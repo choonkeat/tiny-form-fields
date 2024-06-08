@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Embed</title>
+    <script src="./dist/tiny-form-fields.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css">
+    <style>
+        input:not(:placeholder-shown):invalid {
+            border-color: red;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-200">
+    <form class="min-h-screen" method="post" action="https://httpbin.org/post">
+        <div class="p-1 md:w-3/5 my-8 ml-auto mr-auto bg-white min-h-full shadow">
+            <!-- START EMBED -->
+            <div id="tiny-form-fields"></div>
+            <!-- END EMBED -->
+        </div>
+        <div class="p-1 md:pl-5 md:w-3/5 my-8 ml-auto mr-auto">
+            <button type="submit" tabindex="0"
+                class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                Test Submit
+            </button>
+        </div>
+    </form>
+    <script>
+        let app = Elm.Main.init(
+            {
+                node: document.getElementById('tiny-form-fields'),
+                flags: {
+                    layout: false,
+                    viewModeString: "Editor",
+                    formFields: null
+                },
+            }
+        )
+    </script>
+</body>
+
+</html>
