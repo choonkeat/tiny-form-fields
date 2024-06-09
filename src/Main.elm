@@ -1,4 +1,4 @@
-module Main exposing
+port module Main exposing
     ( allInputField
     , decodeFormFields
     , encodeFormFields
@@ -7,14 +7,17 @@ module Main exposing
 
 import Array exposing (Array)
 import Browser
-import Html exposing (Html, a, button, div, input, label, li, node, option, select, text, textarea, ul)
-import Html.Attributes exposing (attribute, checked, class, disabled, for, href, id, maxlength, minlength, name, placeholder, rel, required, tabindex, title, type_, value)
+import Html exposing (Html, a, button, div, input, label, li, option, select, text, textarea, ul)
+import Html.Attributes exposing (attribute, checked, class, disabled, for, id, maxlength, minlength, name, placeholder, required, tabindex, title, type_, value)
 import Html.Events exposing (onCheck, onClick, onInput)
 import Json.Decode
 import Json.Decode.Extra exposing (andMap)
 import Json.Encode
 import Svg exposing (path, svg)
 import Svg.Attributes as SvgAttr
+
+
+port onUpdate : Json.Encode.Value -> Cmd msg
 
 
 main : Program Flags Model Msg
@@ -28,15 +31,13 @@ main =
 
 
 type alias Flags =
-    { layout : Maybe Bool
-    , viewModeString : Maybe String
+    { viewModeString : Maybe String
     , formFields : Maybe Json.Encode.Value
     }
 
 
 type alias Model =
-    { layout : Bool
-    , viewMode : ViewMode
+    { viewMode : ViewMode
     , formFields : Array FormField
     }
 
@@ -130,22 +131,26 @@ type FormFieldMsg
 
 init : Flags -> ( Model, Cmd Msg )
 init flags =
-    ( { layout =
-            flags.layout
-                |> Maybe.withDefault True
-      , viewMode =
+    let
+        ( initFormFields, initCmd ) =
+            case Maybe.map (Json.Decode.decodeValue decodeFormFields) flags.formFields of
+                Just (Ok formFields) ->
+                    ( formFields, onUpdate (encodeFormFields formFields) )
+
+                decodeFail ->
+                    let
+                        _ =
+                            Debug.log "decodeFail" ( decodeFail, Maybe.map (Json.Encode.encode 0) flags.formFields )
+                    in
+                    ( Array.empty, Cmd.none )
+    in
+    ( { viewMode =
             flags.viewModeString
                 |> Maybe.andThen viewModeFromString
                 |> Maybe.withDefault Editor
-      , formFields =
-            case Maybe.map (Json.Decode.decodeValue decodeFormFields) flags.formFields of
-                Just (Ok formFields) ->
-                    formFields
-
-                _ ->
-                    Array.empty
+      , formFields = initFormFields
       }
-    , Cmd.none
+    , initCmd
     )
 
 
@@ -172,12 +177,12 @@ update msg model =
                     , description = ""
                     , type_ = fieldType
                     }
-            in
-            ( { model
-                | formFields =
+
+                newFormFields =
                     Array.push newFormField model.formFields
-              }
-            , Cmd.none
+            in
+            ( { model | formFields = newFormFields }
+            , onUpdate (encodeFormFields newFormFields)
             )
 
         DeleteFormField index ->
@@ -189,21 +194,25 @@ update msg model =
                         |> Array.fromList
             in
             ( { model | formFields = newFormFields }
-            , Cmd.none
+            , onUpdate (encodeFormFields newFormFields)
             )
 
         MoveFormFieldUp index ->
-            ( { model
-                | formFields = swapArrayIndex index (index - 1) model.formFields
-              }
-            , Cmd.none
+            let
+                newFormFields =
+                    swapArrayIndex index (index - 1) model.formFields
+            in
+            ( { model | formFields = newFormFields }
+            , onUpdate (encodeFormFields newFormFields)
             )
 
         MoveFormFieldDown index ->
-            ( { model
-                | formFields = swapArrayIndex index (index + 1) model.formFields
-              }
-            , Cmd.none
+            let
+                newFormFields =
+                    swapArrayIndex index (index + 1) model.formFields
+            in
+            ( { model | formFields = newFormFields }
+            , onUpdate (encodeFormFields newFormFields)
             )
 
         OnFormField fmsg index string ->
@@ -220,7 +229,7 @@ update msg model =
                         model.formFields
             in
             ( { model | formFields = newFormFields }
-            , Cmd.none
+            , onUpdate (encodeFormFields newFormFields)
             )
 
 
@@ -294,49 +303,39 @@ swapArrayIndex i j arr =
 
 view : Model -> Html Msg
 view model =
-    let
-        wrapper =
-            if model.layout then
-                viewLayout
-
-            else
-                identity
-    in
-    wrapper
-        (div [ class "md:p-4" ]
-            (case model.viewMode of
-                Editor ->
-                    [ viewTabs model.viewMode
-                        [ ( Editor, text "Editor" )
-                        , ( Preview, text "Preview" )
-                        ]
-                    , input
-                        [ type_ "hidden"
-                        , name "tiny-form-fields"
-                        , value (Json.Encode.encode 0 (encodeFormFields model.formFields))
-                        ]
-                        []
-                    , viewFormBuilder model
+    div [ class "md:p-4" ]
+        (case model.viewMode of
+            Editor ->
+                [ viewTabs model.viewMode
+                    [ ( Editor, text "Editor" )
+                    , ( Preview, text "Preview" )
                     ]
-
-                Preview ->
-                    [ viewTabs model.viewMode
-                        [ ( Editor, text "Editor" )
-                        , ( Preview, text "Preview" )
-                        ]
-                    , input
-                        [ type_ "hidden"
-                        , name "tiny-form-fields"
-                        , value (Json.Encode.encode 0 (encodeFormFields model.formFields))
-                        ]
-                        []
-                    , viewFormPreview [ disabled True ] model
+                , input
+                    [ type_ "hidden"
+                    , name "tiny-form-fields"
+                    , value (Json.Encode.encode 0 (encodeFormFields model.formFields))
                     ]
+                    []
+                , viewFormBuilder model
+                ]
 
-                CollectData ->
-                    [ viewFormPreview [] model
+            Preview ->
+                [ viewTabs model.viewMode
+                    [ ( Editor, text "Editor" )
+                    , ( Preview, text "Preview" )
                     ]
-            )
+                , input
+                    [ type_ "hidden"
+                    , name "tiny-form-fields"
+                    , value (Json.Encode.encode 0 (encodeFormFields model.formFields))
+                    ]
+                    []
+                , viewFormPreview [ disabled True ] model
+                ]
+
+            CollectData ->
+                [ viewFormPreview [] model
+                ]
         )
 
 
@@ -370,27 +369,6 @@ viewTabs active tabs =
             )
             tabs
         )
-
-
-viewLayout : Html Msg -> Html Msg
-viewLayout content =
-    div []
-        [ node "link"
-            [ rel "stylesheet"
-            , href "https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css"
-            ]
-            []
-        , node "style"
-            []
-            [ text "*:invalid { border-color: red; }" ]
-        , div
-            [ class "flex bg-gray-200 min-h-screen" ]
-            [ div
-                [ class "md:w-3/5 my-8 ml-auto mr-auto bg-white min-h-full shadow" ]
-                [ content
-                ]
-            ]
-        ]
 
 
 viewFormPreview : List (Html.Attribute Msg) -> { a | formFields : Array FormField } -> Html Msg

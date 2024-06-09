@@ -4887,7 +4887,6 @@ var $elm$core$Result$isOk = function (result) {
 	}
 };
 var $elm$json$Json$Decode$andThen = _Json_andThen;
-var $elm$json$Json$Decode$bool = _Json_decodeBool;
 var $elm$json$Json$Decode$map = _Json_map1;
 var $elm$json$Json$Decode$map2 = _Json_map2;
 var $elm$json$Json$Decode$succeed = _Json_succeed;
@@ -5218,6 +5217,7 @@ var $author$project$Main$FormField = F4(
 		return {description: description, label: label, required: required, type_: type_};
 	});
 var $elm_community$json_extra$Json$Decode$Extra$andMap = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
+var $elm$json$Json$Decode$bool = _Json_decodeBool;
 var $author$project$Main$ChooseMultiple = function (a) {
 	return {$: 'ChooseMultiple', a: a};
 };
@@ -5342,6 +5342,17 @@ var $author$project$Main$decodeFormFields = A2(
 	$elm$core$Array$fromList,
 	$elm$json$Json$Decode$list($author$project$Main$decodeFormField));
 var $elm$json$Json$Decode$decodeValue = _Json_run;
+var $elm$json$Json$Encode$bool = _Json_wrap;
+var $elm$json$Json$Encode$int = _Json_wrap;
+var $elm$json$Json$Encode$list = F2(
+	function (func, entries) {
+		return _Json_wrap(
+			A3(
+				$elm$core$List$foldl,
+				_Json_addEntry(func),
+				_Json_emptyArray(_Utils_Tuple0),
+				entries));
+	});
 var $elm$core$Maybe$map = F2(
 	function (f, maybe) {
 		if (maybe.$ === 'Just') {
@@ -5352,8 +5363,122 @@ var $elm$core$Maybe$map = F2(
 			return $elm$core$Maybe$Nothing;
 		}
 	});
+var $elm$json$Json$Encode$null = _Json_encodeNull;
+var $elm$json$Json$Encode$object = function (pairs) {
+	return _Json_wrap(
+		A3(
+			$elm$core$List$foldl,
+			F2(
+				function (_v0, obj) {
+					var k = _v0.a;
+					var v = _v0.b;
+					return A3(_Json_addField, k, v, obj);
+				}),
+			_Json_emptyObject(_Utils_Tuple0),
+			pairs));
+};
+var $elm$json$Json$Encode$string = _Json_wrap;
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var $author$project$Main$encodeInputField = function (inputField) {
+	switch (inputField.$) {
+		case 'ShortText':
+			var inputType = inputField.a;
+			var maybeMaxLength = inputField.b;
+			return $elm$json$Json$Encode$object(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'type',
+						$elm$json$Json$Encode$string('ShortText')),
+						_Utils_Tuple2(
+						'inputType',
+						$elm$json$Json$Encode$string(inputType)),
+						_Utils_Tuple2(
+						'maxLength',
+						A2(
+							$elm$core$Maybe$withDefault,
+							$elm$json$Json$Encode$null,
+							A2($elm$core$Maybe$map, $elm$json$Json$Encode$int, maybeMaxLength)))
+					]));
+		case 'LongText':
+			var maybeMaxLength = inputField.a;
+			return $elm$json$Json$Encode$object(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'type',
+						$elm$json$Json$Encode$string('LongText')),
+						_Utils_Tuple2(
+						'maxLength',
+						A2(
+							$elm$core$Maybe$withDefault,
+							$elm$json$Json$Encode$null,
+							A2($elm$core$Maybe$map, $elm$json$Json$Encode$int, maybeMaxLength)))
+					]));
+		case 'ChooseOne':
+			var choices = inputField.a;
+			return $elm$json$Json$Encode$object(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'type',
+						$elm$json$Json$Encode$string('ChooseOne')),
+						_Utils_Tuple2(
+						'choices',
+						A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, choices))
+					]));
+		default:
+			var choices = inputField.a;
+			return $elm$json$Json$Encode$object(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'type',
+						$elm$json$Json$Encode$string('ChooseMultiple')),
+						_Utils_Tuple2(
+						'choices',
+						A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, choices))
+					]));
+	}
+};
+var $author$project$Main$encodeFormFields = function (formFields) {
+	return A2(
+		$elm$json$Json$Encode$list,
+		$elm$core$Basics$identity,
+		A2(
+			$elm$core$List$map,
+			function (formField) {
+				return $elm$json$Json$Encode$object(
+					_List_fromArray(
+						[
+							_Utils_Tuple2(
+							'label',
+							$elm$json$Json$Encode$string(formField.label)),
+							_Utils_Tuple2(
+							'required',
+							$elm$json$Json$Encode$bool(formField.required)),
+							_Utils_Tuple2(
+							'description',
+							$elm$json$Json$Encode$string(formField.description)),
+							_Utils_Tuple2(
+							'type',
+							$author$project$Main$encodeInputField(formField.type_))
+						]));
+			},
+			$elm$core$Array$toList(formFields)));
+};
+var $elm$core$Debug$log = _Debug_log;
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
+var $author$project$Main$onUpdate = _Platform_outgoingPort('onUpdate', $elm$core$Basics$identity);
 var $author$project$Main$CollectData = {$: 'CollectData'};
 var $author$project$Main$Preview = {$: 'Preview'};
 var $author$project$Main$viewModeFromString = function (str) {
@@ -5368,37 +5493,43 @@ var $author$project$Main$viewModeFromString = function (str) {
 			return $elm$core$Maybe$Nothing;
 	}
 };
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
 var $author$project$Main$init = function (flags) {
+	var _v0 = function () {
+		var _v1 = A2(
+			$elm$core$Maybe$map,
+			$elm$json$Json$Decode$decodeValue($author$project$Main$decodeFormFields),
+			flags.formFields);
+		if ((_v1.$ === 'Just') && (_v1.a.$ === 'Ok')) {
+			var formFields = _v1.a.a;
+			return _Utils_Tuple2(
+				formFields,
+				$author$project$Main$onUpdate(
+					$author$project$Main$encodeFormFields(formFields)));
+		} else {
+			var decodeFail = _v1;
+			var _v2 = A2(
+				$elm$core$Debug$log,
+				'decodeFail',
+				_Utils_Tuple2(
+					decodeFail,
+					A2(
+						$elm$core$Maybe$map,
+						$elm$json$Json$Encode$encode(0),
+						flags.formFields)));
+			return _Utils_Tuple2($elm$core$Array$empty, $elm$core$Platform$Cmd$none);
+		}
+	}();
+	var initFormFields = _v0.a;
+	var initCmd = _v0.b;
 	return _Utils_Tuple2(
 		{
-			formFields: function () {
-				var _v0 = A2(
-					$elm$core$Maybe$map,
-					$elm$json$Json$Decode$decodeValue($author$project$Main$decodeFormFields),
-					flags.formFields);
-				if ((_v0.$ === 'Just') && (_v0.a.$ === 'Ok')) {
-					var formFields = _v0.a.a;
-					return formFields;
-				} else {
-					return $elm$core$Array$empty;
-				}
-			}(),
-			layout: A2($elm$core$Maybe$withDefault, true, flags.layout),
+			formFields: initFormFields,
 			viewMode: A2(
 				$elm$core$Maybe$withDefault,
 				$author$project$Main$Editor,
 				A2($elm$core$Maybe$andThen, $author$project$Main$viewModeFromString, flags.viewModeString))
 		},
-		$elm$core$Platform$Cmd$none);
+		initCmd);
 };
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
@@ -5460,7 +5591,6 @@ var $elm$core$Array$length = function (_v0) {
 	var len = _v0.a;
 	return len;
 };
-var $elm$core$Debug$log = _Debug_log;
 var $elm$core$Basics$neq = _Utils_notEqual;
 var $elm$core$Elm$JsArray$push = _JsArray_push;
 var $elm$core$Bitwise$and = _Bitwise_and;
@@ -5762,13 +5892,13 @@ var $author$project$Main$update = F2(
 					required: true,
 					type_: fieldType
 				};
+				var newFormFields = A2($elm$core$Array$push, newFormField, model.formFields);
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{
-							formFields: A2($elm$core$Array$push, newFormField, model.formFields)
-						}),
-					$elm$core$Platform$Cmd$none);
+						{formFields: newFormFields}),
+					$author$project$Main$onUpdate(
+						$author$project$Main$encodeFormFields(newFormFields)));
 			case 'DeleteFormField':
 				var index = _v0.a;
 				var newFormFields = $elm$core$Array$fromList(
@@ -5786,25 +5916,26 @@ var $author$project$Main$update = F2(
 					_Utils_update(
 						model,
 						{formFields: newFormFields}),
-					$elm$core$Platform$Cmd$none);
+					$author$project$Main$onUpdate(
+						$author$project$Main$encodeFormFields(newFormFields)));
 			case 'MoveFormFieldUp':
 				var index = _v0.a;
+				var newFormFields = A3($author$project$Main$swapArrayIndex, index, index - 1, model.formFields);
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{
-							formFields: A3($author$project$Main$swapArrayIndex, index, index - 1, model.formFields)
-						}),
-					$elm$core$Platform$Cmd$none);
+						{formFields: newFormFields}),
+					$author$project$Main$onUpdate(
+						$author$project$Main$encodeFormFields(newFormFields)));
 			case 'MoveFormFieldDown':
 				var index = _v0.a;
+				var newFormFields = A3($author$project$Main$swapArrayIndex, index, index + 1, model.formFields);
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{
-							formFields: A3($author$project$Main$swapArrayIndex, index, index + 1, model.formFields)
-						}),
-					$elm$core$Platform$Cmd$none);
+						{formFields: newFormFields}),
+					$author$project$Main$onUpdate(
+						$author$project$Main$encodeFormFields(newFormFields)));
 			default:
 				var fmsg = _v0.a;
 				var index = _v0.b;
@@ -5820,11 +5951,11 @@ var $author$project$Main$update = F2(
 					_Utils_update(
 						model,
 						{formFields: newFormFields}),
-					$elm$core$Platform$Cmd$none);
+					$author$project$Main$onUpdate(
+						$author$project$Main$encodeFormFields(newFormFields)));
 		}
 	});
 var $elm$json$Json$Decode$value = _Json_decodeValue;
-var $elm$json$Json$Encode$string = _Json_wrap;
 var $elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
 		return A2(
@@ -5833,7 +5964,6 @@ var $elm$html$Html$Attributes$stringProperty = F2(
 			$elm$json$Json$Encode$string(string));
 	});
 var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
-var $elm$json$Json$Encode$bool = _Json_wrap;
 var $elm$html$Html$Attributes$boolProperty = F2(
 	function (key, bool) {
 		return A2(
@@ -5843,118 +5973,6 @@ var $elm$html$Html$Attributes$boolProperty = F2(
 	});
 var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty('disabled');
 var $elm$html$Html$div = _VirtualDom_node('div');
-var $elm$json$Json$Encode$int = _Json_wrap;
-var $elm$json$Json$Encode$list = F2(
-	function (func, entries) {
-		return _Json_wrap(
-			A3(
-				$elm$core$List$foldl,
-				_Json_addEntry(func),
-				_Json_emptyArray(_Utils_Tuple0),
-				entries));
-	});
-var $elm$json$Json$Encode$null = _Json_encodeNull;
-var $elm$json$Json$Encode$object = function (pairs) {
-	return _Json_wrap(
-		A3(
-			$elm$core$List$foldl,
-			F2(
-				function (_v0, obj) {
-					var k = _v0.a;
-					var v = _v0.b;
-					return A3(_Json_addField, k, v, obj);
-				}),
-			_Json_emptyObject(_Utils_Tuple0),
-			pairs));
-};
-var $author$project$Main$encodeInputField = function (inputField) {
-	switch (inputField.$) {
-		case 'ShortText':
-			var inputType = inputField.a;
-			var maybeMaxLength = inputField.b;
-			return $elm$json$Json$Encode$object(
-				_List_fromArray(
-					[
-						_Utils_Tuple2(
-						'type',
-						$elm$json$Json$Encode$string('ShortText')),
-						_Utils_Tuple2(
-						'inputType',
-						$elm$json$Json$Encode$string(inputType)),
-						_Utils_Tuple2(
-						'maxLength',
-						A2(
-							$elm$core$Maybe$withDefault,
-							$elm$json$Json$Encode$null,
-							A2($elm$core$Maybe$map, $elm$json$Json$Encode$int, maybeMaxLength)))
-					]));
-		case 'LongText':
-			var maybeMaxLength = inputField.a;
-			return $elm$json$Json$Encode$object(
-				_List_fromArray(
-					[
-						_Utils_Tuple2(
-						'type',
-						$elm$json$Json$Encode$string('LongText')),
-						_Utils_Tuple2(
-						'maxLength',
-						A2(
-							$elm$core$Maybe$withDefault,
-							$elm$json$Json$Encode$null,
-							A2($elm$core$Maybe$map, $elm$json$Json$Encode$int, maybeMaxLength)))
-					]));
-		case 'ChooseOne':
-			var choices = inputField.a;
-			return $elm$json$Json$Encode$object(
-				_List_fromArray(
-					[
-						_Utils_Tuple2(
-						'type',
-						$elm$json$Json$Encode$string('ChooseOne')),
-						_Utils_Tuple2(
-						'choices',
-						A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, choices))
-					]));
-		default:
-			var choices = inputField.a;
-			return $elm$json$Json$Encode$object(
-				_List_fromArray(
-					[
-						_Utils_Tuple2(
-						'type',
-						$elm$json$Json$Encode$string('ChooseMultiple')),
-						_Utils_Tuple2(
-						'choices',
-						A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, choices))
-					]));
-	}
-};
-var $author$project$Main$encodeFormFields = function (formFields) {
-	return A2(
-		$elm$json$Json$Encode$list,
-		$elm$core$Basics$identity,
-		A2(
-			$elm$core$List$map,
-			function (formField) {
-				return $elm$json$Json$Encode$object(
-					_List_fromArray(
-						[
-							_Utils_Tuple2(
-							'label',
-							$elm$json$Json$Encode$string(formField.label)),
-							_Utils_Tuple2(
-							'required',
-							$elm$json$Json$Encode$bool(formField.required)),
-							_Utils_Tuple2(
-							'description',
-							$elm$json$Json$Encode$string(formField.description)),
-							_Utils_Tuple2(
-							'type',
-							$author$project$Main$encodeInputField(formField.type_))
-						]));
-			},
-			$elm$core$Array$toList(formFields)));
-};
 var $elm$html$Html$input = _VirtualDom_node('input');
 var $elm$html$Html$Attributes$name = $elm$html$Html$Attributes$stringProperty('name');
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
@@ -6787,60 +6805,6 @@ var $author$project$Main$viewFormPreview = F2(
 							formFields)))
 				]));
 	});
-var $elm$html$Html$Attributes$href = function (url) {
-	return A2(
-		$elm$html$Html$Attributes$stringProperty,
-		'href',
-		_VirtualDom_noJavaScriptUri(url));
-};
-var $elm$virtual_dom$VirtualDom$node = function (tag) {
-	return _VirtualDom_node(
-		_VirtualDom_noScript(tag));
-};
-var $elm$html$Html$node = $elm$virtual_dom$VirtualDom$node;
-var $elm$html$Html$Attributes$rel = _VirtualDom_attribute('rel');
-var $author$project$Main$viewLayout = function (content) {
-	return A2(
-		$elm$html$Html$div,
-		_List_Nil,
-		_List_fromArray(
-			[
-				A3(
-				$elm$html$Html$node,
-				'link',
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$rel('stylesheet'),
-						$elm$html$Html$Attributes$href('https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css')
-					]),
-				_List_Nil),
-				A3(
-				$elm$html$Html$node,
-				'style',
-				_List_Nil,
-				_List_fromArray(
-					[
-						$elm$html$Html$text('*:invalid { border-color: red; }')
-					])),
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('flex bg-gray-200 min-h-screen')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('md:w-3/5 my-8 ml-auto mr-auto bg-white min-h-full shadow')
-							]),
-						_List_fromArray(
-							[content]))
-					]))
-			]));
-};
 var $author$project$Main$SetViewMode = function (a) {
 	return {$: 'SetViewMode', a: a};
 };
@@ -6886,90 +6850,88 @@ var $author$project$Main$viewTabs = F2(
 				tabs));
 	});
 var $author$project$Main$view = function (model) {
-	var wrapper = model.layout ? $author$project$Main$viewLayout : $elm$core$Basics$identity;
-	return wrapper(
-		A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('md:p-4')
-				]),
-			function () {
-				var _v0 = model.viewMode;
-				switch (_v0.$) {
-					case 'Editor':
-						return _List_fromArray(
-							[
-								A2(
-								$author$project$Main$viewTabs,
-								model.viewMode,
-								_List_fromArray(
-									[
-										_Utils_Tuple2(
-										$author$project$Main$Editor,
-										$elm$html$Html$text('Editor')),
-										_Utils_Tuple2(
-										$author$project$Main$Preview,
-										$elm$html$Html$text('Preview'))
-									])),
-								A2(
-								$elm$html$Html$input,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$type_('hidden'),
-										$elm$html$Html$Attributes$name('tiny-form-fields'),
-										$elm$html$Html$Attributes$value(
-										A2(
-											$elm$json$Json$Encode$encode,
-											0,
-											$author$project$Main$encodeFormFields(model.formFields)))
-									]),
-								_List_Nil),
-								$author$project$Main$viewFormBuilder(model)
-							]);
-					case 'Preview':
-						return _List_fromArray(
-							[
-								A2(
-								$author$project$Main$viewTabs,
-								model.viewMode,
-								_List_fromArray(
-									[
-										_Utils_Tuple2(
-										$author$project$Main$Editor,
-										$elm$html$Html$text('Editor')),
-										_Utils_Tuple2(
-										$author$project$Main$Preview,
-										$elm$html$Html$text('Preview'))
-									])),
-								A2(
-								$elm$html$Html$input,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$type_('hidden'),
-										$elm$html$Html$Attributes$name('tiny-form-fields'),
-										$elm$html$Html$Attributes$value(
-										A2(
-											$elm$json$Json$Encode$encode,
-											0,
-											$author$project$Main$encodeFormFields(model.formFields)))
-									]),
-								_List_Nil),
-								A2(
-								$author$project$Main$viewFormPreview,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$disabled(true)
-									]),
-								model)
-							]);
-					default:
-						return _List_fromArray(
-							[
-								A2($author$project$Main$viewFormPreview, _List_Nil, model)
-							]);
-				}
-			}()));
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('md:p-4')
+			]),
+		function () {
+			var _v0 = model.viewMode;
+			switch (_v0.$) {
+				case 'Editor':
+					return _List_fromArray(
+						[
+							A2(
+							$author$project$Main$viewTabs,
+							model.viewMode,
+							_List_fromArray(
+								[
+									_Utils_Tuple2(
+									$author$project$Main$Editor,
+									$elm$html$Html$text('Editor')),
+									_Utils_Tuple2(
+									$author$project$Main$Preview,
+									$elm$html$Html$text('Preview'))
+								])),
+							A2(
+							$elm$html$Html$input,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$type_('hidden'),
+									$elm$html$Html$Attributes$name('tiny-form-fields'),
+									$elm$html$Html$Attributes$value(
+									A2(
+										$elm$json$Json$Encode$encode,
+										0,
+										$author$project$Main$encodeFormFields(model.formFields)))
+								]),
+							_List_Nil),
+							$author$project$Main$viewFormBuilder(model)
+						]);
+				case 'Preview':
+					return _List_fromArray(
+						[
+							A2(
+							$author$project$Main$viewTabs,
+							model.viewMode,
+							_List_fromArray(
+								[
+									_Utils_Tuple2(
+									$author$project$Main$Editor,
+									$elm$html$Html$text('Editor')),
+									_Utils_Tuple2(
+									$author$project$Main$Preview,
+									$elm$html$Html$text('Preview'))
+								])),
+							A2(
+							$elm$html$Html$input,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$type_('hidden'),
+									$elm$html$Html$Attributes$name('tiny-form-fields'),
+									$elm$html$Html$Attributes$value(
+									A2(
+										$elm$json$Json$Encode$encode,
+										0,
+										$author$project$Main$encodeFormFields(model.formFields)))
+								]),
+							_List_Nil),
+							A2(
+							$author$project$Main$viewFormPreview,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$disabled(true)
+								]),
+							model)
+						]);
+				default:
+					return _List_fromArray(
+						[
+							A2($author$project$Main$viewFormPreview, _List_Nil, model)
+						]);
+			}
+		}());
 };
 var $author$project$Main$main = $elm$browser$Browser$element(
 	{
@@ -6984,31 +6946,18 @@ _Platform_export({'Main':{'init':$author$project$Main$main(
 		function (viewModeString) {
 			return A2(
 				$elm$json$Json$Decode$andThen,
-				function (layout) {
-					return A2(
-						$elm$json$Json$Decode$andThen,
-						function (formFields) {
-							return $elm$json$Json$Decode$succeed(
-								{formFields: formFields, layout: layout, viewModeString: viewModeString});
-						},
-						A2(
-							$elm$json$Json$Decode$field,
-							'formFields',
-							$elm$json$Json$Decode$oneOf(
-								_List_fromArray(
-									[
-										$elm$json$Json$Decode$null($elm$core$Maybe$Nothing),
-										A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, $elm$json$Json$Decode$value)
-									]))));
+				function (formFields) {
+					return $elm$json$Json$Decode$succeed(
+						{formFields: formFields, viewModeString: viewModeString});
 				},
 				A2(
 					$elm$json$Json$Decode$field,
-					'layout',
+					'formFields',
 					$elm$json$Json$Decode$oneOf(
 						_List_fromArray(
 							[
 								$elm$json$Json$Decode$null($elm$core$Maybe$Nothing),
-								A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, $elm$json$Json$Decode$bool)
+								A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, $elm$json$Json$Decode$value)
 							]))));
 		},
 		A2(
