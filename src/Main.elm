@@ -8,7 +8,7 @@ module Main exposing
 import Array exposing (Array)
 import Browser
 import Html exposing (Html, a, button, div, input, label, li, node, option, select, text, textarea, ul)
-import Html.Attributes exposing (attribute, checked, class, for, href, id, maxlength, minlength, name, placeholder, rel, required, tabindex, title, type_, value)
+import Html.Attributes exposing (attribute, checked, class, disabled, for, href, id, maxlength, minlength, name, placeholder, rel, required, tabindex, title, type_, value)
 import Html.Events exposing (onCheck, onClick, onInput)
 import Json.Decode
 import Json.Decode.Extra exposing (andMap)
@@ -44,6 +44,7 @@ type alias Model =
 type ViewMode
     = Editor
     | Preview
+    | CollectData
 
 
 viewModeFromString : String -> Maybe ViewMode
@@ -54,6 +55,9 @@ viewModeFromString str =
 
         "Preview" ->
             Just Preview
+
+        "CollectData" ->
+            Just CollectData
 
         _ ->
             Nothing
@@ -300,23 +304,39 @@ view model =
     in
     wrapper
         (div [ class "md:p-4" ]
-            [ viewTabs model.viewMode
-                [ ( Editor, text "Editor" )
-                , ( Preview, text "Preview" )
-                ]
-            , input
-                [ type_ "hidden"
-                , name "tiny-form-fields"
-                , value (Json.Encode.encode 0 (encodeFormFields model.formFields))
-                ]
-                []
-            , case model.viewMode of
+            (case model.viewMode of
                 Editor ->
-                    viewFormBuilder model
+                    [ viewTabs model.viewMode
+                        [ ( Editor, text "Editor" )
+                        , ( Preview, text "Preview" )
+                        ]
+                    , input
+                        [ type_ "hidden"
+                        , name "tiny-form-fields"
+                        , value (Json.Encode.encode 0 (encodeFormFields model.formFields))
+                        ]
+                        []
+                    , viewFormBuilder model
+                    ]
 
                 Preview ->
-                    viewFormPreview model
-            ]
+                    [ viewTabs model.viewMode
+                        [ ( Editor, text "Editor" )
+                        , ( Preview, text "Preview" )
+                        ]
+                    , input
+                        [ type_ "hidden"
+                        , name "tiny-form-fields"
+                        , value (Json.Encode.encode 0 (encodeFormFields model.formFields))
+                        ]
+                        []
+                    , viewFormPreview [ disabled True ] model
+                    ]
+
+                CollectData ->
+                    [ viewFormPreview [] model
+                    ]
+            )
         )
 
 
@@ -373,16 +393,16 @@ viewLayout content =
         ]
 
 
-viewFormPreview : { a | formFields : Array FormField } -> Html Msg
-viewFormPreview { formFields } =
+viewFormPreview : List (Html.Attribute Msg) -> { a | formFields : Array FormField } -> Html Msg
+viewFormPreview customAttrs { formFields } =
     div []
         [ div []
-            (Array.toList (Array.map viewFormFieldPreview formFields))
+            (Array.toList (Array.map (viewFormFieldPreview customAttrs) formFields))
         ]
 
 
-viewFormFieldPreview : FormField -> Html Msg
-viewFormFieldPreview formField =
+viewFormFieldPreview : List (Html.Attribute Msg) -> FormField -> Html Msg
+viewFormFieldPreview customAttrs formField =
     div [ class "grid grid-rows-[auto_auto_1fr_auto] gap-2 mb-4" ]
         [ div [ class "field-group mb-2" ]
             [ label [ class "text-sm text-gray-600" ]
@@ -393,7 +413,7 @@ viewFormFieldPreview formField =
                   else
                     text " (optional)"
                 ]
-            , viewFormFieldOptionsPreview formField
+            , viewFormFieldOptionsPreview customAttrs formField
             , div [ class "mt-1 text-xs text-gray-600" ]
                 [ text formField.description
                 , case maybeMaxLengthOf formField of
@@ -420,8 +440,8 @@ maybeMaxLengthOf formField =
             Nothing
 
 
-viewFormFieldOptionsPreview : FormField -> Html Msg
-viewFormFieldOptionsPreview formField =
+viewFormFieldOptionsPreview : List (Html.Attribute Msg) -> FormField -> Html Msg
+viewFormFieldOptionsPreview customAttrs formField =
     case formField.type_ of
         ShortText inputType maybeMaxLength ->
             let
@@ -441,6 +461,7 @@ viewFormFieldOptionsPreview formField =
                  , placeholder " "
                  ]
                     ++ extraAttrs
+                    ++ customAttrs
                 )
                 []
 
@@ -461,6 +482,7 @@ viewFormFieldOptionsPreview formField =
                  , placeholder " "
                  ]
                     ++ extraAttrs
+                    ++ customAttrs
                 )
                 []
 
@@ -475,7 +497,7 @@ viewFormFieldOptionsPreview formField =
                     (List.map
                         (\choice ->
                             option
-                                [ value choice ]
+                                (value choice :: customAttrs)
                                 [ text choice ]
                         )
                         choices
@@ -485,19 +507,20 @@ viewFormFieldOptionsPreview formField =
         ChooseMultiple choices ->
             -- checkboxes
             div [ class "grid" ]
-                [ selectArrowDown
-                , div [ class "grid grid-cols-1 gap-2" ]
+                [ div [ class "grid grid-cols-1 gap-2" ]
                     (List.map
                         (\choice ->
                             div [ class "flex items center" ]
                                 [ label [ class "text-sm text-gray-600" ]
                                     [ input
-                                        [ type_ "checkbox"
-                                        , tabindex 0
-                                        , class "border border-gray-300 p-2"
-                                        , name formField.label
-                                        , value choice
-                                        ]
+                                        ([ type_ "checkbox"
+                                         , tabindex 0
+                                         , class "border border-gray-300 p-2"
+                                         , name formField.label
+                                         , value choice
+                                         ]
+                                            ++ customAttrs
+                                        )
                                         []
                                     , text " "
                                     , text choice

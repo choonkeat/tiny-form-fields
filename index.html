@@ -34,8 +34,8 @@
                 node: document.getElementById('tiny-form-fields'),
                 flags: {
                     layout: false,
-                    viewModeString: "Editor",
-                    formFields: null
+                    viewModeString: "Editor" || "Preview" || "CollectData",
+                    formFields: window.location.hash.substring(1) || null,
                 },
             }
         )

@@ -5354,6 +5354,7 @@ var $elm$core$Maybe$map = F2(
 	});
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
+var $author$project$Main$CollectData = {$: 'CollectData'};
 var $author$project$Main$Preview = {$: 'Preview'};
 var $author$project$Main$viewModeFromString = function (str) {
 	switch (str) {
@@ -5361,6 +5362,8 @@ var $author$project$Main$viewModeFromString = function (str) {
 			return $elm$core$Maybe$Just($author$project$Main$Editor);
 		case 'Preview':
 			return $elm$core$Maybe$Just($author$project$Main$Preview);
+		case 'CollectData':
+			return $elm$core$Maybe$Just($author$project$Main$CollectData);
 		default:
 			return $elm$core$Maybe$Nothing;
 	}
@@ -5830,8 +5833,16 @@ var $elm$html$Html$Attributes$stringProperty = F2(
 			$elm$json$Json$Encode$string(string));
 	});
 var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
-var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$json$Json$Encode$bool = _Json_wrap;
+var $elm$html$Html$Attributes$boolProperty = F2(
+	function (key, bool) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$bool(bool));
+	});
+var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty('disabled');
+var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$json$Json$Encode$int = _Json_wrap;
 var $elm$json$Json$Encode$list = F2(
 	function (func, entries) {
@@ -6008,13 +6019,6 @@ var $author$project$Main$OnLabelInput = {$: 'OnLabelInput'};
 var $author$project$Main$OnRequiredInput = function (a) {
 	return {$: 'OnRequiredInput', a: a};
 };
-var $elm$html$Html$Attributes$boolProperty = F2(
-	function (key, bool) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			$elm$json$Json$Encode$bool(bool));
-	});
 var $elm$html$Html$Attributes$checked = $elm$html$Html$Attributes$boolProperty('checked');
 var $elm$html$Html$Attributes$for = $elm$html$Html$Attributes$stringProperty('htmlFor');
 var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
@@ -6564,218 +6568,225 @@ var $author$project$Main$selectArrowDown = A2(
 				]),
 			_List_Nil)
 		]));
-var $author$project$Main$viewFormFieldOptionsPreview = function (formField) {
-	var _v0 = formField.type_;
-	switch (_v0.$) {
-		case 'ShortText':
-			var inputType = _v0.a;
-			var maybeMaxLength = _v0.b;
-			var extraAttrs = function () {
-				if (maybeMaxLength.$ === 'Just') {
-					var maxLength = maybeMaxLength.a;
-					return _List_fromArray(
-						[
-							$elm$html$Html$Attributes$maxlength(maxLength)
-						]);
-				} else {
-					return _List_Nil;
-				}
-			}();
-			return A2(
-				$elm$html$Html$input,
-				_Utils_ap(
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$type_(inputType),
-							$elm$html$Html$Attributes$class('border border-gray-300 p-2 w-full rounded'),
-							$elm$html$Html$Attributes$name(formField.label),
-							$elm$html$Html$Attributes$required(formField.required),
-							$elm$html$Html$Attributes$placeholder(' ')
-						]),
-					extraAttrs),
-				_List_Nil);
-		case 'LongText':
-			var maybeMaxLength = _v0.a;
-			var extraAttrs = function () {
-				if (maybeMaxLength.$ === 'Just') {
-					var maxLength = maybeMaxLength.a;
-					return _List_fromArray(
-						[
-							$elm$html$Html$Attributes$maxlength(maxLength)
-						]);
-				} else {
-					return _List_Nil;
-				}
-			}();
-			return A2(
-				$elm$html$Html$textarea,
-				_Utils_ap(
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('border border-gray-300 p-2 w-full rounded'),
-							$elm$html$Html$Attributes$name(formField.label),
-							$elm$html$Html$Attributes$required(formField.required),
-							$elm$html$Html$Attributes$placeholder(' ')
-						]),
-					extraAttrs),
-				_List_Nil);
-		case 'ChooseOne':
-			var choices = _v0.a;
-			return A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('grid')
-					]),
-				_List_fromArray(
-					[
-						$author$project$Main$selectArrowDown,
-						A2(
-						$elm$html$Html$select,
+var $author$project$Main$viewFormFieldOptionsPreview = F2(
+	function (customAttrs, formField) {
+		var _v0 = formField.type_;
+		switch (_v0.$) {
+			case 'ShortText':
+				var inputType = _v0.a;
+				var maybeMaxLength = _v0.b;
+				var extraAttrs = function () {
+					if (maybeMaxLength.$ === 'Just') {
+						var maxLength = maybeMaxLength.a;
+						return _List_fromArray(
+							[
+								$elm$html$Html$Attributes$maxlength(maxLength)
+							]);
+					} else {
+						return _List_Nil;
+					}
+				}();
+				return A2(
+					$elm$html$Html$input,
+					_Utils_ap(
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class('appearance-none forced-colors:appearance-auto border row-start-1 col-start-1 bg-slate-50 dark:bg-slate-800 hover:border-cyan-500 dark:hover:border-cyan-700 hover:bg-white dark:hover:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 p-2 rounded'),
+								$elm$html$Html$Attributes$type_(inputType),
+								$elm$html$Html$Attributes$class('border border-gray-300 p-2 w-full rounded'),
 								$elm$html$Html$Attributes$name(formField.label),
-								$elm$html$Html$Attributes$required(formField.required)
+								$elm$html$Html$Attributes$required(formField.required),
+								$elm$html$Html$Attributes$placeholder(' ')
 							]),
-						A2(
-							$elm$core$List$map,
-							function (choice) {
-								return A2(
-									$elm$html$Html$option,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$value(choice)
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text(choice)
-										]));
-							},
-							choices))
-					]));
-		default:
-			var choices = _v0.a;
-			return A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('grid')
-					]),
-				_List_fromArray(
-					[
-						$author$project$Main$selectArrowDown,
-						A2(
-						$elm$html$Html$div,
+						_Utils_ap(extraAttrs, customAttrs)),
+					_List_Nil);
+			case 'LongText':
+				var maybeMaxLength = _v0.a;
+				var extraAttrs = function () {
+					if (maybeMaxLength.$ === 'Just') {
+						var maxLength = maybeMaxLength.a;
+						return _List_fromArray(
+							[
+								$elm$html$Html$Attributes$maxlength(maxLength)
+							]);
+					} else {
+						return _List_Nil;
+					}
+				}();
+				return A2(
+					$elm$html$Html$textarea,
+					_Utils_ap(
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class('grid grid-cols-1 gap-2')
+								$elm$html$Html$Attributes$class('border border-gray-300 p-2 w-full rounded'),
+								$elm$html$Html$Attributes$name(formField.label),
+								$elm$html$Html$Attributes$required(formField.required),
+								$elm$html$Html$Attributes$placeholder(' ')
 							]),
+						_Utils_ap(extraAttrs, customAttrs)),
+					_List_Nil);
+			case 'ChooseOne':
+				var choices = _v0.a;
+				return A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('grid')
+						]),
+					_List_fromArray(
+						[
+							$author$project$Main$selectArrowDown,
+							A2(
+							$elm$html$Html$select,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('appearance-none forced-colors:appearance-auto border row-start-1 col-start-1 bg-slate-50 dark:bg-slate-800 hover:border-cyan-500 dark:hover:border-cyan-700 hover:bg-white dark:hover:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 p-2 rounded'),
+									$elm$html$Html$Attributes$name(formField.label),
+									$elm$html$Html$Attributes$required(formField.required)
+								]),
+							A2(
+								$elm$core$List$map,
+								function (choice) {
+									return A2(
+										$elm$html$Html$option,
+										A2(
+											$elm$core$List$cons,
+											$elm$html$Html$Attributes$value(choice),
+											customAttrs),
+										_List_fromArray(
+											[
+												$elm$html$Html$text(choice)
+											]));
+								},
+								choices))
+						]));
+			default:
+				var choices = _v0.a;
+				return A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('grid')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('grid grid-cols-1 gap-2')
+								]),
+							A2(
+								$elm$core$List$map,
+								function (choice) {
+									return A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('flex items center')
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$label,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('text-sm text-gray-600')
+													]),
+												_List_fromArray(
+													[
+														A2(
+														$elm$html$Html$input,
+														_Utils_ap(
+															_List_fromArray(
+																[
+																	$elm$html$Html$Attributes$type_('checkbox'),
+																	$elm$html$Html$Attributes$tabindex(0),
+																	$elm$html$Html$Attributes$class('border border-gray-300 p-2'),
+																	$elm$html$Html$Attributes$name(formField.label),
+																	$elm$html$Html$Attributes$value(choice)
+																]),
+															customAttrs),
+														_List_Nil),
+														$elm$html$Html$text(' '),
+														$elm$html$Html$text(choice)
+													]))
+											]));
+								},
+								choices))
+						]));
+		}
+	});
+var $author$project$Main$viewFormFieldPreview = F2(
+	function (customAttrs, formField) {
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('grid grid-rows-[auto_auto_1fr_auto] gap-2 mb-4')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('field-group mb-2')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$label,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('text-sm text-gray-600')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(formField.label),
+									formField.required ? $elm$html$Html$text('') : $elm$html$Html$text(' (optional)')
+								])),
+							A2($author$project$Main$viewFormFieldOptionsPreview, customAttrs, formField),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('mt-1 text-xs text-gray-600')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(formField.description),
+									function () {
+									var _v0 = $author$project$Main$maybeMaxLengthOf(formField);
+									if (_v0.$ === 'Just') {
+										var maxLength = _v0.a;
+										return $elm$html$Html$text(
+											' (max ' + ($elm$core$String$fromInt(maxLength) + ' characters)'));
+									} else {
+										return $elm$html$Html$text('');
+									}
+								}()
+								]))
+						]))
+				]));
+	});
+var $author$project$Main$viewFormPreview = F2(
+	function (customAttrs, _v0) {
+		var formFields = _v0.formFields;
+		return A2(
+			$elm$html$Html$div,
+			_List_Nil,
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_Nil,
+					$elm$core$Array$toList(
 						A2(
-							$elm$core$List$map,
-							function (choice) {
-								return A2(
-									$elm$html$Html$div,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('flex items center')
-										]),
-									_List_fromArray(
-										[
-											A2(
-											$elm$html$Html$label,
-											_List_fromArray(
-												[
-													$elm$html$Html$Attributes$class('text-sm text-gray-600')
-												]),
-											_List_fromArray(
-												[
-													A2(
-													$elm$html$Html$input,
-													_List_fromArray(
-														[
-															$elm$html$Html$Attributes$type_('checkbox'),
-															$elm$html$Html$Attributes$tabindex(0),
-															$elm$html$Html$Attributes$class('border border-gray-300 p-2'),
-															$elm$html$Html$Attributes$name(formField.label),
-															$elm$html$Html$Attributes$value(choice)
-														]),
-													_List_Nil),
-													$elm$html$Html$text(' '),
-													$elm$html$Html$text(choice)
-												]))
-										]));
-							},
-							choices))
-					]));
-	}
-};
-var $author$project$Main$viewFormFieldPreview = function (formField) {
-	return A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('grid grid-rows-[auto_auto_1fr_auto] gap-2 mb-4')
-			]),
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('field-group mb-2')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$label,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('text-sm text-gray-600')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text(formField.label),
-								formField.required ? $elm$html$Html$text('') : $elm$html$Html$text(' (optional)')
-							])),
-						$author$project$Main$viewFormFieldOptionsPreview(formField),
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('mt-1 text-xs text-gray-600')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text(formField.description),
-								function () {
-								var _v0 = $author$project$Main$maybeMaxLengthOf(formField);
-								if (_v0.$ === 'Just') {
-									var maxLength = _v0.a;
-									return $elm$html$Html$text(
-										' (max ' + ($elm$core$String$fromInt(maxLength) + ' characters)'));
-								} else {
-									return $elm$html$Html$text('');
-								}
-							}()
-							]))
-					]))
-			]));
-};
-var $author$project$Main$viewFormPreview = function (_v0) {
-	var formFields = _v0.formFields;
-	return A2(
-		$elm$html$Html$div,
-		_List_Nil,
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$div,
-				_List_Nil,
-				$elm$core$Array$toList(
-					A2($elm$core$Array$map, $author$project$Main$viewFormFieldPreview, formFields)))
-			]));
-};
+							$elm$core$Array$map,
+							$author$project$Main$viewFormFieldPreview(customAttrs),
+							formFields)))
+				]));
+	});
 var $elm$html$Html$Attributes$href = function (url) {
 	return A2(
 		$elm$html$Html$Attributes$stringProperty,
@@ -6883,42 +6894,82 @@ var $author$project$Main$view = function (model) {
 				[
 					$elm$html$Html$Attributes$class('md:p-4')
 				]),
-			_List_fromArray(
-				[
-					A2(
-					$author$project$Main$viewTabs,
-					model.viewMode,
-					_List_fromArray(
-						[
-							_Utils_Tuple2(
-							$author$project$Main$Editor,
-							$elm$html$Html$text('Editor')),
-							_Utils_Tuple2(
-							$author$project$Main$Preview,
-							$elm$html$Html$text('Preview'))
-						])),
-					A2(
-					$elm$html$Html$input,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$type_('hidden'),
-							$elm$html$Html$Attributes$name('tiny-form-fields'),
-							$elm$html$Html$Attributes$value(
-							A2(
-								$elm$json$Json$Encode$encode,
-								0,
-								$author$project$Main$encodeFormFields(model.formFields)))
-						]),
-					_List_Nil),
-					function () {
-					var _v0 = model.viewMode;
-					if (_v0.$ === 'Editor') {
-						return $author$project$Main$viewFormBuilder(model);
-					} else {
-						return $author$project$Main$viewFormPreview(model);
-					}
-				}()
-				])));
+			function () {
+				var _v0 = model.viewMode;
+				switch (_v0.$) {
+					case 'Editor':
+						return _List_fromArray(
+							[
+								A2(
+								$author$project$Main$viewTabs,
+								model.viewMode,
+								_List_fromArray(
+									[
+										_Utils_Tuple2(
+										$author$project$Main$Editor,
+										$elm$html$Html$text('Editor')),
+										_Utils_Tuple2(
+										$author$project$Main$Preview,
+										$elm$html$Html$text('Preview'))
+									])),
+								A2(
+								$elm$html$Html$input,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$type_('hidden'),
+										$elm$html$Html$Attributes$name('tiny-form-fields'),
+										$elm$html$Html$Attributes$value(
+										A2(
+											$elm$json$Json$Encode$encode,
+											0,
+											$author$project$Main$encodeFormFields(model.formFields)))
+									]),
+								_List_Nil),
+								$author$project$Main$viewFormBuilder(model)
+							]);
+					case 'Preview':
+						return _List_fromArray(
+							[
+								A2(
+								$author$project$Main$viewTabs,
+								model.viewMode,
+								_List_fromArray(
+									[
+										_Utils_Tuple2(
+										$author$project$Main$Editor,
+										$elm$html$Html$text('Editor')),
+										_Utils_Tuple2(
+										$author$project$Main$Preview,
+										$elm$html$Html$text('Preview'))
+									])),
+								A2(
+								$elm$html$Html$input,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$type_('hidden'),
+										$elm$html$Html$Attributes$name('tiny-form-fields'),
+										$elm$html$Html$Attributes$value(
+										A2(
+											$elm$json$Json$Encode$encode,
+											0,
+											$author$project$Main$encodeFormFields(model.formFields)))
+									]),
+								_List_Nil),
+								A2(
+								$author$project$Main$viewFormPreview,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$disabled(true)
+									]),
+								model)
+							]);
+					default:
+						return _List_fromArray(
+							[
+								A2($author$project$Main$viewFormPreview, _List_Nil, model)
+							]);
+				}
+			}()));
 };
 var $author$project$Main$main = $elm$browser$Browser$element(
 	{
