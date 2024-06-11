@@ -5212,9 +5212,9 @@ var $elm$core$Maybe$andThen = F2(
 			return $elm$core$Maybe$Nothing;
 		}
 	});
-var $author$project$Main$FormField = F5(
-	function (label, name, required, description, type_) {
-		return {description: description, label: label, name: name, required: required, type_: type_};
+var $author$project$Main$FormField = F6(
+	function (label, name, required, description, type_, deletable) {
+		return {deletable: deletable, description: description, label: label, name: name, required: required, type_: type_};
 	});
 var $elm_community$json_extra$Json$Decode$Extra$andMap = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
 var $elm$json$Json$Decode$bool = _Json_decodeBool;
@@ -5322,20 +5322,23 @@ var $elm_community$json_extra$Json$Decode$Extra$optionalNullableField = F2(
 	});
 var $author$project$Main$decodeFormField = A2(
 	$elm_community$json_extra$Json$Decode$Extra$andMap,
-	A2($elm$json$Json$Decode$field, 'type', $author$project$Main$decodeInputField),
+	A2($elm_community$json_extra$Json$Decode$Extra$optionalNullableField, 'deletable', $elm$json$Json$Decode$bool),
 	A2(
 		$elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2($elm$json$Json$Decode$field, 'description', $elm$json$Json$Decode$string),
+		A2($elm$json$Json$Decode$field, 'type', $author$project$Main$decodeInputField),
 		A2(
 			$elm_community$json_extra$Json$Decode$Extra$andMap,
-			A2($elm$json$Json$Decode$field, 'required', $elm$json$Json$Decode$bool),
+			A2($elm$json$Json$Decode$field, 'description', $elm$json$Json$Decode$string),
 			A2(
 				$elm_community$json_extra$Json$Decode$Extra$andMap,
-				A2($elm_community$json_extra$Json$Decode$Extra$optionalNullableField, 'name', $elm$json$Json$Decode$string),
+				A2($elm$json$Json$Decode$field, 'required', $elm$json$Json$Decode$bool),
 				A2(
 					$elm_community$json_extra$Json$Decode$Extra$andMap,
-					A2($elm$json$Json$Decode$field, 'label', $elm$json$Json$Decode$string),
-					$elm$json$Json$Decode$succeed($author$project$Main$FormField))))));
+					A2($elm_community$json_extra$Json$Decode$Extra$optionalNullableField, 'name', $elm$json$Json$Decode$string),
+					A2(
+						$elm_community$json_extra$Json$Decode$Extra$andMap,
+						A2($elm$json$Json$Decode$field, 'label', $elm$json$Json$Decode$string),
+						$elm$json$Json$Decode$succeed($author$project$Main$FormField)))))));
 var $elm$core$Array$fromListHelp = F3(
 	function (list, nodeList, nodeListSize) {
 		fromListHelp:
@@ -5482,6 +5485,27 @@ var $author$project$Main$encodeInputField = function (inputField) {
 					]));
 	}
 };
+var $author$project$Main$encodeMaybe = F2(
+	function (encode, maybeValue) {
+		if (maybeValue.$ === 'Just') {
+			var value = maybeValue.a;
+			return encode(value);
+		} else {
+			return $elm$json$Json$Encode$null;
+		}
+	});
+var $elm$core$List$filter = F2(
+	function (isGood, list) {
+		return A3(
+			$elm$core$List$foldr,
+			F2(
+				function (x, xs) {
+					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
+				}),
+			_List_Nil,
+			list);
+	});
+var $elm$core$Basics$neq = _Utils_notEqual;
 var $author$project$Main$encodeFormFields = function (formFields) {
 	return A2(
 		$elm$json$Json$Encode$list,
@@ -5489,27 +5513,21 @@ var $author$project$Main$encodeFormFields = function (formFields) {
 		A2(
 			$elm$core$List$map,
 			function (formField) {
-				var optionals = function () {
-					var _v0 = formField.name;
-					if (_v0.$ === 'Just') {
-						var name = _v0.a;
-						return _List_fromArray(
-							[
-								_Utils_Tuple2(
-								'name',
-								$elm$json$Json$Encode$string(name))
-							]);
-					} else {
-						return _List_Nil;
-					}
-				}();
 				return $elm$json$Json$Encode$object(
-					_Utils_ap(
+					A2(
+						$elm$core$List$filter,
+						function (_v0) {
+							var v = _v0.b;
+							return !_Utils_eq(v, $elm$json$Json$Encode$null);
+						},
 						_List_fromArray(
 							[
 								_Utils_Tuple2(
 								'label',
 								$elm$json$Json$Encode$string(formField.label)),
+								_Utils_Tuple2(
+								'name',
+								A2($author$project$Main$encodeMaybe, $elm$json$Json$Encode$string, formField.name)),
 								_Utils_Tuple2(
 								'required',
 								$elm$json$Json$Encode$bool(formField.required)),
@@ -5518,9 +5536,11 @@ var $author$project$Main$encodeFormFields = function (formFields) {
 								$elm$json$Json$Encode$string(formField.description)),
 								_Utils_Tuple2(
 								'type',
-								$author$project$Main$encodeInputField(formField.type_))
-							]),
-						optionals));
+								$author$project$Main$encodeInputField(formField.type_)),
+								_Utils_Tuple2(
+								'deletable',
+								A2($author$project$Main$encodeMaybe, $elm$json$Json$Encode$bool, formField.deletable))
+							])));
 			},
 			$elm$core$Array$toList(formFields)));
 };
@@ -5582,17 +5602,6 @@ var $author$project$Main$init = function (flags) {
 };
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
-var $elm$core$List$filter = F2(
-	function (isGood, list) {
-		return A3(
-			$elm$core$List$foldr,
-			F2(
-				function (x, xs) {
-					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
-				}),
-			_List_Nil,
-			list);
-	});
 var $elm$core$Elm$JsArray$foldl = _JsArray_foldl;
 var $elm$core$Elm$JsArray$indexedMap = _JsArray_indexedMap;
 var $elm$core$Bitwise$shiftLeftBy = _Bitwise_shiftLeftBy;
@@ -5640,7 +5649,6 @@ var $elm$core$Array$length = function (_v0) {
 	var len = _v0.a;
 	return len;
 };
-var $elm$core$Basics$neq = _Utils_notEqual;
 var $elm$core$Elm$JsArray$push = _JsArray_push;
 var $elm$core$Bitwise$and = _Bitwise_and;
 var $elm$core$Array$bitMask = 4294967295 >>> (32 - $elm$core$Array$shiftStep);
@@ -5935,6 +5943,7 @@ var $author$project$Main$update = F2(
 			case 'AddFormField':
 				var fieldType = _v0.a;
 				var newFormField = {
+					deletable: $elm$core$Maybe$Just(true),
 					description: '',
 					label: $author$project$Main$stringFromInputField(fieldType) + (' ' + $elm$core$String$fromInt(
 						$elm$core$Array$length(model.formFields) + 1)),
@@ -6489,28 +6498,23 @@ var $author$project$Main$viewFormFieldBuilder = F3(
 											$elm$html$Html$text('↓')
 										]))
 								])),
-							function () {
-							var _v0 = formField.name;
-							if (_v0.$ === 'Just') {
-								return $elm$html$Html$text('');
-							} else {
-								return A2(
-									$elm$html$Html$button,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$type_('button'),
-											$elm$html$Html$Attributes$tabindex(0),
-											$elm$html$Html$Attributes$class('text-xs bg-gray-200 hover:bg-gray-400 text-red-700 px-4 py-2 rounded'),
-											$elm$html$Html$Attributes$title('Delete field'),
-											$elm$html$Html$Events$onClick(
-											$author$project$Main$DeleteFormField(index))
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text('⨯ Delete')
-										]));
-							}
-						}()
+							_Utils_eq(
+							formField.deletable,
+							$elm$core$Maybe$Just(true)) ? A2(
+							$elm$html$Html$button,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$type_('button'),
+									$elm$html$Html$Attributes$tabindex(0),
+									$elm$html$Html$Attributes$class('text-xs bg-gray-200 hover:bg-gray-400 text-red-700 px-4 py-2 rounded'),
+									$elm$html$Html$Attributes$title('Delete field'),
+									$elm$html$Html$Events$onClick(
+									$author$project$Main$DeleteFormField(index))
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('⨯ Delete')
+								])) : $elm$html$Html$text('')
 						]))
 				]));
 	});

@@ -70,6 +70,10 @@ type alias FormField =
     , required : Bool
     , description : String
     , type_ : InputField
+
+    -- not an attribute on the input field itself, but for the Editor ui
+    -- `Maybe Bool` because it's easier to encodeFormFields
+    , deletable : Maybe Bool
     }
 
 
@@ -178,6 +182,7 @@ update msg model =
                     , required = True
                     , description = ""
                     , type_ = fieldType
+                    , deletable = Just True
                     }
 
                 newFormFields =
@@ -639,19 +644,18 @@ viewFormFieldBuilder totalLength index formField =
                         ]
                         [ text "↓" ]
                 ]
-            , case formField.name of
-                Just _ ->
-                    text ""
+            , if formField.deletable == Just True then
+                button
+                    [ type_ "button"
+                    , tabindex 0
+                    , class "text-xs bg-gray-200 hover:bg-gray-400 text-red-700 px-4 py-2 rounded"
+                    , title "Delete field"
+                    , onClick (DeleteFormField index)
+                    ]
+                    [ text "⨯ Delete" ]
 
-                Nothing ->
-                    button
-                        [ type_ "button"
-                        , tabindex 0
-                        , class "text-xs bg-gray-200 hover:bg-gray-400 text-red-700 px-4 py-2 rounded"
-                        , title "Delete field"
-                        , onClick (DeleteFormField index)
-                        ]
-                        [ text "⨯ Delete" ]
+              else
+                text ""
             ]
         ]
 
@@ -732,29 +736,32 @@ viewFormFieldOptionsBuilder index fieldType =
 --  ENCODERS DECODERS
 
 
+encodeMaybe : (a -> Json.Encode.Value) -> Maybe a -> Json.Encode.Value
+encodeMaybe encode maybeValue =
+    case maybeValue of
+        Just value ->
+            encode value
+
+        Nothing ->
+            Json.Encode.null
+
+
 encodeFormFields : Array FormField -> Json.Encode.Value
 encodeFormFields formFields =
     formFields
         |> Array.toList
         |> List.map
             (\formField ->
-                let
-                    optionals =
-                        -- smaller output json than if we encoded `null` all the time
-                        case formField.name of
-                            Just name ->
-                                [ ( "name", Json.Encode.string name ) ]
-
-                            Nothing ->
-                                []
-                in
                 Json.Encode.object
                     ([ ( "label", Json.Encode.string formField.label )
+                     , ( "name", encodeMaybe Json.Encode.string formField.name )
                      , ( "required", Json.Encode.bool formField.required )
                      , ( "description", Json.Encode.string formField.description )
                      , ( "type", encodeInputField formField.type_ )
+                     , ( "deletable", encodeMaybe Json.Encode.bool formField.deletable )
                      ]
-                        ++ optionals
+                        -- smaller output json than if we encoded `null` all the time
+                        |> List.filter (\( _, v ) -> v /= Json.Encode.null)
                     )
             )
         |> Json.Encode.list identity
@@ -774,6 +781,7 @@ decodeFormField =
         |> andMap (Json.Decode.field "required" Json.Decode.bool)
         |> andMap (Json.Decode.field "description" Json.Decode.string)
         |> andMap (Json.Decode.field "type" decodeInputField)
+        |> andMap (Json.Decode.Extra.optionalNullableField "deletable" Json.Decode.bool)
 
 
 encodeInputField : InputField -> Json.Encode.Value

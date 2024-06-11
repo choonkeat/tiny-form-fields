@@ -24,6 +24,7 @@ suite =
                                     , required = modBy (index + 1) 2 == 0
                                     , description = "description " ++ String.fromInt index
                                     , type_ = type_
+                                    , deletable = Just (modBy (index + 1) 2 == 1)
                                     }
                                 )
                             |> Array.fromList
