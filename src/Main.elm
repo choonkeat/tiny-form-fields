@@ -486,11 +486,11 @@ viewFormFieldOptionsPreview customAttrs formField =
                     (List.map
                         (\choice ->
                             div [ class "flex items center" ]
-                                [ label [ class "text-sm text-gray-600" ]
+                                [ label [ class "text-sm text-gray-600 align-middle" ]
                                     [ input
                                         ([ type_ "checkbox"
                                          , tabindex 0
-                                         , class "border border-gray-300 p-2"
+                                         , class "border border-gray-300 align-middle"
                                          , name formField.label
                                          , value choice
                                          ]
@@ -572,12 +572,12 @@ viewFormFieldBuilder totalLength index formField =
                 []
             ]
         , div [ class "field-group mb-2" ]
-            [ label [ class "text-sm text-gray-600", for ("required-" ++ idSuffix) ]
+            [ label [ class "text-sm text-gray-600 align-middle", for ("required-" ++ idSuffix) ]
                 [ input
                     [ id ("required-" ++ idSuffix)
                     , type_ "checkbox"
                     , tabindex 0
-                    , class "border border-gray-300 p-2"
+                    , class "border border-gray-300 align-middle"
                     , checked formField.required
                     , onCheck (\b -> OnFormField (OnRequiredInput b) index "")
                     ]

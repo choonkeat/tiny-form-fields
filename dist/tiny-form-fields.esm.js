@@ -6342,7 +6342,7 @@ var $author$project$Main$viewFormFieldBuilder = F3(
 							$elm$html$Html$label,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('text-sm text-gray-600'),
+									$elm$html$Html$Attributes$class('text-sm text-gray-600 align-middle'),
 									$elm$html$Html$Attributes$for('required-' + idSuffix)
 								]),
 							_List_fromArray(
@@ -6354,7 +6354,7 @@ var $author$project$Main$viewFormFieldBuilder = F3(
 											$elm$html$Html$Attributes$id('required-' + idSuffix),
 											$elm$html$Html$Attributes$type_('checkbox'),
 											$elm$html$Html$Attributes$tabindex(0),
-											$elm$html$Html$Attributes$class('border border-gray-300 p-2'),
+											$elm$html$Html$Attributes$class('border border-gray-300 align-middle'),
 											$elm$html$Html$Attributes$checked(formField.required),
 											$elm$html$Html$Events$onCheck(
 											function (b) {
@@ -6716,7 +6716,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 												$elm$html$Html$label,
 												_List_fromArray(
 													[
-														$elm$html$Html$Attributes$class('text-sm text-gray-600')
+														$elm$html$Html$Attributes$class('text-sm text-gray-600 align-middle')
 													]),
 												_List_fromArray(
 													[
@@ -6727,7 +6727,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 																[
 																	$elm$html$Html$Attributes$type_('checkbox'),
 																	$elm$html$Html$Attributes$tabindex(0),
-																	$elm$html$Html$Attributes$class('border border-gray-300 p-2'),
+																	$elm$html$Html$Attributes$class('border border-gray-300 align-middle'),
 																	$elm$html$Html$Attributes$name(formField.label),
 																	$elm$html$Html$Attributes$value(choice)
 																]),
