@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+input:not(:placeholder-shown):invalid {
+    border-color: red;
+}
+select:invalid {
+    @apply text-gray-300;
+}
