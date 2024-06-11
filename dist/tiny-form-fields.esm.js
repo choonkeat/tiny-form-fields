@@ -5220,9 +5220,9 @@ var $elm$core$Maybe$andThen = F2(
 			return $elm$core$Maybe$Nothing;
 		}
 	});
-var $author$project$Main$FormField = F4(
-	function (label, required, description, type_) {
-		return {description: description, label: label, required: required, type_: type_};
+var $author$project$Main$FormField = F5(
+	function (label, name, required, description, type_) {
+		return {description: description, label: label, name: name, required: required, type_: type_};
 	});
 var $elm_community$json_extra$Json$Decode$Extra$andMap = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
 var $elm$json$Json$Decode$bool = _Json_decodeBool;
@@ -5297,6 +5297,37 @@ var $author$project$Main$decodeInputField = A2(
 		}
 	},
 	A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string));
+var $elm$json$Json$Decode$decodeValue = _Json_run;
+var $elm$json$Json$Decode$value = _Json_decodeValue;
+var $elm_community$json_extra$Json$Decode$Extra$optionalField = F2(
+	function (fieldName, decoder) {
+		var finishDecoding = function (json) {
+			var _v0 = A2(
+				$elm$json$Json$Decode$decodeValue,
+				A2($elm$json$Json$Decode$field, fieldName, $elm$json$Json$Decode$value),
+				json);
+			if (_v0.$ === 'Ok') {
+				var val = _v0.a;
+				return A2(
+					$elm$json$Json$Decode$map,
+					$elm$core$Maybe$Just,
+					A2($elm$json$Json$Decode$field, fieldName, decoder));
+			} else {
+				return $elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing);
+			}
+		};
+		return A2($elm$json$Json$Decode$andThen, finishDecoding, $elm$json$Json$Decode$value);
+	});
+var $elm_community$json_extra$Json$Decode$Extra$optionalNullableField = F2(
+	function (fieldName, decoder) {
+		return A2(
+			$elm$json$Json$Decode$map,
+			$elm$core$Maybe$andThen($elm$core$Basics$identity),
+			A2(
+				$elm_community$json_extra$Json$Decode$Extra$optionalField,
+				fieldName,
+				$elm$json$Json$Decode$nullable(decoder)));
+	});
 var $author$project$Main$decodeFormField = A2(
 	$elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2($elm$json$Json$Decode$field, 'type', $author$project$Main$decodeInputField),
@@ -5308,8 +5339,11 @@ var $author$project$Main$decodeFormField = A2(
 			A2($elm$json$Json$Decode$field, 'required', $elm$json$Json$Decode$bool),
 			A2(
 				$elm_community$json_extra$Json$Decode$Extra$andMap,
-				A2($elm$json$Json$Decode$field, 'label', $elm$json$Json$Decode$string),
-				$elm$json$Json$Decode$succeed($author$project$Main$FormField)))));
+				A2($elm_community$json_extra$Json$Decode$Extra$optionalNullableField, 'name', $elm$json$Json$Decode$string),
+				A2(
+					$elm_community$json_extra$Json$Decode$Extra$andMap,
+					A2($elm$json$Json$Decode$field, 'label', $elm$json$Json$Decode$string),
+					$elm$json$Json$Decode$succeed($author$project$Main$FormField))))));
 var $elm$core$Array$fromListHelp = F3(
 	function (list, nodeList, nodeListSize) {
 		fromListHelp:
@@ -5349,7 +5383,6 @@ var $author$project$Main$decodeFormFields = A2(
 	$elm$json$Json$Decode$map,
 	$elm$core$Array$fromList,
 	$elm$json$Json$Decode$list($author$project$Main$decodeFormField));
-var $elm$json$Json$Decode$decodeValue = _Json_run;
 var $elm$json$Json$Encode$bool = _Json_wrap;
 var $elm$json$Json$Encode$int = _Json_wrap;
 var $elm$json$Json$Encode$list = F2(
@@ -5464,22 +5497,38 @@ var $author$project$Main$encodeFormFields = function (formFields) {
 		A2(
 			$elm$core$List$map,
 			function (formField) {
+				var optionals = function () {
+					var _v0 = formField.name;
+					if (_v0.$ === 'Just') {
+						var name = _v0.a;
+						return _List_fromArray(
+							[
+								_Utils_Tuple2(
+								'name',
+								$elm$json$Json$Encode$string(name))
+							]);
+					} else {
+						return _List_Nil;
+					}
+				}();
 				return $elm$json$Json$Encode$object(
-					_List_fromArray(
-						[
-							_Utils_Tuple2(
-							'label',
-							$elm$json$Json$Encode$string(formField.label)),
-							_Utils_Tuple2(
-							'required',
-							$elm$json$Json$Encode$bool(formField.required)),
-							_Utils_Tuple2(
-							'description',
-							$elm$json$Json$Encode$string(formField.description)),
-							_Utils_Tuple2(
-							'type',
-							$author$project$Main$encodeInputField(formField.type_))
-						]));
+					_Utils_ap(
+						_List_fromArray(
+							[
+								_Utils_Tuple2(
+								'label',
+								$elm$json$Json$Encode$string(formField.label)),
+								_Utils_Tuple2(
+								'required',
+								$elm$json$Json$Encode$bool(formField.required)),
+								_Utils_Tuple2(
+								'description',
+								$elm$json$Json$Encode$string(formField.description)),
+								_Utils_Tuple2(
+								'type',
+								$author$project$Main$encodeInputField(formField.type_))
+							]),
+						optionals));
 			},
 			$elm$core$Array$toList(formFields)));
 };
@@ -5897,6 +5946,7 @@ var $author$project$Main$update = F2(
 					description: '',
 					label: $author$project$Main$stringFromInputField(fieldType) + (' ' + $elm$core$String$fromInt(
 						$elm$core$Array$length(model.formFields) + 1)),
+					name: $elm$core$Maybe$Nothing,
 					required: true,
 					type_: fieldType
 				};
@@ -5963,7 +6013,6 @@ var $author$project$Main$update = F2(
 						$author$project$Main$encodeFormFields(newFormFields)));
 		}
 	});
-var $elm$json$Json$Decode$value = _Json_decodeValue;
 var $elm$html$Html$Attributes$boolProperty = F2(
 	function (key, bool) {
 		return A2(
@@ -6448,21 +6497,28 @@ var $author$project$Main$viewFormFieldBuilder = F3(
 											$elm$html$Html$text('↓')
 										]))
 								])),
-							A2(
-							$elm$html$Html$button,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$type_('button'),
-									$elm$html$Html$Attributes$tabindex(0),
-									$elm$html$Html$Attributes$class('text-xs bg-gray-200 hover:bg-gray-400 text-red-700 px-4 py-2 rounded'),
-									$elm$html$Html$Attributes$title('Delete field'),
-									$elm$html$Html$Events$onClick(
-									$author$project$Main$DeleteFormField(index))
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text('⨯ Delete')
-								]))
+							function () {
+							var _v0 = formField.name;
+							if (_v0.$ === 'Just') {
+								return $elm$html$Html$text('');
+							} else {
+								return A2(
+									$elm$html$Html$button,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$type_('button'),
+											$elm$html$Html$Attributes$tabindex(0),
+											$elm$html$Html$Attributes$class('text-xs bg-gray-200 hover:bg-gray-400 text-red-700 px-4 py-2 rounded'),
+											$elm$html$Html$Attributes$title('Delete field'),
+											$elm$html$Html$Events$onClick(
+											$author$project$Main$DeleteFormField(index))
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text('⨯ Delete')
+										]));
+							}
+						}()
 						]))
 				]));
 	});
@@ -6597,6 +6653,7 @@ var $author$project$Main$selectArrowDown = A2(
 var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
 var $author$project$Main$viewFormFieldOptionsPreview = F2(
 	function (customAttrs, formField) {
+		var fieldName = A2($elm$core$Maybe$withDefault, formField.label, formField.name);
 		var _v0 = formField.type_;
 		switch (_v0.$) {
 			case 'ShortText':
@@ -6620,7 +6677,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 							[
 								$elm$html$Html$Attributes$type_(inputType),
 								$elm$html$Html$Attributes$class('border border-gray-300 p-2 w-full rounded'),
-								$elm$html$Html$Attributes$name(formField.label),
+								$elm$html$Html$Attributes$name(fieldName),
 								$elm$html$Html$Attributes$required(formField.required),
 								$elm$html$Html$Attributes$placeholder(' ')
 							]),
@@ -6645,7 +6702,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 						_List_fromArray(
 							[
 								$elm$html$Html$Attributes$class('border border-gray-300 p-2 w-full rounded'),
-								$elm$html$Html$Attributes$name(formField.label),
+								$elm$html$Html$Attributes$name(fieldName),
 								$elm$html$Html$Attributes$required(formField.required),
 								$elm$html$Html$Attributes$placeholder(' ')
 							]),
@@ -6667,7 +6724,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 							_List_fromArray(
 								[
 									$elm$html$Html$Attributes$class('appearance-none forced-colors:appearance-auto border row-start-1 col-start-1 bg-slate-50 dark:bg-slate-800 hover:border-cyan-500 dark:hover:border-cyan-700 hover:bg-white dark:hover:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 p-2 rounded'),
-									$elm$html$Html$Attributes$name(formField.label),
+									$elm$html$Html$Attributes$name(fieldName),
 									$elm$html$Html$Attributes$required(formField.required)
 								]),
 							A2(
@@ -6745,7 +6802,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 																	$elm$html$Html$Attributes$type_('checkbox'),
 																	$elm$html$Html$Attributes$tabindex(0),
 																	$elm$html$Html$Attributes$class('border border-gray-300 align-middle'),
-																	$elm$html$Html$Attributes$name(formField.label),
+																	$elm$html$Html$Attributes$name(fieldName),
 																	$elm$html$Html$Attributes$value(choice)
 																]),
 															customAttrs),

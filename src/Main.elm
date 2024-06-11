@@ -7,7 +7,7 @@ port module Main exposing
 
 import Array exposing (Array)
 import Browser
-import Html exposing (Html, a, button, div, input, label, li, option, select, span, text, textarea, ul)
+import Html exposing (Html, a, button, div, input, label, li, option, select, text, textarea, ul)
 import Html.Attributes exposing (attribute, checked, class, disabled, for, id, maxlength, minlength, name, placeholder, required, selected, tabindex, title, type_, value)
 import Html.Events exposing (onCheck, onClick, onInput)
 import Json.Decode
@@ -66,6 +66,7 @@ viewModeFromString str =
 
 type alias FormField =
     { label : String
+    , name : Maybe String
     , required : Bool
     , description : String
     , type_ : InputField
@@ -173,6 +174,7 @@ update msg model =
                 newFormField : FormField
                 newFormField =
                     { label = stringFromInputField fieldType ++ " " ++ String.fromInt (Array.length model.formFields + 1)
+                    , name = Nothing
                     , required = True
                     , description = ""
                     , type_ = fieldType
@@ -417,6 +419,10 @@ maybeMaxLengthOf formField =
 
 viewFormFieldOptionsPreview : List (Html.Attribute Msg) -> FormField -> Html Msg
 viewFormFieldOptionsPreview customAttrs formField =
+    let
+        fieldName =
+            Maybe.withDefault formField.label formField.name
+    in
     case formField.type_ of
         ShortText inputType maybeMaxLength ->
             let
@@ -431,7 +437,7 @@ viewFormFieldOptionsPreview customAttrs formField =
             input
                 ([ type_ inputType
                  , class "border border-gray-300 p-2 w-full rounded"
-                 , name formField.label
+                 , name fieldName
                  , required formField.required
                  , placeholder " "
                  ]
@@ -452,7 +458,7 @@ viewFormFieldOptionsPreview customAttrs formField =
             in
             textarea
                 ([ class "border border-gray-300 p-2 w-full rounded"
-                 , name formField.label
+                 , name fieldName
                  , required formField.required
                  , placeholder " "
                  ]
@@ -466,7 +472,7 @@ viewFormFieldOptionsPreview customAttrs formField =
                 [ selectArrowDown
                 , select
                     [ class "appearance-none forced-colors:appearance-auto border row-start-1 col-start-1 bg-slate-50 dark:bg-slate-800 hover:border-cyan-500 dark:hover:border-cyan-700 hover:bg-white dark:hover:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 p-2 rounded"
-                    , name formField.label
+                    , name fieldName
                     , required formField.required
                     ]
                     (option
@@ -501,7 +507,7 @@ viewFormFieldOptionsPreview customAttrs formField =
                                         ([ type_ "checkbox"
                                          , tabindex 0
                                          , class "border border-gray-300 align-middle"
-                                         , name formField.label
+                                         , name fieldName
                                          , value choice
                                          ]
                                             ++ customAttrs
@@ -633,14 +639,19 @@ viewFormFieldBuilder totalLength index formField =
                         ]
                         [ text "↓" ]
                 ]
-            , button
-                [ type_ "button"
-                , tabindex 0
-                , class "text-xs bg-gray-200 hover:bg-gray-400 text-red-700 px-4 py-2 rounded"
-                , title "Delete field"
-                , onClick (DeleteFormField index)
-                ]
-                [ text "⨯ Delete" ]
+            , case formField.name of
+                Just _ ->
+                    text ""
+
+                Nothing ->
+                    button
+                        [ type_ "button"
+                        , tabindex 0
+                        , class "text-xs bg-gray-200 hover:bg-gray-400 text-red-700 px-4 py-2 rounded"
+                        , title "Delete field"
+                        , onClick (DeleteFormField index)
+                        ]
+                        [ text "⨯ Delete" ]
             ]
         ]
 
@@ -727,12 +738,24 @@ encodeFormFields formFields =
         |> Array.toList
         |> List.map
             (\formField ->
+                let
+                    optionals =
+                        -- smaller output json than if we encoded `null` all the time
+                        case formField.name of
+                            Just name ->
+                                [ ( "name", Json.Encode.string name ) ]
+
+                            Nothing ->
+                                []
+                in
                 Json.Encode.object
-                    [ ( "label", Json.Encode.string formField.label )
-                    , ( "required", Json.Encode.bool formField.required )
-                    , ( "description", Json.Encode.string formField.description )
-                    , ( "type", encodeInputField formField.type_ )
-                    ]
+                    ([ ( "label", Json.Encode.string formField.label )
+                     , ( "required", Json.Encode.bool formField.required )
+                     , ( "description", Json.Encode.string formField.description )
+                     , ( "type", encodeInputField formField.type_ )
+                     ]
+                        ++ optionals
+                    )
             )
         |> Json.Encode.list identity
 
@@ -747,6 +770,7 @@ decodeFormField : Json.Decode.Decoder FormField
 decodeFormField =
     Json.Decode.succeed FormField
         |> andMap (Json.Decode.field "label" Json.Decode.string)
+        |> andMap (Json.Decode.Extra.optionalNullableField "name" Json.Decode.string)
         |> andMap (Json.Decode.field "required" Json.Decode.bool)
         |> andMap (Json.Decode.field "description" Json.Decode.string)
         |> andMap (Json.Decode.field "type" decodeInputField)

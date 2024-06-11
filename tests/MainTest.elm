@@ -20,6 +20,7 @@ suite =
                             |> List.indexedMap
                                 (\index type_ ->
                                     { label = "label " ++ String.fromInt index
+                                    , name = Just ("name " ++ String.fromInt index)
                                     , required = modBy (index + 1) 2 == 0
                                     , description = "description " ++ String.fromInt index
                                     , type_ = type_
