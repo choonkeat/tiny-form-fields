@@ -5964,14 +5964,6 @@ var $author$project$Main$update = F2(
 		}
 	});
 var $elm$json$Json$Decode$value = _Json_decodeValue;
-var $elm$html$Html$Attributes$stringProperty = F2(
-	function (key, string) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			$elm$json$Json$Encode$string(string));
-	});
-var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
 var $elm$html$Html$Attributes$boolProperty = F2(
 	function (key, bool) {
 		return A2(
@@ -5982,6 +5974,13 @@ var $elm$html$Html$Attributes$boolProperty = F2(
 var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty('disabled');
 var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$html$Html$input = _VirtualDom_node('input');
+var $elm$html$Html$Attributes$stringProperty = F2(
+	function (key, string) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$string(string));
+	});
 var $elm$html$Html$Attributes$name = $elm$html$Html$Attributes$stringProperty('name');
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
@@ -6004,6 +6003,7 @@ var $author$project$Main$allInputField = _List_fromArray(
 			['Apple', 'Banana', 'Cantaloupe', 'Durian']))
 	]);
 var $elm$html$Html$button = _VirtualDom_node('button');
+var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
 };
@@ -6798,20 +6798,11 @@ var $author$project$Main$viewFormFieldPreview = F2(
 var $author$project$Main$viewFormPreview = F2(
 	function (customAttrs, _v0) {
 		var formFields = _v0.formFields;
-		return A2(
-			$elm$html$Html$div,
-			_List_Nil,
-			_List_fromArray(
-				[
-					A2(
-					$elm$html$Html$div,
-					_List_Nil,
-					$elm$core$Array$toList(
-						A2(
-							$elm$core$Array$map,
-							$author$project$Main$viewFormFieldPreview(customAttrs),
-							formFields)))
-				]));
+		return $elm$core$Array$toList(
+			A2(
+				$elm$core$Array$map,
+				$author$project$Main$viewFormFieldPreview(customAttrs),
+				formFields));
 	});
 var $author$project$Main$SetViewMode = function (a) {
 	return {$: 'SetViewMode', a: a};
@@ -6860,10 +6851,7 @@ var $author$project$Main$viewTabs = F2(
 var $author$project$Main$view = function (model) {
 	return A2(
 		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('md:p-4')
-			]),
+		_List_Nil,
 		function () {
 			var _v0 = model.viewMode;
 			switch (_v0.$) {
@@ -6898,46 +6886,44 @@ var $author$project$Main$view = function (model) {
 							$author$project$Main$viewFormBuilder(model)
 						]);
 				case 'Preview':
-					return _List_fromArray(
-						[
-							A2(
-							$author$project$Main$viewTabs,
-							model.viewMode,
-							_List_fromArray(
-								[
-									_Utils_Tuple2(
-									$author$project$Main$Editor,
-									$elm$html$Html$text('Editor')),
-									_Utils_Tuple2(
-									$author$project$Main$Preview,
-									$elm$html$Html$text('Preview'))
-								])),
-							A2(
-							$elm$html$Html$input,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$type_('hidden'),
-									$elm$html$Html$Attributes$name('tiny-form-fields'),
-									$elm$html$Html$Attributes$value(
-									A2(
-										$elm$json$Json$Encode$encode,
-										0,
-										$author$project$Main$encodeFormFields(model.formFields)))
-								]),
-							_List_Nil),
-							A2(
+					return _Utils_ap(
+						_List_fromArray(
+							[
+								A2(
+								$author$project$Main$viewTabs,
+								model.viewMode,
+								_List_fromArray(
+									[
+										_Utils_Tuple2(
+										$author$project$Main$Editor,
+										$elm$html$Html$text('Editor')),
+										_Utils_Tuple2(
+										$author$project$Main$Preview,
+										$elm$html$Html$text('Preview'))
+									])),
+								A2(
+								$elm$html$Html$input,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$type_('hidden'),
+										$elm$html$Html$Attributes$name('tiny-form-fields'),
+										$elm$html$Html$Attributes$value(
+										A2(
+											$elm$json$Json$Encode$encode,
+											0,
+											$author$project$Main$encodeFormFields(model.formFields)))
+									]),
+								_List_Nil)
+							]),
+						A2(
 							$author$project$Main$viewFormPreview,
 							_List_fromArray(
 								[
 									$elm$html$Html$Attributes$disabled(true)
 								]),
-							model)
-						]);
+							model));
 				default:
-					return _List_fromArray(
-						[
-							A2($author$project$Main$viewFormPreview, _List_Nil, model)
-						]);
+					return A2($author$project$Main$viewFormPreview, _List_Nil, model);
 			}
 		}());
 };

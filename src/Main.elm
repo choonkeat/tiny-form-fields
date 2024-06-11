@@ -303,7 +303,8 @@ swapArrayIndex i j arr =
 
 view : Model -> Html Msg
 view model =
-    div [ class "md:p-4" ]
+    -- no padding; easier for embedders to style
+    div []
         (case model.viewMode of
             Editor ->
                 [ viewTabs model.viewMode
@@ -330,12 +331,11 @@ view model =
                     , value (Json.Encode.encode 0 (encodeFormFields model.formFields))
                     ]
                     []
-                , viewFormPreview [ disabled True ] model
                 ]
+                    ++ viewFormPreview [ disabled True ] model
 
             CollectData ->
-                [ viewFormPreview [] model
-                ]
+                viewFormPreview [] model
         )
 
 
@@ -371,12 +371,9 @@ viewTabs active tabs =
         )
 
 
-viewFormPreview : List (Html.Attribute Msg) -> { a | formFields : Array FormField } -> Html Msg
+viewFormPreview : List (Html.Attribute Msg) -> { a | formFields : Array FormField } -> List (Html Msg)
 viewFormPreview customAttrs { formFields } =
-    div []
-        [ div []
-            (Array.toList (Array.map (viewFormFieldPreview customAttrs) formFields))
-        ]
+    Array.toList (Array.map (viewFormFieldPreview customAttrs) formFields)
 
 
 viewFormFieldPreview : List (Html.Attribute Msg) -> FormField -> Html Msg
