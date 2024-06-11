@@ -7,8 +7,8 @@ port module Main exposing
 
 import Array exposing (Array)
 import Browser
-import Html exposing (Html, a, button, div, input, label, li, option, select, text, textarea, ul)
-import Html.Attributes exposing (attribute, checked, class, disabled, for, id, maxlength, minlength, name, placeholder, required, tabindex, title, type_, value)
+import Html exposing (Html, a, button, div, input, label, li, option, select, span, text, textarea, ul)
+import Html.Attributes exposing (attribute, checked, class, disabled, for, id, maxlength, minlength, name, placeholder, required, selected, tabindex, title, type_, value)
 import Html.Events exposing (onCheck, onClick, onInput)
 import Json.Decode
 import Json.Decode.Extra exposing (andMap)
@@ -469,13 +469,23 @@ viewFormFieldOptionsPreview customAttrs formField =
                     , name formField.label
                     , required formField.required
                     ]
-                    (List.map
-                        (\choice ->
-                            option
-                                (value choice :: customAttrs)
-                                [ text choice ]
+                    (option
+                        ([ disabled True
+                         , selected True
+                         , attribute "value" ""
+
+                         --  , class "text-gray-300"
+                         ]
+                            ++ customAttrs
                         )
-                        choices
+                        [ text "-- Select an option --" ]
+                        :: List.map
+                            (\choice ->
+                                option
+                                    (value choice :: customAttrs)
+                                    [ text choice ]
+                            )
+                            choices
                     )
                 ]
 

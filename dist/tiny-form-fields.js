@@ -6540,14 +6540,6 @@ var $author$project$Main$maybeMaxLengthOf = function (formField) {
 			return $elm$core$Maybe$Nothing;
 	}
 };
-var $elm$html$Html$Attributes$maxlength = function (n) {
-	return A2(
-		_VirtualDom_attribute,
-		'maxlength',
-		$elm$core$String$fromInt(n));
-};
-var $elm$html$Html$option = _VirtualDom_node('option');
-var $elm$html$Html$select = _VirtualDom_node('select');
 var $elm$virtual_dom$VirtualDom$attribute = F2(
 	function (key, value) {
 		return A2(
@@ -6556,6 +6548,14 @@ var $elm$virtual_dom$VirtualDom$attribute = F2(
 			_VirtualDom_noJavaScriptOrHtmlUri(value));
 	});
 var $elm$html$Html$Attributes$attribute = $elm$virtual_dom$VirtualDom$attribute;
+var $elm$html$Html$Attributes$maxlength = function (n) {
+	return A2(
+		_VirtualDom_attribute,
+		'maxlength',
+		$elm$core$String$fromInt(n));
+};
+var $elm$html$Html$option = _VirtualDom_node('option');
+var $elm$html$Html$select = _VirtualDom_node('select');
 var $elm$svg$Svg$Attributes$class = _VirtualDom_attribute('class');
 var $elm$svg$Svg$Attributes$clipRule = _VirtualDom_attribute('clip-rule');
 var $elm$svg$Svg$Attributes$d = _VirtualDom_attribute('d');
@@ -6586,6 +6586,7 @@ var $author$project$Main$selectArrowDown = A2(
 				]),
 			_List_Nil)
 		]));
+var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
 var $author$project$Main$viewFormFieldOptionsPreview = F2(
 	function (customAttrs, formField) {
 		var _v0 = formField.type_;
@@ -6662,20 +6663,36 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 									$elm$html$Html$Attributes$required(formField.required)
 								]),
 							A2(
-								$elm$core$List$map,
-								function (choice) {
-									return A2(
-										$elm$html$Html$option,
-										A2(
-											$elm$core$List$cons,
-											$elm$html$Html$Attributes$value(choice),
-											customAttrs),
+								$elm$core$List$cons,
+								A2(
+									$elm$html$Html$option,
+									_Utils_ap(
 										_List_fromArray(
 											[
-												$elm$html$Html$text(choice)
-											]));
-								},
-								choices))
+												$elm$html$Html$Attributes$disabled(true),
+												$elm$html$Html$Attributes$selected(true),
+												A2($elm$html$Html$Attributes$attribute, 'value', '')
+											]),
+										customAttrs),
+									_List_fromArray(
+										[
+											$elm$html$Html$text('-- Select an option --')
+										])),
+								A2(
+									$elm$core$List$map,
+									function (choice) {
+										return A2(
+											$elm$html$Html$option,
+											A2(
+												$elm$core$List$cons,
+												$elm$html$Html$Attributes$value(choice),
+												customAttrs),
+											_List_fromArray(
+												[
+													$elm$html$Html$text(choice)
+												]));
+									},
+									choices)))
 						]));
 			default:
 				var choices = _v0.a;
