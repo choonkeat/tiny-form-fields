@@ -478,7 +478,12 @@ viewFormFieldOptionsPreview customAttrs formField =
                 , select
                     [ class "appearance-none forced-colors:appearance-auto border row-start-1 col-start-1 bg-slate-50 dark:bg-slate-800 hover:border-cyan-500 dark:hover:border-cyan-700 hover:bg-white dark:hover:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 p-2 rounded"
                     , name fieldName
-                    , required formField.required
+
+                    -- when we're disabling `<select>` we actually only
+                    -- want to disable the `<option>`s so user can see the options but cannot choose
+                    -- but if the `<select>` is required, then now we are in a bind
+                    -- so we cannot have `required` on the `<select>` if we're disabling it
+                    , required (formField.required && not (List.member (disabled True) customAttrs))
                     ]
                     (option
                         ([ disabled True

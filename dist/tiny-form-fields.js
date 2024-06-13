@@ -6619,6 +6619,37 @@ var $elm$html$Html$Attributes$maxlength = function (n) {
 		'maxlength',
 		$elm$core$String$fromInt(n));
 };
+var $elm$core$List$any = F2(
+	function (isOkay, list) {
+		any:
+		while (true) {
+			if (!list.b) {
+				return false;
+			} else {
+				var x = list.a;
+				var xs = list.b;
+				if (isOkay(x)) {
+					return true;
+				} else {
+					var $temp$isOkay = isOkay,
+						$temp$list = xs;
+					isOkay = $temp$isOkay;
+					list = $temp$list;
+					continue any;
+				}
+			}
+		}
+	});
+var $elm$core$List$member = F2(
+	function (x, xs) {
+		return A2(
+			$elm$core$List$any,
+			function (a) {
+				return _Utils_eq(a, x);
+			},
+			xs);
+	});
+var $elm$core$Basics$not = _Basics_not;
 var $elm$html$Html$option = _VirtualDom_node('option');
 var $elm$html$Html$select = _VirtualDom_node('select');
 var $elm$svg$Svg$Attributes$class = _VirtualDom_attribute('class');
@@ -6726,7 +6757,11 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 								[
 									$elm$html$Html$Attributes$class('appearance-none forced-colors:appearance-auto border row-start-1 col-start-1 bg-slate-50 dark:bg-slate-800 hover:border-cyan-500 dark:hover:border-cyan-700 hover:bg-white dark:hover:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 p-2 rounded'),
 									$elm$html$Html$Attributes$name(fieldName),
-									$elm$html$Html$Attributes$required(formField.required)
+									$elm$html$Html$Attributes$required(
+									formField.required && (!A2(
+										$elm$core$List$member,
+										$elm$html$Html$Attributes$disabled(true),
+										customAttrs)))
 								]),
 							A2(
 								$elm$core$List$cons,
