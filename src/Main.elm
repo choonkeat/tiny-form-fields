@@ -73,7 +73,7 @@ type alias FormField =
 
     -- not an attribute on the input field itself, but for the Editor ui
     -- `Maybe Bool` because it's easier to encodeFormFields
-    , deletable : Maybe Bool
+    , fixed : Maybe Bool
     }
 
 
@@ -182,7 +182,7 @@ update msg model =
                     , required = True
                     , description = ""
                     , type_ = fieldType
-                    , deletable = Just True
+                    , fixed = Nothing
                     }
 
                 newFormFields =
@@ -644,18 +644,19 @@ viewFormFieldBuilder totalLength index formField =
                         ]
                         [ text "↓" ]
                 ]
-            , if formField.deletable == Just True then
-                button
-                    [ type_ "button"
-                    , tabindex 0
-                    , class "text-xs bg-gray-200 hover:bg-gray-400 text-red-700 px-4 py-2 rounded"
-                    , title "Delete field"
-                    , onClick (DeleteFormField index)
-                    ]
-                    [ text "⨯ Delete" ]
+            , case formField.fixed of
+                Just True ->
+                    text ""
 
-              else
-                text ""
+                _ ->
+                    button
+                        [ type_ "button"
+                        , tabindex 0
+                        , class "text-xs bg-gray-200 hover:bg-gray-400 text-red-700 px-4 py-2 rounded"
+                        , title "Delete field"
+                        , onClick (DeleteFormField index)
+                        ]
+                        [ text "⨯ Delete" ]
             ]
         ]
 
@@ -758,7 +759,7 @@ encodeFormFields formFields =
                      , ( "required", Json.Encode.bool formField.required )
                      , ( "description", Json.Encode.string formField.description )
                      , ( "type", encodeInputField formField.type_ )
-                     , ( "deletable", encodeMaybe Json.Encode.bool formField.deletable )
+                     , ( "fixed", encodeMaybe Json.Encode.bool formField.fixed )
                      ]
                         -- smaller output json than if we encoded `null` all the time
                         |> List.filter (\( _, v ) -> v /= Json.Encode.null)
@@ -781,7 +782,7 @@ decodeFormField =
         |> andMap (Json.Decode.field "required" Json.Decode.bool)
         |> andMap (Json.Decode.field "description" Json.Decode.string)
         |> andMap (Json.Decode.field "type" decodeInputField)
-        |> andMap (Json.Decode.Extra.optionalNullableField "deletable" Json.Decode.bool)
+        |> andMap (Json.Decode.Extra.optionalNullableField "fixed" Json.Decode.bool)
 
 
 encodeInputField : InputField -> Json.Encode.Value
