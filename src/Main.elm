@@ -1,14 +1,19 @@
 port module Main exposing
-    ( allInputField
+    ( FormField
+    , InputField(..)
+    , ViewMode(..)
+    , allInputField
     , decodeFormFields
     , encodeFormFields
     , main
+    , stringFromViewMode
+    , viewModeFromString
     )
 
 import Array exposing (Array)
 import Browser
 import Html exposing (Html, a, button, div, input, label, li, option, select, text, textarea, ul)
-import Html.Attributes exposing (attribute, checked, class, disabled, for, id, maxlength, minlength, name, placeholder, required, selected, tabindex, title, type_, value)
+import Html.Attributes exposing (attribute, checked, class, disabled, for, id, maxlength, minlength, name, placeholder, required, selected, style, tabindex, title, type_, value)
 import Html.Events exposing (onCheck, onClick, onInput)
 import Json.Decode
 import Json.Decode.Extra exposing (andMap)
@@ -62,6 +67,19 @@ viewModeFromString str =
 
         _ ->
             Nothing
+
+
+stringFromViewMode : ViewMode -> String
+stringFromViewMode viewMode =
+    case viewMode of
+        Editor ->
+            "Editor"
+
+        Preview ->
+            "Preview"
+
+        CollectData ->
+            "CollectData"
 
 
 type alias FormField =
@@ -311,7 +329,7 @@ swapArrayIndex i j arr =
 view : Model -> Html Msg
 view model =
     -- no padding; easier for embedders to style
-    div []
+    div [ class ("tff tff-mode-" ++ stringFromViewMode model.viewMode) ]
         (case model.viewMode of
             Editor ->
                 [ viewTabs model.viewMode
@@ -324,8 +342,8 @@ view model =
                     , value (Json.Encode.encode 0 (encodeFormFields model.formFields))
                     ]
                     []
-                , viewFormBuilder model
                 ]
+                    ++ viewFormBuilder model
 
             Preview ->
                 [ viewTabs model.viewMode
@@ -349,25 +367,21 @@ view model =
 viewTabs : ViewMode -> List ( ViewMode, Html Msg ) -> Html Msg
 viewTabs active tabs =
     ul
-        [ class "flex flex-wrap text-sm font-medium text-center text-gray-500 border-b border-gray-200 dark:border-gray-700 dark:text-gray-400 mb-4"
+        [ class "tff-tabs"
         ]
         (List.map
             (\( tab, content ) ->
-                li
-                    [ class "me-2"
-                    ]
+                li []
                     [ button
                         [ type_ "button"
                         , tabindex 0
                         , attribute "aria-current" "page"
                         , class
-                            ("inline-block p-4 text-blue-600 rounded-t-lg dark:text-blue-500"
-                                ++ (if tab == active then
-                                        "  bg-gray-200 dark:bg-gray-800 border-b border-gray-200 -mb-1"
+                            (if tab == active then
+                                "tff-tabs-active"
 
-                                    else
-                                        ""
-                                   )
+                             else
+                                "tff-tabs-inactive"
                             )
                         , onClick (SetViewMode tab)
                         ]
@@ -383,11 +397,21 @@ viewFormPreview customAttrs { formFields } =
     Array.toList (Array.map (viewFormFieldPreview customAttrs) formFields)
 
 
+when : Bool -> { true : a, false : a } -> a
+when bool condition =
+    if bool then
+        condition.true
+
+    else
+        condition.false
+
+
 viewFormFieldPreview : List (Html.Attribute Msg) -> FormField -> Html Msg
 viewFormFieldPreview customAttrs formField =
-    div [ class "grid grid-rows-[auto_auto_1fr_auto] gap-2 mb-4" ]
-        [ div [ class "field-group mb-2" ]
-            [ label [ class "text-sm text-gray-600" ]
+    div [ class "tff-tabs-preview" ]
+        [ div
+            [ class ("tff-field-group" ++ when formField.required { true = " tff-required", false = "" }) ]
+            [ label [ class "tff-field-label" ]
                 [ text formField.label
                 , if formField.required then
                     text ""
@@ -396,7 +420,7 @@ viewFormFieldPreview customAttrs formField =
                     text " (optional)"
                 ]
             , viewFormFieldOptionsPreview customAttrs formField
-            , div [ class "mt-1 text-xs text-gray-600" ]
+            , div [ class "tff-field-description" ]
                 [ text formField.description
                 , case maybeMaxLengthOf formField of
                     Just maxLength ->
@@ -441,7 +465,7 @@ viewFormFieldOptionsPreview customAttrs formField =
             in
             input
                 ([ type_ inputType
-                 , class "border border-gray-300 p-2 w-full rounded"
+                 , class "tff-text-field"
                  , name fieldName
                  , required formField.required
                  , placeholder " "
@@ -462,7 +486,7 @@ viewFormFieldOptionsPreview customAttrs formField =
                             []
             in
             textarea
-                ([ class "border border-gray-300 p-2 w-full rounded"
+                ([ class "tff-text-field"
                  , name fieldName
                  , required formField.required
                  , placeholder " "
@@ -473,24 +497,25 @@ viewFormFieldOptionsPreview customAttrs formField =
                 []
 
         ChooseOne choices ->
-            div [ class "grid" ]
+            div [ class "tff-chooseone-group" ]
                 [ selectArrowDown
                 , select
-                    [ class "appearance-none forced-colors:appearance-auto border row-start-1 col-start-1 bg-slate-50 dark:bg-slate-800 hover:border-cyan-500 dark:hover:border-cyan-700 hover:bg-white dark:hover:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 p-2 rounded"
-                    , name fieldName
+                    [ name fieldName
 
                     -- when we're disabling `<select>` we actually only
                     -- want to disable the `<option>`s so user can see the options but cannot choose
                     -- but if the `<select>` is required, then now we are in a bind
                     -- so we cannot have `required` on the `<select>` if we're disabling it
-                    , required (formField.required && not (List.member (disabled True) customAttrs))
+                    , if List.member (disabled True) customAttrs then
+                        class "tff-select-disabled"
+
+                      else
+                        required formField.required
                     ]
                     (option
                         ([ disabled True
                          , selected True
                          , attribute "value" ""
-
-                         --  , class "text-gray-300"
                          ]
                             ++ customAttrs
                         )
@@ -507,16 +532,15 @@ viewFormFieldOptionsPreview customAttrs formField =
 
         ChooseMultiple choices ->
             -- checkboxes
-            div [ class "grid" ]
-                [ div [ class "grid grid-cols-1 gap-2" ]
+            div [ class "tff-choosemany-group" ]
+                [ div [ class "tff-choosemany-checkboxes" ]
                     (List.map
                         (\choice ->
-                            div [ class "flex items center" ]
-                                [ label [ class "text-sm text-gray-600 align-middle" ]
+                            div [ class "tff-checkbox-group" ]
+                                [ label [ class "tff-field-label" ]
                                     [ input
                                         ([ type_ "checkbox"
                                          , tabindex 0
-                                         , class "border border-gray-300 align-middle"
                                          , name fieldName
                                          , value choice
                                          ]
@@ -537,33 +561,31 @@ viewFormFieldOptionsPreview customAttrs formField =
 --
 
 
-viewFormBuilder : { a | formFields : Array FormField } -> Html Msg
+viewFormBuilder : { a | formFields : Array FormField } -> List (Html Msg)
 viewFormBuilder { formFields } =
-    div []
-        [ div []
-            (Array.toList (Array.indexedMap (viewFormFieldBuilder (Array.length formFields)) formFields))
-        , div [ class "mt-4" ]
-            (allInputField
-                |> List.map
-                    (\inputField ->
-                        button
-                            [ type_ "button"
-                            , tabindex 0
-                            , class "text-sm bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded mr-2 mb-2"
-                            , onClick (AddFormField inputField)
-                            ]
-                            [ text ("+ " ++ stringFromInputField inputField)
-                            ]
-                    )
-            )
-        ]
+    [ div [ class "tff-build-fields" ]
+        (Array.toList (Array.indexedMap (viewFormFieldBuilder (Array.length formFields)) formFields))
+    , div [ class "tff-add-fields" ]
+        (allInputField
+            |> List.map
+                (\inputField ->
+                    button
+                        [ type_ "button"
+                        , tabindex 0
+                        , class "tff-add-field-button"
+                        , onClick (AddFormField inputField)
+                        ]
+                        [ text ("+ " ++ stringFromInputField inputField)
+                        ]
+                )
+        )
+    ]
 
 
 selectArrowDown : Html msg
 selectArrowDown =
     svg
-        [ SvgAttr.class "pointer-events-none z-10 right-1 relative col-start-1 row-start-1 h-4 w-4 mr-2 self-center justify-self-end forced-colors:hidden"
-        , SvgAttr.viewBox "0 0 16 16"
+        [ SvgAttr.viewBox "0 0 16 16"
         , SvgAttr.fill "currentColor"
         , attribute "aria-hidden" "true"
         ]
@@ -582,28 +604,27 @@ viewFormFieldBuilder totalLength index formField =
         idSuffix =
             String.fromInt index
     in
-    div [ class "grid grid-rows-[auto_auto_1fr_auto] gap-2" ]
-        [ div [ class "field-group mb-2" ]
-            [ label [ class "text-xs text-gray-600", for ("label-" ++ idSuffix) ] [ text (stringFromInputField formField.type_ ++ " label") ]
+    div [ class "tff-build-field" ]
+        [ div [ class "tff-field-group" ]
+            [ label [ class "tff-field-label", for ("label-" ++ idSuffix) ] [ text (stringFromInputField formField.type_ ++ " label") ]
             , input
                 [ type_ "text"
                 , id ("label-" ++ idSuffix)
                 , required True
                 , minlength 1
-                , class "border border-gray-300 p-2 w-full rounded"
+                , class "tff-text-field"
                 , placeholder "Label"
                 , value formField.label
                 , onInput (OnFormField OnLabelInput index)
                 ]
                 []
             ]
-        , div [ class "field-group mb-2" ]
-            [ label [ class "text-sm text-gray-600 align-middle", for ("required-" ++ idSuffix) ]
+        , div [ class "tff-field-group tff-checkbox-group" ]
+            [ label [ class "tff-field-label", for ("required-" ++ idSuffix) ]
                 [ input
                     [ id ("required-" ++ idSuffix)
                     , type_ "checkbox"
                     , tabindex 0
-                    , class "border border-gray-300 align-middle"
                     , checked formField.required
                     , onCheck (\b -> OnFormField (OnRequiredInput b) index "")
                     ]
@@ -612,18 +633,18 @@ viewFormFieldBuilder totalLength index formField =
                 ]
             ]
         , viewFormFieldOptionsBuilder index formField.type_
-        , div [ class "field-group mb-2" ]
-            [ label [ class "text-xs text-gray-600", for ("description-" ++ idSuffix) ] [ text "Description (optional)" ]
+        , div [ class "tff-field-group" ]
+            [ label [ class "tff-field-label", for ("description-" ++ idSuffix) ] [ text "Description (optional)" ]
             , input
                 [ id ("description-" ++ idSuffix)
-                , class "border border-gray-300 p-2 w-full rounded"
+                , class "tff-text-field"
                 , value formField.description
                 , onInput (OnFormField OnDescriptionInput index)
                 ]
                 []
             ]
-        , div [ class "flex justify-between items-end mb-16" ]
-            [ div [ class "flex space-x-2" ]
+        , div [ class "tff-build-field-buttons" ]
+            [ div [ class "tff-move" ]
                 [ if index == 0 then
                     text ""
 
@@ -631,7 +652,6 @@ viewFormFieldBuilder totalLength index formField =
                     button
                         [ type_ "button"
                         , tabindex 0
-                        , class "text-xs bg-gray-200 hover:bg-gray-400 text-gray-600 px-4 py-2 rounded"
                         , title "Move field up"
                         , onClick (MoveFormFieldUp index)
                         ]
@@ -643,7 +663,6 @@ viewFormFieldBuilder totalLength index formField =
                     button
                         [ type_ "button"
                         , tabindex 0
-                        , class "text-xs bg-gray-200 hover:bg-gray-400 text-gray-600 px-4 py-2 rounded"
                         , title "Move field down"
                         , onClick (MoveFormFieldDown index)
                         ]
@@ -657,7 +676,7 @@ viewFormFieldBuilder totalLength index formField =
                     button
                         [ type_ "button"
                         , tabindex 0
-                        , class "text-xs bg-gray-200 hover:bg-gray-400 text-red-700 px-4 py-2 rounded"
+                        , class "tff-delete"
                         , title "Delete field"
                         , onClick (DeleteFormField index)
                         ]
@@ -675,12 +694,12 @@ viewFormFieldOptionsBuilder index fieldType =
     case fieldType of
         ShortText _ maybeMaxLength ->
             div []
-                [ div [ class "field-group mb-2" ]
-                    [ label [ class "text-xs text-gray-600", for ("placeholder-" ++ idSuffix) ] [ text "Max length (optional)" ]
+                [ div [ class "tff-field-group" ]
+                    [ label [ class "tff-field-label", for ("placeholder-" ++ idSuffix) ] [ text "Max length (optional)" ]
                     , input
                         [ id ("placeholder-" ++ idSuffix)
                         , type_ "number"
-                        , class "border border-gray-300 p-2 w-full rounded"
+                        , class "tff-text-field"
                         , value (Maybe.map String.fromInt maybeMaxLength |> Maybe.withDefault "")
                         , onInput (OnFormField OnMaxLengthInput index)
                         ]
@@ -690,12 +709,12 @@ viewFormFieldOptionsBuilder index fieldType =
 
         LongText maybeMaxLength ->
             div []
-                [ div [ class "field-group mb-2" ]
-                    [ label [ class "text-xs text-gray-600", for ("placeholder-" ++ idSuffix) ] [ text "Max length (optional)" ]
+                [ div [ class "tff-field-group" ]
+                    [ label [ class "tff-field-label", for ("placeholder-" ++ idSuffix) ] [ text "Max length (optional)" ]
                     , input
                         [ id ("placeholder-" ++ idSuffix)
                         , type_ "number"
-                        , class "border border-gray-300 p-2 w-full rounded"
+                        , class "tff-text-field"
                         , value (Maybe.map String.fromInt maybeMaxLength |> Maybe.withDefault "")
                         , onInput (OnFormField OnMaxLengthInput index)
                         ]
@@ -705,13 +724,13 @@ viewFormFieldOptionsBuilder index fieldType =
 
         ChooseOne choices ->
             div []
-                [ div [ class "field-group mb-2" ]
-                    [ label [ class "text-xs text-gray-600", for ("choices-" ++ idSuffix) ] [ text "Choices" ]
+                [ div [ class "tff-field-group" ]
+                    [ label [ class "tff-field-label", for ("choices-" ++ idSuffix) ] [ text "Choices" ]
                     , textarea
                         [ id ("choices-" ++ idSuffix)
                         , required True
                         , minlength 1
-                        , class "border border-gray-300 p-2 w-full rounded"
+                        , class "tff-text-field"
                         , placeholder "Enter one choice per line"
                         , value (String.join "\n" choices)
                         , onInput (OnFormField OnChoicesInput index)
@@ -722,13 +741,13 @@ viewFormFieldOptionsBuilder index fieldType =
 
         ChooseMultiple choices ->
             div []
-                [ div [ class "field-group mb-2" ]
-                    [ label [ class "text-xs text-gray-600", for ("choices-" ++ idSuffix) ] [ text "Choices" ]
+                [ div [ class "tff-field-group" ]
+                    [ label [ class "tff-field-label", for ("choices-" ++ idSuffix) ] [ text "Choices" ]
                     , textarea
                         [ id ("choices-" ++ idSuffix)
                         , required True
                         , minlength 1
-                        , class "border border-gray-300 p-2 w-full rounded"
+                        , class "tff-text-field"
                         , placeholder "Enter one choice per line"
                         , value (String.join "\n" choices)
                         , onInput (OnFormField OnChoicesInput index)

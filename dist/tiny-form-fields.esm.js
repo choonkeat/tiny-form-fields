@@ -6022,6 +6022,14 @@ var $author$project$Main$update = F2(
 						$author$project$Main$encodeFormFields(newFormFields)));
 		}
 	});
+var $elm$html$Html$Attributes$stringProperty = F2(
+	function (key, string) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$string(string));
+	});
+var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
 var $elm$html$Html$Attributes$boolProperty = F2(
 	function (key, bool) {
 		return A2(
@@ -6032,14 +6040,17 @@ var $elm$html$Html$Attributes$boolProperty = F2(
 var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty('disabled');
 var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$html$Html$input = _VirtualDom_node('input');
-var $elm$html$Html$Attributes$stringProperty = F2(
-	function (key, string) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			$elm$json$Json$Encode$string(string));
-	});
 var $elm$html$Html$Attributes$name = $elm$html$Html$Attributes$stringProperty('name');
+var $author$project$Main$stringFromViewMode = function (viewMode) {
+	switch (viewMode.$) {
+		case 'Editor':
+			return 'Editor';
+		case 'Preview':
+			return 'Preview';
+		default:
+			return 'CollectData';
+	}
+};
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
@@ -6061,7 +6072,6 @@ var $author$project$Main$allInputField = _List_fromArray(
 			['Apple', 'Banana', 'Cantaloupe', 'Durian']))
 	]);
 var $elm$html$Html$button = _VirtualDom_node('button');
-var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
 };
@@ -6176,7 +6186,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F2(
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('field-group mb-2')
+									$elm$html$Html$Attributes$class('tff-field-group')
 								]),
 							_List_fromArray(
 								[
@@ -6184,7 +6194,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F2(
 									$elm$html$Html$label,
 									_List_fromArray(
 										[
-											$elm$html$Html$Attributes$class('text-xs text-gray-600'),
+											$elm$html$Html$Attributes$class('tff-field-label'),
 											$elm$html$Html$Attributes$for('placeholder-' + idSuffix)
 										]),
 									_List_fromArray(
@@ -6197,7 +6207,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F2(
 										[
 											$elm$html$Html$Attributes$id('placeholder-' + idSuffix),
 											$elm$html$Html$Attributes$type_('number'),
-											$elm$html$Html$Attributes$class('border border-gray-300 p-2 w-full rounded'),
+											$elm$html$Html$Attributes$class('tff-text-field'),
 											$elm$html$Html$Attributes$value(
 											A2(
 												$elm$core$Maybe$withDefault,
@@ -6220,7 +6230,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F2(
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('field-group mb-2')
+									$elm$html$Html$Attributes$class('tff-field-group')
 								]),
 							_List_fromArray(
 								[
@@ -6228,7 +6238,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F2(
 									$elm$html$Html$label,
 									_List_fromArray(
 										[
-											$elm$html$Html$Attributes$class('text-xs text-gray-600'),
+											$elm$html$Html$Attributes$class('tff-field-label'),
 											$elm$html$Html$Attributes$for('placeholder-' + idSuffix)
 										]),
 									_List_fromArray(
@@ -6241,7 +6251,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F2(
 										[
 											$elm$html$Html$Attributes$id('placeholder-' + idSuffix),
 											$elm$html$Html$Attributes$type_('number'),
-											$elm$html$Html$Attributes$class('border border-gray-300 p-2 w-full rounded'),
+											$elm$html$Html$Attributes$class('tff-text-field'),
 											$elm$html$Html$Attributes$value(
 											A2(
 												$elm$core$Maybe$withDefault,
@@ -6264,7 +6274,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F2(
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('field-group mb-2')
+									$elm$html$Html$Attributes$class('tff-field-group')
 								]),
 							_List_fromArray(
 								[
@@ -6272,7 +6282,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F2(
 									$elm$html$Html$label,
 									_List_fromArray(
 										[
-											$elm$html$Html$Attributes$class('text-xs text-gray-600'),
+											$elm$html$Html$Attributes$class('tff-field-label'),
 											$elm$html$Html$Attributes$for('choices-' + idSuffix)
 										]),
 									_List_fromArray(
@@ -6286,7 +6296,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F2(
 											$elm$html$Html$Attributes$id('choices-' + idSuffix),
 											$elm$html$Html$Attributes$required(true),
 											$elm$html$Html$Attributes$minlength(1),
-											$elm$html$Html$Attributes$class('border border-gray-300 p-2 w-full rounded'),
+											$elm$html$Html$Attributes$class('tff-text-field'),
 											$elm$html$Html$Attributes$placeholder('Enter one choice per line'),
 											$elm$html$Html$Attributes$value(
 											A2($elm$core$String$join, '\n', choices)),
@@ -6307,7 +6317,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F2(
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('field-group mb-2')
+									$elm$html$Html$Attributes$class('tff-field-group')
 								]),
 							_List_fromArray(
 								[
@@ -6315,7 +6325,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F2(
 									$elm$html$Html$label,
 									_List_fromArray(
 										[
-											$elm$html$Html$Attributes$class('text-xs text-gray-600'),
+											$elm$html$Html$Attributes$class('tff-field-label'),
 											$elm$html$Html$Attributes$for('choices-' + idSuffix)
 										]),
 									_List_fromArray(
@@ -6329,7 +6339,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F2(
 											$elm$html$Html$Attributes$id('choices-' + idSuffix),
 											$elm$html$Html$Attributes$required(true),
 											$elm$html$Html$Attributes$minlength(1),
-											$elm$html$Html$Attributes$class('border border-gray-300 p-2 w-full rounded'),
+											$elm$html$Html$Attributes$class('tff-text-field'),
 											$elm$html$Html$Attributes$placeholder('Enter one choice per line'),
 											$elm$html$Html$Attributes$value(
 											A2($elm$core$String$join, '\n', choices)),
@@ -6348,7 +6358,7 @@ var $author$project$Main$viewFormFieldBuilder = F3(
 			$elm$html$Html$div,
 			_List_fromArray(
 				[
-					$elm$html$Html$Attributes$class('grid grid-rows-[auto_auto_1fr_auto] gap-2')
+					$elm$html$Html$Attributes$class('tff-build-field')
 				]),
 			_List_fromArray(
 				[
@@ -6356,7 +6366,7 @@ var $author$project$Main$viewFormFieldBuilder = F3(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('field-group mb-2')
+							$elm$html$Html$Attributes$class('tff-field-group')
 						]),
 					_List_fromArray(
 						[
@@ -6364,7 +6374,7 @@ var $author$project$Main$viewFormFieldBuilder = F3(
 							$elm$html$Html$label,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('text-xs text-gray-600'),
+									$elm$html$Html$Attributes$class('tff-field-label'),
 									$elm$html$Html$Attributes$for('label-' + idSuffix)
 								]),
 							_List_fromArray(
@@ -6380,7 +6390,7 @@ var $author$project$Main$viewFormFieldBuilder = F3(
 									$elm$html$Html$Attributes$id('label-' + idSuffix),
 									$elm$html$Html$Attributes$required(true),
 									$elm$html$Html$Attributes$minlength(1),
-									$elm$html$Html$Attributes$class('border border-gray-300 p-2 w-full rounded'),
+									$elm$html$Html$Attributes$class('tff-text-field'),
 									$elm$html$Html$Attributes$placeholder('Label'),
 									$elm$html$Html$Attributes$value(formField.label),
 									$elm$html$Html$Events$onInput(
@@ -6392,7 +6402,7 @@ var $author$project$Main$viewFormFieldBuilder = F3(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('field-group mb-2')
+							$elm$html$Html$Attributes$class('tff-field-group tff-checkbox-group')
 						]),
 					_List_fromArray(
 						[
@@ -6400,7 +6410,7 @@ var $author$project$Main$viewFormFieldBuilder = F3(
 							$elm$html$Html$label,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('text-sm text-gray-600 align-middle'),
+									$elm$html$Html$Attributes$class('tff-field-label'),
 									$elm$html$Html$Attributes$for('required-' + idSuffix)
 								]),
 							_List_fromArray(
@@ -6412,7 +6422,6 @@ var $author$project$Main$viewFormFieldBuilder = F3(
 											$elm$html$Html$Attributes$id('required-' + idSuffix),
 											$elm$html$Html$Attributes$type_('checkbox'),
 											$elm$html$Html$Attributes$tabindex(0),
-											$elm$html$Html$Attributes$class('border border-gray-300 align-middle'),
 											$elm$html$Html$Attributes$checked(formField.required),
 											$elm$html$Html$Events$onCheck(
 											function (b) {
@@ -6432,7 +6441,7 @@ var $author$project$Main$viewFormFieldBuilder = F3(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('field-group mb-2')
+							$elm$html$Html$Attributes$class('tff-field-group')
 						]),
 					_List_fromArray(
 						[
@@ -6440,7 +6449,7 @@ var $author$project$Main$viewFormFieldBuilder = F3(
 							$elm$html$Html$label,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('text-xs text-gray-600'),
+									$elm$html$Html$Attributes$class('tff-field-label'),
 									$elm$html$Html$Attributes$for('description-' + idSuffix)
 								]),
 							_List_fromArray(
@@ -6452,7 +6461,7 @@ var $author$project$Main$viewFormFieldBuilder = F3(
 							_List_fromArray(
 								[
 									$elm$html$Html$Attributes$id('description-' + idSuffix),
-									$elm$html$Html$Attributes$class('border border-gray-300 p-2 w-full rounded'),
+									$elm$html$Html$Attributes$class('tff-text-field'),
 									$elm$html$Html$Attributes$value(formField.description),
 									$elm$html$Html$Events$onInput(
 									A2($author$project$Main$OnFormField, $author$project$Main$OnDescriptionInput, index))
@@ -6463,7 +6472,7 @@ var $author$project$Main$viewFormFieldBuilder = F3(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('flex justify-between items-end mb-16')
+							$elm$html$Html$Attributes$class('tff-build-field-buttons')
 						]),
 					_List_fromArray(
 						[
@@ -6471,7 +6480,7 @@ var $author$project$Main$viewFormFieldBuilder = F3(
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('flex space-x-2')
+									$elm$html$Html$Attributes$class('tff-move')
 								]),
 							_List_fromArray(
 								[
@@ -6481,7 +6490,6 @@ var $author$project$Main$viewFormFieldBuilder = F3(
 										[
 											$elm$html$Html$Attributes$type_('button'),
 											$elm$html$Html$Attributes$tabindex(0),
-											$elm$html$Html$Attributes$class('text-xs bg-gray-200 hover:bg-gray-400 text-gray-600 px-4 py-2 rounded'),
 											$elm$html$Html$Attributes$title('Move field up'),
 											$elm$html$Html$Events$onClick(
 											$author$project$Main$MoveFormFieldUp(index))
@@ -6496,7 +6504,6 @@ var $author$project$Main$viewFormFieldBuilder = F3(
 										[
 											$elm$html$Html$Attributes$type_('button'),
 											$elm$html$Html$Attributes$tabindex(0),
-											$elm$html$Html$Attributes$class('text-xs bg-gray-200 hover:bg-gray-400 text-gray-600 px-4 py-2 rounded'),
 											$elm$html$Html$Attributes$title('Move field down'),
 											$elm$html$Html$Events$onClick(
 											$author$project$Main$MoveFormFieldDown(index))
@@ -6517,7 +6524,7 @@ var $author$project$Main$viewFormFieldBuilder = F3(
 										[
 											$elm$html$Html$Attributes$type_('button'),
 											$elm$html$Html$Attributes$tabindex(0),
-											$elm$html$Html$Attributes$class('text-xs bg-gray-200 hover:bg-gray-400 text-red-700 px-4 py-2 rounded'),
+											$elm$html$Html$Attributes$class('tff-delete'),
 											$elm$html$Html$Attributes$title('Delete field'),
 											$elm$html$Html$Events$onClick(
 											$author$project$Main$DeleteFormField(index))
@@ -6533,47 +6540,47 @@ var $author$project$Main$viewFormFieldBuilder = F3(
 	});
 var $author$project$Main$viewFormBuilder = function (_v0) {
 	var formFields = _v0.formFields;
-	return A2(
-		$elm$html$Html$div,
-		_List_Nil,
-		_List_fromArray(
-			[
+	return _List_fromArray(
+		[
+			A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('tff-build-fields')
+				]),
+			$elm$core$Array$toList(
 				A2(
-				$elm$html$Html$div,
-				_List_Nil,
-				$elm$core$Array$toList(
-					A2(
-						$elm$core$Array$indexedMap,
-						$author$project$Main$viewFormFieldBuilder(
-							$elm$core$Array$length(formFields)),
-						formFields))),
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('mt-4')
-					]),
-				A2(
-					$elm$core$List$map,
-					function (inputField) {
-						return A2(
-							$elm$html$Html$button,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$type_('button'),
-									$elm$html$Html$Attributes$tabindex(0),
-									$elm$html$Html$Attributes$class('text-sm bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded mr-2 mb-2'),
-									$elm$html$Html$Events$onClick(
-									$author$project$Main$AddFormField(inputField))
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text(
-									'+ ' + $author$project$Main$stringFromInputField(inputField))
-								]));
-					},
-					$author$project$Main$allInputField))
-			]));
+					$elm$core$Array$indexedMap,
+					$author$project$Main$viewFormFieldBuilder(
+						$elm$core$Array$length(formFields)),
+					formFields))),
+			A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('tff-add-fields')
+				]),
+			A2(
+				$elm$core$List$map,
+				function (inputField) {
+					return A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$type_('button'),
+								$elm$html$Html$Attributes$tabindex(0),
+								$elm$html$Html$Attributes$class('tff-add-field-button'),
+								$elm$html$Html$Events$onClick(
+								$author$project$Main$AddFormField(inputField))
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text(
+								'+ ' + $author$project$Main$stringFromInputField(inputField))
+							]));
+				},
+				$author$project$Main$allInputField))
+		]);
 };
 var $elm$core$Elm$JsArray$map = _JsArray_map;
 var $elm$core$Array$map = F2(
@@ -6657,10 +6664,8 @@ var $elm$core$List$member = F2(
 			},
 			xs);
 	});
-var $elm$core$Basics$not = _Basics_not;
 var $elm$html$Html$option = _VirtualDom_node('option');
 var $elm$html$Html$select = _VirtualDom_node('select');
-var $elm$svg$Svg$Attributes$class = _VirtualDom_attribute('class');
 var $elm$svg$Svg$Attributes$clipRule = _VirtualDom_attribute('clip-rule');
 var $elm$svg$Svg$Attributes$d = _VirtualDom_attribute('d');
 var $elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
@@ -6673,7 +6678,6 @@ var $author$project$Main$selectArrowDown = A2(
 	$elm$svg$Svg$svg,
 	_List_fromArray(
 		[
-			$elm$svg$Svg$Attributes$class('pointer-events-none z-10 right-1 relative col-start-1 row-start-1 h-4 w-4 mr-2 self-center justify-self-end forced-colors:hidden'),
 			$elm$svg$Svg$Attributes$viewBox('0 0 16 16'),
 			$elm$svg$Svg$Attributes$fill('currentColor'),
 			A2($elm$html$Html$Attributes$attribute, 'aria-hidden', 'true')
@@ -6716,7 +6720,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 						_List_fromArray(
 							[
 								$elm$html$Html$Attributes$type_(inputType),
-								$elm$html$Html$Attributes$class('border border-gray-300 p-2 w-full rounded'),
+								$elm$html$Html$Attributes$class('tff-text-field'),
 								$elm$html$Html$Attributes$name(fieldName),
 								$elm$html$Html$Attributes$required(formField.required),
 								$elm$html$Html$Attributes$placeholder(' ')
@@ -6741,7 +6745,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 					_Utils_ap(
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class('border border-gray-300 p-2 w-full rounded'),
+								$elm$html$Html$Attributes$class('tff-text-field'),
 								$elm$html$Html$Attributes$name(fieldName),
 								$elm$html$Html$Attributes$required(formField.required),
 								$elm$html$Html$Attributes$placeholder(' ')
@@ -6754,7 +6758,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('grid')
+							$elm$html$Html$Attributes$class('tff-chooseone-group')
 						]),
 					_List_fromArray(
 						[
@@ -6763,13 +6767,11 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 							$elm$html$Html$select,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('appearance-none forced-colors:appearance-auto border row-start-1 col-start-1 bg-slate-50 dark:bg-slate-800 hover:border-cyan-500 dark:hover:border-cyan-700 hover:bg-white dark:hover:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 p-2 rounded'),
 									$elm$html$Html$Attributes$name(fieldName),
-									$elm$html$Html$Attributes$required(
-									formField.required && (!A2(
-										$elm$core$List$member,
-										$elm$html$Html$Attributes$disabled(true),
-										customAttrs)))
+									A2(
+									$elm$core$List$member,
+									$elm$html$Html$Attributes$disabled(true),
+									customAttrs) ? $elm$html$Html$Attributes$class('tff-select-disabled') : $elm$html$Html$Attributes$required(formField.required)
 								]),
 							A2(
 								$elm$core$List$cons,
@@ -6809,7 +6811,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('grid')
+							$elm$html$Html$Attributes$class('tff-choosemany-group')
 						]),
 					_List_fromArray(
 						[
@@ -6817,7 +6819,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('grid grid-cols-1 gap-2')
+									$elm$html$Html$Attributes$class('tff-choosemany-checkboxes')
 								]),
 							A2(
 								$elm$core$List$map,
@@ -6826,7 +6828,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 										$elm$html$Html$div,
 										_List_fromArray(
 											[
-												$elm$html$Html$Attributes$class('flex items center')
+												$elm$html$Html$Attributes$class('tff-checkbox-group')
 											]),
 										_List_fromArray(
 											[
@@ -6834,7 +6836,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 												$elm$html$Html$label,
 												_List_fromArray(
 													[
-														$elm$html$Html$Attributes$class('text-sm text-gray-600 align-middle')
+														$elm$html$Html$Attributes$class('tff-field-label')
 													]),
 												_List_fromArray(
 													[
@@ -6845,7 +6847,6 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 																[
 																	$elm$html$Html$Attributes$type_('checkbox'),
 																	$elm$html$Html$Attributes$tabindex(0),
-																	$elm$html$Html$Attributes$class('border border-gray-300 align-middle'),
 																	$elm$html$Html$Attributes$name(fieldName),
 																	$elm$html$Html$Attributes$value(choice)
 																]),
@@ -6860,13 +6861,17 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 						]));
 		}
 	});
+var $author$project$Main$when = F2(
+	function (bool, condition) {
+		return bool ? condition._true : condition._false;
+	});
 var $author$project$Main$viewFormFieldPreview = F2(
 	function (customAttrs, formField) {
 		return A2(
 			$elm$html$Html$div,
 			_List_fromArray(
 				[
-					$elm$html$Html$Attributes$class('grid grid-rows-[auto_auto_1fr_auto] gap-2 mb-4')
+					$elm$html$Html$Attributes$class('tff-tabs-preview')
 				]),
 			_List_fromArray(
 				[
@@ -6874,7 +6879,11 @@ var $author$project$Main$viewFormFieldPreview = F2(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('field-group mb-2')
+							$elm$html$Html$Attributes$class(
+							'tff-field-group' + A2(
+								$author$project$Main$when,
+								formField.required,
+								{_false: '', _true: ' tff-required'}))
 						]),
 					_List_fromArray(
 						[
@@ -6882,7 +6891,7 @@ var $author$project$Main$viewFormFieldPreview = F2(
 							$elm$html$Html$label,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('text-sm text-gray-600')
+									$elm$html$Html$Attributes$class('tff-field-label')
 								]),
 							_List_fromArray(
 								[
@@ -6894,7 +6903,7 @@ var $author$project$Main$viewFormFieldPreview = F2(
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('mt-1 text-xs text-gray-600')
+									$elm$html$Html$Attributes$class('tff-field-description')
 								]),
 							_List_fromArray(
 								[
@@ -6933,7 +6942,7 @@ var $author$project$Main$viewTabs = F2(
 			$elm$html$Html$ul,
 			_List_fromArray(
 				[
-					$elm$html$Html$Attributes$class('flex flex-wrap text-sm font-medium text-center text-gray-500 border-b border-gray-200 dark:border-gray-700 dark:text-gray-400 mb-4')
+					$elm$html$Html$Attributes$class('tff-tabs')
 				]),
 			A2(
 				$elm$core$List$map,
@@ -6942,10 +6951,7 @@ var $author$project$Main$viewTabs = F2(
 					var content = _v0.b;
 					return A2(
 						$elm$html$Html$li,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('me-2')
-							]),
+						_List_Nil,
 						_List_fromArray(
 							[
 								A2(
@@ -6956,7 +6962,7 @@ var $author$project$Main$viewTabs = F2(
 										$elm$html$Html$Attributes$tabindex(0),
 										A2($elm$html$Html$Attributes$attribute, 'aria-current', 'page'),
 										$elm$html$Html$Attributes$class(
-										'inline-block p-4 text-blue-600 rounded-t-lg dark:text-blue-500' + (_Utils_eq(tab, active) ? '  bg-gray-200 dark:bg-gray-800 border-b border-gray-200 -mb-1' : '')),
+										_Utils_eq(tab, active) ? 'tff-tabs-active' : 'tff-tabs-inactive'),
 										$elm$html$Html$Events$onClick(
 										$author$project$Main$SetViewMode(tab))
 									]),
@@ -6969,40 +6975,45 @@ var $author$project$Main$viewTabs = F2(
 var $author$project$Main$view = function (model) {
 	return A2(
 		$elm$html$Html$div,
-		_List_Nil,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class(
+				'tff tff-mode-' + $author$project$Main$stringFromViewMode(model.viewMode))
+			]),
 		function () {
 			var _v0 = model.viewMode;
 			switch (_v0.$) {
 				case 'Editor':
-					return _List_fromArray(
-						[
-							A2(
-							$author$project$Main$viewTabs,
-							model.viewMode,
-							_List_fromArray(
-								[
-									_Utils_Tuple2(
-									$author$project$Main$Editor,
-									$elm$html$Html$text('Editor')),
-									_Utils_Tuple2(
-									$author$project$Main$Preview,
-									$elm$html$Html$text('Preview'))
-								])),
-							A2(
-							$elm$html$Html$input,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$type_('hidden'),
-									$elm$html$Html$Attributes$name('tiny-form-fields'),
-									$elm$html$Html$Attributes$value(
-									A2(
-										$elm$json$Json$Encode$encode,
-										0,
-										$author$project$Main$encodeFormFields(model.formFields)))
-								]),
-							_List_Nil),
-							$author$project$Main$viewFormBuilder(model)
-						]);
+					return _Utils_ap(
+						_List_fromArray(
+							[
+								A2(
+								$author$project$Main$viewTabs,
+								model.viewMode,
+								_List_fromArray(
+									[
+										_Utils_Tuple2(
+										$author$project$Main$Editor,
+										$elm$html$Html$text('Editor')),
+										_Utils_Tuple2(
+										$author$project$Main$Preview,
+										$elm$html$Html$text('Preview'))
+									])),
+								A2(
+								$elm$html$Html$input,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$type_('hidden'),
+										$elm$html$Html$Attributes$name('tiny-form-fields'),
+										$elm$html$Html$Attributes$value(
+										A2(
+											$elm$json$Json$Encode$encode,
+											0,
+											$author$project$Main$encodeFormFields(model.formFields)))
+									]),
+								_List_Nil)
+							]),
+						$author$project$Main$viewFormBuilder(model));
 				case 'Preview':
 					return _Utils_ap(
 						_List_fromArray(

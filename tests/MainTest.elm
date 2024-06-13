@@ -1,8 +1,8 @@
 module MainTest exposing (..)
 
 import Array
-import Expect exposing (Expectation)
-import Fuzz exposing (Fuzzer, int, list, string)
+import Expect
+import Fuzz exposing (Fuzzer, string)
 import Json.Decode
 import Json.Encode
 import Main
@@ -12,21 +12,11 @@ import Test exposing (..)
 suite : Test
 suite =
     describe "Main"
-        [ test "{encode,decode}InputField is reversible" <|
-            \() ->
+        [ Test.fuzz (Fuzz.intRange 0 100) "{encode,decode}InputField is reversible" <|
+            \size ->
                 let
                     formFields =
-                        Main.allInputField
-                            |> List.indexedMap
-                                (\index type_ ->
-                                    { label = "label " ++ String.fromInt index
-                                    , name = Just ("name " ++ String.fromInt index)
-                                    , required = modBy (index + 1) 2 == 0
-                                    , description = "description " ++ String.fromInt index
-                                    , type_ = type_
-                                    , fixed = Just (modBy (index + 1) 2 == 1)
-                                    }
-                                )
+                        Fuzz.examples size fuzzFormField
                             |> Array.fromList
                 in
                 formFields
@@ -34,4 +24,41 @@ suite =
                     |> Json.Encode.encode 0
                     |> Json.Decode.decodeString Main.decodeFormFields
                     |> Expect.equal (Ok formFields)
+        , Test.fuzz viewModeFuzzer "stringFromViewMode,viewModeFromString is reversible" <|
+            \mode ->
+                mode
+                    |> Main.stringFromViewMode
+                    |> Main.viewModeFromString
+                    |> Expect.equal (Just mode)
         ]
+
+
+
+--
+
+
+viewModeFuzzer : Fuzzer Main.ViewMode
+viewModeFuzzer =
+    Fuzz.oneOf
+        [ Fuzz.constant Main.Editor
+        , Fuzz.constant Main.Preview
+        , Fuzz.constant Main.CollectData
+        ]
+
+
+inputFieldFuzzer : Fuzzer Main.InputField
+inputFieldFuzzer =
+    Main.allInputField
+        |> List.map Fuzz.constant
+        |> Fuzz.oneOf
+
+
+fuzzFormField : Fuzzer Main.FormField
+fuzzFormField =
+    Fuzz.map6 Main.FormField
+        string
+        (Fuzz.maybe string)
+        Fuzz.bool
+        string
+        inputFieldFuzzer
+        (Fuzz.maybe Fuzz.bool)

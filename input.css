@@ -2,9 +2,183 @@
 @tailwind components;
 @tailwind utilities;
 
-input:not(:placeholder-shown):invalid {
+.tff-tabs {
+    @apply flex;
+    @apply flex-wrap;
+    @apply text-sm;
+    @apply font-medium;
+    @apply text-center;
+    @apply text-gray-500;
+    @apply border-b;
+    @apply border-gray-200;
+    @apply dark:border-gray-700;
+    @apply dark:text-gray-400;
+    @apply mb-4;
+}
+
+.tff-tabs li {
+    @apply me-2;
+}
+
+.tff-tabs li button {
+    @apply inline-block;
+    @apply p-4;
+    @apply text-blue-600;
+    @apply rounded-t-lg;
+    @apply dark:text-blue-500;
+}
+
+.tff-tabs li .tff-tabs-active {
+    @apply bg-gray-200;
+    @apply dark:bg-gray-800;
+    @apply border-b;
+    @apply border-gray-200;
+    @apply -mb-1;
+}
+
+.tff-tabs-preview {
+    @apply grid;
+    @apply grid-rows-[auto_auto_1fr_auto];
+    @apply gap-2;
+    @apply mb-4;
+}
+
+.tff-field-group {
+    @apply mb-2
+}
+
+.tff-field-group input:not(:placeholder-shown):invalid {
     border-color: red;
 }
-select:invalid {
+
+.tff-field-label {
+    @apply text-sm;
+    @apply text-gray-600;
+    @apply align-middle;
+}
+
+.tff-field-description {
+    @apply mt-1;
+    @apply text-xs;
+    @apply text-gray-600;
+}
+
+.tff-text-field {
+    @apply border;
+    @apply border-gray-300;
+    @apply p-2;
+    @apply w-full;
+    @apply rounded;
+}
+
+.tff-chooseone-group {
+    @apply grid;
+}
+
+.tff-chooseone-group select {
+    @apply appearance-none;
+    @apply forced-colors:appearance-auto;
+    @apply border;
+    @apply row-start-1;
+    @apply col-start-1;
+    @apply bg-slate-50;
+    @apply dark:bg-slate-800;
+    @apply hover:border-cyan-500;
+    @apply dark:hover:border-cyan-700;
+    @apply hover:bg-white;
+    @apply dark:hover:bg-slate-700;
+    @apply border-slate-300;
+    @apply dark:border-slate-600;
+    @apply text-slate-700;
+    @apply dark:text-slate-200;
+    @apply p-2;
+    @apply rounded;
+}
+
+.tff-chooseone-group select:invalid,
+.tff-chooseone-group select.tff-select-disabled {
     @apply text-gray-300;
+}
+
+.tff-chooseone-group svg {
+    @apply pointer-events-none;
+    @apply z-10;
+    @apply right-1;
+    @apply relative;
+    @apply col-start-1;
+    @apply row-start-1;
+    @apply h-4;
+    @apply w-4;
+    @apply mr-2;
+    @apply self-center;
+    @apply justify-self-end;
+    @apply forced-colors:hidden;
+}
+
+.tff-choosemany-group {
+    @apply grid;
+}
+
+.tff-choosemany-group .tff-choosemany-checkboxes {
+    @apply grid;
+    @apply grid-cols-1;
+    @apply gap-2;
+}
+
+.tff-checkbox-group {
+    @apply flex;
+}
+
+.tff-checkbox-group .tff-field-label input {
+    @apply border;
+    @apply border-gray-300;
+    @apply align-middle;
+}
+
+.tff-add-fields {
+    @apply mt-5;
+}
+
+.tff-add-field-button{
+    @apply text-sm;
+    @apply bg-blue-500;
+    @apply hover:bg-blue-700;
+    @apply text-white;
+    @apply px-4;
+    @apply py-2;
+    @apply rounded;
+    @apply mr-2;
+    @apply mb-2;
+}
+
+.tff-build-field {
+    @apply grid;
+    @apply grid-rows-[auto_auto_1fr_auto];
+    @apply gap-2;
+}
+
+.tff-build-field-buttons {
+    @apply flex;
+    @apply justify-between;
+    @apply items-end;
+    @apply mb-16;
+}
+
+.tff-build-field-buttons .tff-move {
+    @apply flex;
+    @apply space-x-2;
+}
+
+.tff-build-field-buttons button {
+    @apply text-xs;
+    @apply bg-gray-200;
+    @apply hover:bg-gray-400;
+    @apply text-gray-600;
+    @apply px-4;
+    @apply py-2;
+    @apply rounded;
+}
+
+.tff-build-field-buttons button.tff-delete {
+    @apply text-red-700;
 }
