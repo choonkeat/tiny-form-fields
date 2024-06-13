@@ -4411,10 +4411,6 @@ var $elm$core$Maybe$Just = function (a) {
 	return {$: 'Just', a: a};
 };
 var $elm$core$Maybe$Nothing = {$: 'Nothing'};
-var $elm$core$Basics$always = F2(
-	function (a, _v0) {
-		return a;
-	});
 var $elm$core$List$cons = _List_cons;
 var $elm$core$Elm$JsArray$foldr = _JsArray_foldr;
 var $elm$core$Array$foldr = F3(
@@ -5203,6 +5199,9 @@ var $elm$core$Task$perform = F2(
 var $elm$browser$Browser$element = _Browser_element;
 var $elm$json$Json$Decode$field = _Json_decodeField;
 var $author$project$Main$Editor = {$: 'Editor'};
+var $author$project$Main$PortOutgoingFormFields = function (a) {
+	return {$: 'PortOutgoingFormFields', a: a};
+};
 var $elm$core$Maybe$andThen = F2(
 	function (callback, maybeValue) {
 		if (maybeValue.$ === 'Just') {
@@ -5544,10 +5543,47 @@ var $author$project$Main$encodeFormFields = function (formFields) {
 			},
 			$elm$core$Array$toList(formFields)));
 };
-var $elm$core$Debug$log = _Debug_log;
+var $author$project$Main$stringFromViewMode = function (viewMode) {
+	switch (viewMode.$) {
+		case 'Editor':
+			return 'Editor';
+		case 'Preview':
+			return 'Preview';
+		default:
+			return 'CollectData';
+	}
+};
+var $author$project$Main$encodePortOutgoingValue = function (value) {
+	if (value.$ === 'PortOutgoingFormFields') {
+		var formFields = value.a;
+		return $elm$json$Json$Encode$object(
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					'type',
+					$elm$json$Json$Encode$string('formFields')),
+					_Utils_Tuple2(
+					'formFields',
+					$author$project$Main$encodeFormFields(formFields))
+				]));
+	} else {
+		var viewMode = value.a;
+		return $elm$json$Json$Encode$object(
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					'type',
+					$elm$json$Json$Encode$string('viewMode')),
+					_Utils_Tuple2(
+					'viewMode',
+					$elm$json$Json$Encode$string(
+						$author$project$Main$stringFromViewMode(viewMode)))
+				]));
+	}
+};
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
-var $author$project$Main$onUpdate = _Platform_outgoingPort('onUpdate', $elm$core$Basics$identity);
+var $author$project$Main$outgoing = _Platform_outgoingPort('outgoing', $elm$core$Basics$identity);
 var $author$project$Main$CollectData = {$: 'CollectData'};
 var $author$project$Main$Preview = {$: 'Preview'};
 var $author$project$Main$viewModeFromString = function (str) {
@@ -5572,19 +5608,10 @@ var $author$project$Main$init = function (flags) {
 			var formFields = _v1.a.a;
 			return _Utils_Tuple2(
 				formFields,
-				$author$project$Main$onUpdate(
-					$author$project$Main$encodeFormFields(formFields)));
+				$author$project$Main$outgoing(
+					$author$project$Main$encodePortOutgoingValue(
+						$author$project$Main$PortOutgoingFormFields(formFields))));
 		} else {
-			var decodeFail = _v1;
-			var _v2 = A2(
-				$elm$core$Debug$log,
-				'decodeFail',
-				_Utils_Tuple2(
-					decodeFail,
-					A2(
-						$elm$core$Maybe$map,
-						$elm$json$Json$Encode$encode(0),
-						flags.formFields)));
 			return _Utils_Tuple2($elm$core$Array$empty, $elm$core$Platform$Cmd$none);
 		}
 	}();
@@ -5600,8 +5627,41 @@ var $author$project$Main$init = function (flags) {
 		},
 		initCmd);
 };
-var $elm$core$Platform$Sub$batch = _Platform_batch;
-var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
+var $author$project$Main$OnPortIncoming = function (a) {
+	return {$: 'OnPortIncoming', a: a};
+};
+var $author$project$Main$incoming = _Platform_incomingPort('incoming', $elm$json$Json$Decode$value);
+var $author$project$Main$subscriptions = function (_v0) {
+	return $author$project$Main$incoming($author$project$Main$OnPortIncoming);
+};
+var $author$project$Main$PortOutgoingViewMode = function (a) {
+	return {$: 'PortOutgoingViewMode', a: a};
+};
+var $author$project$Main$PortIncomingViewMode = function (a) {
+	return {$: 'PortIncomingViewMode', a: a};
+};
+var $author$project$Main$decodePortIncomingValue = A2(
+	$elm$json$Json$Decode$andThen,
+	function (type_) {
+		if (type_ === 'viewMode') {
+			return A2(
+				$elm$json$Json$Decode$andThen,
+				function (viewModeString) {
+					var _v1 = $author$project$Main$viewModeFromString(viewModeString);
+					if (_v1.$ === 'Just') {
+						var viewMode = _v1.a;
+						return $elm$json$Json$Decode$succeed(
+							$author$project$Main$PortIncomingViewMode(viewMode));
+					} else {
+						return $elm$json$Json$Decode$fail('Unknown view mode: ' + viewModeString);
+					}
+				},
+				A2($elm$json$Json$Decode$field, 'viewMode', $elm$json$Json$Decode$string));
+		} else {
+			return $elm$json$Json$Decode$fail('Unknown port event type: ' + type_);
+		}
+	},
+	A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string));
 var $elm$core$Elm$JsArray$foldl = _JsArray_foldl;
 var $elm$core$Elm$JsArray$indexedMap = _JsArray_indexedMap;
 var $elm$core$Bitwise$shiftLeftBy = _Bitwise_shiftLeftBy;
@@ -5931,17 +5991,31 @@ var $author$project$Main$updateFormField = F3(
 	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
-		var _v0 = A2($elm$core$Debug$log, 'update', msg);
-		switch (_v0.$) {
+		switch (msg.$) {
+			case 'OnPortIncoming':
+				var value = msg.a;
+				var _v1 = A2($elm$json$Json$Decode$decodeValue, $author$project$Main$decodePortIncomingValue, value);
+				if (_v1.$ === 'Ok') {
+					var viewMode = _v1.a.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{viewMode: viewMode}),
+						$elm$core$Platform$Cmd$none);
+				} else {
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				}
 			case 'SetViewMode':
-				var viewMode = _v0.a;
+				var viewMode = msg.a;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{viewMode: viewMode}),
-					$elm$core$Platform$Cmd$none);
+					$author$project$Main$outgoing(
+						$author$project$Main$encodePortOutgoingValue(
+							$author$project$Main$PortOutgoingViewMode(viewMode))));
 			case 'AddFormField':
-				var fieldType = _v0.a;
+				var fieldType = msg.a;
 				var newFormField = {
 					description: '',
 					fixed: $elm$core$Maybe$Nothing,
@@ -5956,18 +6030,19 @@ var $author$project$Main$update = F2(
 					_Utils_update(
 						model,
 						{formFields: newFormFields}),
-					$author$project$Main$onUpdate(
-						$author$project$Main$encodeFormFields(newFormFields)));
+					$author$project$Main$outgoing(
+						$author$project$Main$encodePortOutgoingValue(
+							$author$project$Main$PortOutgoingFormFields(newFormFields))));
 			case 'DeleteFormField':
-				var index = _v0.a;
+				var index = msg.a;
 				var newFormFields = $elm$core$Array$fromList(
 					A2(
 						$elm$core$List$map,
 						$elm$core$Tuple$second,
 						A2(
 							$elm$core$List$filter,
-							function (_v1) {
-								var i = _v1.a;
+							function (_v2) {
+								var i = _v2.a;
 								return !_Utils_eq(i, index);
 							},
 							$elm$core$Array$toIndexedList(model.formFields))));
@@ -5975,30 +6050,33 @@ var $author$project$Main$update = F2(
 					_Utils_update(
 						model,
 						{formFields: newFormFields}),
-					$author$project$Main$onUpdate(
-						$author$project$Main$encodeFormFields(newFormFields)));
+					$author$project$Main$outgoing(
+						$author$project$Main$encodePortOutgoingValue(
+							$author$project$Main$PortOutgoingFormFields(newFormFields))));
 			case 'MoveFormFieldUp':
-				var index = _v0.a;
+				var index = msg.a;
 				var newFormFields = A3($author$project$Main$swapArrayIndex, index, index - 1, model.formFields);
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{formFields: newFormFields}),
-					$author$project$Main$onUpdate(
-						$author$project$Main$encodeFormFields(newFormFields)));
+					$author$project$Main$outgoing(
+						$author$project$Main$encodePortOutgoingValue(
+							$author$project$Main$PortOutgoingFormFields(newFormFields))));
 			case 'MoveFormFieldDown':
-				var index = _v0.a;
+				var index = msg.a;
 				var newFormFields = A3($author$project$Main$swapArrayIndex, index, index + 1, model.formFields);
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{formFields: newFormFields}),
-					$author$project$Main$onUpdate(
-						$author$project$Main$encodeFormFields(newFormFields)));
+					$author$project$Main$outgoing(
+						$author$project$Main$encodePortOutgoingValue(
+							$author$project$Main$PortOutgoingFormFields(newFormFields))));
 			default:
-				var fmsg = _v0.a;
-				var index = _v0.b;
-				var string = _v0.c;
+				var fmsg = msg.a;
+				var index = msg.b;
+				var string = msg.c;
 				var newFormFields = A2(
 					$elm$core$Array$indexedMap,
 					F2(
@@ -6010,8 +6088,9 @@ var $author$project$Main$update = F2(
 					_Utils_update(
 						model,
 						{formFields: newFormFields}),
-					$author$project$Main$onUpdate(
-						$author$project$Main$encodeFormFields(newFormFields)));
+					$author$project$Main$outgoing(
+						$author$project$Main$encodePortOutgoingValue(
+							$author$project$Main$PortOutgoingFormFields(newFormFields))));
 		}
 	});
 var $elm$html$Html$Attributes$stringProperty = F2(
@@ -6033,16 +6112,6 @@ var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty(
 var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$html$Html$input = _VirtualDom_node('input');
 var $elm$html$Html$Attributes$name = $elm$html$Html$Attributes$stringProperty('name');
-var $author$project$Main$stringFromViewMode = function (viewMode) {
-	switch (viewMode.$) {
-		case 'Editor':
-			return 'Editor';
-		case 'Preview':
-			return 'Preview';
-		default:
-			return 'CollectData';
-	}
-};
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
@@ -7049,12 +7118,7 @@ var $author$project$Main$view = function (model) {
 		}());
 };
 var $author$project$Main$main = $elm$browser$Browser$element(
-	{
-		init: $author$project$Main$init,
-		subscriptions: $elm$core$Basics$always($elm$core$Platform$Sub$none),
-		update: $author$project$Main$update,
-		view: $author$project$Main$view
-	});
+	{init: $author$project$Main$init, subscriptions: $author$project$Main$subscriptions, update: $author$project$Main$update, view: $author$project$Main$view});
 _Platform_export({'Main':{'init':$author$project$Main$main(
 	A2(
 		$elm$json$Json$Decode$andThen,

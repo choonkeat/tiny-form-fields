@@ -22,7 +22,10 @@ import Svg exposing (path, svg)
 import Svg.Attributes as SvgAttr
 
 
-port onUpdate : Json.Encode.Value -> Cmd msg
+port outgoing : Json.Encode.Value -> Cmd msg
+
+
+port incoming : (Json.Encode.Value -> msg) -> Sub msg
 
 
 main : Program Flags Model Msg
@@ -31,7 +34,7 @@ main =
         { init = init
         , view = view
         , update = update
-        , subscriptions = always Sub.none
+        , subscriptions = subscriptions
         }
 
 
@@ -132,7 +135,8 @@ stringFromInputField inputField =
 
 
 type Msg
-    = SetViewMode ViewMode
+    = OnPortIncoming Json.Encode.Value
+    | SetViewMode ViewMode
     | AddFormField InputField
     | DeleteFormField Int
     | MoveFormFieldUp Int
@@ -158,13 +162,9 @@ init flags =
         ( initFormFields, initCmd ) =
             case Maybe.map (Json.Decode.decodeValue decodeFormFields) flags.formFields of
                 Just (Ok formFields) ->
-                    ( formFields, onUpdate (encodeFormFields formFields) )
+                    ( formFields, outgoing (encodePortOutgoingValue (PortOutgoingFormFields formFields)) )
 
-                decodeFail ->
-                    let
-                        _ =
-                            Debug.log "decodeFail" ( decodeFail, Maybe.map (Json.Encode.encode 0) flags.formFields )
-                    in
+                _ ->
                     ( Array.empty, Cmd.none )
     in
     ( { viewMode =
@@ -183,12 +183,22 @@ init flags =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case Debug.log "update" msg of
+    case msg of
+        OnPortIncoming value ->
+            case Json.Decode.decodeValue decodePortIncomingValue value of
+                Ok (PortIncomingViewMode viewMode) ->
+                    ( { model | viewMode = viewMode }
+                    , Cmd.none
+                    )
+
+                Err _ ->
+                    ( model, Cmd.none )
+
         SetViewMode viewMode ->
             ( { model
                 | viewMode = viewMode
               }
-            , Cmd.none
+            , outgoing (encodePortOutgoingValue (PortOutgoingViewMode viewMode))
             )
 
         AddFormField fieldType ->
@@ -207,7 +217,7 @@ update msg model =
                     Array.push newFormField model.formFields
             in
             ( { model | formFields = newFormFields }
-            , onUpdate (encodeFormFields newFormFields)
+            , outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
             )
 
         DeleteFormField index ->
@@ -219,7 +229,7 @@ update msg model =
                         |> Array.fromList
             in
             ( { model | formFields = newFormFields }
-            , onUpdate (encodeFormFields newFormFields)
+            , outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
             )
 
         MoveFormFieldUp index ->
@@ -228,7 +238,7 @@ update msg model =
                     swapArrayIndex index (index - 1) model.formFields
             in
             ( { model | formFields = newFormFields }
-            , onUpdate (encodeFormFields newFormFields)
+            , outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
             )
 
         MoveFormFieldDown index ->
@@ -237,7 +247,7 @@ update msg model =
                     swapArrayIndex index (index + 1) model.formFields
             in
             ( { model | formFields = newFormFields }
-            , onUpdate (encodeFormFields newFormFields)
+            , outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
             )
 
         OnFormField fmsg index string ->
@@ -254,7 +264,7 @@ update msg model =
                         model.formFields
             in
             ( { model | formFields = newFormFields }
-            , onUpdate (encodeFormFields newFormFields)
+            , outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
             )
 
 
@@ -297,6 +307,11 @@ updateFormField msg string formField =
 
                 ChooseMultiple _ ->
                     formField
+
+
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+    incoming OnPortIncoming
 
 
 
@@ -755,6 +770,59 @@ viewFormFieldOptionsBuilder index fieldType =
                         []
                     ]
                 ]
+
+
+
+-- PORT
+
+
+type PortOutgoingValue
+    = PortOutgoingFormFields (Array FormField)
+    | PortOutgoingViewMode ViewMode
+
+
+encodePortOutgoingValue : PortOutgoingValue -> Json.Encode.Value
+encodePortOutgoingValue value =
+    case value of
+        PortOutgoingFormFields formFields ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "formFields" )
+                , ( "formFields", encodeFormFields formFields )
+                ]
+
+        PortOutgoingViewMode viewMode ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "viewMode" )
+                , ( "viewMode", Json.Encode.string (stringFromViewMode viewMode) )
+                ]
+
+
+type PortIncomingValue
+    = PortIncomingViewMode ViewMode
+
+
+decodePortIncomingValue : Json.Decode.Decoder PortIncomingValue
+decodePortIncomingValue =
+    Json.Decode.field "type" Json.Decode.string
+        |> Json.Decode.andThen
+            (\type_ ->
+                case type_ of
+                    "viewMode" ->
+                        -- app.ports.incoming.send({ type: "viewMode", viewMode: "Preview" })
+                        Json.Decode.field "viewMode" Json.Decode.string
+                            |> Json.Decode.andThen
+                                (\viewModeString ->
+                                    case viewModeFromString viewModeString of
+                                        Just viewMode ->
+                                            Json.Decode.succeed (PortIncomingViewMode viewMode)
+
+                                        Nothing ->
+                                            Json.Decode.fail ("Unknown view mode: " ++ viewModeString)
+                                )
+
+                    _ ->
+                        Json.Decode.fail ("Unknown port event type: " ++ type_)
+            )
 
 
 

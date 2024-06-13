@@ -56,19 +56,27 @@
                 },
             }
         )
-        app.ports.onUpdate.subscribe((formFields) => {
+        app.ports.outgoing.subscribe((event) => {
             // do what you need with the JSON here
             // e.g. we update one of our a[href]
-            window.location.hash = `viewMode=${hash['viewMode']}&formFields=${encodeURIComponent(JSON.stringify(formFields))}`
-            if (hash['viewMode'] == "CollectData") return
+            switch (event.type) {
+                case 'formFields':
+                    let formFields = event.formFields;
+                    window.location.hash = `viewMode=${hash['viewMode']}&formFields=${encodeURIComponent(JSON.stringify(formFields))}`
+                    if (hash['viewMode'] == "CollectData") return
 
-            let ele = document.getElementById('view-sample-collect-data')
-            ele.href = `?#viewMode=CollectData&formFields=${encodeURIComponent(JSON.stringify(formFields))}`
-            if (formFields && formFields.length > 0) {
-                ele.classList.remove('hidden')
-                document.getElementById('reset-form').classList.remove('hidden')
-            } else {
-                ele.classList.add('hidden')
+                    let ele = document.getElementById('view-sample-collect-data');
+                    ele.href = `?#viewMode=CollectData&formFields=${encodeURIComponent(JSON.stringify(formFields))}`;
+                    if (formFields && formFields.length > 0) {
+                        ele.classList.remove('hidden');
+                        document.getElementById('reset-form').classList.remove('hidden');
+                    } else {
+                        ele.classList.add('hidden');
+                    }
+                    break;
+                case 'viewMode':
+                    console.log('viewMode is now', event.viewMode);
+                    break;
             }
         })
     </script>
