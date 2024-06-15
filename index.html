@@ -51,10 +51,59 @@
             formFields: hash['formFields'] ? JSON.parse(decodeURIComponent(hash['formFields'])) : null, // JSON representation of form fields
             formValues: { "Email": "email@example.com", "ChooseOne": "No", "ChooseMany": [ "Durian", "Banana" ]}, // pre-fill form fields
             shortTextTypeList: [
-                { 'Text': { type: 'text' } },
-                { 'Email': { type: 'email' } },
-                { 'Number': { type: 'number', pattern: '^[0-9]+$' } },
-                { 'Nric': { type: 'text', pattern: '^[STGM][0-9]{7}[ABCDEFGHIZJ]$', minlength: "9", maxlength: "9" } },
+                {
+                    "Free text": {
+                        "type": "text"
+                    }
+                },
+                {
+                    "Email": {
+                        "type": "email"
+                    }
+                },
+                {
+                    "NRIC": {
+                        "maxlength": "9",
+                        "minlength": "9",
+                        "pattern": "^[STGM][0-9]{7}[ABCDEFGHIZJ]$",
+                        "type": "text"
+                    }
+                },
+                {
+                    "Telephone": {
+                        "type": "tel"
+                    }
+                },
+                {
+                    "URL": {
+                        "type": "url"
+                    }
+                },
+                {
+                    "Month": {
+                        "type": "month"
+                    }
+                },
+                {
+                    "Week": {
+                        "type": "week"
+                    }
+                },
+                {
+                    "Date": {
+                        "type": "date"
+                    }
+                },
+                {
+                    "Time": {
+                        "type": "time"
+                    }
+                },
+                {
+                    "Date & Time": {
+                        "type": "datetime-local"
+                    }
+                }
             ],
         }
 
