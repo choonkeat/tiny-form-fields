@@ -6156,40 +6156,9 @@ var $elm$core$Array$toIndexedList = function (array) {
 		_Utils_Tuple2(len - 1, _List_Nil),
 		array).b;
 };
-var $elm$core$Dict$get = F2(
-	function (targetKey, dict) {
-		get:
-		while (true) {
-			if (dict.$ === 'RBEmpty_elm_builtin') {
-				return $elm$core$Maybe$Nothing;
-			} else {
-				var key = dict.b;
-				var value = dict.c;
-				var left = dict.d;
-				var right = dict.e;
-				var _v1 = A2($elm$core$Basics$compare, targetKey, key);
-				switch (_v1.$) {
-					case 'LT':
-						var $temp$targetKey = targetKey,
-							$temp$dict = left;
-						targetKey = $temp$targetKey;
-						dict = $temp$dict;
-						continue get;
-					case 'EQ':
-						return $elm$core$Maybe$Just(value);
-					default:
-						var $temp$targetKey = targetKey,
-							$temp$dict = right;
-						targetKey = $temp$targetKey;
-						dict = $temp$dict;
-						continue get;
-				}
-			}
-		}
-	});
 var $elm$core$String$lines = _String_lines;
-var $author$project$Main$updateFormField = F4(
-	function (shortTextTypeDict, msg, string, formField) {
+var $author$project$Main$updateFormField = F3(
+	function (msg, string, formField) {
 		switch (msg.$) {
 			case 'OnLabelInput':
 				return _Utils_update(
@@ -6264,25 +6233,10 @@ var $author$project$Main$updateFormField = F4(
 				var _v3 = formField.type_;
 				if (_v3.$ === 'ShortText') {
 					var maybeMaxLength = _v3.b;
-					var maybeShortTextTypeMaxLength = A2(
-						$elm$core$Maybe$andThen,
-						$elm$core$String$toInt,
-						A2(
-							$elm$core$Maybe$andThen,
-							$elm$core$Dict$get('minlength'),
-							A2($elm$core$Dict$get, string, shortTextTypeDict)));
-					var effectiveMaxLength = function () {
-						if (maybeShortTextTypeMaxLength.$ === 'Just') {
-							var i = maybeShortTextTypeMaxLength.a;
-							return $elm$core$Maybe$Just(i);
-						} else {
-							return maybeMaxLength;
-						}
-					}();
 					return _Utils_update(
 						formField,
 						{
-							type_: A2($author$project$Main$ShortText, string, effectiveMaxLength)
+							type_: A2($author$project$Main$ShortText, string, maybeMaxLength)
 						});
 				} else {
 					return formField;
@@ -6381,7 +6335,7 @@ var $author$project$Main$update = F2(
 					$elm$core$Array$indexedMap,
 					F2(
 						function (i, formField) {
-							return _Utils_eq(i, index) ? A4($author$project$Main$updateFormField, model.shortTextTypeDict, fmsg, string, formField) : formField;
+							return _Utils_eq(i, index) ? A3($author$project$Main$updateFormField, fmsg, string, formField) : formField;
 						}),
 					model.formFields);
 				return _Utils_Tuple2(
@@ -6534,6 +6488,37 @@ var $elm$html$Html$Attributes$title = $elm$html$Html$Attributes$stringProperty('
 var $author$project$Main$OnChoicesInput = {$: 'OnChoicesInput'};
 var $author$project$Main$OnMaxLengthInput = {$: 'OnMaxLengthInput'};
 var $author$project$Main$OnShortTextType = {$: 'OnShortTextType'};
+var $elm$core$Dict$get = F2(
+	function (targetKey, dict) {
+		get:
+		while (true) {
+			if (dict.$ === 'RBEmpty_elm_builtin') {
+				return $elm$core$Maybe$Nothing;
+			} else {
+				var key = dict.b;
+				var value = dict.c;
+				var left = dict.d;
+				var right = dict.e;
+				var _v1 = A2($elm$core$Basics$compare, targetKey, key);
+				switch (_v1.$) {
+					case 'LT':
+						var $temp$targetKey = targetKey,
+							$temp$dict = left;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+					case 'EQ':
+						return $elm$core$Maybe$Just(value);
+					default:
+						var $temp$targetKey = targetKey,
+							$temp$dict = right;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+				}
+			}
+		}
+	});
 var $elm$core$List$head = function (list) {
 	if (list.b) {
 		var x = list.a;

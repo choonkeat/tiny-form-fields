@@ -288,7 +288,7 @@ update msg model =
                     Array.indexedMap
                         (\i formField ->
                             if i == index then
-                                updateFormField model.shortTextTypeDict fmsg string formField
+                                updateFormField fmsg string formField
 
                             else
                                 formField
@@ -300,8 +300,8 @@ update msg model =
             )
 
 
-updateFormField : Dict String (Dict String String) -> FormFieldMsg -> String -> FormField -> FormField
-updateFormField shortTextTypeDict msg string formField =
+updateFormField : FormFieldMsg -> String -> FormField -> FormField
+updateFormField msg string formField =
     case msg of
         OnLabelInput ->
             { formField | label = string }
@@ -349,21 +349,7 @@ updateFormField shortTextTypeDict msg string formField =
         OnShortTextType ->
             case formField.type_ of
                 ShortText _ maybeMaxLength ->
-                    let
-                        maybeShortTextTypeMaxLength =
-                            Dict.get string shortTextTypeDict
-                                |> Maybe.andThen (Dict.get "minlength")
-                                |> Maybe.andThen String.toInt
-
-                        effectiveMaxLength =
-                            case maybeShortTextTypeMaxLength of
-                                Just i ->
-                                    Just i
-
-                                Nothing ->
-                                    maybeMaxLength
-                    in
-                    { formField | type_ = ShortText string effectiveMaxLength }
+                    { formField | type_ = ShortText string maybeMaxLength }
 
                 _ ->
                     formField
