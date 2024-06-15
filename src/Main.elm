@@ -103,6 +103,7 @@ type alias FormField =
 type InputField
     = ShortText String (Maybe Int)
     | LongText (Maybe Int)
+    | Dropdown (List String)
     | ChooseOne (List String)
     | ChooseMultiple (List String)
 
@@ -112,6 +113,7 @@ allInputField =
     [ ShortText "text" Nothing
     , ShortText "email" Nothing
     , LongText (Just 160)
+    , Dropdown [ "Red", "Orange", "Yellow", "Green", "Blue", "Indigo", "Violet" ]
     , ChooseOne [ "Yes", "No" ]
     , ChooseMultiple [ "Apple", "Banana", "Cantaloupe", "Durian" ]
     ]
@@ -129,8 +131,11 @@ stringFromInputField inputField =
         LongText _ ->
             "Long text"
 
-        ChooseOne _ ->
+        Dropdown _ ->
             "Dropdown"
+
+        ChooseOne _ ->
+            "Radio buttons"
 
         ChooseMultiple _ ->
             "Checkboxes"
@@ -163,10 +168,17 @@ init flags =
     let
         ( initFormFields, initCmd ) =
             case Maybe.map (Json.Decode.decodeValue decodeFormFields) flags.formFields of
+                Nothing ->
+                    ( Array.empty, Cmd.none )
+
                 Just (Ok formFields) ->
                     ( formFields, outgoing (encodePortOutgoingValue (PortOutgoingFormFields formFields)) )
 
-                _ ->
+                Just (Err err) ->
+                    let
+                        _ =
+                            Debug.log "decode formFields" err
+                    in
                     ( Array.empty, Cmd.none )
     in
     ( { viewMode =
@@ -291,6 +303,9 @@ updateFormField msg string formField =
                 LongText _ ->
                     formField
 
+                Dropdown _ ->
+                    { formField | type_ = Dropdown (String.lines string) }
+
                 ChooseOne _ ->
                     { formField | type_ = ChooseOne (String.lines string) }
 
@@ -304,6 +319,9 @@ updateFormField msg string formField =
 
                 LongText _ ->
                     { formField | type_ = LongText (String.toInt string) }
+
+                Dropdown _ ->
+                    formField
 
                 ChooseOne _ ->
                     formField
@@ -510,12 +528,12 @@ viewFormFieldOptionsPreview { formValues, customAttrs } formField =
                 )
                 []
 
-        ChooseOne choices ->
+        Dropdown choices ->
             let
                 valueString =
                     maybeDecode fieldName Json.Decode.string formValues
             in
-            div [ class "tff-chooseone-group" ]
+            div [ class "tff-dropdown-group" ]
                 [ selectArrowDown
                 , select
                     [ name fieldName
@@ -550,6 +568,38 @@ viewFormFieldOptionsPreview { formValues, customAttrs } formField =
                                     [ text choice ]
                             )
                             choices
+                    )
+                ]
+
+        ChooseOne choices ->
+            let
+                values =
+                    maybeDecode fieldName (Json.Decode.list Json.Decode.string) formValues
+                        |> Maybe.withDefault []
+            in
+            -- radio buttons
+            div [ class "tff-chooseone-group" ]
+                [ div [ class "tff-chooseone-radiobuttons" ]
+                    (List.map
+                        (\choice ->
+                            div [ class "tff-radiobuttons-group" ]
+                                [ label [ class "tff-field-label" ]
+                                    [ input
+                                        ([ type_ "radio"
+                                         , tabindex 0
+                                         , name fieldName
+                                         , value choice
+                                         , checked (List.member choice values)
+                                         ]
+                                            ++ customAttrs
+                                        )
+                                        []
+                                    , text " "
+                                    , text choice
+                                    ]
+                                ]
+                        )
+                        choices
                     )
                 ]
 
@@ -751,6 +801,23 @@ viewFormFieldOptionsBuilder index fieldType =
                     ]
                 ]
 
+        Dropdown choices ->
+            div []
+                [ div [ class "tff-field-group" ]
+                    [ label [ class "tff-field-label", for ("choices-" ++ idSuffix) ] [ text "Choices" ]
+                    , textarea
+                        [ id ("choices-" ++ idSuffix)
+                        , required True
+                        , minlength 1
+                        , class "tff-text-field"
+                        , placeholder "Enter one choice per line"
+                        , value (String.join "\n" choices)
+                        , onInput (OnFormField OnChoicesInput index)
+                        ]
+                        []
+                    ]
+                ]
+
         ChooseOne choices ->
             div []
                 [ div [ class "tff-field-group" ]
@@ -914,6 +981,12 @@ encodeInputField inputField =
                 , ( "maxLength", maybeMaxLength |> Maybe.map Json.Encode.int |> Maybe.withDefault Json.Encode.null )
                 ]
 
+        Dropdown choices ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "Dropdown" )
+                , ( "choices", Json.Encode.list Json.Encode.string choices )
+                ]
+
         ChooseOne choices ->
             Json.Encode.object
                 [ ( "type", Json.Encode.string "ChooseOne" )
@@ -941,6 +1014,10 @@ decodeInputField =
                     "LongText" ->
                         Json.Decode.succeed LongText
                             |> andMap (Json.Decode.field "maxLength" (Json.Decode.nullable Json.Decode.int))
+
+                    "Dropdown" ->
+                        Json.Decode.field "choices" (Json.Decode.list Json.Decode.string)
+                            |> Json.Decode.map Dropdown
 
                     "ChooseOne" ->
                         Json.Decode.field "choices" (Json.Decode.list Json.Decode.string)

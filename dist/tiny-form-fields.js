@@ -5223,6 +5223,9 @@ var $author$project$Main$ChooseMultiple = function (a) {
 var $author$project$Main$ChooseOne = function (a) {
 	return {$: 'ChooseOne', a: a};
 };
+var $author$project$Main$Dropdown = function (a) {
+	return {$: 'Dropdown', a: a};
+};
 var $author$project$Main$LongText = function (a) {
 	return {$: 'LongText', a: a};
 };
@@ -5267,6 +5270,14 @@ var $author$project$Main$decodeInputField = A2(
 						'maxLength',
 						$elm$json$Json$Decode$nullable($elm$json$Json$Decode$int)),
 					$elm$json$Json$Decode$succeed($author$project$Main$LongText));
+			case 'Dropdown':
+				return A2(
+					$elm$json$Json$Decode$map,
+					$author$project$Main$Dropdown,
+					A2(
+						$elm$json$Json$Decode$field,
+						'choices',
+						$elm$json$Json$Decode$list($elm$json$Json$Decode$string)));
 			case 'ChooseOne':
 				return A2(
 					$elm$json$Json$Decode$map,
@@ -5458,6 +5469,18 @@ var $author$project$Main$encodeInputField = function (inputField) {
 							$elm$json$Json$Encode$null,
 							A2($elm$core$Maybe$map, $elm$json$Json$Encode$int, maybeMaxLength)))
 					]));
+		case 'Dropdown':
+			var choices = inputField.a;
+			return $elm$json$Json$Encode$object(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'type',
+						$elm$json$Json$Encode$string('Dropdown')),
+						_Utils_Tuple2(
+						'choices',
+						A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, choices))
+					]));
 		case 'ChooseOne':
 			var choices = inputField.a;
 			return $elm$json$Json$Encode$object(
@@ -5581,6 +5604,7 @@ var $author$project$Main$encodePortOutgoingValue = function (value) {
 				]));
 	}
 };
+var $elm$core$Debug$log = _Debug_log;
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Main$outgoing = _Platform_outgoingPort('outgoing', $elm$core$Basics$identity);
@@ -5604,15 +5628,21 @@ var $author$project$Main$init = function (flags) {
 			$elm$core$Maybe$map,
 			$elm$json$Json$Decode$decodeValue($author$project$Main$decodeFormFields),
 			flags.formFields);
-		if ((_v1.$ === 'Just') && (_v1.a.$ === 'Ok')) {
-			var formFields = _v1.a.a;
-			return _Utils_Tuple2(
-				formFields,
-				$author$project$Main$outgoing(
-					$author$project$Main$encodePortOutgoingValue(
-						$author$project$Main$PortOutgoingFormFields(formFields))));
-		} else {
+		if (_v1.$ === 'Nothing') {
 			return _Utils_Tuple2($elm$core$Array$empty, $elm$core$Platform$Cmd$none);
+		} else {
+			if (_v1.a.$ === 'Ok') {
+				var formFields = _v1.a.a;
+				return _Utils_Tuple2(
+					formFields,
+					$author$project$Main$outgoing(
+						$author$project$Main$encodePortOutgoingValue(
+							$author$project$Main$PortOutgoingFormFields(formFields))));
+			} else {
+				var err = _v1.a.a;
+				var _v2 = A2($elm$core$Debug$log, 'decode formFields', err);
+				return _Utils_Tuple2($elm$core$Array$empty, $elm$core$Platform$Cmd$none);
+			}
 		}
 	}();
 	var initFormFields = _v0.a;
@@ -5807,8 +5837,10 @@ var $author$project$Main$stringFromInputField = function (inputField) {
 			}
 		case 'LongText':
 			return 'Long text';
-		case 'ChooseOne':
+		case 'Dropdown':
 			return 'Dropdown';
+		case 'ChooseOne':
+			return 'Radio buttons';
 		default:
 			return 'Checkboxes';
 	}
@@ -5948,6 +5980,13 @@ var $author$project$Main$updateFormField = F3(
 						return formField;
 					case 'LongText':
 						return formField;
+					case 'Dropdown':
+						return _Utils_update(
+							formField,
+							{
+								type_: $author$project$Main$Dropdown(
+									$elm$core$String$lines(string))
+							});
 					case 'ChooseOne':
 						return _Utils_update(
 							formField,
@@ -5983,6 +6022,8 @@ var $author$project$Main$updateFormField = F3(
 								type_: $author$project$Main$LongText(
 									$elm$core$String$toInt(string))
 							});
+					case 'Dropdown':
+						return formField;
 					case 'ChooseOne':
 						return formField;
 					default:
@@ -6126,6 +6167,9 @@ var $author$project$Main$allInputField = _List_fromArray(
 		A2($author$project$Main$ShortText, 'email', $elm$core$Maybe$Nothing),
 		$author$project$Main$LongText(
 		$elm$core$Maybe$Just(160)),
+		$author$project$Main$Dropdown(
+		_List_fromArray(
+			['Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Indigo', 'Violet'])),
 		$author$project$Main$ChooseOne(
 		_List_fromArray(
 			['Yes', 'No'])),
@@ -6321,6 +6365,49 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F2(
 												A2($elm$core$Maybe$map, $elm$core$String$fromInt, maybeMaxLength))),
 											$elm$html$Html$Events$onInput(
 											A2($author$project$Main$OnFormField, $author$project$Main$OnMaxLengthInput, index))
+										]),
+									_List_Nil)
+								]))
+						]));
+			case 'Dropdown':
+				var choices = fieldType.a;
+				return A2(
+					$elm$html$Html$div,
+					_List_Nil,
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('tff-field-group')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$label,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('tff-field-label'),
+											$elm$html$Html$Attributes$for('choices-' + idSuffix)
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text('Choices')
+										])),
+									A2(
+									$elm$html$Html$textarea,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$id('choices-' + idSuffix),
+											$elm$html$Html$Attributes$required(true),
+											$elm$html$Html$Attributes$minlength(1),
+											$elm$html$Html$Attributes$class('tff-text-field'),
+											$elm$html$Html$Attributes$placeholder('Enter one choice per line'),
+											$elm$html$Html$Attributes$value(
+											A2($elm$core$String$join, '\n', choices)),
+											$elm$html$Html$Events$onInput(
+											A2($author$project$Main$OnFormField, $author$project$Main$OnChoicesInput, index))
 										]),
 									_List_Nil)
 								]))
@@ -6867,14 +6954,14 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 							]),
 						_Utils_ap(extraAttrs, customAttrs)),
 					_List_Nil);
-			case 'ChooseOne':
+			case 'Dropdown':
 				var choices = _v1.a;
 				var valueString = A3($author$project$Main$maybeDecode, fieldName, $elm$json$Json$Decode$string, formValues);
 				return A2(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('tff-chooseone-group')
+							$elm$html$Html$Attributes$class('tff-dropdown-group')
 						]),
 					_List_fromArray(
 						[
@@ -6939,6 +7026,70 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 												]));
 									},
 									choices)))
+						]));
+			case 'ChooseOne':
+				var choices = _v1.a;
+				var values = A2(
+					$elm$core$Maybe$withDefault,
+					_List_Nil,
+					A3(
+						$author$project$Main$maybeDecode,
+						fieldName,
+						$elm$json$Json$Decode$list($elm$json$Json$Decode$string),
+						formValues));
+				return A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('tff-chooseone-group')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('tff-chooseone-radiobuttons')
+								]),
+							A2(
+								$elm$core$List$map,
+								function (choice) {
+									return A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('tff-radiobuttons-group')
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$label,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('tff-field-label')
+													]),
+												_List_fromArray(
+													[
+														A2(
+														$elm$html$Html$input,
+														_Utils_ap(
+															_List_fromArray(
+																[
+																	$elm$html$Html$Attributes$type_('radio'),
+																	$elm$html$Html$Attributes$tabindex(0),
+																	$elm$html$Html$Attributes$name(fieldName),
+																	$elm$html$Html$Attributes$value(choice),
+																	$elm$html$Html$Attributes$checked(
+																	A2($elm$core$List$member, choice, values))
+																]),
+															customAttrs),
+														_List_Nil),
+														$elm$html$Html$text(' '),
+														$elm$html$Html$text(choice)
+													]))
+											]));
+								},
+								choices))
 						]));
 			default:
 				var choices = _v1.a;

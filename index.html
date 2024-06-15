@@ -45,16 +45,18 @@
             acc[key] = value
             return acc
         }, {})
+        hash['viewMode'] = hash['viewMode'] || "Editor" // "Editor" for form admins, "CollectData" for form users
+        const flags = {
+            viewModeString: hash['viewMode'],
+            formFields: hash['formFields'] ? JSON.parse(decodeURIComponent(hash['formFields'])) : null, // JSON representation of form fields
+            formValues: { "Email": "email@example.com", "ChooseOne": "No", "ChooseMany": [ "Durian", "Banana" ]}, // pre-fill form fields
+        }
 
         // code to setup tiny-form-fields
         let app = Elm.Main.init(
             {
                 node: document.getElementById('tiny-form-fields'),
-                flags: {
-                    viewModeString: hash['viewMode'] || "Editor", // "Editor" for form admins, "CollectData" for form users
-                    formFields: hash['formFields'] ? JSON.parse(decodeURIComponent(hash['formFields'])) : null, // JSON representation of form fields
-                    formValues: { "Email": "email@example.com", "ChooseOne": "No", "ChooseMany": [ "Durian", "Banana" ]}, // pre-fill form fields
-                },
+                flags: flags,
             }
         )
         app.ports.outgoing.subscribe((event) => {

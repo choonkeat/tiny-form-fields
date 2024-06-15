@@ -71,11 +71,11 @@
     @apply rounded;
 }
 
-.tff-chooseone-group {
+.tff-dropdown-group {
     @apply grid;
 }
 
-.tff-chooseone-group select {
+.tff-dropdown-group select {
     @apply appearance-none;
     @apply forced-colors:appearance-auto;
     @apply border;
@@ -95,12 +95,12 @@
     @apply rounded;
 }
 
-.tff-chooseone-group select:invalid,
-.tff-chooseone-group select.tff-select-disabled {
+.tff-dropdown-group select:invalid,
+.tff-dropdown-group select.tff-select-disabled {
     @apply text-gray-300;
 }
 
-.tff-chooseone-group svg {
+.tff-dropdown-group svg {
     @apply pointer-events-none;
     @apply z-10;
     @apply right-1;
@@ -115,21 +115,25 @@
     @apply forced-colors:hidden;
 }
 
-.tff-choosemany-group {
+.tff-choosemany-group,
+.tff-chooseone-group {
     @apply grid;
 }
 
-.tff-choosemany-group .tff-choosemany-checkboxes {
+.tff-choosemany-group .tff-choosemany-checkboxes,
+.tff-chooseone-group .tff-chooseone-radiobuttons {
     @apply grid;
     @apply grid-cols-1;
     @apply gap-2;
 }
 
-.tff-checkbox-group {
+.tff-checkbox-group,
+.tff-radiobuttons-group {
     @apply flex;
 }
 
-.tff-checkbox-group .tff-field-label input {
+.tff-checkbox-group .tff-field-label input,
+.tff-radiobuttons-group .tff-field-label input {
     @apply border;
     @apply border-gray-300;
     @apply align-middle;
