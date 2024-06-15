@@ -54,7 +54,7 @@
                 { 'Text': { type: 'text' } },
                 { 'Email': { type: 'email' } },
                 { 'Number': { type: 'number', pattern: '^[0-9]+$' } },
-                { 'Nric': { type: 'text', pattern: '^[STGM][0-9]{7}[ABCDEFGHIZJ]$' } },
+                { 'Nric': { type: 'text', pattern: '^[STGM][0-9]{7}[ABCDEFGHIZJ]$', minlength: "9", maxlength: "9" } },
             ],
         }
 
@@ -71,6 +71,7 @@
             switch (event.type) {
                 case 'formFields':
                     let formFields = event.formFields;
+                    console.log('formFields', JSON.stringify(formFields, null, 2));
                     window.location.hash = `viewMode=${hash['viewMode']}&formFields=${encodeURIComponent(JSON.stringify(formFields))}`
                     if (hash['viewMode'] == "CollectData") return
 

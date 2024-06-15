@@ -6148,9 +6148,40 @@ var $elm$core$Array$toIndexedList = function (array) {
 		_Utils_Tuple2(len - 1, _List_Nil),
 		array).b;
 };
+var $elm$core$Dict$get = F2(
+	function (targetKey, dict) {
+		get:
+		while (true) {
+			if (dict.$ === 'RBEmpty_elm_builtin') {
+				return $elm$core$Maybe$Nothing;
+			} else {
+				var key = dict.b;
+				var value = dict.c;
+				var left = dict.d;
+				var right = dict.e;
+				var _v1 = A2($elm$core$Basics$compare, targetKey, key);
+				switch (_v1.$) {
+					case 'LT':
+						var $temp$targetKey = targetKey,
+							$temp$dict = left;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+					case 'EQ':
+						return $elm$core$Maybe$Just(value);
+					default:
+						var $temp$targetKey = targetKey,
+							$temp$dict = right;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+				}
+			}
+		}
+	});
 var $elm$core$String$lines = _String_lines;
-var $author$project$Main$updateFormField = F3(
-	function (msg, string, formField) {
+var $author$project$Main$updateFormField = F4(
+	function (shortTextTypeDict, msg, string, formField) {
 		switch (msg.$) {
 			case 'OnLabelInput':
 				return _Utils_update(
@@ -6225,10 +6256,25 @@ var $author$project$Main$updateFormField = F3(
 				var _v3 = formField.type_;
 				if (_v3.$ === 'ShortText') {
 					var maybeMaxLength = _v3.b;
+					var maybeShortTextTypeMaxLength = A2(
+						$elm$core$Maybe$andThen,
+						$elm$core$String$toInt,
+						A2(
+							$elm$core$Maybe$andThen,
+							$elm$core$Dict$get('minlength'),
+							A2($elm$core$Dict$get, string, shortTextTypeDict)));
+					var effectiveMaxLength = function () {
+						if (maybeShortTextTypeMaxLength.$ === 'Just') {
+							var i = maybeShortTextTypeMaxLength.a;
+							return $elm$core$Maybe$Just(i);
+						} else {
+							return maybeMaxLength;
+						}
+					}();
 					return _Utils_update(
 						formField,
 						{
-							type_: A2($author$project$Main$ShortText, string, maybeMaxLength)
+							type_: A2($author$project$Main$ShortText, string, effectiveMaxLength)
 						});
 				} else {
 					return formField;
@@ -6327,7 +6373,7 @@ var $author$project$Main$update = F2(
 					$elm$core$Array$indexedMap,
 					F2(
 						function (i, formField) {
-							return _Utils_eq(i, index) ? A3($author$project$Main$updateFormField, fmsg, string, formField) : formField;
+							return _Utils_eq(i, index) ? A4($author$project$Main$updateFormField, model.shortTextTypeDict, fmsg, string, formField) : formField;
 						}),
 					model.formFields);
 				return _Utils_Tuple2(
@@ -6480,6 +6526,15 @@ var $elm$html$Html$Attributes$title = $elm$html$Html$Attributes$stringProperty('
 var $author$project$Main$OnChoicesInput = {$: 'OnChoicesInput'};
 var $author$project$Main$OnMaxLengthInput = {$: 'OnMaxLengthInput'};
 var $author$project$Main$OnShortTextType = {$: 'OnShortTextType'};
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
 var $elm$html$Html$option = _VirtualDom_node('option');
 var $elm$html$Html$select = _VirtualDom_node('select');
 var $elm$virtual_dom$VirtualDom$attribute = F2(
@@ -6527,6 +6582,23 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 			case 'ShortText':
 				var inputType = fieldType.a;
 				var maybeMaxLength = fieldType.b;
+				var maybeShortTextTypeMaxLength = A2(
+					$elm$core$Maybe$andThen,
+					$elm$core$String$toInt,
+					A2(
+						$elm$core$Maybe$andThen,
+						$elm$core$Dict$get('minlength'),
+						A2(
+							$elm$core$Maybe$map,
+							$elm$core$Tuple$second,
+							$elm$core$List$head(
+								A2(
+									$elm$core$List$filter,
+									function (_v2) {
+										var k = _v2.a;
+										return _Utils_eq(k, inputType);
+									},
+									shortTextTypeList)))));
 				return _List_fromArray(
 					[
 						A2(
@@ -6585,42 +6657,58 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 											A2($elm$core$List$map, $elm$core$Tuple$first, shortTextTypeList)))
 									]))
 							])),
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('tff-field-group')
-							]),
-						_List_fromArray(
-							[
-								A2(
-								$elm$html$Html$label,
+						function () {
+						if (maybeShortTextTypeMaxLength.$ === 'Nothing') {
+							return A2(
+								$elm$html$Html$div,
 								_List_fromArray(
 									[
-										$elm$html$Html$Attributes$class('tff-field-label'),
-										$elm$html$Html$Attributes$for('placeholder-' + idSuffix)
+										$elm$html$Html$Attributes$class('tff-field-group')
 									]),
 								_List_fromArray(
 									[
-										$elm$html$Html$text('Max length (optional)')
-									])),
-								A2(
+										A2(
+										$elm$html$Html$label,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('tff-field-label'),
+												$elm$html$Html$Attributes$for('maxlength-' + idSuffix)
+											]),
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Max length (optional)')
+											])),
+										A2(
+										$elm$html$Html$input,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$id('maxlength-' + idSuffix),
+												$elm$html$Html$Attributes$type_('number'),
+												$elm$html$Html$Attributes$class('tff-text-field'),
+												$elm$html$Html$Attributes$value(
+												A2(
+													$elm$core$Maybe$withDefault,
+													'',
+													A2($elm$core$Maybe$map, $elm$core$String$fromInt, maybeMaxLength))),
+												$elm$html$Html$Events$onInput(
+												A2($author$project$Main$OnFormField, $author$project$Main$OnMaxLengthInput, index))
+											]),
+										_List_Nil)
+									]));
+						} else {
+							var i = maybeShortTextTypeMaxLength.a;
+							return A2(
 								$elm$html$Html$input,
 								_List_fromArray(
 									[
-										$elm$html$Html$Attributes$id('placeholder-' + idSuffix),
-										$elm$html$Html$Attributes$type_('number'),
-										$elm$html$Html$Attributes$class('tff-text-field'),
+										$elm$html$Html$Attributes$type_('hidden'),
+										$elm$html$Html$Attributes$name('maxlength-' + idSuffix),
 										$elm$html$Html$Attributes$value(
-										A2(
-											$elm$core$Maybe$withDefault,
-											'',
-											A2($elm$core$Maybe$map, $elm$core$String$fromInt, maybeMaxLength))),
-										$elm$html$Html$Events$onInput(
-										A2($author$project$Main$OnFormField, $author$project$Main$OnMaxLengthInput, index))
+										$elm$core$String$fromInt(i))
 									]),
-								_List_Nil)
-							]))
+								_List_Nil);
+						}
+					}()
 					]);
 			case 'LongText':
 				var maybeMaxLength = fieldType.a;
@@ -6639,7 +6727,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 								_List_fromArray(
 									[
 										$elm$html$Html$Attributes$class('tff-field-label'),
-										$elm$html$Html$Attributes$for('placeholder-' + idSuffix)
+										$elm$html$Html$Attributes$for('maxlength-' + idSuffix)
 									]),
 								_List_fromArray(
 									[
@@ -6649,7 +6737,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 								$elm$html$Html$input,
 								_List_fromArray(
 									[
-										$elm$html$Html$Attributes$id('placeholder-' + idSuffix),
+										$elm$html$Html$Attributes$id('maxlength-' + idSuffix),
 										$elm$html$Html$Attributes$type_('number'),
 										$elm$html$Html$Attributes$class('tff-text-field'),
 										$elm$html$Html$Attributes$value(
@@ -7070,37 +7158,6 @@ var $elm$core$List$filterMap = F2(
 			$elm$core$List$maybeCons(f),
 			_List_Nil,
 			xs);
-	});
-var $elm$core$Dict$get = F2(
-	function (targetKey, dict) {
-		get:
-		while (true) {
-			if (dict.$ === 'RBEmpty_elm_builtin') {
-				return $elm$core$Maybe$Nothing;
-			} else {
-				var key = dict.b;
-				var value = dict.c;
-				var left = dict.d;
-				var right = dict.e;
-				var _v1 = A2($elm$core$Basics$compare, targetKey, key);
-				switch (_v1.$) {
-					case 'LT':
-						var $temp$targetKey = targetKey,
-							$temp$dict = left;
-						targetKey = $temp$targetKey;
-						dict = $temp$dict;
-						continue get;
-					case 'EQ':
-						return $elm$core$Maybe$Just(value);
-					default:
-						var $temp$targetKey = targetKey,
-							$temp$dict = right;
-						targetKey = $temp$targetKey;
-						dict = $temp$dict;
-						continue get;
-				}
-			}
-		}
 	});
 var $elm$html$Html$Attributes$maxlength = function (n) {
 	return A2(

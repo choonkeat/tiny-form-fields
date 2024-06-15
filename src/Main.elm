@@ -288,7 +288,7 @@ update msg model =
                     Array.indexedMap
                         (\i formField ->
                             if i == index then
-                                updateFormField fmsg string formField
+                                updateFormField model.shortTextTypeDict fmsg string formField
 
                             else
                                 formField
@@ -300,8 +300,8 @@ update msg model =
             )
 
 
-updateFormField : FormFieldMsg -> String -> FormField -> FormField
-updateFormField msg string formField =
+updateFormField : Dict String (Dict String String) -> FormFieldMsg -> String -> FormField -> FormField
+updateFormField shortTextTypeDict msg string formField =
     case msg of
         OnLabelInput ->
             { formField | label = string }
@@ -349,7 +349,21 @@ updateFormField msg string formField =
         OnShortTextType ->
             case formField.type_ of
                 ShortText _ maybeMaxLength ->
-                    { formField | type_ = ShortText string maybeMaxLength }
+                    let
+                        maybeShortTextTypeMaxLength =
+                            Dict.get string shortTextTypeDict
+                                |> Maybe.andThen (Dict.get "minlength")
+                                |> Maybe.andThen String.toInt
+
+                        effectiveMaxLength =
+                            case maybeShortTextTypeMaxLength of
+                                Just i ->
+                                    Just i
+
+                                Nothing ->
+                                    maybeMaxLength
+                    in
+                    { formField | type_ = ShortText string effectiveMaxLength }
 
                 _ ->
                     formField
@@ -814,6 +828,15 @@ viewFormFieldOptionsBuilder shortTextTypeList index fieldType =
     in
     case fieldType of
         ShortText inputType maybeMaxLength ->
+            let
+                maybeShortTextTypeMaxLength =
+                    shortTextTypeList
+                        |> List.filter (\( k, _ ) -> k == inputType)
+                        |> List.head
+                        |> Maybe.map Tuple.second
+                        |> Maybe.andThen (Dict.get "minlength")
+                        |> Maybe.andThen String.toInt
+            in
             [ div [ class "tff-field-group" ]
                 [ label [ class "tff-field-label", for ("inputType-" ++ idSuffix) ] [ text "Type" ]
                 , div [ class "tff-dropdown-group" ]
@@ -835,24 +858,29 @@ viewFormFieldOptionsBuilder shortTextTypeList index fieldType =
                         )
                     ]
                 ]
-            , div [ class "tff-field-group" ]
-                [ label [ class "tff-field-label", for ("placeholder-" ++ idSuffix) ] [ text "Max length (optional)" ]
-                , input
-                    [ id ("placeholder-" ++ idSuffix)
-                    , type_ "number"
-                    , class "tff-text-field"
-                    , value (Maybe.map String.fromInt maybeMaxLength |> Maybe.withDefault "")
-                    , onInput (OnFormField OnMaxLengthInput index)
-                    ]
-                    []
-                ]
+            , case maybeShortTextTypeMaxLength of
+                Nothing ->
+                    div [ class "tff-field-group" ]
+                        [ label [ class "tff-field-label", for ("maxlength-" ++ idSuffix) ] [ text "Max length (optional)" ]
+                        , input
+                            [ id ("maxlength-" ++ idSuffix)
+                            , type_ "number"
+                            , class "tff-text-field"
+                            , value (Maybe.map String.fromInt maybeMaxLength |> Maybe.withDefault "")
+                            , onInput (OnFormField OnMaxLengthInput index)
+                            ]
+                            []
+                        ]
+
+                Just i ->
+                    input [ type_ "hidden", name ("maxlength-" ++ idSuffix), value (String.fromInt i) ] []
             ]
 
         LongText maybeMaxLength ->
             [ div [ class "tff-field-group" ]
-                [ label [ class "tff-field-label", for ("placeholder-" ++ idSuffix) ] [ text "Max length (optional)" ]
+                [ label [ class "tff-field-label", for ("maxlength-" ++ idSuffix) ] [ text "Max length (optional)" ]
                 , input
-                    [ id ("placeholder-" ++ idSuffix)
+                    [ id ("maxlength-" ++ idSuffix)
                     , type_ "number"
                     , class "tff-text-field"
                     , value (Maybe.map String.fromInt maybeMaxLength |> Maybe.withDefault "")
