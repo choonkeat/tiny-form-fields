@@ -53,6 +53,7 @@
                 flags: {
                     viewModeString: hash['viewMode'] || "Editor", // "Editor" for form admins, "CollectData" for form users
                     formFields: hash['formFields'] ? JSON.parse(decodeURIComponent(hash['formFields'])) : null, // JSON representation of form fields
+                    formValues: { "Email": "email@example.com", "ChooseOne": "No", "ChooseMany": [ "Durian", "Banana" ]}, // pre-fill form fields
                 },
             }
         )

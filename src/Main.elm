@@ -13,7 +13,7 @@ port module Main exposing
 import Array exposing (Array)
 import Browser
 import Html exposing (Html, a, button, div, input, label, li, option, select, text, textarea, ul)
-import Html.Attributes exposing (attribute, checked, class, disabled, for, id, maxlength, minlength, name, placeholder, required, selected, style, tabindex, title, type_, value)
+import Html.Attributes exposing (attribute, checked, class, disabled, for, id, maxlength, minlength, name, placeholder, required, selected, tabindex, title, type_, value)
 import Html.Events exposing (onCheck, onClick, onInput)
 import Json.Decode
 import Json.Decode.Extra exposing (andMap)
@@ -41,12 +41,14 @@ main =
 type alias Flags =
     { viewModeString : Maybe String
     , formFields : Maybe Json.Encode.Value
+    , formValues : Json.Encode.Value
     }
 
 
 type alias Model =
     { viewMode : ViewMode
     , formFields : Array FormField
+    , formValues : Json.Encode.Value
     }
 
 
@@ -172,6 +174,7 @@ init flags =
                 |> Maybe.andThen viewModeFromString
                 |> Maybe.withDefault Editor
       , formFields = initFormFields
+      , formValues = flags.formValues
       }
     , initCmd
     )
@@ -407,9 +410,9 @@ viewTabs active tabs =
         )
 
 
-viewFormPreview : List (Html.Attribute Msg) -> { a | formFields : Array FormField } -> List (Html Msg)
-viewFormPreview customAttrs { formFields } =
-    Array.toList (Array.map (viewFormFieldPreview customAttrs) formFields)
+viewFormPreview : List (Html.Attribute Msg) -> { a | formFields : Array FormField, formValues : Json.Encode.Value } -> List (Html Msg)
+viewFormPreview customAttrs { formFields, formValues } =
+    Array.toList (Array.map (viewFormFieldPreview { customAttrs = customAttrs, formValues = formValues }) formFields)
 
 
 when : Bool -> { true : a, false : a } -> a
@@ -421,8 +424,8 @@ when bool condition =
         condition.false
 
 
-viewFormFieldPreview : List (Html.Attribute Msg) -> FormField -> Html Msg
-viewFormFieldPreview customAttrs formField =
+viewFormFieldPreview : { formValues : Json.Encode.Value, customAttrs : List (Html.Attribute Msg) } -> FormField -> Html Msg
+viewFormFieldPreview config formField =
     div [ class "tff-tabs-preview" ]
         [ div
             [ class ("tff-field-group" ++ when formField.required { true = " tff-required", false = "" }) ]
@@ -434,7 +437,7 @@ viewFormFieldPreview customAttrs formField =
                   else
                     text " (optional)"
                 ]
-            , viewFormFieldOptionsPreview customAttrs formField
+            , viewFormFieldOptionsPreview config formField
             , div [ class "tff-field-description" ]
                 [ text formField.description
                 , case maybeMaxLengthOf formField of
@@ -461,8 +464,8 @@ maybeMaxLengthOf formField =
             Nothing
 
 
-viewFormFieldOptionsPreview : List (Html.Attribute Msg) -> FormField -> Html Msg
-viewFormFieldOptionsPreview customAttrs formField =
+viewFormFieldOptionsPreview : { formValues : Json.Encode.Value, customAttrs : List (Html.Attribute Msg) } -> FormField -> Html Msg
+viewFormFieldOptionsPreview { formValues, customAttrs } formField =
     let
         fieldName =
             Maybe.withDefault formField.label formField.name
@@ -471,12 +474,10 @@ viewFormFieldOptionsPreview customAttrs formField =
         ShortText inputType maybeMaxLength ->
             let
                 extraAttrs =
-                    case maybeMaxLength of
-                        Just maxLength ->
-                            [ maxlength maxLength ]
-
-                        Nothing ->
-                            []
+                    [ Maybe.map (\maxLength -> maxlength maxLength) maybeMaxLength
+                    , Maybe.map (\s -> value s) (maybeDecode fieldName Json.Decode.string formValues)
+                    ]
+                        |> List.filterMap identity
             in
             input
                 ([ type_ inputType
@@ -493,12 +494,10 @@ viewFormFieldOptionsPreview customAttrs formField =
         LongText maybeMaxLength ->
             let
                 extraAttrs =
-                    case maybeMaxLength of
-                        Just maxLength ->
-                            [ maxlength maxLength ]
-
-                        Nothing ->
-                            []
+                    [ Maybe.map (\maxLength -> maxlength maxLength) maybeMaxLength
+                    , Maybe.map (\s -> value s) (maybeDecode fieldName Json.Decode.string formValues)
+                    ]
+                        |> List.filterMap identity
             in
             textarea
                 ([ class "tff-text-field"
@@ -512,6 +511,10 @@ viewFormFieldOptionsPreview customAttrs formField =
                 []
 
         ChooseOne choices ->
+            let
+                valueString =
+                    maybeDecode fieldName Json.Decode.string formValues
+            in
             div [ class "tff-chooseone-group" ]
                 [ selectArrowDown
                 , select
@@ -526,10 +529,12 @@ viewFormFieldOptionsPreview customAttrs formField =
 
                       else
                         required formField.required
+                    , attribute "data-values" (Json.Encode.encode 0 (Json.Encode.string (Maybe.withDefault "{null}" valueString)))
+                    , attribute "data-formvalues" (Json.Encode.encode 0 formValues)
                     ]
                     (option
                         ([ disabled True
-                         , selected True
+                         , selected (valueString == Nothing)
                          , attribute "value" ""
                          ]
                             ++ customAttrs
@@ -538,7 +543,10 @@ viewFormFieldOptionsPreview customAttrs formField =
                         :: List.map
                             (\choice ->
                                 option
-                                    (value choice :: customAttrs)
+                                    (value choice
+                                        :: selected (valueString == Just choice)
+                                        :: customAttrs
+                                    )
                                     [ text choice ]
                             )
                             choices
@@ -546,6 +554,11 @@ viewFormFieldOptionsPreview customAttrs formField =
                 ]
 
         ChooseMultiple choices ->
+            let
+                values =
+                    maybeDecode fieldName (Json.Decode.list Json.Decode.string) formValues
+                        |> Maybe.withDefault []
+            in
             -- checkboxes
             div [ class "tff-choosemany-group" ]
                 [ div [ class "tff-choosemany-checkboxes" ]
@@ -558,6 +571,7 @@ viewFormFieldOptionsPreview customAttrs formField =
                                          , tabindex 0
                                          , name fieldName
                                          , value choice
+                                         , checked (List.member choice values)
                                          ]
                                             ++ customAttrs
                                         )
@@ -827,6 +841,13 @@ decodePortIncomingValue =
 
 
 --  ENCODERS DECODERS
+
+
+maybeDecode : String -> Json.Decode.Decoder b -> Json.Decode.Value -> Maybe b
+maybeDecode key decoder jsonValue =
+    Json.Decode.decodeValue (Json.Decode.Extra.optionalField key decoder) jsonValue
+        |> Result.toMaybe
+        |> Maybe.andThen identity
 
 
 encodeMaybe : (a -> Json.Encode.Value) -> Maybe a -> Json.Encode.Value

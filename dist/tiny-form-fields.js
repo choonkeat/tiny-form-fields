@@ -5620,6 +5620,7 @@ var $author$project$Main$init = function (flags) {
 	return _Utils_Tuple2(
 		{
 			formFields: initFormFields,
+			formValues: flags.formValues,
 			viewMode: A2(
 				$elm$core$Maybe$withDefault,
 				$author$project$Main$Editor,
@@ -6689,12 +6690,49 @@ var $elm$virtual_dom$VirtualDom$attribute = F2(
 			_VirtualDom_noJavaScriptOrHtmlUri(value));
 	});
 var $elm$html$Html$Attributes$attribute = $elm$virtual_dom$VirtualDom$attribute;
+var $elm$core$List$maybeCons = F3(
+	function (f, mx, xs) {
+		var _v0 = f(mx);
+		if (_v0.$ === 'Just') {
+			var x = _v0.a;
+			return A2($elm$core$List$cons, x, xs);
+		} else {
+			return xs;
+		}
+	});
+var $elm$core$List$filterMap = F2(
+	function (f, xs) {
+		return A3(
+			$elm$core$List$foldr,
+			$elm$core$List$maybeCons(f),
+			_List_Nil,
+			xs);
+	});
 var $elm$html$Html$Attributes$maxlength = function (n) {
 	return A2(
 		_VirtualDom_attribute,
 		'maxlength',
 		$elm$core$String$fromInt(n));
 };
+var $elm$core$Result$toMaybe = function (result) {
+	if (result.$ === 'Ok') {
+		var v = result.a;
+		return $elm$core$Maybe$Just(v);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $author$project$Main$maybeDecode = F3(
+	function (key, decoder, jsonValue) {
+		return A2(
+			$elm$core$Maybe$andThen,
+			$elm$core$Basics$identity,
+			$elm$core$Result$toMaybe(
+				A2(
+					$elm$json$Json$Decode$decodeValue,
+					A2($elm_community$json_extra$Json$Decode$Extra$optionalField, key, decoder),
+					jsonValue)));
+	});
 var $elm$core$List$any = F2(
 	function (isOkay, list) {
 		any:
@@ -6757,24 +6795,33 @@ var $author$project$Main$selectArrowDown = A2(
 		]));
 var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
 var $author$project$Main$viewFormFieldOptionsPreview = F2(
-	function (customAttrs, formField) {
+	function (_v0, formField) {
+		var formValues = _v0.formValues;
+		var customAttrs = _v0.customAttrs;
 		var fieldName = A2($elm$core$Maybe$withDefault, formField.label, formField.name);
-		var _v0 = formField.type_;
-		switch (_v0.$) {
+		var _v1 = formField.type_;
+		switch (_v1.$) {
 			case 'ShortText':
-				var inputType = _v0.a;
-				var maybeMaxLength = _v0.b;
-				var extraAttrs = function () {
-					if (maybeMaxLength.$ === 'Just') {
-						var maxLength = maybeMaxLength.a;
-						return _List_fromArray(
-							[
-								$elm$html$Html$Attributes$maxlength(maxLength)
-							]);
-					} else {
-						return _List_Nil;
-					}
-				}();
+				var inputType = _v1.a;
+				var maybeMaxLength = _v1.b;
+				var extraAttrs = A2(
+					$elm$core$List$filterMap,
+					$elm$core$Basics$identity,
+					_List_fromArray(
+						[
+							A2(
+							$elm$core$Maybe$map,
+							function (maxLength) {
+								return $elm$html$Html$Attributes$maxlength(maxLength);
+							},
+							maybeMaxLength),
+							A2(
+							$elm$core$Maybe$map,
+							function (s) {
+								return $elm$html$Html$Attributes$value(s);
+							},
+							A3($author$project$Main$maybeDecode, fieldName, $elm$json$Json$Decode$string, formValues))
+						]));
 				return A2(
 					$elm$html$Html$input,
 					_Utils_ap(
@@ -6789,18 +6836,25 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 						_Utils_ap(extraAttrs, customAttrs)),
 					_List_Nil);
 			case 'LongText':
-				var maybeMaxLength = _v0.a;
-				var extraAttrs = function () {
-					if (maybeMaxLength.$ === 'Just') {
-						var maxLength = maybeMaxLength.a;
-						return _List_fromArray(
-							[
-								$elm$html$Html$Attributes$maxlength(maxLength)
-							]);
-					} else {
-						return _List_Nil;
-					}
-				}();
+				var maybeMaxLength = _v1.a;
+				var extraAttrs = A2(
+					$elm$core$List$filterMap,
+					$elm$core$Basics$identity,
+					_List_fromArray(
+						[
+							A2(
+							$elm$core$Maybe$map,
+							function (maxLength) {
+								return $elm$html$Html$Attributes$maxlength(maxLength);
+							},
+							maybeMaxLength),
+							A2(
+							$elm$core$Maybe$map,
+							function (s) {
+								return $elm$html$Html$Attributes$value(s);
+							},
+							A3($author$project$Main$maybeDecode, fieldName, $elm$json$Json$Decode$string, formValues))
+						]));
 				return A2(
 					$elm$html$Html$textarea,
 					_Utils_ap(
@@ -6814,7 +6868,8 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 						_Utils_ap(extraAttrs, customAttrs)),
 					_List_Nil);
 			case 'ChooseOne':
-				var choices = _v0.a;
+				var choices = _v1.a;
+				var valueString = A3($author$project$Main$maybeDecode, fieldName, $elm$json$Json$Decode$string, formValues);
 				return A2(
 					$elm$html$Html$div,
 					_List_fromArray(
@@ -6832,7 +6887,19 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 									A2(
 									$elm$core$List$member,
 									$elm$html$Html$Attributes$disabled(true),
-									customAttrs) ? $elm$html$Html$Attributes$class('tff-select-disabled') : $elm$html$Html$Attributes$required(formField.required)
+									customAttrs) ? $elm$html$Html$Attributes$class('tff-select-disabled') : $elm$html$Html$Attributes$required(formField.required),
+									A2(
+									$elm$html$Html$Attributes$attribute,
+									'data-values',
+									A2(
+										$elm$json$Json$Encode$encode,
+										0,
+										$elm$json$Json$Encode$string(
+											A2($elm$core$Maybe$withDefault, '{null}', valueString)))),
+									A2(
+									$elm$html$Html$Attributes$attribute,
+									'data-formvalues',
+									A2($elm$json$Json$Encode$encode, 0, formValues))
 								]),
 							A2(
 								$elm$core$List$cons,
@@ -6842,7 +6909,8 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 										_List_fromArray(
 											[
 												$elm$html$Html$Attributes$disabled(true),
-												$elm$html$Html$Attributes$selected(true),
+												$elm$html$Html$Attributes$selected(
+												_Utils_eq(valueString, $elm$core$Maybe$Nothing)),
 												A2($elm$html$Html$Attributes$attribute, 'value', '')
 											]),
 										customAttrs),
@@ -6858,7 +6926,13 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 											A2(
 												$elm$core$List$cons,
 												$elm$html$Html$Attributes$value(choice),
-												customAttrs),
+												A2(
+													$elm$core$List$cons,
+													$elm$html$Html$Attributes$selected(
+														_Utils_eq(
+															valueString,
+															$elm$core$Maybe$Just(choice))),
+													customAttrs)),
 											_List_fromArray(
 												[
 													$elm$html$Html$text(choice)
@@ -6867,7 +6941,15 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 									choices)))
 						]));
 			default:
-				var choices = _v0.a;
+				var choices = _v1.a;
+				var values = A2(
+					$elm$core$Maybe$withDefault,
+					_List_Nil,
+					A3(
+						$author$project$Main$maybeDecode,
+						fieldName,
+						$elm$json$Json$Decode$list($elm$json$Json$Decode$string),
+						formValues));
 				return A2(
 					$elm$html$Html$div,
 					_List_fromArray(
@@ -6909,7 +6991,9 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 																	$elm$html$Html$Attributes$type_('checkbox'),
 																	$elm$html$Html$Attributes$tabindex(0),
 																	$elm$html$Html$Attributes$name(fieldName),
-																	$elm$html$Html$Attributes$value(choice)
+																	$elm$html$Html$Attributes$value(choice),
+																	$elm$html$Html$Attributes$checked(
+																	A2($elm$core$List$member, choice, values))
 																]),
 															customAttrs),
 														_List_Nil),
@@ -6927,7 +7011,7 @@ var $author$project$Main$when = F2(
 		return bool ? condition._true : condition._false;
 	});
 var $author$project$Main$viewFormFieldPreview = F2(
-	function (customAttrs, formField) {
+	function (config, formField) {
 		return A2(
 			$elm$html$Html$div,
 			_List_fromArray(
@@ -6959,7 +7043,7 @@ var $author$project$Main$viewFormFieldPreview = F2(
 									$elm$html$Html$text(formField.label),
 									formField.required ? $elm$html$Html$text('') : $elm$html$Html$text(' (optional)')
 								])),
-							A2($author$project$Main$viewFormFieldOptionsPreview, customAttrs, formField),
+							A2($author$project$Main$viewFormFieldOptionsPreview, config, formField),
 							A2(
 							$elm$html$Html$div,
 							_List_fromArray(
@@ -6986,10 +7070,12 @@ var $author$project$Main$viewFormFieldPreview = F2(
 var $author$project$Main$viewFormPreview = F2(
 	function (customAttrs, _v0) {
 		var formFields = _v0.formFields;
+		var formValues = _v0.formValues;
 		return $elm$core$Array$toList(
 			A2(
 				$elm$core$Array$map,
-				$author$project$Main$viewFormFieldPreview(customAttrs),
+				$author$project$Main$viewFormFieldPreview(
+					{customAttrs: customAttrs, formValues: formValues}),
 				formFields));
 	});
 var $author$project$Main$SetViewMode = function (a) {
@@ -7125,19 +7211,24 @@ _Platform_export({'Main':{'init':$author$project$Main$main(
 		function (viewModeString) {
 			return A2(
 				$elm$json$Json$Decode$andThen,
-				function (formFields) {
-					return $elm$json$Json$Decode$succeed(
-						{formFields: formFields, viewModeString: viewModeString});
+				function (formValues) {
+					return A2(
+						$elm$json$Json$Decode$andThen,
+						function (formFields) {
+							return $elm$json$Json$Decode$succeed(
+								{formFields: formFields, formValues: formValues, viewModeString: viewModeString});
+						},
+						A2(
+							$elm$json$Json$Decode$field,
+							'formFields',
+							$elm$json$Json$Decode$oneOf(
+								_List_fromArray(
+									[
+										$elm$json$Json$Decode$null($elm$core$Maybe$Nothing),
+										A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, $elm$json$Json$Decode$value)
+									]))));
 				},
-				A2(
-					$elm$json$Json$Decode$field,
-					'formFields',
-					$elm$json$Json$Decode$oneOf(
-						_List_fromArray(
-							[
-								$elm$json$Json$Decode$null($elm$core$Maybe$Nothing),
-								A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, $elm$json$Json$Decode$value)
-							]))));
+				A2($elm$json$Json$Decode$field, 'formValues', $elm$json$Json$Decode$value));
 		},
 		A2(
 			$elm$json$Json$Decode$field,
