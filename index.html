@@ -50,6 +50,12 @@
             viewModeString: hash['viewMode'],
             formFields: hash['formFields'] ? JSON.parse(decodeURIComponent(hash['formFields'])) : null, // JSON representation of form fields
             formValues: { "Email": "email@example.com", "ChooseOne": "No", "ChooseMany": [ "Durian", "Banana" ]}, // pre-fill form fields
+            shortTextTypeList: [
+                { 'Text': { type: 'text' } },
+                { 'Email': { type: 'email' } },
+                { 'Number': { type: 'number', pattern: '^[0-9]+$' } },
+                { 'Nric': { type: 'text', pattern: '^[STGM][0-9]{7}[ABCDEFGHIZJ]$' } },
+            ],
         }
 
         // code to setup tiny-form-fields

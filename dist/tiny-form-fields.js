@@ -5388,6 +5388,161 @@ var $author$project$Main$decodeFormFields = A2(
 	$elm$json$Json$Decode$map,
 	$elm$core$Array$fromList,
 	$elm$json$Json$Decode$list($author$project$Main$decodeFormField));
+var $elm$core$Basics$composeR = F3(
+	function (f, g, x) {
+		return g(
+			f(x));
+	});
+var $elm$core$List$append = F2(
+	function (xs, ys) {
+		if (!ys.b) {
+			return xs;
+		} else {
+			return A3($elm$core$List$foldr, $elm$core$List$cons, ys, xs);
+		}
+	});
+var $elm$core$List$concat = function (lists) {
+	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
+};
+var $elm$core$Dict$RBEmpty_elm_builtin = {$: 'RBEmpty_elm_builtin'};
+var $elm$core$Dict$empty = $elm$core$Dict$RBEmpty_elm_builtin;
+var $elm$core$Dict$Black = {$: 'Black'};
+var $elm$core$Dict$RBNode_elm_builtin = F5(
+	function (a, b, c, d, e) {
+		return {$: 'RBNode_elm_builtin', a: a, b: b, c: c, d: d, e: e};
+	});
+var $elm$core$Dict$Red = {$: 'Red'};
+var $elm$core$Dict$balance = F5(
+	function (color, key, value, left, right) {
+		if ((right.$ === 'RBNode_elm_builtin') && (right.a.$ === 'Red')) {
+			var _v1 = right.a;
+			var rK = right.b;
+			var rV = right.c;
+			var rLeft = right.d;
+			var rRight = right.e;
+			if ((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Red')) {
+				var _v3 = left.a;
+				var lK = left.b;
+				var lV = left.c;
+				var lLeft = left.d;
+				var lRight = left.e;
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					$elm$core$Dict$Red,
+					key,
+					value,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, lK, lV, lLeft, lRight),
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, rK, rV, rLeft, rRight));
+			} else {
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					color,
+					rK,
+					rV,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, key, value, left, rLeft),
+					rRight);
+			}
+		} else {
+			if ((((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Red')) && (left.d.$ === 'RBNode_elm_builtin')) && (left.d.a.$ === 'Red')) {
+				var _v5 = left.a;
+				var lK = left.b;
+				var lV = left.c;
+				var _v6 = left.d;
+				var _v7 = _v6.a;
+				var llK = _v6.b;
+				var llV = _v6.c;
+				var llLeft = _v6.d;
+				var llRight = _v6.e;
+				var lRight = left.e;
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					$elm$core$Dict$Red,
+					lK,
+					lV,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, llK, llV, llLeft, llRight),
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, key, value, lRight, right));
+			} else {
+				return A5($elm$core$Dict$RBNode_elm_builtin, color, key, value, left, right);
+			}
+		}
+	});
+var $elm$core$Basics$compare = _Utils_compare;
+var $elm$core$Dict$insertHelp = F3(
+	function (key, value, dict) {
+		if (dict.$ === 'RBEmpty_elm_builtin') {
+			return A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, key, value, $elm$core$Dict$RBEmpty_elm_builtin, $elm$core$Dict$RBEmpty_elm_builtin);
+		} else {
+			var nColor = dict.a;
+			var nKey = dict.b;
+			var nValue = dict.c;
+			var nLeft = dict.d;
+			var nRight = dict.e;
+			var _v1 = A2($elm$core$Basics$compare, key, nKey);
+			switch (_v1.$) {
+				case 'LT':
+					return A5(
+						$elm$core$Dict$balance,
+						nColor,
+						nKey,
+						nValue,
+						A3($elm$core$Dict$insertHelp, key, value, nLeft),
+						nRight);
+				case 'EQ':
+					return A5($elm$core$Dict$RBNode_elm_builtin, nColor, nKey, value, nLeft, nRight);
+				default:
+					return A5(
+						$elm$core$Dict$balance,
+						nColor,
+						nKey,
+						nValue,
+						nLeft,
+						A3($elm$core$Dict$insertHelp, key, value, nRight));
+			}
+		}
+	});
+var $elm$core$Dict$insert = F3(
+	function (key, value, dict) {
+		var _v0 = A3($elm$core$Dict$insertHelp, key, value, dict);
+		if ((_v0.$ === 'RBNode_elm_builtin') && (_v0.a.$ === 'Red')) {
+			var _v1 = _v0.a;
+			var k = _v0.b;
+			var v = _v0.c;
+			var l = _v0.d;
+			var r = _v0.e;
+			return A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, k, v, l, r);
+		} else {
+			var x = _v0;
+			return x;
+		}
+	});
+var $elm$core$Dict$fromList = function (assocs) {
+	return A3(
+		$elm$core$List$foldl,
+		F2(
+			function (_v0, dict) {
+				var key = _v0.a;
+				var value = _v0.b;
+				return A3($elm$core$Dict$insert, key, value, dict);
+			}),
+		$elm$core$Dict$empty,
+		assocs);
+};
+var $elm$json$Json$Decode$keyValuePairs = _Json_decodeKeyValuePairs;
+var $elm$json$Json$Decode$dict = function (decoder) {
+	return A2(
+		$elm$json$Json$Decode$map,
+		$elm$core$Dict$fromList,
+		$elm$json$Json$Decode$keyValuePairs(decoder));
+};
+var $author$project$Main$decodeShortTextTypeList = A2(
+	$elm$json$Json$Decode$map,
+	A2(
+		$elm$core$Basics$composeR,
+		$elm$core$List$map($elm$core$Dict$toList),
+		$elm$core$List$concat),
+	$elm$json$Json$Decode$list(
+		$elm$json$Json$Decode$dict(
+			$elm$json$Json$Decode$dict($elm$json$Json$Decode$string))));
 var $elm$json$Json$Encode$bool = _Json_wrap;
 var $elm$json$Json$Encode$int = _Json_wrap;
 var $elm$json$Json$Encode$list = F2(
@@ -5605,6 +5760,16 @@ var $author$project$Main$encodePortOutgoingValue = function (value) {
 	}
 };
 var $elm$core$Debug$log = _Debug_log;
+var $author$project$Main$mapNothing = F2(
+	function (f, maybeValue) {
+		if (maybeValue.$ === 'Just') {
+			var value = maybeValue.a;
+			return $elm$core$Maybe$Just(value);
+		} else {
+			var _v1 = f(_Utils_Tuple0);
+			return $elm$core$Maybe$Nothing;
+		}
+	});
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Main$outgoing = _Platform_outgoingPort('outgoing', $elm$core$Basics$identity);
@@ -5623,6 +5788,29 @@ var $author$project$Main$viewModeFromString = function (str) {
 	}
 };
 var $author$project$Main$init = function (flags) {
+	var shortTextTypeList = function () {
+		var _v4 = A2($elm$json$Json$Decode$decodeValue, $author$project$Main$decodeShortTextTypeList, flags.shortTextTypeList);
+		if (_v4.$ === 'Ok') {
+			var dict = _v4.a;
+			return dict;
+		} else {
+			var err = _v4.a;
+			var _v5 = A2(
+				$elm$core$Debug$log,
+				'decodeShortTypeText',
+				$elm$json$Json$Decode$errorToString(err));
+			return _List_fromArray(
+				[
+					_Utils_Tuple2(
+					'Text',
+					$elm$core$Dict$fromList(
+						_List_fromArray(
+							[
+								_Utils_Tuple2('type', 'text')
+							])))
+				]);
+		}
+	}();
 	var _v0 = function () {
 		var _v1 = A2(
 			$elm$core$Maybe$map,
@@ -5651,10 +5839,17 @@ var $author$project$Main$init = function (flags) {
 		{
 			formFields: initFormFields,
 			formValues: flags.formValues,
+			shortTextTypeDict: $elm$core$Dict$fromList(shortTextTypeList),
+			shortTextTypeList: shortTextTypeList,
 			viewMode: A2(
 				$elm$core$Maybe$withDefault,
 				$author$project$Main$Editor,
-				A2($elm$core$Maybe$andThen, $author$project$Main$viewModeFromString, flags.viewModeString))
+				A2(
+					$author$project$Main$mapNothing,
+					function (_v3) {
+						return A2($elm$core$Debug$log, 'invalid viewModeString', flags.viewModeString);
+					},
+					A2($elm$core$Maybe$andThen, $author$project$Main$viewModeFromString, flags.viewModeString)))
 		},
 		initCmd);
 };
@@ -5830,11 +6025,8 @@ var $elm$core$Tuple$second = function (_v0) {
 var $author$project$Main$stringFromInputField = function (inputField) {
 	switch (inputField.$) {
 		case 'ShortText':
-			if (inputField.a === 'email') {
-				return 'Email';
-			} else {
-				return 'Short text';
-			}
+			var inputType = inputField.a;
+			return inputType;
 		case 'LongText':
 			return 'Long text';
 		case 'Dropdown':
@@ -6002,7 +6194,7 @@ var $author$project$Main$updateFormField = F3(
 									$elm$core$String$lines(string))
 							});
 				}
-			default:
+			case 'OnMaxLengthInput':
 				var _v2 = formField.type_;
 				switch (_v2.$) {
 					case 'ShortText':
@@ -6028,6 +6220,18 @@ var $author$project$Main$updateFormField = F3(
 						return formField;
 					default:
 						return formField;
+				}
+			default:
+				var _v3 = formField.type_;
+				if (_v3.$ === 'ShortText') {
+					var maybeMaxLength = _v3.b;
+					return _Utils_update(
+						formField,
+						{
+							type_: A2($author$project$Main$ShortText, string, maybeMaxLength)
+						});
+				} else {
+					return formField;
 				}
 		}
 	});
@@ -6163,8 +6367,7 @@ var $author$project$Main$AddFormField = function (a) {
 };
 var $author$project$Main$allInputField = _List_fromArray(
 	[
-		A2($author$project$Main$ShortText, 'text', $elm$core$Maybe$Nothing),
-		A2($author$project$Main$ShortText, 'email', $elm$core$Maybe$Nothing),
+		A2($author$project$Main$ShortText, 'Text', $elm$core$Maybe$Nothing),
 		$author$project$Main$LongText(
 		$elm$core$Maybe$Just(160)),
 		$author$project$Main$Dropdown(
@@ -6276,232 +6479,314 @@ var $elm$html$Html$Attributes$required = $elm$html$Html$Attributes$boolProperty(
 var $elm$html$Html$Attributes$title = $elm$html$Html$Attributes$stringProperty('title');
 var $author$project$Main$OnChoicesInput = {$: 'OnChoicesInput'};
 var $author$project$Main$OnMaxLengthInput = {$: 'OnMaxLengthInput'};
+var $author$project$Main$OnShortTextType = {$: 'OnShortTextType'};
+var $elm$html$Html$option = _VirtualDom_node('option');
+var $elm$html$Html$select = _VirtualDom_node('select');
+var $elm$virtual_dom$VirtualDom$attribute = F2(
+	function (key, value) {
+		return A2(
+			_VirtualDom_attribute,
+			_VirtualDom_noOnOrFormAction(key),
+			_VirtualDom_noJavaScriptOrHtmlUri(value));
+	});
+var $elm$html$Html$Attributes$attribute = $elm$virtual_dom$VirtualDom$attribute;
+var $elm$svg$Svg$Attributes$clipRule = _VirtualDom_attribute('clip-rule');
+var $elm$svg$Svg$Attributes$d = _VirtualDom_attribute('d');
+var $elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
+var $elm$svg$Svg$Attributes$fillRule = _VirtualDom_attribute('fill-rule');
+var $elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
+var $elm$svg$Svg$path = $elm$svg$Svg$trustedNode('path');
+var $elm$svg$Svg$svg = $elm$svg$Svg$trustedNode('svg');
+var $elm$svg$Svg$Attributes$viewBox = _VirtualDom_attribute('viewBox');
+var $author$project$Main$selectArrowDown = A2(
+	$elm$svg$Svg$svg,
+	_List_fromArray(
+		[
+			$elm$svg$Svg$Attributes$viewBox('0 0 16 16'),
+			$elm$svg$Svg$Attributes$fill('currentColor'),
+			A2($elm$html$Html$Attributes$attribute, 'aria-hidden', 'true')
+		]),
+	_List_fromArray(
+		[
+			A2(
+			$elm$svg$Svg$path,
+			_List_fromArray(
+				[
+					$elm$svg$Svg$Attributes$fillRule('evenodd'),
+					$elm$svg$Svg$Attributes$d('M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z'),
+					$elm$svg$Svg$Attributes$clipRule('evenodd')
+				]),
+			_List_Nil)
+		]));
+var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
 var $elm$html$Html$textarea = _VirtualDom_node('textarea');
-var $author$project$Main$viewFormFieldOptionsBuilder = F2(
-	function (index, fieldType) {
+var $author$project$Main$viewFormFieldOptionsBuilder = F3(
+	function (shortTextTypeList, index, fieldType) {
 		var idSuffix = $elm$core$String$fromInt(index);
 		switch (fieldType.$) {
 			case 'ShortText':
+				var inputType = fieldType.a;
 				var maybeMaxLength = fieldType.b;
-				return A2(
-					$elm$html$Html$div,
-					_List_Nil,
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('tff-field-group')
-								]),
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$label,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('tff-field-label'),
-											$elm$html$Html$Attributes$for('placeholder-' + idSuffix)
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text('Max length (optional)')
-										])),
-									A2(
-									$elm$html$Html$input,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$id('placeholder-' + idSuffix),
-											$elm$html$Html$Attributes$type_('number'),
-											$elm$html$Html$Attributes$class('tff-text-field'),
-											$elm$html$Html$Attributes$value(
-											A2(
-												$elm$core$Maybe$withDefault,
-												'',
-												A2($elm$core$Maybe$map, $elm$core$String$fromInt, maybeMaxLength))),
-											$elm$html$Html$Events$onInput(
-											A2($author$project$Main$OnFormField, $author$project$Main$OnMaxLengthInput, index))
-										]),
-									_List_Nil)
-								]))
-						]));
+				return _List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('tff-field-group')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$label,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('tff-field-label'),
+										$elm$html$Html$Attributes$for('inputType-' + idSuffix)
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Type')
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('tff-dropdown-group')
+									]),
+								_List_fromArray(
+									[
+										$author$project$Main$selectArrowDown,
+										A2(
+										$elm$html$Html$select,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$required(true),
+												$elm$html$Html$Attributes$name('inputType-' + idSuffix),
+												$elm$html$Html$Events$onInput(
+												A2($author$project$Main$OnFormField, $author$project$Main$OnShortTextType, index))
+											]),
+										A2(
+											$elm$core$List$map,
+											function (choice) {
+												return A2(
+													$elm$html$Html$option,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$value(choice),
+															$elm$html$Html$Attributes$selected(
+															_Utils_eq(inputType, choice))
+														]),
+													_List_fromArray(
+														[
+															$elm$html$Html$text(choice)
+														]));
+											},
+											A2($elm$core$List$map, $elm$core$Tuple$first, shortTextTypeList)))
+									]))
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('tff-field-group')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$label,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('tff-field-label'),
+										$elm$html$Html$Attributes$for('placeholder-' + idSuffix)
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Max length (optional)')
+									])),
+								A2(
+								$elm$html$Html$input,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$id('placeholder-' + idSuffix),
+										$elm$html$Html$Attributes$type_('number'),
+										$elm$html$Html$Attributes$class('tff-text-field'),
+										$elm$html$Html$Attributes$value(
+										A2(
+											$elm$core$Maybe$withDefault,
+											'',
+											A2($elm$core$Maybe$map, $elm$core$String$fromInt, maybeMaxLength))),
+										$elm$html$Html$Events$onInput(
+										A2($author$project$Main$OnFormField, $author$project$Main$OnMaxLengthInput, index))
+									]),
+								_List_Nil)
+							]))
+					]);
 			case 'LongText':
 				var maybeMaxLength = fieldType.a;
-				return A2(
-					$elm$html$Html$div,
-					_List_Nil,
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('tff-field-group')
-								]),
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$label,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('tff-field-label'),
-											$elm$html$Html$Attributes$for('placeholder-' + idSuffix)
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text('Max length (optional)')
-										])),
-									A2(
-									$elm$html$Html$input,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$id('placeholder-' + idSuffix),
-											$elm$html$Html$Attributes$type_('number'),
-											$elm$html$Html$Attributes$class('tff-text-field'),
-											$elm$html$Html$Attributes$value(
-											A2(
-												$elm$core$Maybe$withDefault,
-												'',
-												A2($elm$core$Maybe$map, $elm$core$String$fromInt, maybeMaxLength))),
-											$elm$html$Html$Events$onInput(
-											A2($author$project$Main$OnFormField, $author$project$Main$OnMaxLengthInput, index))
-										]),
-									_List_Nil)
-								]))
-						]));
+				return _List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('tff-field-group')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$label,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('tff-field-label'),
+										$elm$html$Html$Attributes$for('placeholder-' + idSuffix)
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Max length (optional)')
+									])),
+								A2(
+								$elm$html$Html$input,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$id('placeholder-' + idSuffix),
+										$elm$html$Html$Attributes$type_('number'),
+										$elm$html$Html$Attributes$class('tff-text-field'),
+										$elm$html$Html$Attributes$value(
+										A2(
+											$elm$core$Maybe$withDefault,
+											'',
+											A2($elm$core$Maybe$map, $elm$core$String$fromInt, maybeMaxLength))),
+										$elm$html$Html$Events$onInput(
+										A2($author$project$Main$OnFormField, $author$project$Main$OnMaxLengthInput, index))
+									]),
+								_List_Nil)
+							]))
+					]);
 			case 'Dropdown':
 				var choices = fieldType.a;
-				return A2(
-					$elm$html$Html$div,
-					_List_Nil,
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('tff-field-group')
-								]),
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$label,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('tff-field-label'),
-											$elm$html$Html$Attributes$for('choices-' + idSuffix)
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text('Choices')
-										])),
-									A2(
-									$elm$html$Html$textarea,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$id('choices-' + idSuffix),
-											$elm$html$Html$Attributes$required(true),
-											$elm$html$Html$Attributes$minlength(1),
-											$elm$html$Html$Attributes$class('tff-text-field'),
-											$elm$html$Html$Attributes$placeholder('Enter one choice per line'),
-											$elm$html$Html$Attributes$value(
-											A2($elm$core$String$join, '\n', choices)),
-											$elm$html$Html$Events$onInput(
-											A2($author$project$Main$OnFormField, $author$project$Main$OnChoicesInput, index))
-										]),
-									_List_Nil)
-								]))
-						]));
+				return _List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('tff-field-group')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$label,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('tff-field-label'),
+										$elm$html$Html$Attributes$for('choices-' + idSuffix)
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Choices')
+									])),
+								A2(
+								$elm$html$Html$textarea,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$id('choices-' + idSuffix),
+										$elm$html$Html$Attributes$required(true),
+										$elm$html$Html$Attributes$minlength(1),
+										$elm$html$Html$Attributes$class('tff-text-field'),
+										$elm$html$Html$Attributes$placeholder('Enter one choice per line'),
+										$elm$html$Html$Attributes$value(
+										A2($elm$core$String$join, '\n', choices)),
+										$elm$html$Html$Events$onInput(
+										A2($author$project$Main$OnFormField, $author$project$Main$OnChoicesInput, index))
+									]),
+								_List_Nil)
+							]))
+					]);
 			case 'ChooseOne':
 				var choices = fieldType.a;
-				return A2(
-					$elm$html$Html$div,
-					_List_Nil,
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('tff-field-group')
-								]),
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$label,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('tff-field-label'),
-											$elm$html$Html$Attributes$for('choices-' + idSuffix)
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text('Choices')
-										])),
-									A2(
-									$elm$html$Html$textarea,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$id('choices-' + idSuffix),
-											$elm$html$Html$Attributes$required(true),
-											$elm$html$Html$Attributes$minlength(1),
-											$elm$html$Html$Attributes$class('tff-text-field'),
-											$elm$html$Html$Attributes$placeholder('Enter one choice per line'),
-											$elm$html$Html$Attributes$value(
-											A2($elm$core$String$join, '\n', choices)),
-											$elm$html$Html$Events$onInput(
-											A2($author$project$Main$OnFormField, $author$project$Main$OnChoicesInput, index))
-										]),
-									_List_Nil)
-								]))
-						]));
+				return _List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('tff-field-group')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$label,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('tff-field-label'),
+										$elm$html$Html$Attributes$for('choices-' + idSuffix)
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Choices')
+									])),
+								A2(
+								$elm$html$Html$textarea,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$id('choices-' + idSuffix),
+										$elm$html$Html$Attributes$required(true),
+										$elm$html$Html$Attributes$minlength(1),
+										$elm$html$Html$Attributes$class('tff-text-field'),
+										$elm$html$Html$Attributes$placeholder('Enter one choice per line'),
+										$elm$html$Html$Attributes$value(
+										A2($elm$core$String$join, '\n', choices)),
+										$elm$html$Html$Events$onInput(
+										A2($author$project$Main$OnFormField, $author$project$Main$OnChoicesInput, index))
+									]),
+								_List_Nil)
+							]))
+					]);
 			default:
 				var choices = fieldType.a;
-				return A2(
-					$elm$html$Html$div,
-					_List_Nil,
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('tff-field-group')
-								]),
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$label,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('tff-field-label'),
-											$elm$html$Html$Attributes$for('choices-' + idSuffix)
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text('Choices')
-										])),
-									A2(
-									$elm$html$Html$textarea,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$id('choices-' + idSuffix),
-											$elm$html$Html$Attributes$required(true),
-											$elm$html$Html$Attributes$minlength(1),
-											$elm$html$Html$Attributes$class('tff-text-field'),
-											$elm$html$Html$Attributes$placeholder('Enter one choice per line'),
-											$elm$html$Html$Attributes$value(
-											A2($elm$core$String$join, '\n', choices)),
-											$elm$html$Html$Events$onInput(
-											A2($author$project$Main$OnFormField, $author$project$Main$OnChoicesInput, index))
-										]),
-									_List_Nil)
-								]))
-						]));
+				return _List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('tff-field-group')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$label,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('tff-field-label'),
+										$elm$html$Html$Attributes$for('choices-' + idSuffix)
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Choices')
+									])),
+								A2(
+								$elm$html$Html$textarea,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$id('choices-' + idSuffix),
+										$elm$html$Html$Attributes$required(true),
+										$elm$html$Html$Attributes$minlength(1),
+										$elm$html$Html$Attributes$class('tff-text-field'),
+										$elm$html$Html$Attributes$placeholder('Enter one choice per line'),
+										$elm$html$Html$Attributes$value(
+										A2($elm$core$String$join, '\n', choices)),
+										$elm$html$Html$Events$onInput(
+										A2($author$project$Main$OnFormField, $author$project$Main$OnChoicesInput, index))
+									]),
+								_List_Nil)
+							]))
+					]);
 		}
 	});
-var $author$project$Main$viewFormFieldBuilder = F3(
-	function (totalLength, index, formField) {
+var $author$project$Main$viewFormFieldBuilder = F4(
+	function (shortTextTypeList, totalLength, index, formField) {
 		var idSuffix = $elm$core$String$fromInt(index);
 		return A2(
 			$elm$html$Html$div,
@@ -6509,186 +6794,183 @@ var $author$project$Main$viewFormFieldBuilder = F3(
 				[
 					$elm$html$Html$Attributes$class('tff-build-field')
 				]),
-			_List_fromArray(
-				[
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('tff-field-group')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$label,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('tff-field-label'),
-									$elm$html$Html$Attributes$for('label-' + idSuffix)
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text(
-									$author$project$Main$stringFromInputField(formField.type_) + ' label')
-								])),
-							A2(
-							$elm$html$Html$input,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$type_('text'),
-									$elm$html$Html$Attributes$id('label-' + idSuffix),
-									$elm$html$Html$Attributes$required(true),
-									$elm$html$Html$Attributes$minlength(1),
-									$elm$html$Html$Attributes$class('tff-text-field'),
-									$elm$html$Html$Attributes$placeholder('Label'),
-									$elm$html$Html$Attributes$value(formField.label),
-									$elm$html$Html$Events$onInput(
-									A2($author$project$Main$OnFormField, $author$project$Main$OnLabelInput, index))
-								]),
-							_List_Nil)
-						])),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('tff-field-group tff-checkbox-group')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$label,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('tff-field-label'),
-									$elm$html$Html$Attributes$for('required-' + idSuffix)
-								]),
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$input,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$id('required-' + idSuffix),
-											$elm$html$Html$Attributes$type_('checkbox'),
-											$elm$html$Html$Attributes$tabindex(0),
-											$elm$html$Html$Attributes$checked(formField.required),
-											$elm$html$Html$Events$onCheck(
-											function (b) {
-												return A3(
-													$author$project$Main$OnFormField,
-													$author$project$Main$OnRequiredInput(b),
-													index,
-													'');
-											})
-										]),
-									_List_Nil),
-									$elm$html$Html$text(' Required field')
-								]))
-						])),
-					A2($author$project$Main$viewFormFieldOptionsBuilder, index, formField.type_),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('tff-field-group')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$label,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('tff-field-label'),
-									$elm$html$Html$Attributes$for('description-' + idSuffix)
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text('Description (optional)')
-								])),
-							A2(
-							$elm$html$Html$input,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$id('description-' + idSuffix),
-									$elm$html$Html$Attributes$class('tff-text-field'),
-									$elm$html$Html$Attributes$value(formField.description),
-									$elm$html$Html$Events$onInput(
-									A2($author$project$Main$OnFormField, $author$project$Main$OnDescriptionInput, index))
-								]),
-							_List_Nil)
-						])),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('tff-build-field-buttons')
-						]),
+			_Utils_ap(
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('tff-field-group')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$label,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('tff-field-label'),
+										$elm$html$Html$Attributes$for('label-' + idSuffix)
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text(
+										$author$project$Main$stringFromInputField(formField.type_) + ' label')
+									])),
+								A2(
+								$elm$html$Html$input,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$type_('text'),
+										$elm$html$Html$Attributes$id('label-' + idSuffix),
+										$elm$html$Html$Attributes$required(true),
+										$elm$html$Html$Attributes$minlength(1),
+										$elm$html$Html$Attributes$class('tff-text-field'),
+										$elm$html$Html$Attributes$placeholder('Label'),
+										$elm$html$Html$Attributes$value(formField.label),
+										$elm$html$Html$Events$onInput(
+										A2($author$project$Main$OnFormField, $author$project$Main$OnLabelInput, index))
+									]),
+								_List_Nil),
+								A2(
+								$elm$html$Html$label,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('tff-field-label'),
+										$elm$html$Html$Attributes$for('required-' + idSuffix)
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$input,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$id('required-' + idSuffix),
+												$elm$html$Html$Attributes$type_('checkbox'),
+												$elm$html$Html$Attributes$tabindex(0),
+												$elm$html$Html$Attributes$checked(formField.required),
+												$elm$html$Html$Events$onCheck(
+												function (b) {
+													return A3(
+														$author$project$Main$OnFormField,
+														$author$project$Main$OnRequiredInput(b),
+														index,
+														'');
+												})
+											]),
+										_List_Nil),
+										$elm$html$Html$text(' Required field')
+									]))
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('tff-field-group')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$label,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('tff-field-label'),
+										$elm$html$Html$Attributes$for('description-' + idSuffix)
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Description (optional)')
+									])),
+								A2(
+								$elm$html$Html$input,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$id('description-' + idSuffix),
+										$elm$html$Html$Attributes$class('tff-text-field'),
+										$elm$html$Html$Attributes$value(formField.description),
+										$elm$html$Html$Events$onInput(
+										A2($author$project$Main$OnFormField, $author$project$Main$OnDescriptionInput, index))
+									]),
+								_List_Nil)
+							]))
+					]),
+				_Utils_ap(
+					A3($author$project$Main$viewFormFieldOptionsBuilder, shortTextTypeList, index, formField.type_),
 					_List_fromArray(
 						[
 							A2(
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('tff-move')
+									$elm$html$Html$Attributes$class('tff-build-field-buttons')
 								]),
 							_List_fromArray(
 								[
-									(!index) ? $elm$html$Html$text('') : A2(
-									$elm$html$Html$button,
+									A2(
+									$elm$html$Html$div,
 									_List_fromArray(
 										[
-											$elm$html$Html$Attributes$type_('button'),
-											$elm$html$Html$Attributes$tabindex(0),
-											$elm$html$Html$Attributes$title('Move field up'),
-											$elm$html$Html$Events$onClick(
-											$author$project$Main$MoveFormFieldUp(index))
+											$elm$html$Html$Attributes$class('tff-move')
 										]),
 									_List_fromArray(
 										[
-											$elm$html$Html$text('↑')
+											(!index) ? $elm$html$Html$text('') : A2(
+											$elm$html$Html$button,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$type_('button'),
+													$elm$html$Html$Attributes$tabindex(0),
+													$elm$html$Html$Attributes$title('Move field up'),
+													$elm$html$Html$Events$onClick(
+													$author$project$Main$MoveFormFieldUp(index))
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text('↑')
+												])),
+											_Utils_eq(index, totalLength - 1) ? $elm$html$Html$text('') : A2(
+											$elm$html$Html$button,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$type_('button'),
+													$elm$html$Html$Attributes$tabindex(0),
+													$elm$html$Html$Attributes$title('Move field down'),
+													$elm$html$Html$Events$onClick(
+													$author$project$Main$MoveFormFieldDown(index))
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text('↓')
+												]))
 										])),
-									_Utils_eq(index, totalLength - 1) ? $elm$html$Html$text('') : A2(
-									$elm$html$Html$button,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$type_('button'),
-											$elm$html$Html$Attributes$tabindex(0),
-											$elm$html$Html$Attributes$title('Move field down'),
-											$elm$html$Html$Events$onClick(
-											$author$project$Main$MoveFormFieldDown(index))
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text('↓')
-										]))
-								])),
-							function () {
-							var _v0 = formField.fixed;
-							if ((_v0.$ === 'Just') && _v0.a) {
-								return $elm$html$Html$text('');
-							} else {
-								return A2(
-									$elm$html$Html$button,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$type_('button'),
-											$elm$html$Html$Attributes$tabindex(0),
-											$elm$html$Html$Attributes$class('tff-delete'),
-											$elm$html$Html$Attributes$title('Delete field'),
-											$elm$html$Html$Events$onClick(
-											$author$project$Main$DeleteFormField(index))
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text('⨯ Delete')
-										]));
-							}
-						}()
-						]))
-				]));
+									function () {
+									var _v0 = formField.fixed;
+									if ((_v0.$ === 'Just') && _v0.a) {
+										return $elm$html$Html$text('');
+									} else {
+										return A2(
+											$elm$html$Html$button,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$type_('button'),
+													$elm$html$Html$Attributes$tabindex(0),
+													$elm$html$Html$Attributes$class('tff-delete'),
+													$elm$html$Html$Attributes$title('Delete field'),
+													$elm$html$Html$Events$onClick(
+													$author$project$Main$DeleteFormField(index))
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text('⨯ Delete')
+												]));
+									}
+								}()
+								]))
+						]))));
 	});
 var $author$project$Main$viewFormBuilder = function (_v0) {
 	var formFields = _v0.formFields;
+	var shortTextTypeList = _v0.shortTextTypeList;
 	return _List_fromArray(
 		[
 			A2(
@@ -6700,7 +6982,9 @@ var $author$project$Main$viewFormBuilder = function (_v0) {
 			$elm$core$Array$toList(
 				A2(
 					$elm$core$Array$indexedMap,
-					$author$project$Main$viewFormFieldBuilder(
+					A2(
+						$author$project$Main$viewFormFieldBuilder,
+						shortTextTypeList,
 						$elm$core$Array$length(formFields)),
 					formFields))),
 			A2(
@@ -6769,14 +7053,6 @@ var $author$project$Main$maybeMaxLengthOf = function (formField) {
 			return $elm$core$Maybe$Nothing;
 	}
 };
-var $elm$virtual_dom$VirtualDom$attribute = F2(
-	function (key, value) {
-		return A2(
-			_VirtualDom_attribute,
-			_VirtualDom_noOnOrFormAction(key),
-			_VirtualDom_noJavaScriptOrHtmlUri(value));
-	});
-var $elm$html$Html$Attributes$attribute = $elm$virtual_dom$VirtualDom$attribute;
 var $elm$core$List$maybeCons = F3(
 	function (f, mx, xs) {
 		var _v0 = f(mx);
@@ -6794,6 +7070,37 @@ var $elm$core$List$filterMap = F2(
 			$elm$core$List$maybeCons(f),
 			_List_Nil,
 			xs);
+	});
+var $elm$core$Dict$get = F2(
+	function (targetKey, dict) {
+		get:
+		while (true) {
+			if (dict.$ === 'RBEmpty_elm_builtin') {
+				return $elm$core$Maybe$Nothing;
+			} else {
+				var key = dict.b;
+				var value = dict.c;
+				var left = dict.d;
+				var right = dict.e;
+				var _v1 = A2($elm$core$Basics$compare, targetKey, key);
+				switch (_v1.$) {
+					case 'LT':
+						var $temp$targetKey = targetKey,
+							$temp$dict = left;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+					case 'EQ':
+						return $elm$core$Maybe$Just(value);
+					default:
+						var $temp$targetKey = targetKey,
+							$temp$dict = right;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+				}
+			}
+		}
 	});
 var $elm$html$Html$Attributes$maxlength = function (n) {
 	return A2(
@@ -6850,47 +7157,29 @@ var $elm$core$List$member = F2(
 			},
 			xs);
 	});
-var $elm$html$Html$option = _VirtualDom_node('option');
-var $elm$html$Html$select = _VirtualDom_node('select');
-var $elm$svg$Svg$Attributes$clipRule = _VirtualDom_attribute('clip-rule');
-var $elm$svg$Svg$Attributes$d = _VirtualDom_attribute('d');
-var $elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
-var $elm$svg$Svg$Attributes$fillRule = _VirtualDom_attribute('fill-rule');
-var $elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
-var $elm$svg$Svg$path = $elm$svg$Svg$trustedNode('path');
-var $elm$svg$Svg$svg = $elm$svg$Svg$trustedNode('svg');
-var $elm$svg$Svg$Attributes$viewBox = _VirtualDom_attribute('viewBox');
-var $author$project$Main$selectArrowDown = A2(
-	$elm$svg$Svg$svg,
-	_List_fromArray(
-		[
-			$elm$svg$Svg$Attributes$viewBox('0 0 16 16'),
-			$elm$svg$Svg$Attributes$fill('currentColor'),
-			A2($elm$html$Html$Attributes$attribute, 'aria-hidden', 'true')
-		]),
-	_List_fromArray(
-		[
-			A2(
-			$elm$svg$Svg$path,
-			_List_fromArray(
-				[
-					$elm$svg$Svg$Attributes$fillRule('evenodd'),
-					$elm$svg$Svg$Attributes$d('M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z'),
-					$elm$svg$Svg$Attributes$clipRule('evenodd')
-				]),
-			_List_Nil)
-		]));
-var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
 var $author$project$Main$viewFormFieldOptionsPreview = F2(
 	function (_v0, formField) {
 		var formValues = _v0.formValues;
 		var customAttrs = _v0.customAttrs;
+		var shortTextTypeDict = _v0.shortTextTypeDict;
 		var fieldName = A2($elm$core$Maybe$withDefault, formField.label, formField.name);
 		var _v1 = formField.type_;
 		switch (_v1.$) {
 			case 'ShortText':
 				var inputType = _v1.a;
 				var maybeMaxLength = _v1.b;
+				var shortTextAttrs = A2(
+					$elm$core$List$map,
+					function (_v2) {
+						var k = _v2.a;
+						var v = _v2.b;
+						return A2($elm$html$Html$Attributes$attribute, k, v);
+					},
+					$elm$core$Dict$toList(
+						A2(
+							$elm$core$Maybe$withDefault,
+							$elm$core$Dict$empty,
+							A2($elm$core$Dict$get, inputType, shortTextTypeDict))));
 				var extraAttrs = A2(
 					$elm$core$List$filterMap,
 					$elm$core$Basics$identity,
@@ -6914,13 +7203,14 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 					_Utils_ap(
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$type_(inputType),
 								$elm$html$Html$Attributes$class('tff-text-field'),
 								$elm$html$Html$Attributes$name(fieldName),
 								$elm$html$Html$Attributes$required(formField.required),
 								$elm$html$Html$Attributes$placeholder(' ')
 							]),
-						_Utils_ap(extraAttrs, customAttrs)),
+						_Utils_ap(
+							shortTextAttrs,
+							_Utils_ap(extraAttrs, customAttrs))),
 					_List_Nil);
 			case 'LongText':
 				var maybeMaxLength = _v1.a;
@@ -6974,19 +7264,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 									A2(
 									$elm$core$List$member,
 									$elm$html$Html$Attributes$disabled(true),
-									customAttrs) ? $elm$html$Html$Attributes$class('tff-select-disabled') : $elm$html$Html$Attributes$required(formField.required),
-									A2(
-									$elm$html$Html$Attributes$attribute,
-									'data-values',
-									A2(
-										$elm$json$Json$Encode$encode,
-										0,
-										$elm$json$Json$Encode$string(
-											A2($elm$core$Maybe$withDefault, '{null}', valueString)))),
-									A2(
-									$elm$html$Html$Attributes$attribute,
-									'data-formvalues',
-									A2($elm$json$Json$Encode$encode, 0, formValues))
+									customAttrs) ? $elm$html$Html$Attributes$class('tff-select-disabled') : $elm$html$Html$Attributes$required(formField.required)
 								]),
 							A2(
 								$elm$core$List$cons,
@@ -7029,14 +7307,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 						]));
 			case 'ChooseOne':
 				var choices = _v1.a;
-				var values = A2(
-					$elm$core$Maybe$withDefault,
-					_List_Nil,
-					A3(
-						$author$project$Main$maybeDecode,
-						fieldName,
-						$elm$json$Json$Decode$list($elm$json$Json$Decode$string),
-						formValues));
+				var valueString = A3($author$project$Main$maybeDecode, fieldName, $elm$json$Json$Decode$string, formValues);
 				return A2(
 					$elm$html$Html$div,
 					_List_fromArray(
@@ -7080,7 +7351,9 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 																	$elm$html$Html$Attributes$name(fieldName),
 																	$elm$html$Html$Attributes$value(choice),
 																	$elm$html$Html$Attributes$checked(
-																	A2($elm$core$List$member, choice, values))
+																	_Utils_eq(
+																		valueString,
+																		$elm$core$Maybe$Just(choice)))
 																]),
 															customAttrs),
 														_List_Nil),
@@ -7222,11 +7495,12 @@ var $author$project$Main$viewFormPreview = F2(
 	function (customAttrs, _v0) {
 		var formFields = _v0.formFields;
 		var formValues = _v0.formValues;
+		var shortTextTypeDict = _v0.shortTextTypeDict;
 		return $elm$core$Array$toList(
 			A2(
 				$elm$core$Array$map,
 				$author$project$Main$viewFormFieldPreview(
-					{customAttrs: customAttrs, formValues: formValues}),
+					{customAttrs: customAttrs, formValues: formValues, shortTextTypeDict: shortTextTypeDict}),
 				formFields));
 	});
 var $author$project$Main$SetViewMode = function (a) {
@@ -7362,24 +7636,29 @@ _Platform_export({'Main':{'init':$author$project$Main$main(
 		function (viewModeString) {
 			return A2(
 				$elm$json$Json$Decode$andThen,
-				function (formValues) {
+				function (shortTextTypeList) {
 					return A2(
 						$elm$json$Json$Decode$andThen,
-						function (formFields) {
-							return $elm$json$Json$Decode$succeed(
-								{formFields: formFields, formValues: formValues, viewModeString: viewModeString});
+						function (formValues) {
+							return A2(
+								$elm$json$Json$Decode$andThen,
+								function (formFields) {
+									return $elm$json$Json$Decode$succeed(
+										{formFields: formFields, formValues: formValues, shortTextTypeList: shortTextTypeList, viewModeString: viewModeString});
+								},
+								A2(
+									$elm$json$Json$Decode$field,
+									'formFields',
+									$elm$json$Json$Decode$oneOf(
+										_List_fromArray(
+											[
+												$elm$json$Json$Decode$null($elm$core$Maybe$Nothing),
+												A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, $elm$json$Json$Decode$value)
+											]))));
 						},
-						A2(
-							$elm$json$Json$Decode$field,
-							'formFields',
-							$elm$json$Json$Decode$oneOf(
-								_List_fromArray(
-									[
-										$elm$json$Json$Decode$null($elm$core$Maybe$Nothing),
-										A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, $elm$json$Json$Decode$value)
-									]))));
+						A2($elm$json$Json$Decode$field, 'formValues', $elm$json$Json$Decode$value));
 				},
-				A2($elm$json$Json$Decode$field, 'formValues', $elm$json$Json$Decode$value));
+				A2($elm$json$Json$Decode$field, 'shortTextTypeList', $elm$json$Json$Decode$value));
 		},
 		A2(
 			$elm$json$Json$Decode$field,

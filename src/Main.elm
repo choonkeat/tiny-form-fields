@@ -4,6 +4,7 @@ port module Main exposing
     , ViewMode(..)
     , allInputField
     , decodeFormFields
+    , decodeShortTextTypeList
     , encodeFormFields
     , main
     , stringFromViewMode
@@ -12,6 +13,7 @@ port module Main exposing
 
 import Array exposing (Array)
 import Browser
+import Dict exposing (Dict)
 import Html exposing (Html, a, button, div, input, label, li, option, select, text, textarea, ul)
 import Html.Attributes exposing (attribute, checked, class, disabled, for, id, maxlength, minlength, name, placeholder, required, selected, tabindex, title, type_, value)
 import Html.Events exposing (onCheck, onClick, onInput)
@@ -42,6 +44,7 @@ type alias Flags =
     { viewModeString : Maybe String
     , formFields : Maybe Json.Encode.Value
     , formValues : Json.Encode.Value
+    , shortTextTypeList : Json.Encode.Value
     }
 
 
@@ -49,6 +52,8 @@ type alias Model =
     { viewMode : ViewMode
     , formFields : Array FormField
     , formValues : Json.Encode.Value
+    , shortTextTypeList : List ( String, Dict String String )
+    , shortTextTypeDict : Dict String (Dict String String)
     }
 
 
@@ -110,8 +115,7 @@ type InputField
 
 allInputField : List InputField
 allInputField =
-    [ ShortText "text" Nothing
-    , ShortText "email" Nothing
+    [ ShortText "Text" Nothing
     , LongText (Just 160)
     , Dropdown [ "Red", "Orange", "Yellow", "Green", "Blue", "Indigo", "Violet" ]
     , ChooseOne [ "Yes", "No" ]
@@ -122,11 +126,8 @@ allInputField =
 stringFromInputField : InputField -> String
 stringFromInputField inputField =
     case inputField of
-        ShortText "email" _ ->
-            "Email"
-
-        ShortText _ _ ->
-            "Short text"
+        ShortText inputType _ ->
+            inputType
 
         LongText _ ->
             "Long text"
@@ -157,6 +158,7 @@ type FormFieldMsg
     | OnRequiredInput Bool
     | OnChoicesInput
     | OnMaxLengthInput
+    | OnShortTextType
 
 
 
@@ -180,13 +182,28 @@ init flags =
                             Debug.log "decode formFields" err
                     in
                     ( Array.empty, Cmd.none )
+
+        shortTextTypeList =
+            case Json.Decode.decodeValue decodeShortTextTypeList flags.shortTextTypeList of
+                Ok dict ->
+                    dict
+
+                Err err ->
+                    let
+                        _ =
+                            Debug.log "decodeShortTypeText" (Json.Decode.errorToString err)
+                    in
+                    [ ( "Text", Dict.fromList [ ( "type", "text" ) ] ) ]
     in
     ( { viewMode =
             flags.viewModeString
                 |> Maybe.andThen viewModeFromString
+                |> mapNothing (\() -> Debug.log "invalid viewModeString" flags.viewModeString)
                 |> Maybe.withDefault Editor
       , formFields = initFormFields
       , formValues = flags.formValues
+      , shortTextTypeList = shortTextTypeList
+      , shortTextTypeDict = Dict.fromList shortTextTypeList
       }
     , initCmd
     )
@@ -329,6 +346,14 @@ updateFormField msg string formField =
                 ChooseMultiple _ ->
                     formField
 
+        OnShortTextType ->
+            case formField.type_ of
+                ShortText _ maybeMaxLength ->
+                    { formField | type_ = ShortText string maybeMaxLength }
+
+                _ ->
+                    formField
+
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
@@ -337,6 +362,20 @@ subscriptions _ =
 
 
 --
+
+
+mapNothing : (() -> b) -> Maybe a -> Maybe a
+mapNothing f maybeValue =
+    case maybeValue of
+        Just value ->
+            Just value
+
+        Nothing ->
+            let
+                _ =
+                    f ()
+            in
+            Nothing
 
 
 swapArrayIndex : Int -> Int -> Array a -> Array a
@@ -428,9 +467,9 @@ viewTabs active tabs =
         )
 
 
-viewFormPreview : List (Html.Attribute Msg) -> { a | formFields : Array FormField, formValues : Json.Encode.Value } -> List (Html Msg)
-viewFormPreview customAttrs { formFields, formValues } =
-    Array.toList (Array.map (viewFormFieldPreview { customAttrs = customAttrs, formValues = formValues }) formFields)
+viewFormPreview : List (Html.Attribute Msg) -> { a | formFields : Array FormField, formValues : Json.Encode.Value, shortTextTypeDict : Dict String (Dict String String) } -> List (Html Msg)
+viewFormPreview customAttrs { formFields, formValues, shortTextTypeDict } =
+    Array.toList (Array.map (viewFormFieldPreview { customAttrs = customAttrs, formValues = formValues, shortTextTypeDict = shortTextTypeDict }) formFields)
 
 
 when : Bool -> { true : a, false : a } -> a
@@ -442,7 +481,7 @@ when bool condition =
         condition.false
 
 
-viewFormFieldPreview : { formValues : Json.Encode.Value, customAttrs : List (Html.Attribute Msg) } -> FormField -> Html Msg
+viewFormFieldPreview : { formValues : Json.Encode.Value, customAttrs : List (Html.Attribute Msg), shortTextTypeDict : Dict String (Dict String String) } -> FormField -> Html Msg
 viewFormFieldPreview config formField =
     div [ class "tff-tabs-preview" ]
         [ div
@@ -482,8 +521,8 @@ maybeMaxLengthOf formField =
             Nothing
 
 
-viewFormFieldOptionsPreview : { formValues : Json.Encode.Value, customAttrs : List (Html.Attribute Msg) } -> FormField -> Html Msg
-viewFormFieldOptionsPreview { formValues, customAttrs } formField =
+viewFormFieldOptionsPreview : { formValues : Json.Encode.Value, customAttrs : List (Html.Attribute Msg), shortTextTypeDict : Dict String (Dict String String) } -> FormField -> Html Msg
+viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formField =
     let
         fieldName =
             Maybe.withDefault formField.label formField.name
@@ -491,6 +530,12 @@ viewFormFieldOptionsPreview { formValues, customAttrs } formField =
     case formField.type_ of
         ShortText inputType maybeMaxLength ->
             let
+                shortTextAttrs =
+                    Dict.get inputType shortTextTypeDict
+                        |> Maybe.withDefault Dict.empty
+                        |> Dict.toList
+                        |> List.map (\( k, v ) -> attribute k v)
+
                 extraAttrs =
                     [ Maybe.map (\maxLength -> maxlength maxLength) maybeMaxLength
                     , Maybe.map (\s -> value s) (maybeDecode fieldName Json.Decode.string formValues)
@@ -498,12 +543,12 @@ viewFormFieldOptionsPreview { formValues, customAttrs } formField =
                         |> List.filterMap identity
             in
             input
-                ([ type_ inputType
-                 , class "tff-text-field"
+                ([ class "tff-text-field"
                  , name fieldName
                  , required formField.required
                  , placeholder " "
                  ]
+                    ++ shortTextAttrs
                     ++ extraAttrs
                     ++ customAttrs
                 )
@@ -547,8 +592,6 @@ viewFormFieldOptionsPreview { formValues, customAttrs } formField =
 
                       else
                         required formField.required
-                    , attribute "data-values" (Json.Encode.encode 0 (Json.Encode.string (Maybe.withDefault "{null}" valueString)))
-                    , attribute "data-formvalues" (Json.Encode.encode 0 formValues)
                     ]
                     (option
                         ([ disabled True
@@ -573,9 +616,8 @@ viewFormFieldOptionsPreview { formValues, customAttrs } formField =
 
         ChooseOne choices ->
             let
-                values =
-                    maybeDecode fieldName (Json.Decode.list Json.Decode.string) formValues
-                        |> Maybe.withDefault []
+                valueString =
+                    maybeDecode fieldName Json.Decode.string formValues
             in
             -- radio buttons
             div [ class "tff-chooseone-group" ]
@@ -589,7 +631,7 @@ viewFormFieldOptionsPreview { formValues, customAttrs } formField =
                                          , tabindex 0
                                          , name fieldName
                                          , value choice
-                                         , checked (List.member choice values)
+                                         , checked (valueString == Just choice)
                                          ]
                                             ++ customAttrs
                                         )
@@ -640,10 +682,10 @@ viewFormFieldOptionsPreview { formValues, customAttrs } formField =
 --
 
 
-viewFormBuilder : { a | formFields : Array FormField } -> List (Html Msg)
-viewFormBuilder { formFields } =
+viewFormBuilder : { a | formFields : Array FormField, shortTextTypeList : List ( String, Dict String String ) } -> List (Html Msg)
+viewFormBuilder { formFields, shortTextTypeList } =
     [ div [ class "tff-build-fields" ]
-        (Array.toList (Array.indexedMap (viewFormFieldBuilder (Array.length formFields)) formFields))
+        (Array.toList (Array.indexedMap (viewFormFieldBuilder shortTextTypeList (Array.length formFields)) formFields))
     , div [ class "tff-add-fields" ]
         (allInputField
             |> List.map
@@ -677,14 +719,14 @@ selectArrowDown =
         ]
 
 
-viewFormFieldBuilder : Int -> Int -> FormField -> Html Msg
-viewFormFieldBuilder totalLength index formField =
+viewFormFieldBuilder : List ( String, Dict String String ) -> Int -> Int -> FormField -> Html Msg
+viewFormFieldBuilder shortTextTypeList totalLength index formField =
     let
         idSuffix =
             String.fromInt index
     in
     div [ class "tff-build-field" ]
-        [ div [ class "tff-field-group" ]
+        ([ div [ class "tff-field-group" ]
             [ label [ class "tff-field-label", for ("label-" ++ idSuffix) ] [ text (stringFromInputField formField.type_ ++ " label") ]
             , input
                 [ type_ "text"
@@ -697,9 +739,7 @@ viewFormFieldBuilder totalLength index formField =
                 , onInput (OnFormField OnLabelInput index)
                 ]
                 []
-            ]
-        , div [ class "tff-field-group tff-checkbox-group" ]
-            [ label [ class "tff-field-label", for ("required-" ++ idSuffix) ]
+            , label [ class "tff-field-label", for ("required-" ++ idSuffix) ]
                 [ input
                     [ id ("required-" ++ idSuffix)
                     , type_ "checkbox"
@@ -711,8 +751,7 @@ viewFormFieldBuilder totalLength index formField =
                 , text " Required field"
                 ]
             ]
-        , viewFormFieldOptionsBuilder index formField.type_
-        , div [ class "tff-field-group" ]
+         , div [ class "tff-field-group" ]
             [ label [ class "tff-field-label", for ("description-" ++ idSuffix) ] [ text "Description (optional)" ]
             , input
                 [ id ("description-" ++ idSuffix)
@@ -722,135 +761,154 @@ viewFormFieldBuilder totalLength index formField =
                 ]
                 []
             ]
-        , div [ class "tff-build-field-buttons" ]
-            [ div [ class "tff-move" ]
-                [ if index == 0 then
-                    text ""
+         ]
+            ++ viewFormFieldOptionsBuilder shortTextTypeList index formField.type_
+            ++ [ div [ class "tff-build-field-buttons" ]
+                    [ div [ class "tff-move" ]
+                        [ if index == 0 then
+                            text ""
 
-                  else
-                    button
-                        [ type_ "button"
-                        , tabindex 0
-                        , title "Move field up"
-                        , onClick (MoveFormFieldUp index)
+                          else
+                            button
+                                [ type_ "button"
+                                , tabindex 0
+                                , title "Move field up"
+                                , onClick (MoveFormFieldUp index)
+                                ]
+                                [ text "↑" ]
+                        , if index == totalLength - 1 then
+                            text ""
+
+                          else
+                            button
+                                [ type_ "button"
+                                , tabindex 0
+                                , title "Move field down"
+                                , onClick (MoveFormFieldDown index)
+                                ]
+                                [ text "↓" ]
                         ]
-                        [ text "↑" ]
-                , if index == totalLength - 1 then
-                    text ""
+                    , case formField.fixed of
+                        Just True ->
+                            text ""
 
-                  else
-                    button
-                        [ type_ "button"
-                        , tabindex 0
-                        , title "Move field down"
-                        , onClick (MoveFormFieldDown index)
-                        ]
-                        [ text "↓" ]
-                ]
-            , case formField.fixed of
-                Just True ->
-                    text ""
-
-                _ ->
-                    button
-                        [ type_ "button"
-                        , tabindex 0
-                        , class "tff-delete"
-                        , title "Delete field"
-                        , onClick (DeleteFormField index)
-                        ]
-                        [ text "⨯ Delete" ]
-            ]
-        ]
+                        _ ->
+                            button
+                                [ type_ "button"
+                                , tabindex 0
+                                , class "tff-delete"
+                                , title "Delete field"
+                                , onClick (DeleteFormField index)
+                                ]
+                                [ text "⨯ Delete" ]
+                    ]
+               ]
+        )
 
 
-viewFormFieldOptionsBuilder : Int -> InputField -> Html Msg
-viewFormFieldOptionsBuilder index fieldType =
+viewFormFieldOptionsBuilder : List ( String, Dict String String ) -> Int -> InputField -> List (Html Msg)
+viewFormFieldOptionsBuilder shortTextTypeList index fieldType =
     let
         idSuffix =
             String.fromInt index
     in
     case fieldType of
-        ShortText _ maybeMaxLength ->
-            div []
-                [ div [ class "tff-field-group" ]
-                    [ label [ class "tff-field-label", for ("placeholder-" ++ idSuffix) ] [ text "Max length (optional)" ]
-                    , input
-                        [ id ("placeholder-" ++ idSuffix)
-                        , type_ "number"
-                        , class "tff-text-field"
-                        , value (Maybe.map String.fromInt maybeMaxLength |> Maybe.withDefault "")
-                        , onInput (OnFormField OnMaxLengthInput index)
+        ShortText inputType maybeMaxLength ->
+            [ div [ class "tff-field-group" ]
+                [ label [ class "tff-field-label", for ("inputType-" ++ idSuffix) ] [ text "Type" ]
+                , div [ class "tff-dropdown-group" ]
+                    [ selectArrowDown
+                    , select
+                        [ required True
+                        , name ("inputType-" ++ idSuffix)
+                        , onInput (OnFormField OnShortTextType index)
                         ]
-                        []
+                        (List.map
+                            (\choice ->
+                                option
+                                    [ value choice
+                                    , selected (inputType == choice)
+                                    ]
+                                    [ text choice ]
+                            )
+                            (List.map Tuple.first shortTextTypeList)
+                        )
                     ]
                 ]
+            , div [ class "tff-field-group" ]
+                [ label [ class "tff-field-label", for ("placeholder-" ++ idSuffix) ] [ text "Max length (optional)" ]
+                , input
+                    [ id ("placeholder-" ++ idSuffix)
+                    , type_ "number"
+                    , class "tff-text-field"
+                    , value (Maybe.map String.fromInt maybeMaxLength |> Maybe.withDefault "")
+                    , onInput (OnFormField OnMaxLengthInput index)
+                    ]
+                    []
+                ]
+            ]
 
         LongText maybeMaxLength ->
-            div []
-                [ div [ class "tff-field-group" ]
-                    [ label [ class "tff-field-label", for ("placeholder-" ++ idSuffix) ] [ text "Max length (optional)" ]
-                    , input
-                        [ id ("placeholder-" ++ idSuffix)
-                        , type_ "number"
-                        , class "tff-text-field"
-                        , value (Maybe.map String.fromInt maybeMaxLength |> Maybe.withDefault "")
-                        , onInput (OnFormField OnMaxLengthInput index)
-                        ]
-                        []
+            [ div [ class "tff-field-group" ]
+                [ label [ class "tff-field-label", for ("placeholder-" ++ idSuffix) ] [ text "Max length (optional)" ]
+                , input
+                    [ id ("placeholder-" ++ idSuffix)
+                    , type_ "number"
+                    , class "tff-text-field"
+                    , value (Maybe.map String.fromInt maybeMaxLength |> Maybe.withDefault "")
+                    , onInput (OnFormField OnMaxLengthInput index)
                     ]
+                    []
                 ]
+            ]
 
         Dropdown choices ->
-            div []
-                [ div [ class "tff-field-group" ]
-                    [ label [ class "tff-field-label", for ("choices-" ++ idSuffix) ] [ text "Choices" ]
-                    , textarea
-                        [ id ("choices-" ++ idSuffix)
-                        , required True
-                        , minlength 1
-                        , class "tff-text-field"
-                        , placeholder "Enter one choice per line"
-                        , value (String.join "\n" choices)
-                        , onInput (OnFormField OnChoicesInput index)
-                        ]
-                        []
+            [ div [ class "tff-field-group" ]
+                [ label [ class "tff-field-label", for ("choices-" ++ idSuffix) ] [ text "Choices" ]
+                , textarea
+                    [ id ("choices-" ++ idSuffix)
+                    , required True
+                    , minlength 1
+                    , class "tff-text-field"
+                    , placeholder "Enter one choice per line"
+                    , value (String.join "\n" choices)
+                    , onInput (OnFormField OnChoicesInput index)
                     ]
+                    []
                 ]
+            ]
 
         ChooseOne choices ->
-            div []
-                [ div [ class "tff-field-group" ]
-                    [ label [ class "tff-field-label", for ("choices-" ++ idSuffix) ] [ text "Choices" ]
-                    , textarea
-                        [ id ("choices-" ++ idSuffix)
-                        , required True
-                        , minlength 1
-                        , class "tff-text-field"
-                        , placeholder "Enter one choice per line"
-                        , value (String.join "\n" choices)
-                        , onInput (OnFormField OnChoicesInput index)
-                        ]
-                        []
+            [ div [ class "tff-field-group" ]
+                [ label [ class "tff-field-label", for ("choices-" ++ idSuffix) ] [ text "Choices" ]
+                , textarea
+                    [ id ("choices-" ++ idSuffix)
+                    , required True
+                    , minlength 1
+                    , class "tff-text-field"
+                    , placeholder "Enter one choice per line"
+                    , value (String.join "\n" choices)
+                    , onInput (OnFormField OnChoicesInput index)
                     ]
+                    []
                 ]
+            ]
 
         ChooseMultiple choices ->
-            div []
-                [ div [ class "tff-field-group" ]
-                    [ label [ class "tff-field-label", for ("choices-" ++ idSuffix) ] [ text "Choices" ]
-                    , textarea
-                        [ id ("choices-" ++ idSuffix)
-                        , required True
-                        , minlength 1
-                        , class "tff-text-field"
-                        , placeholder "Enter one choice per line"
-                        , value (String.join "\n" choices)
-                        , onInput (OnFormField OnChoicesInput index)
-                        ]
-                        []
+            [ div [ class "tff-field-group" ]
+                [ label [ class "tff-field-label", for ("choices-" ++ idSuffix) ] [ text "Choices" ]
+                , textarea
+                    [ id ("choices-" ++ idSuffix)
+                    , required True
+                    , minlength 1
+                    , class "tff-text-field"
+                    , placeholder "Enter one choice per line"
+                    , value (String.join "\n" choices)
+                    , onInput (OnFormField OnChoicesInput index)
                     ]
+                    []
                 ]
+            ]
 
 
 
@@ -1030,3 +1088,9 @@ decodeInputField =
                     _ ->
                         Json.Decode.fail ("Unknown input field type: " ++ type_)
             )
+
+
+decodeShortTextTypeList : Json.Decode.Decoder (List ( String, Dict String String ))
+decodeShortTextTypeList =
+    Json.Decode.list (Json.Decode.dict (Json.Decode.dict Json.Decode.string))
+        |> Json.Decode.map (List.map Dict.toList >> List.concat)

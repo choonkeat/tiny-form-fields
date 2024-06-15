@@ -1,6 +1,7 @@
 module MainTest exposing (..)
 
 import Array
+import Dict
 import Expect
 import Fuzz exposing (Fuzzer, string)
 import Json.Decode
@@ -30,6 +31,25 @@ suite =
                     |> Main.stringFromViewMode
                     |> Main.viewModeFromString
                     |> Expect.equal (Just mode)
+        , test "decodeShortTextTypeList" <|
+            \_ ->
+                """
+                [
+                    { "Text": { "type": "text" } },
+                    { "Email": { "type": "email" } },
+                    { "Digits": { "type": "text", "pattern": "^[0-9]+$" } },
+                    { "Nric": { "type": "text", "pattern": "^[STGM][0-9]{7}[ABCDEFGHIZJ]$" } }
+                ]
+                """
+                    |> Json.Decode.decodeString Main.decodeShortTextTypeList
+                    |> Expect.equal
+                        (Ok
+                            [ ( "Text", Dict.fromList [ ( "type", "text" ) ] )
+                            , ( "Email", Dict.fromList [ ( "type", "email" ) ] )
+                            , ( "Digits", Dict.fromList [ ( "pattern", "^[0-9]+$" ), ( "type", "text" ) ] )
+                            , ( "Nric", Dict.fromList [ ( "pattern", "^[STGM][0-9]{7}[ABCDEFGHIZJ]$" ), ( "type", "text" ) ] )
+                            ]
+                        )
         ]
 
 
