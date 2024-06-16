@@ -73,12 +73,18 @@ inputFieldFuzzer =
         |> Fuzz.oneOf
 
 
+presenceFuzzer : Fuzzer Main.Presence
+presenceFuzzer =
+    Fuzz.oneOf
+        [ Fuzz.constant Main.Required
+        , Fuzz.constant Main.Optional
+        ]
+
+
 fuzzFormField : Fuzzer Main.FormField
 fuzzFormField =
-    Fuzz.map6 Main.FormField
+    Fuzz.map4 Main.FormField
         string
-        (Fuzz.maybe string)
-        Fuzz.bool
+        presenceFuzzer
         string
         inputFieldFuzzer
-        (Fuzz.maybe Fuzz.bool)

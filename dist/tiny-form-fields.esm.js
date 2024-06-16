@@ -5219,12 +5219,11 @@ var $elm$core$Maybe$andThen = F2(
 			return $elm$core$Maybe$Nothing;
 		}
 	});
-var $author$project$Main$FormField = F6(
-	function (label, name, required, description, type_, fixed) {
-		return {description: description, fixed: fixed, label: label, name: name, required: required, type_: type_};
+var $author$project$Main$FormField = F4(
+	function (label, presence, description, type_) {
+		return {description: description, label: label, presence: presence, type_: type_};
 	});
 var $elm_community$json_extra$Json$Decode$Extra$andMap = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
-var $elm$json$Json$Decode$bool = _Json_decodeBool;
 var $author$project$Main$ChooseMultiple = function (a) {
 	return {$: 'ChooseMultiple', a: a};
 };
@@ -5307,56 +5306,58 @@ var $author$project$Main$decodeInputField = A2(
 		}
 	},
 	A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string));
-var $elm$json$Json$Decode$decodeValue = _Json_run;
-var $elm$json$Json$Decode$value = _Json_decodeValue;
-var $elm_community$json_extra$Json$Decode$Extra$optionalField = F2(
-	function (fieldName, decoder) {
-		var finishDecoding = function (json) {
-			var _v0 = A2(
-				$elm$json$Json$Decode$decodeValue,
-				A2($elm$json$Json$Decode$field, fieldName, $elm$json$Json$Decode$value),
-				json);
-			if (_v0.$ === 'Ok') {
-				var val = _v0.a;
-				return A2(
-					$elm$json$Json$Decode$map,
-					$elm$core$Maybe$Just,
-					A2($elm$json$Json$Decode$field, fieldName, decoder));
-			} else {
-				return $elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing);
-			}
-		};
-		return A2($elm$json$Json$Decode$andThen, finishDecoding, $elm$json$Json$Decode$value);
-	});
-var $elm_community$json_extra$Json$Decode$Extra$optionalNullableField = F2(
-	function (fieldName, decoder) {
-		return A2(
-			$elm$json$Json$Decode$map,
-			$elm$core$Maybe$andThen($elm$core$Basics$identity),
+var $author$project$Main$System = function (a) {
+	return {$: 'System', a: a};
+};
+var $author$project$Main$Optional = {$: 'Optional'};
+var $author$project$Main$Required = {$: 'Required'};
+var $author$project$Main$decodePresenceString = A2(
+	$elm$json$Json$Decode$andThen,
+	function (str) {
+		switch (str) {
+			case 'Required':
+				return $elm$json$Json$Decode$succeed($author$project$Main$Required);
+			case 'Optional':
+				return $elm$json$Json$Decode$succeed($author$project$Main$Optional);
+			default:
+				return $elm$json$Json$Decode$fail('Unknown presence: ' + str);
+		}
+	},
+	$elm$json$Json$Decode$string);
+var $author$project$Main$decodePresence = $elm$json$Json$Decode$oneOf(
+	_List_fromArray(
+		[
+			$author$project$Main$decodePresenceString,
 			A2(
-				$elm_community$json_extra$Json$Decode$Extra$optionalField,
-				fieldName,
-				$elm$json$Json$Decode$nullable(decoder)));
-	});
+			$elm$json$Json$Decode$andThen,
+			function (type_) {
+				if (type_ === 'System') {
+					return A2(
+						$elm$json$Json$Decode$map,
+						function (name) {
+							return $author$project$Main$System(
+								{name: name});
+						},
+						A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string));
+				} else {
+					return $elm$json$Json$Decode$fail('Unknown presence type: ' + type_);
+				}
+			},
+			A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string))
+		]));
 var $author$project$Main$decodeFormField = A2(
 	$elm_community$json_extra$Json$Decode$Extra$andMap,
-	A2($elm_community$json_extra$Json$Decode$Extra$optionalNullableField, 'fixed', $elm$json$Json$Decode$bool),
+	A2($elm$json$Json$Decode$field, 'type', $author$project$Main$decodeInputField),
 	A2(
 		$elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2($elm$json$Json$Decode$field, 'type', $author$project$Main$decodeInputField),
+		A2($elm$json$Json$Decode$field, 'description', $elm$json$Json$Decode$string),
 		A2(
 			$elm_community$json_extra$Json$Decode$Extra$andMap,
-			A2($elm$json$Json$Decode$field, 'description', $elm$json$Json$Decode$string),
+			A2($elm$json$Json$Decode$field, 'presence', $author$project$Main$decodePresence),
 			A2(
 				$elm_community$json_extra$Json$Decode$Extra$andMap,
-				A2($elm$json$Json$Decode$field, 'required', $elm$json$Json$Decode$bool),
-				A2(
-					$elm_community$json_extra$Json$Decode$Extra$andMap,
-					A2($elm_community$json_extra$Json$Decode$Extra$optionalNullableField, 'name', $elm$json$Json$Decode$string),
-					A2(
-						$elm_community$json_extra$Json$Decode$Extra$andMap,
-						A2($elm$json$Json$Decode$field, 'label', $elm$json$Json$Decode$string),
-						$elm$json$Json$Decode$succeed($author$project$Main$FormField)))))));
+				A2($elm$json$Json$Decode$field, 'label', $elm$json$Json$Decode$string),
+				$elm$json$Json$Decode$succeed($author$project$Main$FormField)))));
 var $elm$core$Array$fromListHelp = F3(
 	function (list, nodeList, nodeListSize) {
 		fromListHelp:
@@ -5551,7 +5552,7 @@ var $author$project$Main$decodeShortTextTypeList = A2(
 	$elm$json$Json$Decode$list(
 		$elm$json$Json$Decode$dict(
 			$elm$json$Json$Decode$dict($elm$json$Json$Decode$string))));
-var $elm$json$Json$Encode$bool = _Json_wrap;
+var $elm$json$Json$Decode$decodeValue = _Json_run;
 var $elm$json$Json$Encode$int = _Json_wrap;
 var $elm$json$Json$Encode$list = F2(
 	function (func, entries) {
@@ -5670,15 +5671,26 @@ var $author$project$Main$encodeInputField = function (inputField) {
 					]));
 	}
 };
-var $author$project$Main$encodeMaybe = F2(
-	function (encode, maybeValue) {
-		if (maybeValue.$ === 'Just') {
-			var value = maybeValue.a;
-			return encode(value);
-		} else {
-			return $elm$json$Json$Encode$null;
-		}
-	});
+var $author$project$Main$encodePresence = function (presence) {
+	switch (presence.$) {
+		case 'Required':
+			return $elm$json$Json$Encode$string('Required');
+		case 'Optional':
+			return $elm$json$Json$Encode$string('Optional');
+		default:
+			var name = presence.a.name;
+			return $elm$json$Json$Encode$object(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'type',
+						$elm$json$Json$Encode$string('System')),
+						_Utils_Tuple2(
+						'name',
+						$elm$json$Json$Encode$string(name))
+					]));
+	}
+};
 var $elm$core$List$filter = F2(
 	function (isGood, list) {
 		return A3(
@@ -5711,20 +5723,14 @@ var $author$project$Main$encodeFormFields = function (formFields) {
 								'label',
 								$elm$json$Json$Encode$string(formField.label)),
 								_Utils_Tuple2(
-								'name',
-								A2($author$project$Main$encodeMaybe, $elm$json$Json$Encode$string, formField.name)),
-								_Utils_Tuple2(
-								'required',
-								$elm$json$Json$Encode$bool(formField.required)),
+								'presence',
+								$author$project$Main$encodePresence(formField.presence)),
 								_Utils_Tuple2(
 								'description',
 								$elm$json$Json$Encode$string(formField.description)),
 								_Utils_Tuple2(
 								'type',
-								$author$project$Main$encodeInputField(formField.type_)),
-								_Utils_Tuple2(
-								'fixed',
-								A2($author$project$Main$encodeMaybe, $elm$json$Json$Encode$bool, formField.fixed))
+								$author$project$Main$encodeInputField(formField.type_))
 							])));
 			},
 			$elm$core$Array$toList(formFields)));
@@ -5864,6 +5870,7 @@ var $author$project$Main$init = function (flags) {
 var $author$project$Main$OnPortIncoming = function (a) {
 	return {$: 'OnPortIncoming', a: a};
 };
+var $elm$json$Json$Decode$value = _Json_decodeValue;
 var $author$project$Main$incoming = _Platform_incomingPort('incoming', $elm$json$Json$Decode$value);
 var $author$project$Main$subscriptions = function (_v0) {
 	return $author$project$Main$incoming($author$project$Main$OnPortIncoming);
@@ -6170,9 +6177,11 @@ var $author$project$Main$updateFormField = F3(
 					{description: string});
 			case 'OnRequiredInput':
 				var bool = msg.a;
-				return _Utils_update(
+				return bool ? _Utils_update(
 					formField,
-					{required: bool});
+					{presence: $author$project$Main$Required}) : _Utils_update(
+					formField,
+					{presence: $author$project$Main$Optional});
 			case 'OnChoicesInput':
 				var _v1 = formField.type_;
 				switch (_v1.$) {
@@ -6272,11 +6281,9 @@ var $author$project$Main$update = F2(
 				var fieldType = msg.a;
 				var newFormField = {
 					description: '',
-					fixed: $elm$core$Maybe$Nothing,
 					label: $author$project$Main$stringFromInputField(fieldType) + (' ' + $elm$core$String$fromInt(
 						$elm$core$Array$length(model.formFields) + 1)),
-					name: $elm$core$Maybe$Nothing,
-					required: true,
+					presence: $author$project$Main$Required,
 					type_: fieldType
 				};
 				var newFormFields = A2($elm$core$Array$push, newFormField, model.formFields);
@@ -6355,6 +6362,7 @@ var $elm$html$Html$Attributes$stringProperty = F2(
 			$elm$json$Json$Encode$string(string));
 	});
 var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
+var $elm$json$Json$Encode$bool = _Json_wrap;
 var $elm$html$Html$Attributes$boolProperty = F2(
 	function (key, bool) {
 		return A2(
@@ -6444,6 +6452,7 @@ var $elm$json$Json$Decode$at = F2(
 	function (fields, decoder) {
 		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
 	});
+var $elm$json$Json$Decode$bool = _Json_decodeBool;
 var $elm$html$Html$Events$targetChecked = A2(
 	$elm$json$Json$Decode$at,
 	_List_fromArray(
@@ -6869,6 +6878,51 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 var $author$project$Main$viewFormFieldBuilder = F4(
 	function (shortTextTypeList, totalLength, index, formField) {
 		var idSuffix = $elm$core$String$fromInt(index);
+		var deleteFieldButton = A2(
+			$elm$html$Html$button,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$type_('button'),
+					$elm$html$Html$Attributes$tabindex(0),
+					$elm$html$Html$Attributes$class('tff-delete'),
+					$elm$html$Html$Attributes$title('Delete field'),
+					$elm$html$Html$Events$onClick(
+					$author$project$Main$DeleteFormField(index))
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('⨯ Delete')
+				]));
+		var configureRequiredCheckbox = A2(
+			$elm$html$Html$label,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('tff-field-label'),
+					$elm$html$Html$Attributes$for('required-' + idSuffix)
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$input,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$id('required-' + idSuffix),
+							$elm$html$Html$Attributes$type_('checkbox'),
+							$elm$html$Html$Attributes$tabindex(0),
+							$elm$html$Html$Attributes$checked(
+							!_Utils_eq(formField.presence, $author$project$Main$Optional)),
+							$elm$html$Html$Events$onCheck(
+							function (b) {
+								return A3(
+									$author$project$Main$OnFormField,
+									$author$project$Main$OnRequiredInput(b),
+									index,
+									'');
+							})
+						]),
+					_List_Nil),
+					$elm$html$Html$text(' Required field')
+				]));
 		return A2(
 			$elm$html$Html$div,
 			_List_fromArray(
@@ -6913,35 +6967,17 @@ var $author$project$Main$viewFormFieldBuilder = F4(
 										A2($author$project$Main$OnFormField, $author$project$Main$OnLabelInput, index))
 									]),
 								_List_Nil),
-								A2(
-								$elm$html$Html$label,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('tff-field-label'),
-										$elm$html$Html$Attributes$for('required-' + idSuffix)
-									]),
-								_List_fromArray(
-									[
-										A2(
-										$elm$html$Html$input,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$id('required-' + idSuffix),
-												$elm$html$Html$Attributes$type_('checkbox'),
-												$elm$html$Html$Attributes$tabindex(0),
-												$elm$html$Html$Attributes$checked(formField.required),
-												$elm$html$Html$Events$onCheck(
-												function (b) {
-													return A3(
-														$author$project$Main$OnFormField,
-														$author$project$Main$OnRequiredInput(b),
-														index,
-														'');
-												})
-											]),
-										_List_Nil),
-										$elm$html$Html$text(' Required field')
-									]))
+								function () {
+								var _v0 = formField.presence;
+								switch (_v0.$) {
+									case 'Required':
+										return configureRequiredCheckbox;
+									case 'Optional':
+										return configureRequiredCheckbox;
+									default:
+										return $elm$html$Html$text('');
+								}
+							}()
 							])),
 						A2(
 						$elm$html$Html$div,
@@ -7025,25 +7061,14 @@ var $author$project$Main$viewFormFieldBuilder = F4(
 												]))
 										])),
 									function () {
-									var _v0 = formField.fixed;
-									if ((_v0.$ === 'Just') && _v0.a) {
-										return $elm$html$Html$text('');
-									} else {
-										return A2(
-											$elm$html$Html$button,
-											_List_fromArray(
-												[
-													$elm$html$Html$Attributes$type_('button'),
-													$elm$html$Html$Attributes$tabindex(0),
-													$elm$html$Html$Attributes$class('tff-delete'),
-													$elm$html$Html$Attributes$title('Delete field'),
-													$elm$html$Html$Events$onClick(
-													$author$project$Main$DeleteFormField(index))
-												]),
-											_List_fromArray(
-												[
-													$elm$html$Html$text('⨯ Delete')
-												]));
+									var _v1 = formField.presence;
+									switch (_v1.$) {
+										case 'Required':
+											return deleteFieldButton;
+										case 'Optional':
+											return deleteFieldButton;
+										default:
+											return $elm$html$Html$text('');
 									}
 								}()
 								]))
@@ -7134,6 +7159,18 @@ var $author$project$Main$maybeMaxLengthOf = function (formField) {
 			return $elm$core$Maybe$Nothing;
 	}
 };
+var $author$project$Main$fieldNameOf = function (formField) {
+	var _v0 = formField.presence;
+	switch (_v0.$) {
+		case 'Required':
+			return formField.label;
+		case 'Optional':
+			return formField.label;
+		default:
+			var name = _v0.a.name;
+			return name;
+	}
+};
 var $elm$core$List$maybeCons = F3(
 	function (f, mx, xs) {
 		var _v0 = f(mx);
@@ -7158,6 +7195,25 @@ var $elm$html$Html$Attributes$maxlength = function (n) {
 		'maxlength',
 		$elm$core$String$fromInt(n));
 };
+var $elm_community$json_extra$Json$Decode$Extra$optionalField = F2(
+	function (fieldName, decoder) {
+		var finishDecoding = function (json) {
+			var _v0 = A2(
+				$elm$json$Json$Decode$decodeValue,
+				A2($elm$json$Json$Decode$field, fieldName, $elm$json$Json$Decode$value),
+				json);
+			if (_v0.$ === 'Ok') {
+				var val = _v0.a;
+				return A2(
+					$elm$json$Json$Decode$map,
+					$elm$core$Maybe$Just,
+					A2($elm$json$Json$Decode$field, fieldName, decoder));
+			} else {
+				return $elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing);
+			}
+		};
+		return A2($elm$json$Json$Decode$andThen, finishDecoding, $elm$json$Json$Decode$value);
+	});
 var $elm$core$Result$toMaybe = function (result) {
 	if (result.$ === 'Ok') {
 		var v = result.a;
@@ -7212,7 +7268,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 		var formValues = _v0.formValues;
 		var customAttrs = _v0.customAttrs;
 		var shortTextTypeDict = _v0.shortTextTypeDict;
-		var fieldName = A2($elm$core$Maybe$withDefault, formField.label, formField.name);
+		var fieldName = $author$project$Main$fieldNameOf(formField);
 		var _v1 = formField.type_;
 		switch (_v1.$) {
 			case 'ShortText':
@@ -7255,7 +7311,8 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 							[
 								$elm$html$Html$Attributes$class('tff-text-field'),
 								$elm$html$Html$Attributes$name(fieldName),
-								$elm$html$Html$Attributes$required(formField.required),
+								$elm$html$Html$Attributes$required(
+								!_Utils_eq(formField.presence, $author$project$Main$Optional)),
 								$elm$html$Html$Attributes$placeholder(' ')
 							]),
 						_Utils_ap(
@@ -7289,7 +7346,8 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 							[
 								$elm$html$Html$Attributes$class('tff-text-field'),
 								$elm$html$Html$Attributes$name(fieldName),
-								$elm$html$Html$Attributes$required(formField.required),
+								$elm$html$Html$Attributes$required(
+								!_Utils_eq(formField.presence, $author$project$Main$Optional)),
 								$elm$html$Html$Attributes$placeholder(' ')
 							]),
 						_Utils_ap(extraAttrs, customAttrs)),
@@ -7314,7 +7372,8 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 									A2(
 									$elm$core$List$member,
 									$elm$html$Html$Attributes$disabled(true),
-									customAttrs) ? $elm$html$Html$Attributes$class('tff-select-disabled') : $elm$html$Html$Attributes$required(formField.required)
+									customAttrs) ? $elm$html$Html$Attributes$class('tff-select-disabled') : $elm$html$Html$Attributes$required(
+									!_Utils_eq(formField.presence, $author$project$Main$Optional))
 								]),
 							A2(
 								$elm$core$List$cons,
@@ -7501,7 +7560,7 @@ var $author$project$Main$viewFormFieldPreview = F2(
 							$elm$html$Html$Attributes$class(
 							'tff-field-group' + A2(
 								$author$project$Main$when,
-								formField.required,
+								!_Utils_eq(formField.presence, $author$project$Main$Optional),
 								{_false: '', _true: ' tff-required'}))
 						]),
 					_List_fromArray(
@@ -7515,7 +7574,17 @@ var $author$project$Main$viewFormFieldPreview = F2(
 							_List_fromArray(
 								[
 									$elm$html$Html$text(formField.label),
-									formField.required ? $elm$html$Html$text('') : $elm$html$Html$text(' (optional)')
+									function () {
+									var _v0 = formField.presence;
+									switch (_v0.$) {
+										case 'Required':
+											return $elm$html$Html$text(' (required)');
+										case 'Optional':
+											return $elm$html$Html$text('');
+										default:
+											return $elm$html$Html$text(' (required)');
+									}
+								}()
 								])),
 							A2($author$project$Main$viewFormFieldOptionsPreview, config, formField),
 							A2(
@@ -7528,9 +7597,9 @@ var $author$project$Main$viewFormFieldPreview = F2(
 								[
 									$elm$html$Html$text(formField.description),
 									function () {
-									var _v0 = $author$project$Main$maybeMaxLengthOf(formField);
-									if (_v0.$ === 'Just') {
-										var maxLength = _v0.a;
+									var _v1 = $author$project$Main$maybeMaxLengthOf(formField);
+									if (_v1.$ === 'Just') {
+										var maxLength = _v1.a;
 										return $elm$html$Html$text(
 											' (max ' + ($elm$core$String$fromInt(maxLength) + ' characters)'));
 									} else {

@@ -1,6 +1,7 @@
 port module Main exposing
     ( FormField
     , InputField(..)
+    , Presence(..)
     , ViewMode(..)
     , allInputField
     , decodeFormFields
@@ -92,16 +93,17 @@ stringFromViewMode viewMode =
             "CollectData"
 
 
+type Presence
+    = Required
+    | Optional
+    | System { name : String }
+
+
 type alias FormField =
     { label : String
-    , name : Maybe String
-    , required : Bool
+    , presence : Presence
     , description : String
     , type_ : InputField
-
-    -- not an attribute on the input field itself, but for the Editor ui
-    -- `Maybe Bool` because it's easier to encodeFormFields
-    , fixed : Maybe Bool
     }
 
 
@@ -238,11 +240,9 @@ update msg model =
                 newFormField : FormField
                 newFormField =
                     { label = stringFromInputField fieldType ++ " " ++ String.fromInt (Array.length model.formFields + 1)
-                    , name = Nothing
-                    , required = True
+                    , presence = Required
                     , description = ""
                     , type_ = fieldType
-                    , fixed = Nothing
                     }
 
                 newFormFields =
@@ -310,7 +310,11 @@ updateFormField msg string formField =
             { formField | description = string }
 
         OnRequiredInput bool ->
-            { formField | required = bool }
+            if bool then
+                { formField | presence = Required }
+
+            else
+                { formField | presence = Optional }
 
         OnChoicesInput ->
             case formField.type_ of
@@ -485,14 +489,18 @@ viewFormFieldPreview : { formValues : Json.Encode.Value, customAttrs : List (Htm
 viewFormFieldPreview config formField =
     div [ class "tff-tabs-preview" ]
         [ div
-            [ class ("tff-field-group" ++ when formField.required { true = " tff-required", false = "" }) ]
+            [ class ("tff-field-group" ++ when (formField.presence /= Optional) { true = " tff-required", false = "" }) ]
             [ label [ class "tff-field-label" ]
                 [ text formField.label
-                , if formField.required then
-                    text ""
+                , case formField.presence of
+                    Required ->
+                        text " (required)"
 
-                  else
-                    text " (optional)"
+                    Optional ->
+                        text ""
+
+                    System _ ->
+                        text " (required)"
                 ]
             , viewFormFieldOptionsPreview config formField
             , div [ class "tff-field-description" ]
@@ -521,11 +529,24 @@ maybeMaxLengthOf formField =
             Nothing
 
 
+fieldNameOf : FormField -> String
+fieldNameOf formField =
+    case formField.presence of
+        Required ->
+            formField.label
+
+        Optional ->
+            formField.label
+
+        System { name } ->
+            name
+
+
 viewFormFieldOptionsPreview : { formValues : Json.Encode.Value, customAttrs : List (Html.Attribute Msg), shortTextTypeDict : Dict String (Dict String String) } -> FormField -> Html Msg
 viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formField =
     let
         fieldName =
-            Maybe.withDefault formField.label formField.name
+            fieldNameOf formField
     in
     case formField.type_ of
         ShortText inputType maybeMaxLength ->
@@ -545,7 +566,7 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formF
             input
                 ([ class "tff-text-field"
                  , name fieldName
-                 , required formField.required
+                 , required (formField.presence /= Optional)
                  , placeholder " "
                  ]
                     ++ shortTextAttrs
@@ -565,7 +586,7 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formF
             textarea
                 ([ class "tff-text-field"
                  , name fieldName
-                 , required formField.required
+                 , required (formField.presence /= Optional)
                  , placeholder " "
                  ]
                     ++ extraAttrs
@@ -591,7 +612,7 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formF
                         class "tff-select-disabled"
 
                       else
-                        required formField.required
+                        required (formField.presence /= Optional)
                     ]
                     (option
                         ([ disabled True
@@ -724,6 +745,29 @@ viewFormFieldBuilder shortTextTypeList totalLength index formField =
     let
         idSuffix =
             String.fromInt index
+
+        configureRequiredCheckbox =
+            label [ class "tff-field-label", for ("required-" ++ idSuffix) ]
+                [ input
+                    [ id ("required-" ++ idSuffix)
+                    , type_ "checkbox"
+                    , tabindex 0
+                    , checked (formField.presence /= Optional)
+                    , onCheck (\b -> OnFormField (OnRequiredInput b) index "")
+                    ]
+                    []
+                , text " Required field"
+                ]
+
+        deleteFieldButton =
+            button
+                [ type_ "button"
+                , tabindex 0
+                , class "tff-delete"
+                , title "Delete field"
+                , onClick (DeleteFormField index)
+                ]
+                [ text "⨯ Delete" ]
     in
     div [ class "tff-build-field" ]
         ([ div [ class "tff-field-group" ]
@@ -739,17 +783,15 @@ viewFormFieldBuilder shortTextTypeList totalLength index formField =
                 , onInput (OnFormField OnLabelInput index)
                 ]
                 []
-            , label [ class "tff-field-label", for ("required-" ++ idSuffix) ]
-                [ input
-                    [ id ("required-" ++ idSuffix)
-                    , type_ "checkbox"
-                    , tabindex 0
-                    , checked formField.required
-                    , onCheck (\b -> OnFormField (OnRequiredInput b) index "")
-                    ]
-                    []
-                , text " Required field"
-                ]
+            , case formField.presence of
+                Required ->
+                    configureRequiredCheckbox
+
+                Optional ->
+                    configureRequiredCheckbox
+
+                System _ ->
+                    text ""
             ]
          , div [ class "tff-field-group" ]
             [ label [ class "tff-field-label", for ("description-" ++ idSuffix) ] [ text "Description (optional)" ]
@@ -788,19 +830,15 @@ viewFormFieldBuilder shortTextTypeList totalLength index formField =
                                 ]
                                 [ text "↓" ]
                         ]
-                    , case formField.fixed of
-                        Just True ->
-                            text ""
+                    , case formField.presence of
+                        Required ->
+                            deleteFieldButton
 
-                        _ ->
-                            button
-                                [ type_ "button"
-                                , tabindex 0
-                                , class "tff-delete"
-                                , title "Delete field"
-                                , onClick (DeleteFormField index)
-                                ]
-                                [ text "⨯ Delete" ]
+                        Optional ->
+                            deleteFieldButton
+
+                        System _ ->
+                            text ""
                     ]
                ]
         )
@@ -989,14 +1027,55 @@ maybeDecode key decoder jsonValue =
         |> Maybe.andThen identity
 
 
-encodeMaybe : (a -> Json.Encode.Value) -> Maybe a -> Json.Encode.Value
-encodeMaybe encode maybeValue =
-    case maybeValue of
-        Just value ->
-            encode value
+encodePresence : Presence -> Json.Encode.Value
+encodePresence presence =
+    case presence of
+        Required ->
+            Json.Encode.string "Required"
 
-        Nothing ->
-            Json.Encode.null
+        Optional ->
+            Json.Encode.string "Optional"
+
+        System { name } ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "System" )
+                , ( "name", Json.Encode.string name )
+                ]
+
+
+decodePresenceString : Json.Decode.Decoder Presence
+decodePresenceString =
+    Json.Decode.string
+        |> Json.Decode.andThen
+            (\str ->
+                case str of
+                    "Required" ->
+                        Json.Decode.succeed Required
+
+                    "Optional" ->
+                        Json.Decode.succeed Optional
+
+                    _ ->
+                        Json.Decode.fail ("Unknown presence: " ++ str)
+            )
+
+
+decodePresence : Json.Decode.Decoder Presence
+decodePresence =
+    Json.Decode.oneOf
+        [ decodePresenceString
+        , Json.Decode.field "type" Json.Decode.string
+            |> Json.Decode.andThen
+                (\type_ ->
+                    case type_ of
+                        "System" ->
+                            Json.Decode.field "name" Json.Decode.string
+                                |> Json.Decode.map (\name -> System { name = name })
+
+                        _ ->
+                            Json.Decode.fail ("Unknown presence type: " ++ type_)
+                )
+        ]
 
 
 encodeFormFields : Array FormField -> Json.Encode.Value
@@ -1007,11 +1086,9 @@ encodeFormFields formFields =
             (\formField ->
                 Json.Encode.object
                     ([ ( "label", Json.Encode.string formField.label )
-                     , ( "name", encodeMaybe Json.Encode.string formField.name )
-                     , ( "required", Json.Encode.bool formField.required )
+                     , ( "presence", encodePresence formField.presence )
                      , ( "description", Json.Encode.string formField.description )
                      , ( "type", encodeInputField formField.type_ )
-                     , ( "fixed", encodeMaybe Json.Encode.bool formField.fixed )
                      ]
                         -- smaller output json than if we encoded `null` all the time
                         |> List.filter (\( _, v ) -> v /= Json.Encode.null)
@@ -1030,11 +1107,9 @@ decodeFormField : Json.Decode.Decoder FormField
 decodeFormField =
     Json.Decode.succeed FormField
         |> andMap (Json.Decode.field "label" Json.Decode.string)
-        |> andMap (Json.Decode.Extra.optionalNullableField "name" Json.Decode.string)
-        |> andMap (Json.Decode.field "required" Json.Decode.bool)
+        |> andMap (Json.Decode.field "presence" decodePresence)
         |> andMap (Json.Decode.field "description" Json.Decode.string)
         |> andMap (Json.Decode.field "type" decodeInputField)
-        |> andMap (Json.Decode.Extra.optionalNullableField "fixed" Json.Decode.bool)
 
 
 encodeInputField : InputField -> Json.Encode.Value
