@@ -64,12 +64,35 @@
 }
 
 .tff-text-field {
+    @apply block;
     @apply border;
     @apply border-gray-300;
     @apply p-2;
     @apply w-full;
     @apply rounded;
 }
+
+.tff-text-field[type="color"] {
+    @apply max-w-10;
+    @apply h-10;
+    @apply p-1;
+}
+
+.tff-text-field[type="date"],
+.tff-text-field[type="time"],
+.tff-text-field[type="datetime-local"] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    @apply bg-inherit;
+}
+
+.tff-text-field::-webkit-date-value,
+.tff-text-field::-webkit-time-value,
+.tff-text-field::-webkit-date-and-time-value {
+    @apply min-h-6;
+    text-align: inherit;
+}
+
 
 .tff-dropdown-group {
     @apply grid;
