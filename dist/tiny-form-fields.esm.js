@@ -6291,7 +6291,7 @@ var $author$project$Main$update = F2(
 					description: '',
 					label: $author$project$Main$stringFromInputField(fieldType) + (' ' + $elm$core$String$fromInt(
 						$elm$core$Array$length(model.formFields) + 1)),
-					presence: $author$project$Main$Required,
+					presence: $author$project$Main$Optional,
 					type_: fieldType
 				};
 				var newFormFields = A2($elm$core$Array$push, newFormField, model.formFields);
@@ -6455,6 +6455,20 @@ var $elm$html$Html$Attributes$minlength = function (n) {
 		_VirtualDom_attribute,
 		'minLength',
 		$elm$core$String$fromInt(n));
+};
+var $author$project$Main$mustBeOptional = function (inputField) {
+	switch (inputField.$) {
+		case 'ShortText':
+			return false;
+		case 'LongText':
+			return false;
+		case 'Dropdown':
+			return false;
+		case 'ChooseOne':
+			return false;
+		default:
+			return true;
+	}
 };
 var $elm$json$Json$Decode$at = F2(
 	function (fields, decoder) {
@@ -6976,24 +6990,28 @@ var $author$project$Main$viewFormFieldBuilder = F4(
 									]),
 								_List_Nil),
 								function () {
-								var _v0 = formField.presence;
-								switch (_v0.$) {
-									case 'Required':
-										return configureRequiredCheckbox;
-									case 'Optional':
-										return configureRequiredCheckbox;
-									default:
-										var sys = _v0.a;
-										return A2(
-											$elm$html$Html$div,
-											_List_fromArray(
-												[
-													$elm$html$Html$Attributes$class('tff-field-description')
-												]),
-											_List_fromArray(
-												[
-													$elm$html$Html$text(sys.description)
-												]));
+								if ($author$project$Main$mustBeOptional(formField.type_)) {
+									return $elm$html$Html$text('');
+								} else {
+									var _v0 = formField.presence;
+									switch (_v0.$) {
+										case 'Required':
+											return configureRequiredCheckbox;
+										case 'Optional':
+											return configureRequiredCheckbox;
+										default:
+											var sys = _v0.a;
+											return A2(
+												$elm$html$Html$div,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('tff-field-description')
+													]),
+												_List_fromArray(
+													[
+														$elm$html$Html$text(sys.description)
+													]));
+									}
 								}
 							}()
 							])),
@@ -7480,7 +7498,9 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 																	$elm$html$Html$Attributes$checked(
 																	_Utils_eq(
 																		valueString,
-																		$elm$core$Maybe$Just(choice)))
+																		$elm$core$Maybe$Just(choice))),
+																	$elm$html$Html$Attributes$required(
+																	!_Utils_eq(formField.presence, $author$project$Main$Optional))
 																]),
 															customAttrs),
 														_List_Nil),
@@ -7516,43 +7536,46 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 									$elm$html$Html$Attributes$class('tff-choosemany-checkboxes')
 								]),
 							A2(
-								$elm$core$List$map,
-								function (choice) {
-									return A2(
-										$elm$html$Html$div,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('tff-checkbox-group')
-											]),
-										_List_fromArray(
-											[
-												A2(
-												$elm$html$Html$label,
-												_List_fromArray(
-													[
-														$elm$html$Html$Attributes$class('tff-field-label')
-													]),
-												_List_fromArray(
-													[
-														A2(
-														$elm$html$Html$input,
-														_Utils_ap(
-															_List_fromArray(
-																[
-																	$elm$html$Html$Attributes$type_('checkbox'),
-																	$elm$html$Html$Attributes$tabindex(0),
-																	$elm$html$Html$Attributes$name(fieldName),
-																	$elm$html$Html$Attributes$value(choice),
-																	$elm$html$Html$Attributes$checked(
-																	A2($elm$core$List$member, choice, values))
-																]),
-															customAttrs),
-														_List_Nil),
-														$elm$html$Html$text(' '),
-														$elm$html$Html$text(choice)
-													]))
-											]));
-								},
+								$elm$core$List$indexedMap,
+								F2(
+									function (index, choice) {
+										return A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('tff-checkbox-group')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$label,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('tff-field-label')
+														]),
+													_List_fromArray(
+														[
+															A2(
+															$elm$html$Html$input,
+															_Utils_ap(
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$type_('checkbox'),
+																		$elm$html$Html$Attributes$tabindex(0),
+																		$elm$html$Html$Attributes$name(fieldName),
+																		$elm$html$Html$Attributes$value(choice),
+																		$elm$html$Html$Attributes$checked(
+																		A2($elm$core$List$member, choice, values)),
+																		$elm$html$Html$Attributes$required(
+																		(!index) && (!_Utils_eq(formField.presence, $author$project$Main$Optional)))
+																	]),
+																customAttrs),
+															_List_Nil),
+															$elm$html$Html$text(' '),
+															$elm$html$Html$text(choice)
+														]))
+												]));
+									}),
 								choices))
 						]));
 		}

@@ -144,6 +144,25 @@ stringFromInputField inputField =
             "Checkboxes"
 
 
+mustBeOptional : InputField -> Bool
+mustBeOptional inputField =
+    case inputField of
+        ShortText _ _ ->
+            False
+
+        LongText _ ->
+            False
+
+        Dropdown _ ->
+            False
+
+        ChooseOne _ ->
+            False
+
+        ChooseMultiple _ ->
+            True
+
+
 type Msg
     = OnPortIncoming Json.Encode.Value
     | SetViewMode ViewMode
@@ -240,7 +259,7 @@ update msg model =
                 newFormField : FormField
                 newFormField =
                     { label = stringFromInputField fieldType ++ " " ++ String.fromInt (Array.length model.formFields + 1)
-                    , presence = Required
+                    , presence = when (mustBeOptional fieldType) { true = Optional, false = Required }
                     , description = ""
                     , type_ = fieldType
                     }
@@ -653,6 +672,7 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formF
                                          , name fieldName
                                          , value choice
                                          , checked (valueString == Just choice)
+                                         , required (formField.presence /= Optional)
                                          ]
                                             ++ customAttrs
                                         )
@@ -783,16 +803,20 @@ viewFormFieldBuilder shortTextTypeList totalLength index formField =
                 , onInput (OnFormField OnLabelInput index)
                 ]
                 []
-            , case formField.presence of
-                Required ->
-                    configureRequiredCheckbox
+            , if mustBeOptional formField.type_ then
+                text ""
 
-                Optional ->
-                    configureRequiredCheckbox
+              else
+                case formField.presence of
+                    Required ->
+                        configureRequiredCheckbox
 
-                System sys ->
-                    div [ class "tff-field-description" ]
-                        [ text sys.description ]
+                    Optional ->
+                        configureRequiredCheckbox
+
+                    System sys ->
+                        div [ class "tff-field-description" ]
+                            [ text sys.description ]
             ]
          , div [ class "tff-field-group" ]
             [ label [ class "tff-field-label", for ("description-" ++ idSuffix) ] [ text "Description (optional)" ]

@@ -5950,6 +5950,20 @@ var $elm$core$Array$length = function (_v0) {
 	var len = _v0.a;
 	return len;
 };
+var $author$project$Main$mustBeOptional = function (inputField) {
+	switch (inputField.$) {
+		case 'ShortText':
+			return false;
+		case 'LongText':
+			return false;
+		case 'Dropdown':
+			return false;
+		case 'ChooseOne':
+			return false;
+		default:
+			return true;
+	}
+};
 var $elm$core$Elm$JsArray$push = _JsArray_push;
 var $elm$core$Bitwise$and = _Bitwise_and;
 var $elm$core$Array$bitMask = 4294967295 >>> (32 - $elm$core$Array$shiftStep);
@@ -6252,6 +6266,10 @@ var $author$project$Main$updateFormField = F3(
 				}
 		}
 	});
+var $author$project$Main$when = F2(
+	function (bool, condition) {
+		return bool ? condition._true : condition._false;
+	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
@@ -6283,7 +6301,10 @@ var $author$project$Main$update = F2(
 					description: '',
 					label: $author$project$Main$stringFromInputField(fieldType) + (' ' + $elm$core$String$fromInt(
 						$elm$core$Array$length(model.formFields) + 1)),
-					presence: $author$project$Main$Required,
+					presence: A2(
+						$author$project$Main$when,
+						$author$project$Main$mustBeOptional(fieldType),
+						{_false: $author$project$Main$Required, _true: $author$project$Main$Optional}),
 					type_: fieldType
 				};
 				var newFormFields = A2($elm$core$Array$push, newFormField, model.formFields);
@@ -6968,24 +6989,28 @@ var $author$project$Main$viewFormFieldBuilder = F4(
 									]),
 								_List_Nil),
 								function () {
-								var _v0 = formField.presence;
-								switch (_v0.$) {
-									case 'Required':
-										return configureRequiredCheckbox;
-									case 'Optional':
-										return configureRequiredCheckbox;
-									default:
-										var sys = _v0.a;
-										return A2(
-											$elm$html$Html$div,
-											_List_fromArray(
-												[
-													$elm$html$Html$Attributes$class('tff-field-description')
-												]),
-											_List_fromArray(
-												[
-													$elm$html$Html$text(sys.description)
-												]));
+								if ($author$project$Main$mustBeOptional(formField.type_)) {
+									return $elm$html$Html$text('');
+								} else {
+									var _v0 = formField.presence;
+									switch (_v0.$) {
+										case 'Required':
+											return configureRequiredCheckbox;
+										case 'Optional':
+											return configureRequiredCheckbox;
+										default:
+											var sys = _v0.a;
+											return A2(
+												$elm$html$Html$div,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('tff-field-description')
+													]),
+												_List_fromArray(
+													[
+														$elm$html$Html$text(sys.description)
+													]));
+									}
 								}
 							}()
 							])),
@@ -7472,7 +7497,9 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 																	$elm$html$Html$Attributes$checked(
 																	_Utils_eq(
 																		valueString,
-																		$elm$core$Maybe$Just(choice)))
+																		$elm$core$Maybe$Just(choice))),
+																	$elm$html$Html$Attributes$required(
+																	!_Utils_eq(formField.presence, $author$project$Main$Optional))
 																]),
 															customAttrs),
 														_List_Nil),
@@ -7548,10 +7575,6 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 								choices))
 						]));
 		}
-	});
-var $author$project$Main$when = F2(
-	function (bool, condition) {
-		return bool ? condition._true : condition._false;
 	});
 var $author$project$Main$viewFormFieldPreview = F2(
 	function (config, formField) {
