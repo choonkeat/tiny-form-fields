@@ -78,6 +78,9 @@ presenceFuzzer =
     Fuzz.oneOf
         [ Fuzz.constant Main.Required
         , Fuzz.constant Main.Optional
+        , Fuzz.map2 (\name description -> Main.System { name = name, description = description })
+            Fuzz.string
+            Fuzz.string
         ]
 
 

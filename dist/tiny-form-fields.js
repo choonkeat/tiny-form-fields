@@ -5325,12 +5325,17 @@ var $author$project$Main$decodePresence = $elm$json$Json$Decode$oneOf(
 			function (type_) {
 				if (type_ === 'System') {
 					return A2(
-						$elm$json$Json$Decode$map,
-						function (name) {
-							return $author$project$Main$System(
-								{name: name});
-						},
-						A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string));
+						$elm_community$json_extra$Json$Decode$Extra$andMap,
+						A2($elm$json$Json$Decode$field, 'description', $elm$json$Json$Decode$string),
+						A2(
+							$elm_community$json_extra$Json$Decode$Extra$andMap,
+							A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string),
+							$elm$json$Json$Decode$succeed(
+								F2(
+									function (name, description) {
+										return $author$project$Main$System(
+											{description: description, name: name});
+									}))));
 				} else {
 					return $elm$json$Json$Decode$fail('Unknown presence type: ' + type_);
 				}
@@ -5670,7 +5675,7 @@ var $author$project$Main$encodePresence = function (presence) {
 		case 'Optional':
 			return $elm$json$Json$Encode$string('Optional');
 		default:
-			var name = presence.a.name;
+			var sys = presence.a;
 			return $elm$json$Json$Encode$object(
 				_List_fromArray(
 					[
@@ -5679,7 +5684,10 @@ var $author$project$Main$encodePresence = function (presence) {
 						$elm$json$Json$Encode$string('System')),
 						_Utils_Tuple2(
 						'name',
-						$elm$json$Json$Encode$string(name))
+						$elm$json$Json$Encode$string(sys.name)),
+						_Utils_Tuple2(
+						'description',
+						$elm$json$Json$Encode$string(sys.description))
 					]));
 	}
 };
@@ -6967,7 +6975,17 @@ var $author$project$Main$viewFormFieldBuilder = F4(
 									case 'Optional':
 										return configureRequiredCheckbox;
 									default:
-										return $elm$html$Html$text('');
+										var sys = _v0.a;
+										return A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('tff-field-description')
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text(sys.description)
+												]));
 								}
 							}()
 							])),

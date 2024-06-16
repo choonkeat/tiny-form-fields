@@ -96,7 +96,7 @@ stringFromViewMode viewMode =
 type Presence
     = Required
     | Optional
-    | System { name : String }
+    | System { name : String, description : String }
 
 
 type alias FormField =
@@ -790,8 +790,9 @@ viewFormFieldBuilder shortTextTypeList totalLength index formField =
                 Optional ->
                     configureRequiredCheckbox
 
-                System _ ->
-                    text ""
+                System sys ->
+                    div [ class "tff-field-description" ]
+                        [ text sys.description ]
             ]
          , div [ class "tff-field-group" ]
             [ label [ class "tff-field-label", for ("description-" ++ idSuffix) ] [ text "Description (optional)" ]
@@ -1036,10 +1037,11 @@ encodePresence presence =
         Optional ->
             Json.Encode.string "Optional"
 
-        System { name } ->
+        System sys ->
             Json.Encode.object
                 [ ( "type", Json.Encode.string "System" )
-                , ( "name", Json.Encode.string name )
+                , ( "name", Json.Encode.string sys.name )
+                , ( "description", Json.Encode.string sys.description )
                 ]
 
 
@@ -1069,8 +1071,9 @@ decodePresence =
                 (\type_ ->
                     case type_ of
                         "System" ->
-                            Json.Decode.field "name" Json.Decode.string
-                                |> Json.Decode.map (\name -> System { name = name })
+                            Json.Decode.succeed (\name description -> System { name = name, description = description })
+                                |> andMap (Json.Decode.field "name" Json.Decode.string)
+                                |> andMap (Json.Decode.field "description" Json.Decode.string)
 
                         _ ->
                             Json.Decode.fail ("Unknown presence type: " ++ type_)
