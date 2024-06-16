@@ -494,13 +494,13 @@ viewFormFieldPreview config formField =
                 [ text formField.label
                 , case formField.presence of
                     Required ->
-                        text " (required)"
-
-                    Optional ->
                         text ""
 
+                    Optional ->
+                        text " (optional)"
+
                     System _ ->
-                        text " (required)"
+                        text ""
                 ]
             , viewFormFieldOptionsPreview config formField
             , div [ class "tff-field-description" ]

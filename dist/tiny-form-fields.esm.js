@@ -7596,11 +7596,11 @@ var $author$project$Main$viewFormFieldPreview = F2(
 									var _v0 = formField.presence;
 									switch (_v0.$) {
 										case 'Required':
-											return $elm$html$Html$text(' (required)');
-										case 'Optional':
 											return $elm$html$Html$text('');
+										case 'Optional':
+											return $elm$html$Html$text(' (optional)');
 										default:
-											return $elm$html$Html$text(' (required)');
+											return $elm$html$Html$text('');
 									}
 								}()
 								])),
