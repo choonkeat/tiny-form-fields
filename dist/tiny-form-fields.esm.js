@@ -5958,6 +5958,20 @@ var $elm$core$Array$length = function (_v0) {
 	var len = _v0.a;
 	return len;
 };
+var $author$project$Main$mustBeOptional = function (inputField) {
+	switch (inputField.$) {
+		case 'ShortText':
+			return false;
+		case 'LongText':
+			return false;
+		case 'Dropdown':
+			return false;
+		case 'ChooseOne':
+			return false;
+		default:
+			return true;
+	}
+};
 var $elm$core$Elm$JsArray$push = _JsArray_push;
 var $elm$core$Bitwise$and = _Bitwise_and;
 var $elm$core$Array$bitMask = 4294967295 >>> (32 - $elm$core$Array$shiftStep);
@@ -6260,6 +6274,10 @@ var $author$project$Main$updateFormField = F3(
 				}
 		}
 	});
+var $author$project$Main$when = F2(
+	function (bool, condition) {
+		return bool ? condition._true : condition._false;
+	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
@@ -6291,7 +6309,10 @@ var $author$project$Main$update = F2(
 					description: '',
 					label: $author$project$Main$stringFromInputField(fieldType) + (' ' + $elm$core$String$fromInt(
 						$elm$core$Array$length(model.formFields) + 1)),
-					presence: $author$project$Main$Optional,
+					presence: A2(
+						$author$project$Main$when,
+						$author$project$Main$mustBeOptional(fieldType),
+						{_false: $author$project$Main$Required, _true: $author$project$Main$Optional}),
 					type_: fieldType
 				};
 				var newFormFields = A2($elm$core$Array$push, newFormField, model.formFields);
@@ -6456,20 +6477,6 @@ var $elm$html$Html$Attributes$minlength = function (n) {
 		'minLength',
 		$elm$core$String$fromInt(n));
 };
-var $author$project$Main$mustBeOptional = function (inputField) {
-	switch (inputField.$) {
-		case 'ShortText':
-			return false;
-		case 'LongText':
-			return false;
-		case 'Dropdown':
-			return false;
-		case 'ChooseOne':
-			return false;
-		default:
-			return true;
-	}
-};
 var $elm$json$Json$Decode$at = F2(
 	function (fields, decoder) {
 		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
@@ -6515,6 +6522,16 @@ var $elm$html$Html$Events$onInput = function (tagger) {
 };
 var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
 var $elm$html$Html$Attributes$required = $elm$html$Html$Attributes$boolProperty('required');
+var $author$project$Main$requiredData = function (presence) {
+	switch (presence.$) {
+		case 'Required':
+			return true;
+		case 'Optional':
+			return false;
+		default:
+			return true;
+	}
+};
 var $elm$html$Html$Attributes$title = $elm$html$Html$Attributes$stringProperty('title');
 var $author$project$Main$OnChoicesInput = {$: 'OnChoicesInput'};
 var $author$project$Main$OnMaxLengthInput = {$: 'OnMaxLengthInput'};
@@ -6932,7 +6949,7 @@ var $author$project$Main$viewFormFieldBuilder = F4(
 							$elm$html$Html$Attributes$type_('checkbox'),
 							$elm$html$Html$Attributes$tabindex(0),
 							$elm$html$Html$Attributes$checked(
-							!_Utils_eq(formField.presence, $author$project$Main$Optional)),
+							$author$project$Main$requiredData(formField.presence)),
 							$elm$html$Html$Events$onCheck(
 							function (b) {
 								return A3(
@@ -7348,7 +7365,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 								$elm$html$Html$Attributes$class('tff-text-field'),
 								$elm$html$Html$Attributes$name(fieldName),
 								$elm$html$Html$Attributes$required(
-								!_Utils_eq(formField.presence, $author$project$Main$Optional)),
+								$author$project$Main$requiredData(formField.presence)),
 								$elm$html$Html$Attributes$placeholder(' ')
 							]),
 						_Utils_ap(
@@ -7383,7 +7400,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 								$elm$html$Html$Attributes$class('tff-text-field'),
 								$elm$html$Html$Attributes$name(fieldName),
 								$elm$html$Html$Attributes$required(
-								!_Utils_eq(formField.presence, $author$project$Main$Optional)),
+								$author$project$Main$requiredData(formField.presence)),
 								$elm$html$Html$Attributes$placeholder(' ')
 							]),
 						_Utils_ap(extraAttrs, customAttrs)),
@@ -7409,7 +7426,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 									$elm$core$List$member,
 									$elm$html$Html$Attributes$disabled(true),
 									customAttrs) ? $elm$html$Html$Attributes$class('tff-select-disabled') : $elm$html$Html$Attributes$required(
-									!_Utils_eq(formField.presence, $author$project$Main$Optional))
+									$author$project$Main$requiredData(formField.presence))
 								]),
 							A2(
 								$elm$core$List$cons,
@@ -7500,7 +7517,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 																		valueString,
 																		$elm$core$Maybe$Just(choice))),
 																	$elm$html$Html$Attributes$required(
-																	!_Utils_eq(formField.presence, $author$project$Main$Optional))
+																	$author$project$Main$requiredData(formField.presence))
 																]),
 															customAttrs),
 														_List_Nil),
@@ -7536,53 +7553,46 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 									$elm$html$Html$Attributes$class('tff-choosemany-checkboxes')
 								]),
 							A2(
-								$elm$core$List$indexedMap,
-								F2(
-									function (index, choice) {
-										return A2(
-											$elm$html$Html$div,
-											_List_fromArray(
-												[
-													$elm$html$Html$Attributes$class('tff-checkbox-group')
-												]),
-											_List_fromArray(
-												[
-													A2(
-													$elm$html$Html$label,
-													_List_fromArray(
-														[
-															$elm$html$Html$Attributes$class('tff-field-label')
-														]),
-													_List_fromArray(
-														[
-															A2(
-															$elm$html$Html$input,
-															_Utils_ap(
-																_List_fromArray(
-																	[
-																		$elm$html$Html$Attributes$type_('checkbox'),
-																		$elm$html$Html$Attributes$tabindex(0),
-																		$elm$html$Html$Attributes$name(fieldName),
-																		$elm$html$Html$Attributes$value(choice),
-																		$elm$html$Html$Attributes$checked(
-																		A2($elm$core$List$member, choice, values)),
-																		$elm$html$Html$Attributes$required(
-																		(!index) && (!_Utils_eq(formField.presence, $author$project$Main$Optional)))
-																	]),
-																customAttrs),
-															_List_Nil),
-															$elm$html$Html$text(' '),
-															$elm$html$Html$text(choice)
-														]))
-												]));
-									}),
+								$elm$core$List$map,
+								function (choice) {
+									return A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('tff-checkbox-group')
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$label,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('tff-field-label')
+													]),
+												_List_fromArray(
+													[
+														A2(
+														$elm$html$Html$input,
+														_Utils_ap(
+															_List_fromArray(
+																[
+																	$elm$html$Html$Attributes$type_('checkbox'),
+																	$elm$html$Html$Attributes$tabindex(0),
+																	$elm$html$Html$Attributes$name(fieldName),
+																	$elm$html$Html$Attributes$value(choice),
+																	$elm$html$Html$Attributes$checked(
+																	A2($elm$core$List$member, choice, values))
+																]),
+															customAttrs),
+														_List_Nil),
+														$elm$html$Html$text(' '),
+														$elm$html$Html$text(choice)
+													]))
+											]));
+								},
 								choices))
 						]));
 		}
-	});
-var $author$project$Main$when = F2(
-	function (bool, condition) {
-		return bool ? condition._true : condition._false;
 	});
 var $author$project$Main$viewFormFieldPreview = F2(
 	function (config, formField) {
@@ -7601,7 +7611,7 @@ var $author$project$Main$viewFormFieldPreview = F2(
 							$elm$html$Html$Attributes$class(
 							'tff-field-group' + A2(
 								$author$project$Main$when,
-								!_Utils_eq(formField.presence, $author$project$Main$Optional),
+								$author$project$Main$requiredData(formField.presence),
 								{_false: '', _true: ' tff-required'}))
 						]),
 					_List_fromArray(

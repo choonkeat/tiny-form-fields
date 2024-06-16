@@ -6514,6 +6514,16 @@ var $elm$html$Html$Events$onInput = function (tagger) {
 };
 var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
 var $elm$html$Html$Attributes$required = $elm$html$Html$Attributes$boolProperty('required');
+var $author$project$Main$requiredData = function (presence) {
+	switch (presence.$) {
+		case 'Required':
+			return true;
+		case 'Optional':
+			return false;
+		default:
+			return true;
+	}
+};
 var $elm$html$Html$Attributes$title = $elm$html$Html$Attributes$stringProperty('title');
 var $author$project$Main$OnChoicesInput = {$: 'OnChoicesInput'};
 var $author$project$Main$OnMaxLengthInput = {$: 'OnMaxLengthInput'};
@@ -6931,7 +6941,7 @@ var $author$project$Main$viewFormFieldBuilder = F4(
 							$elm$html$Html$Attributes$type_('checkbox'),
 							$elm$html$Html$Attributes$tabindex(0),
 							$elm$html$Html$Attributes$checked(
-							!_Utils_eq(formField.presence, $author$project$Main$Optional)),
+							$author$project$Main$requiredData(formField.presence)),
 							$elm$html$Html$Events$onCheck(
 							function (b) {
 								return A3(
@@ -7347,7 +7357,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 								$elm$html$Html$Attributes$class('tff-text-field'),
 								$elm$html$Html$Attributes$name(fieldName),
 								$elm$html$Html$Attributes$required(
-								!_Utils_eq(formField.presence, $author$project$Main$Optional)),
+								$author$project$Main$requiredData(formField.presence)),
 								$elm$html$Html$Attributes$placeholder(' ')
 							]),
 						_Utils_ap(
@@ -7382,7 +7392,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 								$elm$html$Html$Attributes$class('tff-text-field'),
 								$elm$html$Html$Attributes$name(fieldName),
 								$elm$html$Html$Attributes$required(
-								!_Utils_eq(formField.presence, $author$project$Main$Optional)),
+								$author$project$Main$requiredData(formField.presence)),
 								$elm$html$Html$Attributes$placeholder(' ')
 							]),
 						_Utils_ap(extraAttrs, customAttrs)),
@@ -7408,7 +7418,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 									$elm$core$List$member,
 									$elm$html$Html$Attributes$disabled(true),
 									customAttrs) ? $elm$html$Html$Attributes$class('tff-select-disabled') : $elm$html$Html$Attributes$required(
-									!_Utils_eq(formField.presence, $author$project$Main$Optional))
+									$author$project$Main$requiredData(formField.presence))
 								]),
 							A2(
 								$elm$core$List$cons,
@@ -7499,7 +7509,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 																		valueString,
 																		$elm$core$Maybe$Just(choice))),
 																	$elm$html$Html$Attributes$required(
-																	!_Utils_eq(formField.presence, $author$project$Main$Optional))
+																	$author$project$Main$requiredData(formField.presence))
 																]),
 															customAttrs),
 														_List_Nil),
@@ -7593,7 +7603,7 @@ var $author$project$Main$viewFormFieldPreview = F2(
 							$elm$html$Html$Attributes$class(
 							'tff-field-group' + A2(
 								$author$project$Main$when,
-								!_Utils_eq(formField.presence, $author$project$Main$Optional),
+								$author$project$Main$requiredData(formField.presence),
 								{_false: '', _true: ' tff-required'}))
 						]),
 					_List_fromArray(

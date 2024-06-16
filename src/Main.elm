@@ -99,6 +99,19 @@ type Presence
     | System { name : String, description : String }
 
 
+requiredData : Presence -> Bool
+requiredData presence =
+    case presence of
+        Required ->
+            True
+
+        Optional ->
+            False
+
+        System _ ->
+            True
+
+
 type alias FormField =
     { label : String
     , presence : Presence
@@ -508,7 +521,7 @@ viewFormFieldPreview : { formValues : Json.Encode.Value, customAttrs : List (Htm
 viewFormFieldPreview config formField =
     div [ class "tff-tabs-preview" ]
         [ div
-            [ class ("tff-field-group" ++ when (formField.presence /= Optional) { true = " tff-required", false = "" }) ]
+            [ class ("tff-field-group" ++ when (requiredData formField.presence) { true = " tff-required", false = "" }) ]
             [ label [ class "tff-field-label" ]
                 [ text formField.label
                 , case formField.presence of
@@ -585,7 +598,7 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formF
             input
                 ([ class "tff-text-field"
                  , name fieldName
-                 , required (formField.presence /= Optional)
+                 , required (requiredData formField.presence)
                  , placeholder " "
                  ]
                     ++ shortTextAttrs
@@ -605,7 +618,7 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formF
             textarea
                 ([ class "tff-text-field"
                  , name fieldName
-                 , required (formField.presence /= Optional)
+                 , required (requiredData formField.presence)
                  , placeholder " "
                  ]
                     ++ extraAttrs
@@ -631,7 +644,7 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formF
                         class "tff-select-disabled"
 
                       else
-                        required (formField.presence /= Optional)
+                        required (requiredData formField.presence)
                     ]
                     (option
                         ([ disabled True
@@ -672,7 +685,7 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formF
                                          , name fieldName
                                          , value choice
                                          , checked (valueString == Just choice)
-                                         , required (formField.presence /= Optional)
+                                         , required (requiredData formField.presence)
                                          ]
                                             ++ customAttrs
                                         )
@@ -772,7 +785,7 @@ viewFormFieldBuilder shortTextTypeList totalLength index formField =
                     [ id ("required-" ++ idSuffix)
                     , type_ "checkbox"
                     , tabindex 0
-                    , checked (formField.presence /= Optional)
+                    , checked (requiredData formField.presence)
                     , onCheck (\b -> OnFormField (OnRequiredInput b) index "")
                     ]
                     []
