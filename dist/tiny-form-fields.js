@@ -80,6 +80,271 @@ function A9(fun, a, b, c, d, e, f, g, h, i) {
 console.warn('Compiled in DEV mode. Follow the advice at https://elm-lang.org/0.19.1/optimize for better performance and smaller assets.');
 
 
+// EQUALITY
+
+function _Utils_eq(x, y)
+{
+	for (
+		var pair, stack = [], isEqual = _Utils_eqHelp(x, y, 0, stack);
+		isEqual && (pair = stack.pop());
+		isEqual = _Utils_eqHelp(pair.a, pair.b, 0, stack)
+		)
+	{}
+
+	return isEqual;
+}
+
+function _Utils_eqHelp(x, y, depth, stack)
+{
+	if (x === y)
+	{
+		return true;
+	}
+
+	if (typeof x !== 'object' || x === null || y === null)
+	{
+		typeof x === 'function' && _Debug_crash(5);
+		return false;
+	}
+
+	if (depth > 100)
+	{
+		stack.push(_Utils_Tuple2(x,y));
+		return true;
+	}
+
+	/**/
+	if (x.$ === 'Set_elm_builtin')
+	{
+		x = $elm$core$Set$toList(x);
+		y = $elm$core$Set$toList(y);
+	}
+	if (x.$ === 'RBNode_elm_builtin' || x.$ === 'RBEmpty_elm_builtin')
+	{
+		x = $elm$core$Dict$toList(x);
+		y = $elm$core$Dict$toList(y);
+	}
+	//*/
+
+	/**_UNUSED/
+	if (x.$ < 0)
+	{
+		x = $elm$core$Dict$toList(x);
+		y = $elm$core$Dict$toList(y);
+	}
+	//*/
+
+	for (var key in x)
+	{
+		if (!_Utils_eqHelp(x[key], y[key], depth + 1, stack))
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+var _Utils_equal = F2(_Utils_eq);
+var _Utils_notEqual = F2(function(a, b) { return !_Utils_eq(a,b); });
+
+
+
+// COMPARISONS
+
+// Code in Generate/JavaScript.hs, Basics.js, and List.js depends on
+// the particular integer values assigned to LT, EQ, and GT.
+
+function _Utils_cmp(x, y, ord)
+{
+	if (typeof x !== 'object')
+	{
+		return x === y ? /*EQ*/ 0 : x < y ? /*LT*/ -1 : /*GT*/ 1;
+	}
+
+	/**/
+	if (x instanceof String)
+	{
+		var a = x.valueOf();
+		var b = y.valueOf();
+		return a === b ? 0 : a < b ? -1 : 1;
+	}
+	//*/
+
+	/**_UNUSED/
+	if (typeof x.$ === 'undefined')
+	//*/
+	/**/
+	if (x.$[0] === '#')
+	//*/
+	{
+		return (ord = _Utils_cmp(x.a, y.a))
+			? ord
+			: (ord = _Utils_cmp(x.b, y.b))
+				? ord
+				: _Utils_cmp(x.c, y.c);
+	}
+
+	// traverse conses until end of a list or a mismatch
+	for (; x.b && y.b && !(ord = _Utils_cmp(x.a, y.a)); x = x.b, y = y.b) {} // WHILE_CONSES
+	return ord || (x.b ? /*GT*/ 1 : y.b ? /*LT*/ -1 : /*EQ*/ 0);
+}
+
+var _Utils_lt = F2(function(a, b) { return _Utils_cmp(a, b) < 0; });
+var _Utils_le = F2(function(a, b) { return _Utils_cmp(a, b) < 1; });
+var _Utils_gt = F2(function(a, b) { return _Utils_cmp(a, b) > 0; });
+var _Utils_ge = F2(function(a, b) { return _Utils_cmp(a, b) >= 0; });
+
+var _Utils_compare = F2(function(x, y)
+{
+	var n = _Utils_cmp(x, y);
+	return n < 0 ? $elm$core$Basics$LT : n ? $elm$core$Basics$GT : $elm$core$Basics$EQ;
+});
+
+
+// COMMON VALUES
+
+var _Utils_Tuple0_UNUSED = 0;
+var _Utils_Tuple0 = { $: '#0' };
+
+function _Utils_Tuple2_UNUSED(a, b) { return { a: a, b: b }; }
+function _Utils_Tuple2(a, b) { return { $: '#2', a: a, b: b }; }
+
+function _Utils_Tuple3_UNUSED(a, b, c) { return { a: a, b: b, c: c }; }
+function _Utils_Tuple3(a, b, c) { return { $: '#3', a: a, b: b, c: c }; }
+
+function _Utils_chr_UNUSED(c) { return c; }
+function _Utils_chr(c) { return new String(c); }
+
+
+// RECORDS
+
+function _Utils_update(oldRecord, updatedFields)
+{
+	var newRecord = {};
+
+	for (var key in oldRecord)
+	{
+		newRecord[key] = oldRecord[key];
+	}
+
+	for (var key in updatedFields)
+	{
+		newRecord[key] = updatedFields[key];
+	}
+
+	return newRecord;
+}
+
+
+// APPEND
+
+var _Utils_append = F2(_Utils_ap);
+
+function _Utils_ap(xs, ys)
+{
+	// append Strings
+	if (typeof xs === 'string')
+	{
+		return xs + ys;
+	}
+
+	// append Lists
+	if (!xs.b)
+	{
+		return ys;
+	}
+	var root = _List_Cons(xs.a, ys);
+	xs = xs.b
+	for (var curr = root; xs.b; xs = xs.b) // WHILE_CONS
+	{
+		curr = curr.b = _List_Cons(xs.a, ys);
+	}
+	return root;
+}
+
+
+
+var _List_Nil_UNUSED = { $: 0 };
+var _List_Nil = { $: '[]' };
+
+function _List_Cons_UNUSED(hd, tl) { return { $: 1, a: hd, b: tl }; }
+function _List_Cons(hd, tl) { return { $: '::', a: hd, b: tl }; }
+
+
+var _List_cons = F2(_List_Cons);
+
+function _List_fromArray(arr)
+{
+	var out = _List_Nil;
+	for (var i = arr.length; i--; )
+	{
+		out = _List_Cons(arr[i], out);
+	}
+	return out;
+}
+
+function _List_toArray(xs)
+{
+	for (var out = []; xs.b; xs = xs.b) // WHILE_CONS
+	{
+		out.push(xs.a);
+	}
+	return out;
+}
+
+var _List_map2 = F3(function(f, xs, ys)
+{
+	for (var arr = []; xs.b && ys.b; xs = xs.b, ys = ys.b) // WHILE_CONSES
+	{
+		arr.push(A2(f, xs.a, ys.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_map3 = F4(function(f, xs, ys, zs)
+{
+	for (var arr = []; xs.b && ys.b && zs.b; xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
+	{
+		arr.push(A3(f, xs.a, ys.a, zs.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_map4 = F5(function(f, ws, xs, ys, zs)
+{
+	for (var arr = []; ws.b && xs.b && ys.b && zs.b; ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
+	{
+		arr.push(A4(f, ws.a, xs.a, ys.a, zs.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_map5 = F6(function(f, vs, ws, xs, ys, zs)
+{
+	for (var arr = []; vs.b && ws.b && xs.b && ys.b && zs.b; vs = vs.b, ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
+	{
+		arr.push(A5(f, vs.a, ws.a, xs.a, ys.a, zs.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_sortBy = F2(function(f, xs)
+{
+	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
+		return _Utils_cmp(f(a), f(b));
+	}));
+});
+
+var _List_sortWith = F2(function(f, xs)
+{
+	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
+		var ord = A2(f, a, b);
+		return ord === $elm$core$Basics$EQ ? 0 : ord === $elm$core$Basics$LT ? -1 : 1;
+	}));
+});
+
+
+
 var _JsArray_empty = [];
 
 function _JsArray_singleton(value)
@@ -525,271 +790,6 @@ function _Debug_regionToString(region)
 	}
 	return 'on lines ' + region.start.line + ' through ' + region.end.line;
 }
-
-
-
-// EQUALITY
-
-function _Utils_eq(x, y)
-{
-	for (
-		var pair, stack = [], isEqual = _Utils_eqHelp(x, y, 0, stack);
-		isEqual && (pair = stack.pop());
-		isEqual = _Utils_eqHelp(pair.a, pair.b, 0, stack)
-		)
-	{}
-
-	return isEqual;
-}
-
-function _Utils_eqHelp(x, y, depth, stack)
-{
-	if (x === y)
-	{
-		return true;
-	}
-
-	if (typeof x !== 'object' || x === null || y === null)
-	{
-		typeof x === 'function' && _Debug_crash(5);
-		return false;
-	}
-
-	if (depth > 100)
-	{
-		stack.push(_Utils_Tuple2(x,y));
-		return true;
-	}
-
-	/**/
-	if (x.$ === 'Set_elm_builtin')
-	{
-		x = $elm$core$Set$toList(x);
-		y = $elm$core$Set$toList(y);
-	}
-	if (x.$ === 'RBNode_elm_builtin' || x.$ === 'RBEmpty_elm_builtin')
-	{
-		x = $elm$core$Dict$toList(x);
-		y = $elm$core$Dict$toList(y);
-	}
-	//*/
-
-	/**_UNUSED/
-	if (x.$ < 0)
-	{
-		x = $elm$core$Dict$toList(x);
-		y = $elm$core$Dict$toList(y);
-	}
-	//*/
-
-	for (var key in x)
-	{
-		if (!_Utils_eqHelp(x[key], y[key], depth + 1, stack))
-		{
-			return false;
-		}
-	}
-	return true;
-}
-
-var _Utils_equal = F2(_Utils_eq);
-var _Utils_notEqual = F2(function(a, b) { return !_Utils_eq(a,b); });
-
-
-
-// COMPARISONS
-
-// Code in Generate/JavaScript.hs, Basics.js, and List.js depends on
-// the particular integer values assigned to LT, EQ, and GT.
-
-function _Utils_cmp(x, y, ord)
-{
-	if (typeof x !== 'object')
-	{
-		return x === y ? /*EQ*/ 0 : x < y ? /*LT*/ -1 : /*GT*/ 1;
-	}
-
-	/**/
-	if (x instanceof String)
-	{
-		var a = x.valueOf();
-		var b = y.valueOf();
-		return a === b ? 0 : a < b ? -1 : 1;
-	}
-	//*/
-
-	/**_UNUSED/
-	if (typeof x.$ === 'undefined')
-	//*/
-	/**/
-	if (x.$[0] === '#')
-	//*/
-	{
-		return (ord = _Utils_cmp(x.a, y.a))
-			? ord
-			: (ord = _Utils_cmp(x.b, y.b))
-				? ord
-				: _Utils_cmp(x.c, y.c);
-	}
-
-	// traverse conses until end of a list or a mismatch
-	for (; x.b && y.b && !(ord = _Utils_cmp(x.a, y.a)); x = x.b, y = y.b) {} // WHILE_CONSES
-	return ord || (x.b ? /*GT*/ 1 : y.b ? /*LT*/ -1 : /*EQ*/ 0);
-}
-
-var _Utils_lt = F2(function(a, b) { return _Utils_cmp(a, b) < 0; });
-var _Utils_le = F2(function(a, b) { return _Utils_cmp(a, b) < 1; });
-var _Utils_gt = F2(function(a, b) { return _Utils_cmp(a, b) > 0; });
-var _Utils_ge = F2(function(a, b) { return _Utils_cmp(a, b) >= 0; });
-
-var _Utils_compare = F2(function(x, y)
-{
-	var n = _Utils_cmp(x, y);
-	return n < 0 ? $elm$core$Basics$LT : n ? $elm$core$Basics$GT : $elm$core$Basics$EQ;
-});
-
-
-// COMMON VALUES
-
-var _Utils_Tuple0_UNUSED = 0;
-var _Utils_Tuple0 = { $: '#0' };
-
-function _Utils_Tuple2_UNUSED(a, b) { return { a: a, b: b }; }
-function _Utils_Tuple2(a, b) { return { $: '#2', a: a, b: b }; }
-
-function _Utils_Tuple3_UNUSED(a, b, c) { return { a: a, b: b, c: c }; }
-function _Utils_Tuple3(a, b, c) { return { $: '#3', a: a, b: b, c: c }; }
-
-function _Utils_chr_UNUSED(c) { return c; }
-function _Utils_chr(c) { return new String(c); }
-
-
-// RECORDS
-
-function _Utils_update(oldRecord, updatedFields)
-{
-	var newRecord = {};
-
-	for (var key in oldRecord)
-	{
-		newRecord[key] = oldRecord[key];
-	}
-
-	for (var key in updatedFields)
-	{
-		newRecord[key] = updatedFields[key];
-	}
-
-	return newRecord;
-}
-
-
-// APPEND
-
-var _Utils_append = F2(_Utils_ap);
-
-function _Utils_ap(xs, ys)
-{
-	// append Strings
-	if (typeof xs === 'string')
-	{
-		return xs + ys;
-	}
-
-	// append Lists
-	if (!xs.b)
-	{
-		return ys;
-	}
-	var root = _List_Cons(xs.a, ys);
-	xs = xs.b
-	for (var curr = root; xs.b; xs = xs.b) // WHILE_CONS
-	{
-		curr = curr.b = _List_Cons(xs.a, ys);
-	}
-	return root;
-}
-
-
-
-var _List_Nil_UNUSED = { $: 0 };
-var _List_Nil = { $: '[]' };
-
-function _List_Cons_UNUSED(hd, tl) { return { $: 1, a: hd, b: tl }; }
-function _List_Cons(hd, tl) { return { $: '::', a: hd, b: tl }; }
-
-
-var _List_cons = F2(_List_Cons);
-
-function _List_fromArray(arr)
-{
-	var out = _List_Nil;
-	for (var i = arr.length; i--; )
-	{
-		out = _List_Cons(arr[i], out);
-	}
-	return out;
-}
-
-function _List_toArray(xs)
-{
-	for (var out = []; xs.b; xs = xs.b) // WHILE_CONS
-	{
-		out.push(xs.a);
-	}
-	return out;
-}
-
-var _List_map2 = F3(function(f, xs, ys)
-{
-	for (var arr = []; xs.b && ys.b; xs = xs.b, ys = ys.b) // WHILE_CONSES
-	{
-		arr.push(A2(f, xs.a, ys.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_map3 = F4(function(f, xs, ys, zs)
-{
-	for (var arr = []; xs.b && ys.b && zs.b; xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
-	{
-		arr.push(A3(f, xs.a, ys.a, zs.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_map4 = F5(function(f, ws, xs, ys, zs)
-{
-	for (var arr = []; ws.b && xs.b && ys.b && zs.b; ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
-	{
-		arr.push(A4(f, ws.a, xs.a, ys.a, zs.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_map5 = F6(function(f, vs, ws, xs, ys, zs)
-{
-	for (var arr = []; vs.b && ws.b && xs.b && ys.b && zs.b; vs = vs.b, ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
-	{
-		arr.push(A5(f, vs.a, ws.a, xs.a, ys.a, zs.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_sortBy = F2(function(f, xs)
-{
-	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
-		return _Utils_cmp(f(a), f(b));
-	}));
-});
-
-var _List_sortWith = F2(function(f, xs)
-{
-	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
-		var ord = A2(f, a, b);
-		return ord === $elm$core$Basics$EQ ? 0 : ord === $elm$core$Basics$LT ? -1 : 1;
-	}));
-});
 
 
 
@@ -4407,35 +4407,10 @@ var _Bitwise_shiftRightZfBy = F2(function(offset, a)
 {
 	return a >>> offset;
 });
-var $elm$core$Maybe$Just = function (a) {
-	return {$: 'Just', a: a};
-};
-var $elm$core$Maybe$Nothing = {$: 'Nothing'};
+var $elm$core$Basics$EQ = {$: 'EQ'};
+var $elm$core$Basics$GT = {$: 'GT'};
+var $elm$core$Basics$LT = {$: 'LT'};
 var $elm$core$List$cons = _List_cons;
-var $elm$core$Elm$JsArray$foldr = _JsArray_foldr;
-var $elm$core$Array$foldr = F3(
-	function (func, baseCase, _v0) {
-		var tree = _v0.c;
-		var tail = _v0.d;
-		var helper = F2(
-			function (node, acc) {
-				if (node.$ === 'SubTree') {
-					var subTree = node.a;
-					return A3($elm$core$Elm$JsArray$foldr, helper, acc, subTree);
-				} else {
-					var values = node.a;
-					return A3($elm$core$Elm$JsArray$foldr, func, acc, values);
-				}
-			});
-		return A3(
-			$elm$core$Elm$JsArray$foldr,
-			helper,
-			A3($elm$core$Elm$JsArray$foldr, func, baseCase, tail),
-			tree);
-	});
-var $elm$core$Array$toList = function (array) {
-	return A3($elm$core$Array$foldr, $elm$core$List$cons, _List_Nil, array);
-};
 var $elm$core$Dict$foldr = F3(
 	function (func, acc, t) {
 		foldr:
@@ -4488,9 +4463,30 @@ var $elm$core$Set$toList = function (_v0) {
 	var dict = _v0.a;
 	return $elm$core$Dict$keys(dict);
 };
-var $elm$core$Basics$EQ = {$: 'EQ'};
-var $elm$core$Basics$GT = {$: 'GT'};
-var $elm$core$Basics$LT = {$: 'LT'};
+var $elm$core$Elm$JsArray$foldr = _JsArray_foldr;
+var $elm$core$Array$foldr = F3(
+	function (func, baseCase, _v0) {
+		var tree = _v0.c;
+		var tail = _v0.d;
+		var helper = F2(
+			function (node, acc) {
+				if (node.$ === 'SubTree') {
+					var subTree = node.a;
+					return A3($elm$core$Elm$JsArray$foldr, helper, acc, subTree);
+				} else {
+					var values = node.a;
+					return A3($elm$core$Elm$JsArray$foldr, func, acc, values);
+				}
+			});
+		return A3(
+			$elm$core$Elm$JsArray$foldr,
+			helper,
+			A3($elm$core$Elm$JsArray$foldr, func, baseCase, tail),
+			tree);
+	});
+var $elm$core$Array$toList = function (array) {
+	return A3($elm$core$Array$foldr, $elm$core$List$cons, _List_Nil, array);
+};
 var $elm$core$Result$Err = function (a) {
 	return {$: 'Err', a: a};
 };
@@ -4514,6 +4510,10 @@ var $elm$json$Json$Decode$OneOf = function (a) {
 };
 var $elm$core$Basics$False = {$: 'False'};
 var $elm$core$Basics$add = _Basics_add;
+var $elm$core$Maybe$Just = function (a) {
+	return {$: 'Just', a: a};
+};
+var $elm$core$Maybe$Nothing = {$: 'Nothing'};
 var $elm$core$String$all = _String_all;
 var $elm$core$Basics$and = _Basics_and;
 var $elm$core$Basics$append = _Utils_append;
@@ -4882,7 +4882,6 @@ var $elm$core$Result$isOk = function (result) {
 		return false;
 	}
 };
-var $elm$json$Json$Decode$andThen = _Json_andThen;
 var $elm$json$Json$Decode$map = _Json_map1;
 var $elm$json$Json$Decode$map2 = _Json_map2;
 var $elm$json$Json$Decode$succeed = _Json_succeed;
@@ -5197,25 +5196,19 @@ var $elm$core$Task$perform = F2(
 				A2($elm$core$Task$map, toMessage, task)));
 	});
 var $elm$browser$Browser$element = _Browser_element;
-var $elm$json$Json$Decode$field = _Json_decodeField;
 var $author$project$Main$Editor = {$: 'Editor'};
 var $author$project$Main$PortOutgoingFormFields = function (a) {
 	return {$: 'PortOutgoingFormFields', a: a};
 };
-var $elm$core$Maybe$andThen = F2(
-	function (callback, maybeValue) {
-		if (maybeValue.$ === 'Just') {
-			var value = maybeValue.a;
-			return callback(value);
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
+var $author$project$Main$Config = F4(
+	function (viewMode, formFields, formValues, shortTextTypeList) {
+		return {formFields: formFields, formValues: formValues, shortTextTypeList: shortTextTypeList, viewMode: viewMode};
 	});
+var $elm_community$json_extra$Json$Decode$Extra$andMap = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
 var $author$project$Main$FormField = F4(
 	function (label, presence, description, type_) {
 		return {description: description, label: label, presence: presence, type_: type_};
 	});
-var $elm_community$json_extra$Json$Decode$Extra$andMap = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
 var $author$project$Main$ChooseMultiple = function (a) {
 	return {$: 'ChooseMultiple', a: a};
 };
@@ -5232,7 +5225,9 @@ var $author$project$Main$ShortText = F2(
 	function (a, b) {
 		return {$: 'ShortText', a: a, b: b};
 	});
+var $elm$json$Json$Decode$andThen = _Json_andThen;
 var $elm$json$Json$Decode$fail = _Json_fail;
+var $elm$json$Json$Decode$field = _Json_decodeField;
 var $elm$json$Json$Decode$int = _Json_decodeInt;
 var $elm$json$Json$Decode$list = _Json_decodeList;
 var $elm$json$Json$Decode$null = _Json_decodeNull;
@@ -5549,7 +5544,118 @@ var $author$project$Main$decodeShortTextTypeList = A2(
 	$elm$json$Json$Decode$list(
 		$elm$json$Json$Decode$dict(
 			$elm$json$Json$Decode$dict($elm$json$Json$Decode$string))));
+var $elm_community$json_extra$Json$Decode$Extra$fromMaybe = F2(
+	function (error, val) {
+		if (val.$ === 'Just') {
+			var v = val.a;
+			return $elm$json$Json$Decode$succeed(v);
+		} else {
+			return $elm$json$Json$Decode$fail(error);
+		}
+	});
+var $author$project$Main$CollectData = {$: 'CollectData'};
+var $author$project$Main$Preview = {$: 'Preview'};
+var $author$project$Main$viewModeFromString = function (str) {
+	switch (str) {
+		case 'Editor':
+			return $elm$core$Maybe$Just($author$project$Main$Editor);
+		case 'Preview':
+			return $elm$core$Maybe$Just($author$project$Main$Preview);
+		case 'CollectData':
+			return $elm$core$Maybe$Just($author$project$Main$CollectData);
+		default:
+			return $elm$core$Maybe$Nothing;
+	}
+};
+var $author$project$Main$decodeViewMode = A2(
+	$elm$json$Json$Decode$andThen,
+	$elm_community$json_extra$Json$Decode$Extra$fromMaybe('Invalid viewMode: Editor | Preview | CollectData'),
+	A2($elm$json$Json$Decode$map, $author$project$Main$viewModeFromString, $elm$json$Json$Decode$string));
+var $elm$json$Json$Encode$null = _Json_encodeNull;
+var $elm$core$Maybe$andThen = F2(
+	function (callback, maybeValue) {
+		if (maybeValue.$ === 'Just') {
+			var value = maybeValue.a;
+			return callback(value);
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
 var $elm$json$Json$Decode$decodeValue = _Json_run;
+var $elm$json$Json$Decode$value = _Json_decodeValue;
+var $elm_community$json_extra$Json$Decode$Extra$optionalField = F2(
+	function (fieldName, decoder) {
+		var finishDecoding = function (json) {
+			var _v0 = A2(
+				$elm$json$Json$Decode$decodeValue,
+				A2($elm$json$Json$Decode$field, fieldName, $elm$json$Json$Decode$value),
+				json);
+			if (_v0.$ === 'Ok') {
+				var val = _v0.a;
+				return A2(
+					$elm$json$Json$Decode$map,
+					$elm$core$Maybe$Just,
+					A2($elm$json$Json$Decode$field, fieldName, decoder));
+			} else {
+				return $elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing);
+			}
+		};
+		return A2($elm$json$Json$Decode$andThen, finishDecoding, $elm$json$Json$Decode$value);
+	});
+var $elm_community$json_extra$Json$Decode$Extra$optionalNullableField = F2(
+	function (fieldName, decoder) {
+		return A2(
+			$elm$json$Json$Decode$map,
+			$elm$core$Maybe$andThen($elm$core$Basics$identity),
+			A2(
+				$elm_community$json_extra$Json$Decode$Extra$optionalField,
+				fieldName,
+				$elm$json$Json$Decode$nullable(decoder)));
+	});
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var $author$project$Main$decodeConfig = A2(
+	$elm_community$json_extra$Json$Decode$Extra$andMap,
+	A2(
+		$elm$json$Json$Decode$map,
+		$elm$core$Maybe$withDefault(
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					'Text',
+					$elm$core$Dict$fromList(
+						_List_fromArray(
+							[
+								_Utils_Tuple2('type', 'text')
+							])))
+				])),
+		A2($elm_community$json_extra$Json$Decode$Extra$optionalNullableField, 'shortTextTypeList', $author$project$Main$decodeShortTextTypeList)),
+	A2(
+		$elm_community$json_extra$Json$Decode$Extra$andMap,
+		A2(
+			$elm$json$Json$Decode$map,
+			$elm$core$Maybe$withDefault($elm$json$Json$Encode$null),
+			A2($elm_community$json_extra$Json$Decode$Extra$optionalNullableField, 'formValues', $elm$json$Json$Decode$value)),
+		A2(
+			$elm_community$json_extra$Json$Decode$Extra$andMap,
+			A2(
+				$elm$json$Json$Decode$map,
+				$elm$core$Maybe$withDefault($elm$core$Array$empty),
+				A2($elm_community$json_extra$Json$Decode$Extra$optionalNullableField, 'formFields', $author$project$Main$decodeFormFields)),
+			A2(
+				$elm_community$json_extra$Json$Decode$Extra$andMap,
+				A2(
+					$elm$json$Json$Decode$map,
+					$elm$core$Maybe$withDefault($author$project$Main$Editor),
+					A2($elm_community$json_extra$Json$Decode$Extra$optionalNullableField, 'viewMode', $author$project$Main$decodeViewMode)),
+				$elm$json$Json$Decode$succeed($author$project$Main$Config)))));
 var $elm$json$Json$Encode$int = _Json_wrap;
 var $elm$json$Json$Encode$list = F2(
 	function (func, entries) {
@@ -5570,7 +5676,6 @@ var $elm$core$Maybe$map = F2(
 			return $elm$core$Maybe$Nothing;
 		}
 	});
-var $elm$json$Json$Encode$null = _Json_encodeNull;
 var $elm$json$Json$Encode$object = function (pairs) {
 	return _Json_wrap(
 		A3(
@@ -5585,15 +5690,6 @@ var $elm$json$Json$Encode$object = function (pairs) {
 			pairs));
 };
 var $elm$json$Json$Encode$string = _Json_wrap;
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
 var $author$project$Main$encodeInputField = function (inputField) {
 	switch (inputField.$) {
 		case 'ShortText':
@@ -5774,103 +5870,35 @@ var $author$project$Main$encodePortOutgoingValue = function (value) {
 	}
 };
 var $elm$core$Debug$log = _Debug_log;
-var $author$project$Main$mapNothing = F2(
-	function (f, maybeValue) {
-		if (maybeValue.$ === 'Just') {
-			var value = maybeValue.a;
-			return $elm$core$Maybe$Just(value);
-		} else {
-			var _v1 = f(_Utils_Tuple0);
-			return $elm$core$Maybe$Nothing;
-		}
-	});
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Main$outgoing = _Platform_outgoingPort('outgoing', $elm$core$Basics$identity);
-var $author$project$Main$CollectData = {$: 'CollectData'};
-var $author$project$Main$Preview = {$: 'Preview'};
-var $author$project$Main$viewModeFromString = function (str) {
-	switch (str) {
-		case 'Editor':
-			return $elm$core$Maybe$Just($author$project$Main$Editor);
-		case 'Preview':
-			return $elm$core$Maybe$Just($author$project$Main$Preview);
-		case 'CollectData':
-			return $elm$core$Maybe$Just($author$project$Main$CollectData);
-		default:
-			return $elm$core$Maybe$Nothing;
-	}
-};
 var $author$project$Main$init = function (flags) {
-	var shortTextTypeList = function () {
-		var _v4 = A2($elm$json$Json$Decode$decodeValue, $author$project$Main$decodeShortTextTypeList, flags.shortTextTypeList);
-		if (_v4.$ === 'Ok') {
-			var dict = _v4.a;
-			return dict;
-		} else {
-			var err = _v4.a;
-			var _v5 = A2(
-				$elm$core$Debug$log,
-				'decodeShortTypeText',
-				$elm$json$Json$Decode$errorToString(err));
-			return _List_fromArray(
-				[
-					_Utils_Tuple2(
-					'Text',
-					$elm$core$Dict$fromList(
-						_List_fromArray(
-							[
-								_Utils_Tuple2('type', 'text')
-							])))
-				]);
-		}
-	}();
-	var _v0 = function () {
-		var _v1 = A2(
-			$elm$core$Maybe$map,
-			$elm$json$Json$Decode$decodeValue($author$project$Main$decodeFormFields),
-			flags.formFields);
-		if (_v1.$ === 'Nothing') {
-			return _Utils_Tuple2($elm$core$Array$empty, $elm$core$Platform$Cmd$none);
-		} else {
-			if (_v1.a.$ === 'Ok') {
-				var formFields = _v1.a.a;
-				return _Utils_Tuple2(
-					formFields,
-					$author$project$Main$outgoing(
-						$author$project$Main$encodePortOutgoingValue(
-							$author$project$Main$PortOutgoingFormFields(formFields))));
-			} else {
-				var err = _v1.a.a;
-				var _v2 = A2($elm$core$Debug$log, 'decode formFields', err);
-				return _Utils_Tuple2($elm$core$Array$empty, $elm$core$Platform$Cmd$none);
-			}
-		}
-	}();
-	var initFormFields = _v0.a;
-	var initCmd = _v0.b;
-	return _Utils_Tuple2(
-		{
-			formFields: initFormFields,
-			formValues: flags.formValues,
-			shortTextTypeDict: $elm$core$Dict$fromList(shortTextTypeList),
-			shortTextTypeList: shortTextTypeList,
-			viewMode: A2(
-				$elm$core$Maybe$withDefault,
-				$author$project$Main$Editor,
-				A2(
-					$author$project$Main$mapNothing,
-					function (_v3) {
-						return A2($elm$core$Debug$log, 'invalid viewModeString', flags.viewModeString);
-					},
-					A2($elm$core$Maybe$andThen, $author$project$Main$viewModeFromString, flags.viewModeString)))
-		},
-		initCmd);
+	var _v0 = A2($elm$json$Json$Decode$decodeValue, $author$project$Main$decodeConfig, flags);
+	if (_v0.$ === 'Ok') {
+		var config = _v0.a;
+		return _Utils_Tuple2(
+			{
+				formFields: config.formFields,
+				formValues: config.formValues,
+				shortTextTypeDict: $elm$core$Dict$fromList(config.shortTextTypeList),
+				shortTextTypeList: config.shortTextTypeList,
+				viewMode: config.viewMode
+			},
+			$author$project$Main$outgoing(
+				$author$project$Main$encodePortOutgoingValue(
+					$author$project$Main$PortOutgoingFormFields(config.formFields))));
+	} else {
+		var err = _v0.a;
+		var _v1 = A2($elm$core$Debug$log, 'error decoding config', err);
+		return _Utils_Tuple2(
+			{formFields: $elm$core$Array$empty, formValues: $elm$json$Json$Encode$null, shortTextTypeDict: $elm$core$Dict$empty, shortTextTypeList: _List_Nil, viewMode: $author$project$Main$Editor},
+			$elm$core$Platform$Cmd$none);
+	}
 };
 var $author$project$Main$OnPortIncoming = function (a) {
 	return {$: 'OnPortIncoming', a: a};
 };
-var $elm$json$Json$Decode$value = _Json_decodeValue;
 var $author$project$Main$incoming = _Platform_incomingPort('incoming', $elm$json$Json$Decode$value);
 var $author$project$Main$subscriptions = function (_v0) {
 	return $author$project$Main$incoming($author$project$Main$OnPortIncoming);
@@ -7240,25 +7268,6 @@ var $elm$html$Html$Attributes$maxlength = function (n) {
 		'maxlength',
 		$elm$core$String$fromInt(n));
 };
-var $elm_community$json_extra$Json$Decode$Extra$optionalField = F2(
-	function (fieldName, decoder) {
-		var finishDecoding = function (json) {
-			var _v0 = A2(
-				$elm$json$Json$Decode$decodeValue,
-				A2($elm$json$Json$Decode$field, fieldName, $elm$json$Json$Decode$value),
-				json);
-			if (_v0.$ === 'Ok') {
-				var val = _v0.a;
-				return A2(
-					$elm$json$Json$Decode$map,
-					$elm$core$Maybe$Just,
-					A2($elm$json$Json$Decode$field, fieldName, decoder));
-			} else {
-				return $elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing);
-			}
-		};
-		return A2($elm$json$Json$Decode$andThen, finishDecoding, $elm$json$Json$Decode$value);
-	});
 var $elm$core$Result$toMaybe = function (result) {
 	if (result.$ === 'Ok') {
 		var v = result.a;
@@ -7792,42 +7801,4 @@ var $author$project$Main$view = function (model) {
 };
 var $author$project$Main$main = $elm$browser$Browser$element(
 	{init: $author$project$Main$init, subscriptions: $author$project$Main$subscriptions, update: $author$project$Main$update, view: $author$project$Main$view});
-_Platform_export({'Main':{'init':$author$project$Main$main(
-	A2(
-		$elm$json$Json$Decode$andThen,
-		function (viewModeString) {
-			return A2(
-				$elm$json$Json$Decode$andThen,
-				function (shortTextTypeList) {
-					return A2(
-						$elm$json$Json$Decode$andThen,
-						function (formValues) {
-							return A2(
-								$elm$json$Json$Decode$andThen,
-								function (formFields) {
-									return $elm$json$Json$Decode$succeed(
-										{formFields: formFields, formValues: formValues, shortTextTypeList: shortTextTypeList, viewModeString: viewModeString});
-								},
-								A2(
-									$elm$json$Json$Decode$field,
-									'formFields',
-									$elm$json$Json$Decode$oneOf(
-										_List_fromArray(
-											[
-												$elm$json$Json$Decode$null($elm$core$Maybe$Nothing),
-												A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, $elm$json$Json$Decode$value)
-											]))));
-						},
-						A2($elm$json$Json$Decode$field, 'formValues', $elm$json$Json$Decode$value));
-				},
-				A2($elm$json$Json$Decode$field, 'shortTextTypeList', $elm$json$Json$Decode$value));
-		},
-		A2(
-			$elm$json$Json$Decode$field,
-			'viewModeString',
-			$elm$json$Json$Decode$oneOf(
-				_List_fromArray(
-					[
-						$elm$json$Json$Decode$null($elm$core$Maybe$Nothing),
-						A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, $elm$json$Json$Decode$string)
-					])))))(0)}});}(this));
+_Platform_export({'Main':{'init':$author$project$Main$main($elm$json$Json$Decode$value)(0)}});}(this));

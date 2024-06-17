@@ -47,7 +47,7 @@
         }, {})
         hash['viewMode'] = hash['viewMode'] || "Editor" // "Editor" for form admins, "CollectData" for form users
         const flags = {
-            viewModeString: hash['viewMode'],
+            viewMode: hash['viewMode'],
             formFields: hash['formFields'] ? JSON.parse(decodeURIComponent(hash['formFields'])) : null, // JSON representation of form fields
             formValues: { "Email": "email@example.com", "ChooseOne": "No", "ChooseMany": [ "Durian", "Banana" ]}, // pre-fill form fields
             shortTextTypeList: [
@@ -117,7 +117,7 @@
                     let formFields = event.formFields;
                     console.log('formFields', JSON.stringify(formFields, null, 2));
                     window.location.hash = `viewMode=${hash['viewMode']}&formFields=${encodeURIComponent(JSON.stringify(formFields))}`
-                    if (hash['viewMode'] == "CollectData") return
+                    if (hash['viewMode'] === "CollectData") return
 
                     let ele = document.getElementById('view-sample-collect-data');
                     ele.href = `?#viewMode=CollectData&formFields=${encodeURIComponent(JSON.stringify(formFields))}`;

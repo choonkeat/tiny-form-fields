@@ -21,6 +21,7 @@ import Html.Events exposing (onCheck, onClick, onInput)
 import Json.Decode
 import Json.Decode.Extra exposing (andMap)
 import Json.Encode
+import Platform.Cmd as Cmd
 import Svg exposing (path, svg)
 import Svg.Attributes as SvgAttr
 
@@ -42,10 +43,14 @@ main =
 
 
 type alias Flags =
-    { viewModeString : Maybe String
-    , formFields : Maybe Json.Encode.Value
+    Json.Encode.Value
+
+
+type alias Config =
+    { viewMode : ViewMode
+    , formFields : Array FormField
     , formValues : Json.Encode.Value
-    , shortTextTypeList : Json.Encode.Value
+    , shortTextTypeList : List ( String, Dict String String )
     }
 
 
@@ -201,46 +206,30 @@ type FormFieldMsg
 
 init : Flags -> ( Model, Cmd Msg )
 init flags =
-    let
-        ( initFormFields, initCmd ) =
-            case Maybe.map (Json.Decode.decodeValue decodeFormFields) flags.formFields of
-                Nothing ->
-                    ( Array.empty, Cmd.none )
+    case Json.Decode.decodeValue decodeConfig flags of
+        Ok config ->
+            ( { viewMode = config.viewMode
+              , formFields = config.formFields
+              , formValues = config.formValues
+              , shortTextTypeList = config.shortTextTypeList
+              , shortTextTypeDict = Dict.fromList config.shortTextTypeList
+              }
+            , outgoing (encodePortOutgoingValue (PortOutgoingFormFields config.formFields))
+            )
 
-                Just (Ok formFields) ->
-                    ( formFields, outgoing (encodePortOutgoingValue (PortOutgoingFormFields formFields)) )
-
-                Just (Err err) ->
-                    let
-                        _ =
-                            Debug.log "decode formFields" err
-                    in
-                    ( Array.empty, Cmd.none )
-
-        shortTextTypeList =
-            case Json.Decode.decodeValue decodeShortTextTypeList flags.shortTextTypeList of
-                Ok dict ->
-                    dict
-
-                Err err ->
-                    let
-                        _ =
-                            Debug.log "decodeShortTypeText" (Json.Decode.errorToString err)
-                    in
-                    [ ( "Text", Dict.fromList [ ( "type", "text" ) ] ) ]
-    in
-    ( { viewMode =
-            flags.viewModeString
-                |> Maybe.andThen viewModeFromString
-                |> mapNothing (\() -> Debug.log "invalid viewModeString" flags.viewModeString)
-                |> Maybe.withDefault Editor
-      , formFields = initFormFields
-      , formValues = flags.formValues
-      , shortTextTypeList = shortTextTypeList
-      , shortTextTypeDict = Dict.fromList shortTextTypeList
-      }
-    , initCmd
-    )
+        Err err ->
+            let
+                _ =
+                    Debug.log "error decoding flags" err
+            in
+            ( { viewMode = Editor
+              , formFields = Array.empty
+              , formValues = Json.Encode.null
+              , shortTextTypeList = []
+              , shortTextTypeDict = Dict.empty
+              }
+            , Cmd.none
+            )
 
 
 
@@ -398,20 +387,6 @@ subscriptions _ =
 
 
 --
-
-
-mapNothing : (() -> b) -> Maybe a -> Maybe a
-mapNothing f maybeValue =
-    case maybeValue of
-        Just value ->
-            Just value
-
-        Nothing ->
-            let
-                _ =
-                    f ()
-            in
-            Nothing
 
 
 swapArrayIndex : Int -> Int -> Array a -> Array a
@@ -1056,6 +1031,22 @@ decodePortIncomingValue =
 
 
 --  ENCODERS DECODERS
+
+
+decodeViewMode : Json.Decode.Decoder ViewMode
+decodeViewMode =
+    Json.Decode.string
+        |> Json.Decode.map viewModeFromString
+        |> Json.Decode.andThen (Json.Decode.Extra.fromMaybe "Invalid viewMode: Editor | Preview | CollectData")
+
+
+decodeConfig : Json.Decode.Decoder Config
+decodeConfig =
+    Json.Decode.succeed Config
+        |> andMap (Json.Decode.Extra.optionalNullableField "viewMode" decodeViewMode |> Json.Decode.map (Maybe.withDefault Editor))
+        |> andMap (Json.Decode.Extra.optionalNullableField "formFields" decodeFormFields |> Json.Decode.map (Maybe.withDefault Array.empty))
+        |> andMap (Json.Decode.Extra.optionalNullableField "formValues" Json.Decode.value |> Json.Decode.map (Maybe.withDefault Json.Encode.null))
+        |> andMap (Json.Decode.Extra.optionalNullableField "shortTextTypeList" decodeShortTextTypeList |> Json.Decode.map (Maybe.withDefault [ ( "Text", Dict.fromList [ ( "type", "text" ) ] ) ]))
 
 
 maybeDecode : String -> Json.Decode.Decoder b -> Json.Decode.Value -> Maybe b
