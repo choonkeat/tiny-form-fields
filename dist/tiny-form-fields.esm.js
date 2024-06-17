@@ -5234,7 +5234,7 @@ var $author$project$Main$ShortText = F2(
 		return {$: 'ShortText', a: a, b: b};
 	});
 var $elm$json$Json$Decode$andThen = _Json_andThen;
-var $author$project$Main$choiceDelimiter = ' = ';
+var $author$project$Main$choiceDelimiter = ' | ';
 var $author$project$Main$choiceFromString = function (s) {
 	var _v0 = A2($elm$core$String$split, $author$project$Main$choiceDelimiter, s);
 	if (_v0.b) {
@@ -6863,8 +6863,8 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 								$elm$html$Html$Attributes$required(true),
 								$elm$html$Html$Attributes$readonly(
 								function () {
-									var _v4 = formField.presence;
-									switch (_v4.$) {
+									var _v3 = formField.presence;
+									switch (_v3.$) {
 										case 'Required':
 											return false;
 										case 'Optional':
@@ -6881,26 +6881,6 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 							]),
 						_List_Nil)
 					]));
-		};
-		var choicesAttrs = function (presence) {
-			switch (presence.$) {
-				case 'Required':
-					return _List_fromArray(
-						[
-							$elm$html$Html$Attributes$required(true)
-						]);
-				case 'Optional':
-					return _List_fromArray(
-						[
-							$elm$html$Html$Attributes$required(true)
-						]);
-				default:
-					return _List_fromArray(
-						[
-							$elm$html$Html$Attributes$required(true),
-							$elm$html$Html$Attributes$readonly(true)
-						]);
-			}
 		};
 		var _v0 = formField.type_;
 		switch (_v0.$) {
@@ -7485,12 +7465,35 @@ var $elm$core$List$member = F2(
 			},
 			xs);
 	});
+var $elm$core$Basics$not = _Basics_not;
 var $author$project$Main$viewFormFieldOptionsPreview = F2(
 	function (_v0, formField) {
 		var formValues = _v0.formValues;
 		var customAttrs = _v0.customAttrs;
 		var shortTextTypeDict = _v0.shortTextTypeDict;
 		var fieldName = $author$project$Main$fieldNameOf(formField);
+		var chosenForYou = function (choices) {
+			var _v3 = _Utils_Tuple2(formField.presence, choices);
+			_v3$2:
+			while (true) {
+				if (_v3.b.b && (!_v3.b.b.b)) {
+					switch (_v3.a.$) {
+						case 'System':
+							var _v4 = _v3.b;
+							return true;
+						case 'Required':
+							var _v5 = _v3.a;
+							var _v6 = _v3.b;
+							return true;
+						default:
+							break _v3$2;
+					}
+				} else {
+					break _v3$2;
+				}
+			}
+			return false;
+		};
 		var _v1 = formField.type_;
 		switch (_v1.$) {
 			case 'ShortText':
@@ -7606,7 +7609,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 											[
 												$elm$html$Html$Attributes$disabled(true),
 												$elm$html$Html$Attributes$selected(
-												_Utils_eq(valueString, $elm$core$Maybe$Nothing)),
+												_Utils_eq(valueString, $elm$core$Maybe$Nothing) && (!chosenForYou(choices))),
 												A2($elm$html$Html$Attributes$attribute, 'value', '')
 											]),
 										customAttrs),
@@ -7627,7 +7630,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 													$elm$html$Html$Attributes$selected(
 														_Utils_eq(
 															valueString,
-															$elm$core$Maybe$Just(choice.value))),
+															$elm$core$Maybe$Just(choice.value)) || chosenForYou(choices)),
 													customAttrs)),
 											_List_fromArray(
 												[
@@ -7684,7 +7687,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 																	$elm$html$Html$Attributes$checked(
 																	_Utils_eq(
 																		valueString,
-																		$elm$core$Maybe$Just(choice.value))),
+																		$elm$core$Maybe$Just(choice.value)) || chosenForYou(choices)),
 																	$elm$html$Html$Attributes$required(
 																	$author$project$Main$requiredData(formField.presence))
 																]),
@@ -7750,7 +7753,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 																	$elm$html$Html$Attributes$name(fieldName),
 																	$elm$html$Html$Attributes$value(choice.value),
 																	$elm$html$Html$Attributes$checked(
-																	A2($elm$core$List$member, choice.value, values))
+																	A2($elm$core$List$member, choice.value, values) || chosenForYou(choices))
 																]),
 															customAttrs),
 														_List_Nil),

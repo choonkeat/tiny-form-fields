@@ -620,6 +620,17 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formF
     let
         fieldName =
             fieldNameOf formField
+
+        chosenForYou choices =
+            case ( formField.presence, choices ) of
+                ( System _, [ _ ] ) ->
+                    True
+
+                ( Required, [ _ ] ) ->
+                    True
+
+                _ ->
+                    False
     in
     case formField.type_ of
         ShortText inputType maybeMaxLength ->
@@ -689,7 +700,7 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formF
                     ]
                     (option
                         ([ disabled True
-                         , selected (valueString == Nothing)
+                         , selected (valueString == Nothing && not (chosenForYou choices))
                          , attribute "value" ""
                          ]
                             ++ customAttrs
@@ -699,7 +710,7 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formF
                             (\choice ->
                                 option
                                     (value choice.value
-                                        :: selected (valueString == Just choice.value)
+                                        :: selected (valueString == Just choice.value || chosenForYou choices)
                                         :: customAttrs
                                     )
                                     [ text choice.label ]
@@ -725,7 +736,7 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formF
                                          , tabindex 0
                                          , name fieldName
                                          , value choice.value
-                                         , checked (valueString == Just choice.value)
+                                         , checked (valueString == Just choice.value || chosenForYou choices)
                                          , required (requiredData formField.presence)
                                          ]
                                             ++ customAttrs
@@ -758,7 +769,7 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formF
                                          , tabindex 0
                                          , name fieldName
                                          , value choice.value
-                                         , checked (List.member choice.value values)
+                                         , checked (List.member choice.value values || chosenForYou choices)
                                          ]
                                             ++ customAttrs
                                         )
@@ -931,19 +942,6 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
     let
         idSuffix =
             String.fromInt index
-
-        choicesAttrs presence =
-            case presence of
-                Required ->
-                    [ required True ]
-
-                Optional ->
-                    [ required True ]
-
-                System _ ->
-                    [ required True
-                    , readonly True
-                    ]
 
         chooseChoicesType chosen =
             div [ class "tff-field-group" ]
@@ -1133,7 +1131,7 @@ decodePortIncomingValue =
 
 choiceDelimiter : String
 choiceDelimiter =
-    " = "
+    " | "
 
 
 choiceToString : Choice -> String
