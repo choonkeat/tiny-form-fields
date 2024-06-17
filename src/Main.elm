@@ -1,11 +1,17 @@
 port module Main exposing
-    ( FormField
+    ( Choice
+    , FormField
     , InputField(..)
     , Presence(..)
     , ViewMode(..)
     , allInputField
+    , choiceDelimiter
+    , choiceFromString
+    , choiceToString
+    , decodeChoice
     , decodeFormFields
     , decodeShortTextTypeList
+    , encodeChoice
     , encodeFormFields
     , main
     , stringFromViewMode
@@ -16,7 +22,7 @@ import Array exposing (Array)
 import Browser
 import Dict exposing (Dict)
 import Html exposing (Html, a, button, div, input, label, li, option, select, text, textarea, ul)
-import Html.Attributes exposing (attribute, checked, class, disabled, for, id, maxlength, minlength, name, placeholder, required, selected, tabindex, title, type_, value)
+import Html.Attributes exposing (attribute, checked, class, disabled, for, id, maxlength, minlength, name, placeholder, readonly, required, selected, tabindex, title, type_, value)
 import Html.Events exposing (onCheck, onClick, onInput)
 import Json.Decode
 import Json.Decode.Extra exposing (andMap)
@@ -128,18 +134,65 @@ type alias FormField =
 type InputField
     = ShortText String (Maybe Int)
     | LongText (Maybe Int)
-    | Dropdown (List String)
-    | ChooseOne (List String)
-    | ChooseMultiple (List String)
+    | Dropdown (List Choice)
+    | ChooseOne (List Choice)
+    | ChooseMultiple (List Choice)
+
+
+choicesFromInputField : InputField -> List Choice
+choicesFromInputField inputField =
+    case inputField of
+        ShortText _ _ ->
+            []
+
+        LongText _ ->
+            []
+
+        Dropdown choices ->
+            choices
+
+        ChooseOne choices ->
+            choices
+
+        ChooseMultiple choices ->
+            choices
+
+
+choicesTypeFromString : InputField -> String -> InputField
+choicesTypeFromString oldField str =
+    case str of
+        "Dropdown" ->
+            Dropdown (choicesFromInputField oldField)
+
+        "Radio buttons" ->
+            ChooseOne (choicesFromInputField oldField)
+
+        "Checkboxes" ->
+            ChooseMultiple (choicesFromInputField oldField)
+
+        _ ->
+            oldField
+
+
+choicesTypes : List String
+choicesTypes =
+    [ "Dropdown"
+    , "Radio buttons"
+    , "Checkboxes"
+    ]
+
+
+type alias Choice =
+    { label : String, value : String }
 
 
 allInputField : List InputField
 allInputField =
     [ ShortText "Text" Nothing
     , LongText (Just 160)
-    , Dropdown [ "Red", "Orange", "Yellow", "Green", "Blue", "Indigo", "Violet" ]
-    , ChooseOne [ "Yes", "No" ]
-    , ChooseMultiple [ "Apple", "Banana", "Cantaloupe", "Durian" ]
+    , Dropdown (List.map choiceFromString [ "Red", "Orange", "Yellow", "Green", "Blue", "Indigo", "Violet" ])
+    , ChooseOne (List.map choiceFromString [ "Yes", "No" ])
+    , ChooseMultiple (List.map choiceFromString [ "Apple", "Banana", "Cantaloupe", "Durian" ])
     ]
 
 
@@ -198,6 +251,7 @@ type FormFieldMsg
     | OnChoicesInput
     | OnMaxLengthInput
     | OnShortTextType
+    | OnChoicesType
 
 
 
@@ -260,7 +314,7 @@ update msg model =
             let
                 newFormField : FormField
                 newFormField =
-                    { label = stringFromInputField fieldType ++ " " ++ String.fromInt (Array.length model.formFields + 1)
+                    { label = "Question " ++ String.fromInt (Array.length model.formFields + 1)
                     , presence = when (mustBeOptional fieldType) { true = Optional, false = Required }
                     , description = ""
                     , type_ = fieldType
@@ -346,13 +400,13 @@ updateFormField msg string formField =
                     formField
 
                 Dropdown _ ->
-                    { formField | type_ = Dropdown (String.lines string) }
+                    { formField | type_ = Dropdown (List.map choiceFromString (String.lines string)) }
 
                 ChooseOne _ ->
-                    { formField | type_ = ChooseOne (String.lines string) }
+                    { formField | type_ = ChooseOne (List.map choiceFromString (String.lines string)) }
 
                 ChooseMultiple _ ->
-                    { formField | type_ = ChooseMultiple (String.lines string) }
+                    { formField | type_ = ChooseMultiple (List.map choiceFromString (String.lines string)) }
 
         OnMaxLengthInput ->
             case formField.type_ of
@@ -378,6 +432,9 @@ updateFormField msg string formField =
 
                 _ ->
                     formField
+
+        OnChoicesType ->
+            { formField | type_ = choicesTypeFromString formField.type_ string }
 
 
 subscriptions : Model -> Sub Msg
@@ -480,7 +537,16 @@ viewTabs active tabs =
 
 viewFormPreview : List (Html.Attribute Msg) -> { a | formFields : Array FormField, formValues : Json.Encode.Value, shortTextTypeDict : Dict String (Dict String String) } -> List (Html Msg)
 viewFormPreview customAttrs { formFields, formValues, shortTextTypeDict } =
-    Array.toList (Array.map (viewFormFieldPreview { customAttrs = customAttrs, formValues = formValues, shortTextTypeDict = shortTextTypeDict }) formFields)
+    let
+        config =
+            { customAttrs = customAttrs
+            , formValues = formValues
+            , shortTextTypeDict = shortTextTypeDict
+            }
+    in
+    formFields
+        |> Array.map (viewFormFieldPreview config)
+        |> Array.toList
 
 
 when : Bool -> { true : a, false : a } -> a
@@ -632,11 +698,11 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formF
                         :: List.map
                             (\choice ->
                                 option
-                                    (value choice
-                                        :: selected (valueString == Just choice)
+                                    (value choice.value
+                                        :: selected (valueString == Just choice.value)
                                         :: customAttrs
                                     )
-                                    [ text choice ]
+                                    [ text choice.label ]
                             )
                             choices
                     )
@@ -658,15 +724,15 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formF
                                         ([ type_ "radio"
                                          , tabindex 0
                                          , name fieldName
-                                         , value choice
-                                         , checked (valueString == Just choice)
+                                         , value choice.value
+                                         , checked (valueString == Just choice.value)
                                          , required (requiredData formField.presence)
                                          ]
                                             ++ customAttrs
                                         )
                                         []
                                     , text " "
-                                    , text choice
+                                    , text choice.label
                                     ]
                                 ]
                         )
@@ -691,14 +757,14 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formF
                                         ([ type_ "checkbox"
                                          , tabindex 0
                                          , name fieldName
-                                         , value choice
-                                         , checked (List.member choice values)
+                                         , value choice.value
+                                         , checked (List.member choice.value values)
                                          ]
                                             ++ customAttrs
                                         )
                                         []
                                     , text " "
-                                    , text choice
+                                    , text choice.label
                                     ]
                                 ]
                         )
@@ -714,7 +780,10 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formF
 viewFormBuilder : { a | formFields : Array FormField, shortTextTypeList : List ( String, Dict String String ) } -> List (Html Msg)
 viewFormBuilder { formFields, shortTextTypeList } =
     [ div [ class "tff-build-fields" ]
-        (Array.toList (Array.indexedMap (viewFormFieldBuilder shortTextTypeList (Array.length formFields)) formFields))
+        (formFields
+            |> Array.indexedMap (viewFormFieldBuilder shortTextTypeList (Array.length formFields))
+            |> Array.toList
+        )
     , div [ class "tff-add-fields" ]
         (allInputField
             |> List.map
@@ -817,7 +886,7 @@ viewFormFieldBuilder shortTextTypeList totalLength index formField =
                 []
             ]
          ]
-            ++ viewFormFieldOptionsBuilder shortTextTypeList index formField.type_
+            ++ viewFormFieldOptionsBuilder shortTextTypeList index formField
             ++ [ div [ class "tff-build-field-buttons" ]
                     [ div [ class "tff-move" ]
                         [ if index == 0 then
@@ -857,13 +926,75 @@ viewFormFieldBuilder shortTextTypeList totalLength index formField =
         )
 
 
-viewFormFieldOptionsBuilder : List ( String, Dict String String ) -> Int -> InputField -> List (Html Msg)
-viewFormFieldOptionsBuilder shortTextTypeList index fieldType =
+viewFormFieldOptionsBuilder : List ( String, Dict String String ) -> Int -> FormField -> List (Html Msg)
+viewFormFieldOptionsBuilder shortTextTypeList index formField =
     let
         idSuffix =
             String.fromInt index
+
+        choicesAttrs presence =
+            case presence of
+                Required ->
+                    [ required True ]
+
+                Optional ->
+                    [ required True ]
+
+                System _ ->
+                    [ required True
+                    , readonly True
+                    ]
+
+        chooseChoicesType chosen =
+            div [ class "tff-field-group" ]
+                [ label [ class "tff-field-label", for ("choicesType-" ++ idSuffix) ] [ text "Type" ]
+                , div [ class "tff-dropdown-group" ]
+                    [ selectArrowDown
+                    , select
+                        [ required True
+                        , name ("choicesType-" ++ idSuffix)
+                        , onInput (OnFormField OnChoicesType index)
+                        ]
+                        (List.map
+                            (\choice ->
+                                option
+                                    [ value choice
+                                    , selected (choice == chosen)
+                                    ]
+                                    [ text choice ]
+                            )
+                            choicesTypes
+                        )
+                    ]
+                ]
+
+        choicesTextarea choices =
+            div [ class "tff-field-group" ]
+                [ label [ class "tff-field-label", for ("choices-" ++ idSuffix) ] [ text "Choices" ]
+                , textarea
+                    [ id ("choices-" ++ idSuffix)
+                    , value (String.join "\n" (List.map choiceToString choices))
+                    , required True
+                    , readonly
+                        (case formField.presence of
+                            Required ->
+                                False
+
+                            Optional ->
+                                False
+
+                            System _ ->
+                                True
+                        )
+                    , onInput (OnFormField OnChoicesInput index)
+                    , minlength 1
+                    , class "tff-text-field"
+                    , placeholder "Enter one choice per line"
+                    ]
+                    []
+                ]
     in
-    case fieldType of
+    case formField.type_ of
         ShortText inputType maybeMaxLength ->
             let
                 maybeShortTextTypeMaxLength =
@@ -928,51 +1059,18 @@ viewFormFieldOptionsBuilder shortTextTypeList index fieldType =
             ]
 
         Dropdown choices ->
-            [ div [ class "tff-field-group" ]
-                [ label [ class "tff-field-label", for ("choices-" ++ idSuffix) ] [ text "Choices" ]
-                , textarea
-                    [ id ("choices-" ++ idSuffix)
-                    , required True
-                    , minlength 1
-                    , class "tff-text-field"
-                    , placeholder "Enter one choice per line"
-                    , value (String.join "\n" choices)
-                    , onInput (OnFormField OnChoicesInput index)
-                    ]
-                    []
-                ]
+            [ chooseChoicesType (stringFromInputField formField.type_)
+            , choicesTextarea choices
             ]
 
         ChooseOne choices ->
-            [ div [ class "tff-field-group" ]
-                [ label [ class "tff-field-label", for ("choices-" ++ idSuffix) ] [ text "Choices" ]
-                , textarea
-                    [ id ("choices-" ++ idSuffix)
-                    , required True
-                    , minlength 1
-                    , class "tff-text-field"
-                    , placeholder "Enter one choice per line"
-                    , value (String.join "\n" choices)
-                    , onInput (OnFormField OnChoicesInput index)
-                    ]
-                    []
-                ]
+            [ chooseChoicesType (stringFromInputField formField.type_)
+            , choicesTextarea choices
             ]
 
         ChooseMultiple choices ->
-            [ div [ class "tff-field-group" ]
-                [ label [ class "tff-field-label", for ("choices-" ++ idSuffix) ] [ text "Choices" ]
-                , textarea
-                    [ id ("choices-" ++ idSuffix)
-                    , required True
-                    , minlength 1
-                    , class "tff-text-field"
-                    , placeholder "Enter one choice per line"
-                    , value (String.join "\n" choices)
-                    , onInput (OnFormField OnChoicesInput index)
-                    ]
-                    []
-                ]
+            [ chooseChoicesType (stringFromInputField formField.type_)
+            , choicesTextarea choices
             ]
 
 
@@ -1031,6 +1129,47 @@ decodePortIncomingValue =
 
 
 --  ENCODERS DECODERS
+
+
+choiceDelimiter : String
+choiceDelimiter =
+    " = "
+
+
+choiceToString : Choice -> String
+choiceToString choice =
+    if choice.label == choice.value then
+        choice.label
+
+    else
+        choice.value ++ choiceDelimiter ++ choice.label
+
+
+choiceFromString : String -> Choice
+choiceFromString s =
+    case String.split choiceDelimiter s of
+        [ value ] ->
+            { value = value, label = value }
+
+        [ value, label ] ->
+            { value = value, label = label }
+
+        value :: labels ->
+            { value = value, label = String.join choiceDelimiter labels }
+
+        _ ->
+            { value = s, label = s }
+
+
+decodeChoice : Json.Decode.Decoder Choice
+decodeChoice =
+    Json.Decode.string
+        |> Json.Decode.map choiceFromString
+
+
+encodeChoice : Choice -> Json.Encode.Value
+encodeChoice choice =
+    Json.Encode.string (choiceToString choice)
 
 
 decodeViewMode : Json.Decode.Decoder ViewMode
@@ -1162,19 +1301,19 @@ encodeInputField inputField =
         Dropdown choices ->
             Json.Encode.object
                 [ ( "type", Json.Encode.string "Dropdown" )
-                , ( "choices", Json.Encode.list Json.Encode.string choices )
+                , ( "choices", Json.Encode.list encodeChoice (List.filter (\{ value } -> String.trim value /= "") choices) )
                 ]
 
         ChooseOne choices ->
             Json.Encode.object
                 [ ( "type", Json.Encode.string "ChooseOne" )
-                , ( "choices", Json.Encode.list Json.Encode.string choices )
+                , ( "choices", Json.Encode.list encodeChoice (List.filter (\{ value } -> String.trim value /= "") choices) )
                 ]
 
         ChooseMultiple choices ->
             Json.Encode.object
                 [ ( "type", Json.Encode.string "ChooseMultiple" )
-                , ( "choices", Json.Encode.list Json.Encode.string choices )
+                , ( "choices", Json.Encode.list encodeChoice (List.filter (\{ value } -> String.trim value /= "") choices) )
                 ]
 
 
@@ -1194,15 +1333,15 @@ decodeInputField =
                             |> andMap (Json.Decode.field "maxLength" (Json.Decode.nullable Json.Decode.int))
 
                     "Dropdown" ->
-                        Json.Decode.field "choices" (Json.Decode.list Json.Decode.string)
+                        Json.Decode.field "choices" (Json.Decode.list decodeChoice)
                             |> Json.Decode.map Dropdown
 
                     "ChooseOne" ->
-                        Json.Decode.field "choices" (Json.Decode.list Json.Decode.string)
+                        Json.Decode.field "choices" (Json.Decode.list decodeChoice)
                             |> Json.Decode.map ChooseOne
 
                     "ChooseMultiple" ->
-                        Json.Decode.field "choices" (Json.Decode.list Json.Decode.string)
+                        Json.Decode.field "choices" (Json.Decode.list decodeChoice)
                             |> Json.Decode.map ChooseMultiple
 
                     _ ->

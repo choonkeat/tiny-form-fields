@@ -6,7 +6,7 @@ import Expect
 import Fuzz exposing (Fuzzer, string)
 import Json.Decode
 import Json.Encode
-import Main
+import Main exposing (choiceToString)
 import Test exposing (..)
 
 
@@ -50,6 +50,13 @@ suite =
                             , ( "Nric", Dict.fromList [ ( "pattern", "^[STGM][0-9]{7}[ABCDEFGHIZJ]$" ), ( "type", "text" ) ] )
                             ]
                         )
+        , Test.fuzz choiceStringFuzzer "choiceStringToChoice,choiceStringFromString is reversible" <|
+            \choice ->
+                choice
+                    |> Main.encodeChoice
+                    |> Json.Encode.encode 0
+                    |> Json.Decode.decodeString Main.decodeChoice
+                    |> Expect.equal (Ok choice)
         ]
 
 
@@ -91,3 +98,14 @@ fuzzFormField =
         presenceFuzzer
         string
         inputFieldFuzzer
+
+
+choiceStringFuzzer : Fuzzer Main.Choice
+choiceStringFuzzer =
+    Fuzz.oneOf
+        [ Fuzz.map2 Main.Choice
+            Fuzz.string
+            Fuzz.string
+        , Fuzz.string
+            |> Fuzz.map (\s -> Main.Choice s s)
+        ]

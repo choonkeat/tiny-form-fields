@@ -5226,6 +5226,34 @@ var $author$project$Main$ShortText = F2(
 		return {$: 'ShortText', a: a, b: b};
 	});
 var $elm$json$Json$Decode$andThen = _Json_andThen;
+var $author$project$Main$choiceDelimiter = ' = ';
+var $author$project$Main$choiceFromString = function (s) {
+	var _v0 = A2($elm$core$String$split, $author$project$Main$choiceDelimiter, s);
+	if (_v0.b) {
+		if (!_v0.b.b) {
+			var value = _v0.a;
+			return {label: value, value: value};
+		} else {
+			if (!_v0.b.b.b) {
+				var value = _v0.a;
+				var _v1 = _v0.b;
+				var label = _v1.a;
+				return {label: label, value: value};
+			} else {
+				var value = _v0.a;
+				var labels = _v0.b;
+				return {
+					label: A2($elm$core$String$join, $author$project$Main$choiceDelimiter, labels),
+					value: value
+				};
+			}
+		}
+	} else {
+		return {label: s, value: s};
+	}
+};
+var $elm$json$Json$Decode$string = _Json_decodeString;
+var $author$project$Main$decodeChoice = A2($elm$json$Json$Decode$map, $author$project$Main$choiceFromString, $elm$json$Json$Decode$string);
 var $elm$json$Json$Decode$fail = _Json_fail;
 var $elm$json$Json$Decode$field = _Json_decodeField;
 var $elm$json$Json$Decode$int = _Json_decodeInt;
@@ -5240,7 +5268,6 @@ var $elm$json$Json$Decode$nullable = function (decoder) {
 				A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, decoder)
 			]));
 };
-var $elm$json$Json$Decode$string = _Json_decodeString;
 var $author$project$Main$decodeInputField = A2(
 	$elm$json$Json$Decode$andThen,
 	function (type_) {
@@ -5271,7 +5298,7 @@ var $author$project$Main$decodeInputField = A2(
 					A2(
 						$elm$json$Json$Decode$field,
 						'choices',
-						$elm$json$Json$Decode$list($elm$json$Json$Decode$string)));
+						$elm$json$Json$Decode$list($author$project$Main$decodeChoice)));
 			case 'ChooseOne':
 				return A2(
 					$elm$json$Json$Decode$map,
@@ -5279,7 +5306,7 @@ var $author$project$Main$decodeInputField = A2(
 					A2(
 						$elm$json$Json$Decode$field,
 						'choices',
-						$elm$json$Json$Decode$list($elm$json$Json$Decode$string)));
+						$elm$json$Json$Decode$list($author$project$Main$decodeChoice)));
 			case 'ChooseMultiple':
 				return A2(
 					$elm$json$Json$Decode$map,
@@ -5287,7 +5314,7 @@ var $author$project$Main$decodeInputField = A2(
 					A2(
 						$elm$json$Json$Decode$field,
 						'choices',
-						$elm$json$Json$Decode$list($elm$json$Json$Decode$string)));
+						$elm$json$Json$Decode$list($author$project$Main$decodeChoice)));
 			default:
 				return $elm$json$Json$Decode$fail('Unknown input field type: ' + type_);
 		}
@@ -5656,6 +5683,27 @@ var $author$project$Main$decodeConfig = A2(
 					$elm$core$Maybe$withDefault($author$project$Main$Editor),
 					A2($elm_community$json_extra$Json$Decode$Extra$optionalNullableField, 'viewMode', $author$project$Main$decodeViewMode)),
 				$elm$json$Json$Decode$succeed($author$project$Main$Config)))));
+var $author$project$Main$choiceToString = function (choice) {
+	return _Utils_eq(choice.label, choice.value) ? choice.label : _Utils_ap(
+		choice.value,
+		_Utils_ap($author$project$Main$choiceDelimiter, choice.label));
+};
+var $elm$json$Json$Encode$string = _Json_wrap;
+var $author$project$Main$encodeChoice = function (choice) {
+	return $elm$json$Json$Encode$string(
+		$author$project$Main$choiceToString(choice));
+};
+var $elm$core$List$filter = F2(
+	function (isGood, list) {
+		return A3(
+			$elm$core$List$foldr,
+			F2(
+				function (x, xs) {
+					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
+				}),
+			_List_Nil,
+			list);
+	});
 var $elm$json$Json$Encode$int = _Json_wrap;
 var $elm$json$Json$Encode$list = F2(
 	function (func, entries) {
@@ -5676,6 +5724,7 @@ var $elm$core$Maybe$map = F2(
 			return $elm$core$Maybe$Nothing;
 		}
 	});
+var $elm$core$Basics$neq = _Utils_notEqual;
 var $elm$json$Json$Encode$object = function (pairs) {
 	return _Json_wrap(
 		A3(
@@ -5689,7 +5738,7 @@ var $elm$json$Json$Encode$object = function (pairs) {
 			_Json_emptyObject(_Utils_Tuple0),
 			pairs));
 };
-var $elm$json$Json$Encode$string = _Json_wrap;
+var $elm$core$String$trim = _String_trim;
 var $author$project$Main$encodeInputField = function (inputField) {
 	switch (inputField.$) {
 		case 'ShortText':
@@ -5736,7 +5785,16 @@ var $author$project$Main$encodeInputField = function (inputField) {
 						$elm$json$Json$Encode$string('Dropdown')),
 						_Utils_Tuple2(
 						'choices',
-						A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, choices))
+						A2(
+							$elm$json$Json$Encode$list,
+							$author$project$Main$encodeChoice,
+							A2(
+								$elm$core$List$filter,
+								function (_v1) {
+									var value = _v1.value;
+									return $elm$core$String$trim(value) !== '';
+								},
+								choices)))
 					]));
 		case 'ChooseOne':
 			var choices = inputField.a;
@@ -5748,7 +5806,16 @@ var $author$project$Main$encodeInputField = function (inputField) {
 						$elm$json$Json$Encode$string('ChooseOne')),
 						_Utils_Tuple2(
 						'choices',
-						A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, choices))
+						A2(
+							$elm$json$Json$Encode$list,
+							$author$project$Main$encodeChoice,
+							A2(
+								$elm$core$List$filter,
+								function (_v2) {
+									var value = _v2.value;
+									return $elm$core$String$trim(value) !== '';
+								},
+								choices)))
 					]));
 		default:
 			var choices = inputField.a;
@@ -5760,7 +5827,16 @@ var $author$project$Main$encodeInputField = function (inputField) {
 						$elm$json$Json$Encode$string('ChooseMultiple')),
 						_Utils_Tuple2(
 						'choices',
-						A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, choices))
+						A2(
+							$elm$json$Json$Encode$list,
+							$author$project$Main$encodeChoice,
+							A2(
+								$elm$core$List$filter,
+								function (_v3) {
+									var value = _v3.value;
+									return $elm$core$String$trim(value) !== '';
+								},
+								choices)))
 					]));
 	}
 };
@@ -5787,18 +5863,6 @@ var $author$project$Main$encodePresence = function (presence) {
 					]));
 	}
 };
-var $elm$core$List$filter = F2(
-	function (isGood, list) {
-		return A3(
-			$elm$core$List$foldr,
-			F2(
-				function (x, xs) {
-					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
-				}),
-			_List_Nil,
-			list);
-	});
-var $elm$core$Basics$neq = _Utils_notEqual;
 var $author$project$Main$encodeFormFields = function (formFields) {
 	return A2(
 		$elm$json$Json$Encode$list,
@@ -5890,7 +5954,7 @@ var $author$project$Main$init = function (flags) {
 					$author$project$Main$PortOutgoingFormFields(config.formFields))));
 	} else {
 		var err = _v0.a;
-		var _v1 = A2($elm$core$Debug$log, 'error decoding config', err);
+		var _v1 = A2($elm$core$Debug$log, 'error decoding flags', err);
 		return _Utils_Tuple2(
 			{formFields: $elm$core$Array$empty, formValues: $elm$json$Json$Encode$null, shortTextTypeDict: $elm$core$Dict$empty, shortTextTypeList: _List_Nil, viewMode: $author$project$Main$Editor},
 			$elm$core$Platform$Cmd$none);
@@ -6079,21 +6143,6 @@ var $elm$core$Tuple$second = function (_v0) {
 	var y = _v0.b;
 	return y;
 };
-var $author$project$Main$stringFromInputField = function (inputField) {
-	switch (inputField.$) {
-		case 'ShortText':
-			var inputType = inputField.a;
-			return inputType;
-		case 'LongText':
-			return 'Long text';
-		case 'Dropdown':
-			return 'Dropdown';
-		case 'ChooseOne':
-			return 'Radio buttons';
-		default:
-			return 'Checkboxes';
-	}
-};
 var $elm$core$Array$getHelp = F3(
 	function (shift, index, tree) {
 		getHelp:
@@ -6205,6 +6254,39 @@ var $elm$core$Array$toIndexedList = function (array) {
 		_Utils_Tuple2(len - 1, _List_Nil),
 		array).b;
 };
+var $author$project$Main$choicesFromInputField = function (inputField) {
+	switch (inputField.$) {
+		case 'ShortText':
+			return _List_Nil;
+		case 'LongText':
+			return _List_Nil;
+		case 'Dropdown':
+			var choices = inputField.a;
+			return choices;
+		case 'ChooseOne':
+			var choices = inputField.a;
+			return choices;
+		default:
+			var choices = inputField.a;
+			return choices;
+	}
+};
+var $author$project$Main$choicesTypeFromString = F2(
+	function (oldField, str) {
+		switch (str) {
+			case 'Dropdown':
+				return $author$project$Main$Dropdown(
+					$author$project$Main$choicesFromInputField(oldField));
+			case 'Radio buttons':
+				return $author$project$Main$ChooseOne(
+					$author$project$Main$choicesFromInputField(oldField));
+			case 'Checkboxes':
+				return $author$project$Main$ChooseMultiple(
+					$author$project$Main$choicesFromInputField(oldField));
+			default:
+				return oldField;
+		}
+	});
 var $elm$core$String$lines = _String_lines;
 var $author$project$Main$updateFormField = F3(
 	function (msg, string, formField) {
@@ -6236,21 +6318,30 @@ var $author$project$Main$updateFormField = F3(
 							formField,
 							{
 								type_: $author$project$Main$Dropdown(
-									$elm$core$String$lines(string))
+									A2(
+										$elm$core$List$map,
+										$author$project$Main$choiceFromString,
+										$elm$core$String$lines(string)))
 							});
 					case 'ChooseOne':
 						return _Utils_update(
 							formField,
 							{
 								type_: $author$project$Main$ChooseOne(
-									$elm$core$String$lines(string))
+									A2(
+										$elm$core$List$map,
+										$author$project$Main$choiceFromString,
+										$elm$core$String$lines(string)))
 							});
 					default:
 						return _Utils_update(
 							formField,
 							{
 								type_: $author$project$Main$ChooseMultiple(
-									$elm$core$String$lines(string))
+									A2(
+										$elm$core$List$map,
+										$author$project$Main$choiceFromString,
+										$elm$core$String$lines(string)))
 							});
 				}
 			case 'OnMaxLengthInput':
@@ -6280,7 +6371,7 @@ var $author$project$Main$updateFormField = F3(
 					default:
 						return formField;
 				}
-			default:
+			case 'OnShortTextType':
 				var _v3 = formField.type_;
 				if (_v3.$ === 'ShortText') {
 					var maybeMaxLength = _v3.b;
@@ -6292,6 +6383,12 @@ var $author$project$Main$updateFormField = F3(
 				} else {
 					return formField;
 				}
+			default:
+				return _Utils_update(
+					formField,
+					{
+						type_: A2($author$project$Main$choicesTypeFromString, formField.type_, string)
+					});
 		}
 	});
 var $author$project$Main$when = F2(
@@ -6327,8 +6424,8 @@ var $author$project$Main$update = F2(
 				var fieldType = msg.a;
 				var newFormField = {
 					description: '',
-					label: $author$project$Main$stringFromInputField(fieldType) + (' ' + $elm$core$String$fromInt(
-						$elm$core$Array$length(model.formFields) + 1)),
+					label: 'Question ' + $elm$core$String$fromInt(
+						$elm$core$Array$length(model.formFields) + 1),
 					presence: A2(
 						$author$project$Main$when,
 						$author$project$Main$mustBeOptional(fieldType),
@@ -6436,14 +6533,23 @@ var $author$project$Main$allInputField = _List_fromArray(
 		$author$project$Main$LongText(
 		$elm$core$Maybe$Just(160)),
 		$author$project$Main$Dropdown(
-		_List_fromArray(
-			['Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Indigo', 'Violet'])),
+		A2(
+			$elm$core$List$map,
+			$author$project$Main$choiceFromString,
+			_List_fromArray(
+				['Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Indigo', 'Violet']))),
 		$author$project$Main$ChooseOne(
-		_List_fromArray(
-			['Yes', 'No'])),
+		A2(
+			$elm$core$List$map,
+			$author$project$Main$choiceFromString,
+			_List_fromArray(
+				['Yes', 'No']))),
 		$author$project$Main$ChooseMultiple(
-		_List_fromArray(
-			['Apple', 'Banana', 'Cantaloupe', 'Durian']))
+		A2(
+			$elm$core$List$map,
+			$author$project$Main$choiceFromString,
+			_List_fromArray(
+				['Apple', 'Banana', 'Cantaloupe', 'Durian'])))
 	]);
 var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
@@ -6462,6 +6568,21 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		$elm$html$Html$Events$on,
 		'click',
 		$elm$json$Json$Decode$succeed(msg));
+};
+var $author$project$Main$stringFromInputField = function (inputField) {
+	switch (inputField.$) {
+		case 'ShortText':
+			var inputType = inputField.a;
+			return inputType;
+		case 'LongText':
+			return 'Long text';
+		case 'Dropdown':
+			return 'Dropdown';
+		case 'ChooseOne':
+			return 'Radio buttons';
+		default:
+			return 'Checkboxes';
+	}
 };
 var $elm$html$Html$Attributes$tabindex = function (n) {
 	return A2(
@@ -6554,8 +6675,11 @@ var $author$project$Main$requiredData = function (presence) {
 };
 var $elm$html$Html$Attributes$title = $elm$html$Html$Attributes$stringProperty('title');
 var $author$project$Main$OnChoicesInput = {$: 'OnChoicesInput'};
+var $author$project$Main$OnChoicesType = {$: 'OnChoicesType'};
 var $author$project$Main$OnMaxLengthInput = {$: 'OnMaxLengthInput'};
 var $author$project$Main$OnShortTextType = {$: 'OnShortTextType'};
+var $author$project$Main$choicesTypes = _List_fromArray(
+	['Dropdown', 'Radio buttons', 'Checkboxes']);
 var $elm$core$Dict$get = F2(
 	function (targetKey, dict) {
 		get:
@@ -6597,6 +6721,7 @@ var $elm$core$List$head = function (list) {
 	}
 };
 var $elm$html$Html$option = _VirtualDom_node('option');
+var $elm$html$Html$Attributes$readonly = $elm$html$Html$Attributes$boolProperty('readOnly');
 var $elm$html$Html$select = _VirtualDom_node('select');
 var $elm$virtual_dom$VirtualDom$attribute = F2(
 	function (key, value) {
@@ -6637,12 +6762,143 @@ var $author$project$Main$selectArrowDown = A2(
 var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
 var $elm$html$Html$textarea = _VirtualDom_node('textarea');
 var $author$project$Main$viewFormFieldOptionsBuilder = F3(
-	function (shortTextTypeList, index, fieldType) {
+	function (shortTextTypeList, index, formField) {
 		var idSuffix = $elm$core$String$fromInt(index);
-		switch (fieldType.$) {
+		var chooseChoicesType = function (chosen) {
+			return A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('tff-field-group')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$label,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('tff-field-label'),
+								$elm$html$Html$Attributes$for('choicesType-' + idSuffix)
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Type')
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('tff-dropdown-group')
+							]),
+						_List_fromArray(
+							[
+								$author$project$Main$selectArrowDown,
+								A2(
+								$elm$html$Html$select,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$required(true),
+										$elm$html$Html$Attributes$name('choicesType-' + idSuffix),
+										$elm$html$Html$Events$onInput(
+										A2($author$project$Main$OnFormField, $author$project$Main$OnChoicesType, index))
+									]),
+								A2(
+									$elm$core$List$map,
+									function (choice) {
+										return A2(
+											$elm$html$Html$option,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$value(choice),
+													$elm$html$Html$Attributes$selected(
+													_Utils_eq(choice, chosen))
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text(choice)
+												]));
+									},
+									$author$project$Main$choicesTypes))
+							]))
+					]));
+		};
+		var choicesTextarea = function (choices) {
+			return A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('tff-field-group')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$label,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('tff-field-label'),
+								$elm$html$Html$Attributes$for('choices-' + idSuffix)
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Choices')
+							])),
+						A2(
+						$elm$html$Html$textarea,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$id('choices-' + idSuffix),
+								$elm$html$Html$Attributes$value(
+								A2(
+									$elm$core$String$join,
+									'\n',
+									A2($elm$core$List$map, $author$project$Main$choiceToString, choices))),
+								$elm$html$Html$Attributes$required(true),
+								$elm$html$Html$Attributes$readonly(
+								function () {
+									var _v4 = formField.presence;
+									switch (_v4.$) {
+										case 'Required':
+											return false;
+										case 'Optional':
+											return false;
+										default:
+											return true;
+									}
+								}()),
+								$elm$html$Html$Events$onInput(
+								A2($author$project$Main$OnFormField, $author$project$Main$OnChoicesInput, index)),
+								$elm$html$Html$Attributes$minlength(1),
+								$elm$html$Html$Attributes$class('tff-text-field'),
+								$elm$html$Html$Attributes$placeholder('Enter one choice per line')
+							]),
+						_List_Nil)
+					]));
+		};
+		var choicesAttrs = function (presence) {
+			switch (presence.$) {
+				case 'Required':
+					return _List_fromArray(
+						[
+							$elm$html$Html$Attributes$required(true)
+						]);
+				case 'Optional':
+					return _List_fromArray(
+						[
+							$elm$html$Html$Attributes$required(true)
+						]);
+				default:
+					return _List_fromArray(
+						[
+							$elm$html$Html$Attributes$required(true),
+							$elm$html$Html$Attributes$readonly(true)
+						]);
+			}
+		};
+		var _v0 = formField.type_;
+		switch (_v0.$) {
 			case 'ShortText':
-				var inputType = fieldType.a;
-				var maybeMaxLength = fieldType.b;
+				var inputType = _v0.a;
+				var maybeMaxLength = _v0.b;
 				var maybeShortTextTypeMaxLength = A2(
 					$elm$core$Maybe$andThen,
 					$elm$core$String$toInt,
@@ -6772,7 +7028,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 					}()
 					]);
 			case 'LongText':
-				var maybeMaxLength = fieldType.a;
+				var maybeMaxLength = _v0.a;
 				return _List_fromArray(
 					[
 						A2(
@@ -6813,124 +7069,28 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 							]))
 					]);
 			case 'Dropdown':
-				var choices = fieldType.a;
+				var choices = _v0.a;
 				return _List_fromArray(
 					[
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('tff-field-group')
-							]),
-						_List_fromArray(
-							[
-								A2(
-								$elm$html$Html$label,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('tff-field-label'),
-										$elm$html$Html$Attributes$for('choices-' + idSuffix)
-									]),
-								_List_fromArray(
-									[
-										$elm$html$Html$text('Choices')
-									])),
-								A2(
-								$elm$html$Html$textarea,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$id('choices-' + idSuffix),
-										$elm$html$Html$Attributes$required(true),
-										$elm$html$Html$Attributes$minlength(1),
-										$elm$html$Html$Attributes$class('tff-text-field'),
-										$elm$html$Html$Attributes$placeholder('Enter one choice per line'),
-										$elm$html$Html$Attributes$value(
-										A2($elm$core$String$join, '\n', choices)),
-										$elm$html$Html$Events$onInput(
-										A2($author$project$Main$OnFormField, $author$project$Main$OnChoicesInput, index))
-									]),
-								_List_Nil)
-							]))
+						chooseChoicesType(
+						$author$project$Main$stringFromInputField(formField.type_)),
+						choicesTextarea(choices)
 					]);
 			case 'ChooseOne':
-				var choices = fieldType.a;
+				var choices = _v0.a;
 				return _List_fromArray(
 					[
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('tff-field-group')
-							]),
-						_List_fromArray(
-							[
-								A2(
-								$elm$html$Html$label,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('tff-field-label'),
-										$elm$html$Html$Attributes$for('choices-' + idSuffix)
-									]),
-								_List_fromArray(
-									[
-										$elm$html$Html$text('Choices')
-									])),
-								A2(
-								$elm$html$Html$textarea,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$id('choices-' + idSuffix),
-										$elm$html$Html$Attributes$required(true),
-										$elm$html$Html$Attributes$minlength(1),
-										$elm$html$Html$Attributes$class('tff-text-field'),
-										$elm$html$Html$Attributes$placeholder('Enter one choice per line'),
-										$elm$html$Html$Attributes$value(
-										A2($elm$core$String$join, '\n', choices)),
-										$elm$html$Html$Events$onInput(
-										A2($author$project$Main$OnFormField, $author$project$Main$OnChoicesInput, index))
-									]),
-								_List_Nil)
-							]))
+						chooseChoicesType(
+						$author$project$Main$stringFromInputField(formField.type_)),
+						choicesTextarea(choices)
 					]);
 			default:
-				var choices = fieldType.a;
+				var choices = _v0.a;
 				return _List_fromArray(
 					[
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('tff-field-group')
-							]),
-						_List_fromArray(
-							[
-								A2(
-								$elm$html$Html$label,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('tff-field-label'),
-										$elm$html$Html$Attributes$for('choices-' + idSuffix)
-									]),
-								_List_fromArray(
-									[
-										$elm$html$Html$text('Choices')
-									])),
-								A2(
-								$elm$html$Html$textarea,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$id('choices-' + idSuffix),
-										$elm$html$Html$Attributes$required(true),
-										$elm$html$Html$Attributes$minlength(1),
-										$elm$html$Html$Attributes$class('tff-text-field'),
-										$elm$html$Html$Attributes$placeholder('Enter one choice per line'),
-										$elm$html$Html$Attributes$value(
-										A2($elm$core$String$join, '\n', choices)),
-										$elm$html$Html$Events$onInput(
-										A2($author$project$Main$OnFormField, $author$project$Main$OnChoicesInput, index))
-									]),
-								_List_Nil)
-							]))
+						chooseChoicesType(
+						$author$project$Main$stringFromInputField(formField.type_)),
+						choicesTextarea(choices)
 					]);
 		}
 	});
@@ -7085,7 +7245,7 @@ var $author$project$Main$viewFormFieldBuilder = F4(
 							]))
 					]),
 				_Utils_ap(
-					A3($author$project$Main$viewFormFieldOptionsBuilder, shortTextTypeList, index, formField.type_),
+					A3($author$project$Main$viewFormFieldOptionsBuilder, shortTextTypeList, index, formField),
 					_List_fromArray(
 						[
 							A2(
@@ -7453,17 +7613,17 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 											$elm$html$Html$option,
 											A2(
 												$elm$core$List$cons,
-												$elm$html$Html$Attributes$value(choice),
+												$elm$html$Html$Attributes$value(choice.value),
 												A2(
 													$elm$core$List$cons,
 													$elm$html$Html$Attributes$selected(
 														_Utils_eq(
 															valueString,
-															$elm$core$Maybe$Just(choice))),
+															$elm$core$Maybe$Just(choice.value))),
 													customAttrs)),
 											_List_fromArray(
 												[
-													$elm$html$Html$text(choice)
+													$elm$html$Html$text(choice.label)
 												]));
 									},
 									choices)))
@@ -7512,18 +7672,18 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 																	$elm$html$Html$Attributes$type_('radio'),
 																	$elm$html$Html$Attributes$tabindex(0),
 																	$elm$html$Html$Attributes$name(fieldName),
-																	$elm$html$Html$Attributes$value(choice),
+																	$elm$html$Html$Attributes$value(choice.value),
 																	$elm$html$Html$Attributes$checked(
 																	_Utils_eq(
 																		valueString,
-																		$elm$core$Maybe$Just(choice))),
+																		$elm$core$Maybe$Just(choice.value))),
 																	$elm$html$Html$Attributes$required(
 																	$author$project$Main$requiredData(formField.presence))
 																]),
 															customAttrs),
 														_List_Nil),
 														$elm$html$Html$text(' '),
-														$elm$html$Html$text(choice)
+														$elm$html$Html$text(choice.label)
 													]))
 											]));
 								},
@@ -7580,14 +7740,14 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 																	$elm$html$Html$Attributes$type_('checkbox'),
 																	$elm$html$Html$Attributes$tabindex(0),
 																	$elm$html$Html$Attributes$name(fieldName),
-																	$elm$html$Html$Attributes$value(choice),
+																	$elm$html$Html$Attributes$value(choice.value),
 																	$elm$html$Html$Attributes$checked(
-																	A2($elm$core$List$member, choice, values))
+																	A2($elm$core$List$member, choice.value, values))
 																]),
 															customAttrs),
 														_List_Nil),
 														$elm$html$Html$text(' '),
-														$elm$html$Html$text(choice)
+														$elm$html$Html$text(choice.label)
 													]))
 											]));
 								},
@@ -7667,11 +7827,11 @@ var $author$project$Main$viewFormPreview = F2(
 		var formFields = _v0.formFields;
 		var formValues = _v0.formValues;
 		var shortTextTypeDict = _v0.shortTextTypeDict;
+		var config = {customAttrs: customAttrs, formValues: formValues, shortTextTypeDict: shortTextTypeDict};
 		return $elm$core$Array$toList(
 			A2(
 				$elm$core$Array$map,
-				$author$project$Main$viewFormFieldPreview(
-					{customAttrs: customAttrs, formValues: formValues, shortTextTypeDict: shortTextTypeDict}),
+				$author$project$Main$viewFormFieldPreview(config),
 				formFields));
 	});
 var $author$project$Main$SetViewMode = function (a) {
