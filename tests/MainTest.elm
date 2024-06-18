@@ -6,7 +6,22 @@ import Expect
 import Fuzz exposing (Fuzzer, string)
 import Json.Decode
 import Json.Encode
-import Main exposing (choiceToString)
+import Main
+    exposing
+        ( Choice
+        , FormField
+        , InputField(..)
+        , Presence(..)
+        , ViewMode(..)
+        , allInputField
+        , decodeChoice
+        , decodeFormFields
+        , decodeShortTextTypeList
+        , encodeChoice
+        , encodeFormFields
+        , stringFromViewMode
+        , viewModeFromString
+        )
 import Test exposing (..)
 
 
@@ -21,15 +36,15 @@ suite =
                             |> Array.fromList
                 in
                 formFields
-                    |> Main.encodeFormFields
+                    |> encodeFormFields
                     |> Json.Encode.encode 0
-                    |> Json.Decode.decodeString Main.decodeFormFields
+                    |> Json.Decode.decodeString decodeFormFields
                     |> Expect.equal (Ok formFields)
         , Test.fuzz viewModeFuzzer "stringFromViewMode,viewModeFromString is reversible" <|
             \mode ->
                 mode
-                    |> Main.stringFromViewMode
-                    |> Main.viewModeFromString
+                    |> stringFromViewMode
+                    |> viewModeFromString
                     |> Expect.equal (Just mode)
         , test "decodeShortTextTypeList" <|
             \_ ->
@@ -41,7 +56,7 @@ suite =
                     { "Nric": { "type": "text", "pattern": "^[STGM][0-9]{7}[ABCDEFGHIZJ]$" } }
                 ]
                 """
-                    |> Json.Decode.decodeString Main.decodeShortTextTypeList
+                    |> Json.Decode.decodeString decodeShortTextTypeList
                     |> Expect.equal
                         (Ok
                             [ ( "Text", Dict.fromList [ ( "type", "text" ) ] )
@@ -53,9 +68,9 @@ suite =
         , Test.fuzz choiceStringFuzzer "choiceStringToChoice,choiceStringFromString is reversible" <|
             \choice ->
                 choice
-                    |> Main.encodeChoice
+                    |> encodeChoice
                     |> Json.Encode.encode 0
-                    |> Json.Decode.decodeString Main.decodeChoice
+                    |> Json.Decode.decodeString decodeChoice
                     |> Expect.equal (Ok choice)
         ]
 
@@ -64,48 +79,48 @@ suite =
 --
 
 
-viewModeFuzzer : Fuzzer Main.ViewMode
+viewModeFuzzer : Fuzzer ViewMode
 viewModeFuzzer =
     Fuzz.oneOf
-        [ Fuzz.constant Main.Editor
-        , Fuzz.constant Main.Preview
-        , Fuzz.constant Main.CollectData
+        [ Fuzz.constant Editor
+        , Fuzz.constant Preview
+        , Fuzz.constant CollectData
         ]
 
 
-inputFieldFuzzer : Fuzzer Main.InputField
+inputFieldFuzzer : Fuzzer InputField
 inputFieldFuzzer =
-    Main.allInputField
+    allInputField
         |> List.map Fuzz.constant
         |> Fuzz.oneOf
 
 
-presenceFuzzer : Fuzzer Main.Presence
+presenceFuzzer : Fuzzer Presence
 presenceFuzzer =
     Fuzz.oneOf
-        [ Fuzz.constant Main.Required
-        , Fuzz.constant Main.Optional
-        , Fuzz.map2 (\name description -> Main.System { name = name, description = description })
+        [ Fuzz.constant Required
+        , Fuzz.constant Optional
+        , Fuzz.map2 (\name description -> System { name = name, description = description })
             Fuzz.string
             Fuzz.string
         ]
 
 
-fuzzFormField : Fuzzer Main.FormField
+fuzzFormField : Fuzzer FormField
 fuzzFormField =
-    Fuzz.map4 Main.FormField
+    Fuzz.map4 FormField
         string
         presenceFuzzer
         string
         inputFieldFuzzer
 
 
-choiceStringFuzzer : Fuzzer Main.Choice
+choiceStringFuzzer : Fuzzer Choice
 choiceStringFuzzer =
     Fuzz.oneOf
-        [ Fuzz.map2 Main.Choice
+        [ Fuzz.map2 Choice
             Fuzz.string
             Fuzz.string
         , Fuzz.string
-            |> Fuzz.map (\s -> Main.Choice s s)
+            |> Fuzz.map (\s -> Choice s s)
         ]

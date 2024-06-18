@@ -13,7 +13,6 @@ port module Main exposing
     , decodeShortTextTypeList
     , encodeChoice
     , encodeFormFields
-    , main
     , stringFromViewMode
     , viewModeFromString
     )
