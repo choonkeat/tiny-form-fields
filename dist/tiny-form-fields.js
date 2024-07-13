@@ -6556,9 +6556,6 @@ var $author$project$Main$AddFormField = function (a) {
 };
 var $author$project$Main$allInputField = _List_fromArray(
 	[
-		A2($author$project$Main$ShortText, 'Text', $elm$core$Maybe$Nothing),
-		$author$project$Main$LongText(
-		$elm$core$Maybe$Just(160)),
 		$author$project$Main$Dropdown(
 		A2(
 			$elm$core$List$map,
@@ -6576,7 +6573,10 @@ var $author$project$Main$allInputField = _List_fromArray(
 			$elm$core$List$map,
 			$author$project$Main$choiceFromString,
 			_List_fromArray(
-				['Apple', 'Banana', 'Cantaloupe', 'Durian'])))
+				['Apple', 'Banana', 'Cantaloupe', 'Durian']))),
+		$author$project$Main$LongText(
+		$elm$core$Maybe$Just(160)),
+		A2($author$project$Main$ShortText, 'Text', $elm$core$Maybe$Nothing)
 	]);
 var $author$project$Main$ToggleDropdownState = {$: 'ToggleDropdownState'};
 var $elm$html$Html$a = _VirtualDom_node('a');
@@ -6732,13 +6732,14 @@ var $author$project$Main$dropDownButton = F2(
 					]))
 			]);
 	});
+var $elm$core$String$toLower = _String_toLower;
 var $author$project$Main$stringFromInputField = function (inputField) {
 	switch (inputField.$) {
 		case 'ShortText':
 			var inputType = inputField.a;
-			return inputType;
+			return ($elm$core$String$toLower(inputType) === 'text') ? 'Single-line free text' : inputType;
 		case 'LongText':
-			return 'Long text';
+			return 'Multi-line description';
 		case 'Dropdown':
 			return 'Dropdown';
 		case 'ChooseOne':
@@ -7280,6 +7281,24 @@ var $author$project$Main$viewFormBuilder = function (_v0) {
 	var dropdownState = _v0.dropdownState;
 	var formFields = _v0.formFields;
 	var shortTextTypeList = _v0.shortTextTypeList;
+	var stdOptions = A2(
+		$elm$core$List$map,
+		function (inputField) {
+			return _Utils_Tuple2(
+				$author$project$Main$AddFormField(inputField),
+				$author$project$Main$stringFromInputField(inputField));
+		},
+		$author$project$Main$allInputField);
+	var extraOptions = A2(
+		$elm$core$List$map,
+		function (_v1) {
+			var k = _v1.a;
+			return _Utils_Tuple2(
+				$author$project$Main$AddFormField(
+					A2($author$project$Main$ShortText, k, $elm$core$Maybe$Nothing)),
+				k);
+		},
+		shortTextTypeList);
 	return A2(
 		$elm$core$List$cons,
 		A2(
@@ -7299,14 +7318,7 @@ var $author$project$Main$viewFormBuilder = function (_v0) {
 		A2(
 			$author$project$Main$dropDownButton,
 			dropdownState,
-			A2(
-				$elm$core$List$map,
-				function (inputField) {
-					return _Utils_Tuple2(
-						$author$project$Main$AddFormField(inputField),
-						$author$project$Main$stringFromInputField(inputField));
-				},
-				$author$project$Main$allInputField)));
+			_Utils_ap(stdOptions, extraOptions)));
 };
 var $elm$core$Elm$JsArray$map = _JsArray_map;
 var $elm$core$Array$map = F2(

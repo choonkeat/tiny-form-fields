@@ -52,11 +52,6 @@
             formValues: { "Email": "email@example.com", "ChooseOne": "No", "ChooseMany": [ "Durian", "Banana" ]}, // pre-fill form fields
             shortTextTypeList: [
                 {
-                    "Free text": {
-                        "type": "text"
-                    }
-                },
-                {
                     "Email": {
                         "type": "email"
                     }
@@ -110,35 +105,40 @@
             }
         )
         app.ports.outgoing.subscribe((event) => {
-            // do what you need with the JSON here
-            // e.g. we update one of our a[href]
-            switch (event.type) {
-                case 'formFields':
-                    let formFields = event.formFields;
-                    console.log('formFields', JSON.stringify(formFields, null, 2));
-                    window.location.hash = `viewMode=${hash['viewMode']}&formFields=${encodeURIComponent(JSON.stringify(formFields))}`
-                    if (hash['viewMode'] === "CollectData") return
+            try {
+                // do what you need with the JSON here
+                // e.g. we update one of our a[href]
+                switch (event.type) {
+                    case 'formFields':
+                        let formFields = event.formFields;
+                        console.log('formFields', JSON.stringify(formFields, null, 2));
+                        const newHash = `viewMode=${hash['viewMode']}&formFields=${encodeURIComponent(JSON.stringify(formFields))}`
+                        setTimeout(function() { window.location.hash = newHash; }, 0);
+                        if (hash['viewMode'] === "CollectData") return
 
-                    let ele = document.getElementById('view-sample-collect-data');
-                    ele.href = `?#viewMode=CollectData&formFields=${encodeURIComponent(JSON.stringify(formFields))}`;
-                    if (formFields && formFields.length > 0) {
-                        ele.classList.remove('hidden');
-                        document.getElementById('reset-form').classList.remove('hidden');
-                    } else {
-                        ele.classList.add('hidden');
-                    }
-                    break;
-                case 'viewMode':
-                    console.log('viewMode is now', event.viewMode);
-                    break;
-                case 'setupCloseDropdown':
-                    typeof app.ports.incoming.send; // must exist upfront
-                    document.body.addEventListener('click', function(_clickEvent) {
-                        app.ports.incoming.send(event.value);
-                    });
-                    break;
-                default:
-                    console.log('unknown outgoing port', event);
+                        let ele = document.getElementById('view-sample-collect-data');
+                        ele.href = `?#viewMode=CollectData&formFields=${encodeURIComponent(JSON.stringify(formFields))}`;
+                        if (formFields && formFields.length > 0) {
+                            ele.classList.remove('hidden');
+                            document.getElementById('reset-form').classList.remove('hidden');
+                        } else {
+                            ele.classList.add('hidden');
+                        }
+                        break;
+                    case 'viewMode':
+                        console.log('viewMode is now', event.viewMode);
+                        break;
+                    case 'setupCloseDropdown':
+                        typeof app.ports.incoming.send; // must exist upfront
+                        document.body.addEventListener('click', function(_clickEvent) {
+                            app.ports.incoming.send(event.value);
+                        });
+                        break;
+                    default:
+                        console.log('unknown outgoing port', event);
+                }
+            } catch (e) {
+                console.error('error', e);
             }
         })
     </script>

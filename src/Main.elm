@@ -146,11 +146,11 @@ type alias Choice =
 
 allInputField : List InputField
 allInputField =
-    [ ShortText "Text" Nothing
-    , LongText (Just 160)
-    , Dropdown (List.map choiceFromString [ "Red", "Orange", "Yellow", "Green", "Blue", "Indigo", "Violet" ])
+    [ Dropdown (List.map choiceFromString [ "Red", "Orange", "Yellow", "Green", "Blue", "Indigo", "Violet" ])
     , ChooseOne (List.map choiceFromString [ "Yes", "No" ])
     , ChooseMultiple (List.map choiceFromString [ "Apple", "Banana", "Cantaloupe", "Durian" ])
+    , LongText (Just 160)
+    , ShortText "Text" Nothing
     ]
 
 
@@ -158,10 +158,14 @@ stringFromInputField : InputField -> String
 stringFromInputField inputField =
     case inputField of
         ShortText inputType _ ->
-            inputType
+            if String.toLower inputType == "text" then
+                "Single-line free text"
+
+            else
+                inputType
 
         LongText _ ->
-            "Long text"
+            "Multi-line description"
 
         Dropdown _ ->
             "Dropdown"
@@ -828,20 +832,31 @@ dropDownButton dropdownState options =
 
 viewFormBuilder : { a | dropdownState : DropdownState, formFields : Array FormField, shortTextTypeList : List ( String, Dict String String ) } -> List (Html Msg)
 viewFormBuilder { dropdownState, formFields, shortTextTypeList } =
+    let
+        stdOptions =
+            List.map
+                (\inputField ->
+                    ( AddFormField inputField
+                    , stringFromInputField inputField
+                    )
+                )
+                allInputField
+
+        extraOptions =
+            shortTextTypeList
+                |> List.map
+                    (\( k, _ ) ->
+                        ( AddFormField (ShortText k Nothing)
+                        , k
+                        )
+                    )
+    in
     div [ class "tff-build-fields" ]
         (formFields
             |> Array.indexedMap (viewFormFieldBuilder shortTextTypeList (Array.length formFields))
             |> Array.toList
         )
-        :: dropDownButton dropdownState
-            (allInputField
-                |> List.map
-                    (\inputField ->
-                        ( AddFormField inputField
-                        , stringFromInputField inputField
-                        )
-                    )
-            )
+        :: dropDownButton dropdownState (stdOptions ++ extraOptions)
 
 
 selectArrowDown : Html msg
