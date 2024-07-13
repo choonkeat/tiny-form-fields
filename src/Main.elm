@@ -13,6 +13,7 @@ port module Main exposing
     , decodeShortTextTypeList
     , encodeChoice
     , encodeFormFields
+    , main
     , stringFromViewMode
     , viewModeFromString
     )
@@ -21,8 +22,8 @@ import Array exposing (Array)
 import Browser
 import Dict exposing (Dict)
 import Html exposing (Html, a, button, div, input, label, li, option, select, text, textarea, ul)
-import Html.Attributes exposing (attribute, checked, class, disabled, for, id, maxlength, minlength, name, placeholder, readonly, required, selected, tabindex, title, type_, value)
-import Html.Events exposing (onCheck, onClick, onInput)
+import Html.Attributes exposing (attribute, checked, class, disabled, for, href, id, maxlength, minlength, name, placeholder, readonly, required, selected, tabindex, title, type_, value)
+import Html.Events exposing (onCheck, onClick, onInput, stopPropagationOn)
 import Json.Decode
 import Json.Decode.Extra exposing (andMap)
 import Json.Encode
@@ -65,6 +66,7 @@ type alias Model =
     , formValues : Json.Encode.Value
     , shortTextTypeList : List ( String, Dict String String )
     , shortTextTypeDict : Dict String (Dict String String)
+    , dropdownState : DropdownState
     }
 
 
@@ -138,49 +140,6 @@ type InputField
     | ChooseMultiple (List Choice)
 
 
-choicesFromInputField : InputField -> List Choice
-choicesFromInputField inputField =
-    case inputField of
-        ShortText _ _ ->
-            []
-
-        LongText _ ->
-            []
-
-        Dropdown choices ->
-            choices
-
-        ChooseOne choices ->
-            choices
-
-        ChooseMultiple choices ->
-            choices
-
-
-choicesTypeFromString : InputField -> String -> InputField
-choicesTypeFromString oldField str =
-    case str of
-        "Dropdown" ->
-            Dropdown (choicesFromInputField oldField)
-
-        "Radio buttons" ->
-            ChooseOne (choicesFromInputField oldField)
-
-        "Checkboxes" ->
-            ChooseMultiple (choicesFromInputField oldField)
-
-        _ ->
-            oldField
-
-
-choicesTypes : List String
-choicesTypes =
-    [ "Dropdown"
-    , "Radio buttons"
-    , "Checkboxes"
-    ]
-
-
 type alias Choice =
     { label : String, value : String }
 
@@ -241,6 +200,7 @@ type Msg
     | MoveFormFieldUp Int
     | MoveFormFieldDown Int
     | OnFormField FormFieldMsg Int String
+    | ToggleDropdownState
 
 
 type FormFieldMsg
@@ -249,8 +209,6 @@ type FormFieldMsg
     | OnRequiredInput Bool
     | OnChoicesInput
     | OnMaxLengthInput
-    | OnShortTextType
-    | OnChoicesType
 
 
 
@@ -266,8 +224,16 @@ init flags =
               , formValues = config.formValues
               , shortTextTypeList = config.shortTextTypeList
               , shortTextTypeDict = Dict.fromList config.shortTextTypeList
+              , dropdownState = DropdownClosed
               }
-            , outgoing (encodePortOutgoingValue (PortOutgoingFormFields config.formFields))
+            , Cmd.batch
+                [ outgoing (encodePortOutgoingValue (PortOutgoingFormFields config.formFields))
+
+                -- js could've just done `document.body.addEventListener` and `app.ports.incoming.send` anyways
+                -- but we're sending out PortOutgoingSetupCloseDropdown to be surer that js would do it
+                -- also, we now dictate what `app.ports.incoming.send` sends back: PortIncomingCloseDropdown
+                , outgoing (encodePortOutgoingValue (PortOutgoingSetupCloseDropdown PortIncomingCloseDropdown))
+                ]
             )
 
         Err err ->
@@ -280,6 +246,7 @@ init flags =
               , formValues = Json.Encode.null
               , shortTextTypeList = []
               , shortTextTypeDict = Dict.empty
+              , dropdownState = DropdownClosed
               }
             , Cmd.none
             )
@@ -296,6 +263,11 @@ update msg model =
             case Json.Decode.decodeValue decodePortIncomingValue value of
                 Ok (PortIncomingViewMode viewMode) ->
                     ( { model | viewMode = viewMode }
+                    , Cmd.none
+                    )
+
+                Ok PortIncomingCloseDropdown ->
+                    ( { model | dropdownState = DropdownClosed }
                     , Cmd.none
                     )
 
@@ -373,6 +345,19 @@ update msg model =
             , outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
             )
 
+        ToggleDropdownState ->
+            ( { model
+                | dropdownState =
+                    case model.dropdownState of
+                        DropdownOpen ->
+                            DropdownClosed
+
+                        DropdownClosed ->
+                            DropdownOpen
+              }
+            , Cmd.none
+            )
+
 
 updateFormField : FormFieldMsg -> String -> FormField -> FormField
 updateFormField msg string formField =
@@ -423,17 +408,6 @@ updateFormField msg string formField =
 
                 ChooseMultiple _ ->
                     formField
-
-        OnShortTextType ->
-            case formField.type_ of
-                ShortText _ maybeMaxLength ->
-                    { formField | type_ = ShortText string maybeMaxLength }
-
-                _ ->
-                    formField
-
-        OnChoicesType ->
-            { formField | type_ = choicesTypeFromString formField.type_ string }
 
 
 subscriptions : Model -> Sub Msg
@@ -787,28 +761,87 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formF
 --
 
 
-viewFormBuilder : { a | formFields : Array FormField, shortTextTypeList : List ( String, Dict String String ) } -> List (Html Msg)
-viewFormBuilder { formFields, shortTextTypeList } =
-    [ div [ class "tff-build-fields" ]
+type DropdownState
+    = DropdownOpen
+    | DropdownClosed
+
+
+dropDownButton : DropdownState -> List ( Msg, String ) -> List (Html Msg)
+dropDownButton dropdownState options =
+    let
+        dropDownButtonClass =
+            case dropdownState of
+                DropdownOpen ->
+                    "tff-dropdown-open"
+
+                DropdownClosed ->
+                    "tff-dropdown-closed"
+    in
+    [ button
+        [ id "dropdownDefaultButton"
+        , attribute "data-dropdown-toggle" "dropdown"
+        , class "tff-dropdown-button"
+        , type_ "button"
+        , stopPropagationOn "click" (Json.Decode.succeed ( ToggleDropdownState, True ))
+        ]
+        [ text " Add question "
+        , svg
+            [ SvgAttr.class "tff-dropdown-svg"
+            , attribute "aria-hidden" "true"
+            , SvgAttr.fill "none"
+            , SvgAttr.viewBox "0 0 10 6"
+            ]
+            [ path
+                [ SvgAttr.stroke "currentColor"
+                , SvgAttr.strokeLinecap "round"
+                , SvgAttr.strokeLinejoin "round"
+                , SvgAttr.strokeWidth "2"
+                , SvgAttr.d "m1 1 4 4 4-4"
+                ]
+                []
+            ]
+        ]
+    , div
+        [ id "dropdown"
+        , class ("tff-dropdown-options-wrapper " ++ dropDownButtonClass)
+        ]
+        [ ul
+            [ class "tff-dropdown-list"
+            , attribute "aria-labelledby" "dropdownDefaultButton"
+            ]
+            [ li []
+                (List.map
+                    (\( msg, labelText ) ->
+                        a
+                            [ href "#"
+                            , class "tff-dropdown-option"
+                            , onClick msg
+                            ]
+                            [ text labelText ]
+                    )
+                    options
+                )
+            ]
+        ]
+    ]
+
+
+viewFormBuilder : { a | dropdownState : DropdownState, formFields : Array FormField, shortTextTypeList : List ( String, Dict String String ) } -> List (Html Msg)
+viewFormBuilder { dropdownState, formFields, shortTextTypeList } =
+    div [ class "tff-build-fields" ]
         (formFields
             |> Array.indexedMap (viewFormFieldBuilder shortTextTypeList (Array.length formFields))
             |> Array.toList
         )
-    , div [ class "tff-add-fields" ]
-        (allInputField
-            |> List.map
-                (\inputField ->
-                    button
-                        [ type_ "button"
-                        , tabindex 0
-                        , class "tff-add-field-button"
-                        , onClick (AddFormField inputField)
-                        ]
-                        [ text ("+ " ++ stringFromInputField inputField)
-                        ]
-                )
-        )
-    ]
+        :: dropDownButton dropdownState
+            (allInputField
+                |> List.map
+                    (\inputField ->
+                        ( AddFormField inputField
+                        , stringFromInputField inputField
+                        )
+                    )
+            )
 
 
 selectArrowDown : Html msg
@@ -942,29 +975,6 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
         idSuffix =
             String.fromInt index
 
-        chooseChoicesType chosen =
-            div [ class "tff-field-group" ]
-                [ label [ class "tff-field-label", for ("choicesType-" ++ idSuffix) ] [ text "Type" ]
-                , div [ class "tff-dropdown-group" ]
-                    [ selectArrowDown
-                    , select
-                        [ required True
-                        , name ("choicesType-" ++ idSuffix)
-                        , onInput (OnFormField OnChoicesType index)
-                        ]
-                        (List.map
-                            (\choice ->
-                                option
-                                    [ value choice
-                                    , selected (choice == chosen)
-                                    ]
-                                    [ text choice ]
-                            )
-                            choicesTypes
-                        )
-                    ]
-                ]
-
         choicesTextarea choices =
             div [ class "tff-field-group" ]
                 [ label [ class "tff-field-label", for ("choices-" ++ idSuffix) ] [ text "Choices" ]
@@ -1002,28 +1012,7 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
                         |> Maybe.andThen (Dict.get "minlength")
                         |> Maybe.andThen String.toInt
             in
-            [ div [ class "tff-field-group" ]
-                [ label [ class "tff-field-label", for ("inputType-" ++ idSuffix) ] [ text "Type" ]
-                , div [ class "tff-dropdown-group" ]
-                    [ selectArrowDown
-                    , select
-                        [ required True
-                        , name ("inputType-" ++ idSuffix)
-                        , onInput (OnFormField OnShortTextType index)
-                        ]
-                        (List.map
-                            (\choice ->
-                                option
-                                    [ value choice
-                                    , selected (inputType == choice)
-                                    ]
-                                    [ text choice ]
-                            )
-                            (List.map Tuple.first shortTextTypeList)
-                        )
-                    ]
-                ]
-            , case maybeShortTextTypeMaxLength of
+            [ case maybeShortTextTypeMaxLength of
                 Nothing ->
                     div [ class "tff-field-group" ]
                         [ label [ class "tff-field-label", for ("maxlength-" ++ idSuffix) ] [ text "Max length (optional)" ]
@@ -1056,18 +1045,15 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
             ]
 
         Dropdown choices ->
-            [ chooseChoicesType (stringFromInputField formField.type_)
-            , choicesTextarea choices
+            [ choicesTextarea choices
             ]
 
         ChooseOne choices ->
-            [ chooseChoicesType (stringFromInputField formField.type_)
-            , choicesTextarea choices
+            [ choicesTextarea choices
             ]
 
         ChooseMultiple choices ->
-            [ chooseChoicesType (stringFromInputField formField.type_)
-            , choicesTextarea choices
+            [ choicesTextarea choices
             ]
 
 
@@ -1078,6 +1064,7 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
 type PortOutgoingValue
     = PortOutgoingFormFields (Array FormField)
     | PortOutgoingViewMode ViewMode
+    | PortOutgoingSetupCloseDropdown PortIncomingValue
 
 
 encodePortOutgoingValue : PortOutgoingValue -> Json.Encode.Value
@@ -1095,9 +1082,31 @@ encodePortOutgoingValue value =
                 , ( "viewMode", Json.Encode.string (stringFromViewMode viewMode) )
                 ]
 
+        PortOutgoingSetupCloseDropdown incomingValue ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "setupCloseDropdown" )
+                , ( "value", encodePortIncomingValue incomingValue )
+                ]
+
 
 type PortIncomingValue
     = PortIncomingViewMode ViewMode
+    | PortIncomingCloseDropdown
+
+
+encodePortIncomingValue : PortIncomingValue -> Json.Encode.Value
+encodePortIncomingValue value =
+    case value of
+        PortIncomingViewMode viewMode ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "viewMode" )
+                , ( "viewMode", Json.Encode.string (stringFromViewMode viewMode) )
+                ]
+
+        PortIncomingCloseDropdown ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "closeDropdown" )
+                ]
 
 
 decodePortIncomingValue : Json.Decode.Decoder PortIncomingValue
@@ -1118,6 +1127,9 @@ decodePortIncomingValue =
                                         Nothing ->
                                             Json.Decode.fail ("Unknown view mode: " ++ viewModeString)
                                 )
+
+                    "closeDropdown" ->
+                        Json.Decode.succeed PortIncomingCloseDropdown
 
                     _ ->
                         Json.Decode.fail ("Unknown port event type: " ++ type_)

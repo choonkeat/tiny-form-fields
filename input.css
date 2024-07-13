@@ -162,22 +162,6 @@
     @apply align-middle;
 }
 
-.tff-add-fields {
-    @apply mt-5;
-}
-
-.tff-add-field-button{
-    @apply text-sm;
-    @apply bg-blue-500;
-    @apply hover:bg-blue-700;
-    @apply text-white;
-    @apply px-4;
-    @apply py-2;
-    @apply rounded;
-    @apply mr-2;
-    @apply mb-2;
-}
-
 .tff-build-field {
     @apply grid;
     @apply grid-rows-[auto_auto_1fr_auto];
@@ -208,4 +192,64 @@
 
 .tff-build-field-buttons button.tff-delete {
     @apply text-red-700;
+}
+
+.tff-dropdown-button {
+    @apply text-white;
+    @apply bg-blue-500;
+    @apply hover:bg-blue-700;
+    @apply focus:ring-4;
+    @apply focus:outline-none;
+    @apply focus:ring-blue-300;
+    @apply font-medium;
+    @apply rounded-lg;
+    @apply text-sm;
+    @apply px-5;
+    @apply py-2.5;
+    @apply text-center;
+    @apply inline-flex;
+    @apply items-center;
+}
+
+.tff-dropdown-open {
+    @apply block;
+    @apply absolute;
+}
+
+.tff-dropdown-closed {
+    @apply hidden;
+}
+
+.tff-dropdown-svg {
+    @apply w-2.5;
+    @apply h-2.5;
+    @apply ms-3;
+}
+
+.tff-dropdown-options-wrapper {
+    @apply z-10;
+    @apply mt-2;
+    @apply bg-white;
+    @apply divide-y;
+    @apply divide-gray-100;
+    @apply rounded-lg;
+    @apply shadow;
+    @apply w-44;
+    @apply dark:bg-gray-700;
+}
+
+.tff-dropdown-list {
+    @apply py-2;
+    @apply text-sm;
+    @apply text-gray-700;
+    @apply dark:text-gray-200;
+}
+
+.tff-dropdown-option {
+   @apply block;
+   @apply px-4;
+   @apply py-2;
+   @apply hover:bg-gray-100;
+   @apply dark:hover:bg-gray-600;
+   @apply dark:hover:text-white;
 }
