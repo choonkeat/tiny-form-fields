@@ -5,7 +5,21 @@ module.exports = {
     "./index.html"
   ],
   theme: {
-    extend: {},
+    extend: {
+
+      // that is animation class
+      animation: {
+        fade: 'fadeOut 500ms ease-out',
+      },
+
+      // that is actual animation
+      keyframes: theme => ({
+        fadeOut: {
+          '0%': { backgroundColor: theme('colors.yellow.200') },
+          '100%': { backgroundColor: theme('colors.transparent') },
+        },
+      }),
+    },
   },
   plugins: [],
 }

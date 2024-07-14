@@ -82,7 +82,10 @@ suite =
 viewModeFuzzer : Fuzzer ViewMode
 viewModeFuzzer =
     Fuzz.oneOf
-        [ Fuzz.constant Editor
+        [ -- Fuzz.constant (Editor { maybeHighlight = Just 42 })
+          -- we don't encode/decode `maybeHighlight` because it is transient value
+          -- maybeHighlight is always Nothing
+          Fuzz.constant (Editor { maybeHighlight = Nothing })
         , Fuzz.constant Preview
         , Fuzz.constant CollectData
         ]

@@ -253,3 +253,11 @@
    @apply dark:hover:bg-gray-600;
    @apply dark:hover:text-white;
 }
+
+.tff-animate-fade {
+    @apply animate-fade;
+}
+
+.tff-animate-fade .tff-text-field {
+    @apply bg-transparent;
+}

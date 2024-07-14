@@ -5197,7 +5197,9 @@ var $elm$core$Task$perform = F2(
 	});
 var $elm$browser$Browser$element = _Browser_element;
 var $author$project$Main$DropdownClosed = {$: 'DropdownClosed'};
-var $author$project$Main$Editor = {$: 'Editor'};
+var $author$project$Main$Editor = function (a) {
+	return {$: 'Editor', a: a};
+};
 var $author$project$Main$PortIncomingCloseDropdown = {$: 'PortIncomingCloseDropdown'};
 var $author$project$Main$PortOutgoingFormFields = function (a) {
 	return {$: 'PortOutgoingFormFields', a: a};
@@ -5591,7 +5593,9 @@ var $author$project$Main$Preview = {$: 'Preview'};
 var $author$project$Main$viewModeFromString = function (str) {
 	switch (str) {
 		case 'Editor':
-			return $elm$core$Maybe$Just($author$project$Main$Editor);
+			return $elm$core$Maybe$Just(
+				$author$project$Main$Editor(
+					{maybeHighlight: $elm$core$Maybe$Nothing}));
 		case 'Preview':
 			return $elm$core$Maybe$Just($author$project$Main$Preview);
 		case 'CollectData':
@@ -5686,7 +5690,9 @@ var $author$project$Main$decodeConfig = A2(
 				$elm_community$json_extra$Json$Decode$Extra$andMap,
 				A2(
 					$elm$json$Json$Decode$map,
-					$elm$core$Maybe$withDefault($author$project$Main$Editor),
+					$elm$core$Maybe$withDefault(
+						$author$project$Main$Editor(
+							{maybeHighlight: $elm$core$Maybe$Nothing})),
 					A2($elm_community$json_extra$Json$Decode$Extra$optionalNullableField, 'viewMode', $author$project$Main$decodeViewMode)),
 				$elm$json$Json$Decode$succeed($author$project$Main$Config)))));
 var $author$project$Main$choiceToString = function (choice) {
@@ -6064,7 +6070,15 @@ var $author$project$Main$init = function (flags) {
 		var err = _v0.a;
 		var _v1 = A2($elm$core$Debug$log, 'error decoding flags', err);
 		return _Utils_Tuple2(
-			{dropdownState: $author$project$Main$DropdownClosed, formFields: $elm$core$Array$empty, formValues: $elm$json$Json$Encode$null, shortTextTypeDict: $elm$core$Dict$empty, shortTextTypeList: _List_Nil, viewMode: $author$project$Main$Editor},
+			{
+				dropdownState: $author$project$Main$DropdownClosed,
+				formFields: $elm$core$Array$empty,
+				formValues: $elm$json$Json$Encode$null,
+				shortTextTypeDict: $elm$core$Dict$empty,
+				shortTextTypeList: _List_Nil,
+				viewMode: $author$project$Main$Editor(
+					{maybeHighlight: $elm$core$Maybe$Nothing})
+			},
 			$elm$core$Platform$Cmd$none);
 	}
 };
@@ -6079,6 +6093,11 @@ var $author$project$Main$DropdownOpen = {$: 'DropdownOpen'};
 var $author$project$Main$PortOutgoingViewMode = function (a) {
 	return {$: 'PortOutgoingViewMode', a: a};
 };
+var $author$project$Main$RemoveHighlight = {$: 'RemoveHighlight'};
+var $elm$core$Basics$always = F2(
+	function (a, _v0) {
+		return a;
+	});
 var $author$project$Main$PortIncomingViewMode = function (a) {
 	return {$: 'PortIncomingViewMode', a: a};
 };
@@ -6251,6 +6270,7 @@ var $elm$core$Array$push = F2(
 			A2($elm$core$Elm$JsArray$push, a, tail),
 			array);
 	});
+var $elm$core$Process$sleep = _Process_sleep;
 var $elm$core$Array$getHelp = F3(
 	function (shift, index, tree) {
 		getHelp:
@@ -6502,10 +6522,25 @@ var $author$project$Main$update = F2(
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{formFields: newFormFields}),
-					$author$project$Main$outgoing(
-						$author$project$Main$encodePortOutgoingValue(
-							$author$project$Main$PortOutgoingFormFields(newFormFields))));
+						{
+							formFields: newFormFields,
+							viewMode: $author$project$Main$Editor(
+								{
+									maybeHighlight: $elm$core$Maybe$Just(
+										$elm$core$Array$length(newFormFields) - 1)
+								})
+						}),
+					$elm$core$Platform$Cmd$batch(
+						_List_fromArray(
+							[
+								$author$project$Main$outgoing(
+								$author$project$Main$encodePortOutgoingValue(
+									$author$project$Main$PortOutgoingFormFields(newFormFields))),
+								A2(
+								$elm$core$Task$perform,
+								$elm$core$Basics$always($author$project$Main$RemoveHighlight),
+								$elm$core$Process$sleep(500))
+							])));
 			case 'DeleteFormField':
 				var index = msg.a;
 				var newFormFields = $elm$core$Array$fromList(
@@ -6532,20 +6567,48 @@ var $author$project$Main$update = F2(
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{formFields: newFormFields}),
-					$author$project$Main$outgoing(
-						$author$project$Main$encodePortOutgoingValue(
-							$author$project$Main$PortOutgoingFormFields(newFormFields))));
+						{
+							formFields: newFormFields,
+							viewMode: $author$project$Main$Editor(
+								{
+									maybeHighlight: $elm$core$Maybe$Just(index - 1)
+								})
+						}),
+					$elm$core$Platform$Cmd$batch(
+						_List_fromArray(
+							[
+								$author$project$Main$outgoing(
+								$author$project$Main$encodePortOutgoingValue(
+									$author$project$Main$PortOutgoingFormFields(newFormFields))),
+								A2(
+								$elm$core$Task$perform,
+								$elm$core$Basics$always($author$project$Main$RemoveHighlight),
+								$elm$core$Process$sleep(1000))
+							])));
 			case 'MoveFormFieldDown':
 				var index = msg.a;
 				var newFormFields = A3($author$project$Main$swapArrayIndex, index, index + 1, model.formFields);
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{formFields: newFormFields}),
-					$author$project$Main$outgoing(
-						$author$project$Main$encodePortOutgoingValue(
-							$author$project$Main$PortOutgoingFormFields(newFormFields))));
+						{
+							formFields: newFormFields,
+							viewMode: $author$project$Main$Editor(
+								{
+									maybeHighlight: $elm$core$Maybe$Just(index + 1)
+								})
+						}),
+					$elm$core$Platform$Cmd$batch(
+						_List_fromArray(
+							[
+								$author$project$Main$outgoing(
+								$author$project$Main$encodePortOutgoingValue(
+									$author$project$Main$PortOutgoingFormFields(newFormFields))),
+								A2(
+								$elm$core$Task$perform,
+								$elm$core$Basics$always($author$project$Main$RemoveHighlight),
+								$elm$core$Process$sleep(1000))
+							])));
 			case 'OnFormField':
 				var fmsg = msg.a;
 				var index = msg.b;
@@ -6564,7 +6627,7 @@ var $author$project$Main$update = F2(
 					$author$project$Main$outgoing(
 						$author$project$Main$encodePortOutgoingValue(
 							$author$project$Main$PortOutgoingFormFields(newFormFields))));
-			default:
+			case 'ToggleDropdownState':
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
@@ -6577,6 +6640,15 @@ var $author$project$Main$update = F2(
 									return $author$project$Main$DropdownOpen;
 								}
 							}()
+						}),
+					$elm$core$Platform$Cmd$none);
+			default:
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							viewMode: $author$project$Main$Editor(
+								{maybeHighlight: $elm$core$Maybe$Nothing})
 						}),
 					$elm$core$Platform$Cmd$none);
 		}
@@ -7130,8 +7202,8 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 					]);
 		}
 	});
-var $author$project$Main$viewFormFieldBuilder = F4(
-	function (shortTextTypeList, totalLength, index, formField) {
+var $author$project$Main$viewFormFieldBuilder = F5(
+	function (maybeHighlight, shortTextTypeList, totalLength, index, formField) {
 		var idSuffix = $elm$core$String$fromInt(index);
 		var deleteFieldButton = A2(
 			$elm$html$Html$button,
@@ -7178,11 +7250,14 @@ var $author$project$Main$viewFormFieldBuilder = F4(
 					_List_Nil),
 					$elm$html$Html$text(' Required field')
 				]));
+		var buildFieldClass = _Utils_eq(
+			maybeHighlight,
+			$elm$core$Maybe$Just(index)) ? 'tff-build-field tff-animate-fade' : 'tff-build-field';
 		return A2(
 			$elm$html$Html$div,
 			_List_fromArray(
 				[
-					$elm$html$Html$Attributes$class('tff-build-field')
+					$elm$html$Html$Attributes$class(buildFieldClass)
 				]),
 			_Utils_ap(
 				_List_fromArray(
@@ -7343,49 +7418,51 @@ var $author$project$Main$viewFormFieldBuilder = F4(
 								]))
 						]))));
 	});
-var $author$project$Main$viewFormBuilder = function (_v0) {
-	var dropdownState = _v0.dropdownState;
-	var formFields = _v0.formFields;
-	var shortTextTypeList = _v0.shortTextTypeList;
-	var stdOptions = A2(
-		$elm$core$List$map,
-		function (inputField) {
-			return _Utils_Tuple2(
-				$author$project$Main$AddFormField(inputField),
-				$author$project$Main$stringFromInputField(inputField));
-		},
-		$author$project$Main$allInputField);
-	var extraOptions = A2(
-		$elm$core$List$map,
-		function (_v1) {
-			var k = _v1.a;
-			return _Utils_Tuple2(
-				$author$project$Main$AddFormField(
-					A2($author$project$Main$ShortText, k, $elm$core$Maybe$Nothing)),
-				k);
-		},
-		shortTextTypeList);
-	return A2(
-		$elm$core$List$cons,
-		A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('tff-build-fields')
-				]),
-			$elm$core$Array$toList(
-				A2(
-					$elm$core$Array$indexedMap,
+var $author$project$Main$viewFormBuilder = F2(
+	function (maybeHighlight, _v0) {
+		var dropdownState = _v0.dropdownState;
+		var formFields = _v0.formFields;
+		var shortTextTypeList = _v0.shortTextTypeList;
+		var stdOptions = A2(
+			$elm$core$List$map,
+			function (inputField) {
+				return _Utils_Tuple2(
+					$author$project$Main$AddFormField(inputField),
+					$author$project$Main$stringFromInputField(inputField));
+			},
+			$author$project$Main$allInputField);
+		var extraOptions = A2(
+			$elm$core$List$map,
+			function (_v1) {
+				var k = _v1.a;
+				return _Utils_Tuple2(
+					$author$project$Main$AddFormField(
+						A2($author$project$Main$ShortText, k, $elm$core$Maybe$Nothing)),
+					k);
+			},
+			shortTextTypeList);
+		return A2(
+			$elm$core$List$cons,
+			A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('tff-build-fields')
+					]),
+				$elm$core$Array$toList(
 					A2(
-						$author$project$Main$viewFormFieldBuilder,
-						shortTextTypeList,
-						$elm$core$Array$length(formFields)),
-					formFields))),
-		A2(
-			$author$project$Main$dropDownButton,
-			dropdownState,
-			_Utils_ap(stdOptions, extraOptions)));
-};
+						$elm$core$Array$indexedMap,
+						A3(
+							$author$project$Main$viewFormFieldBuilder,
+							maybeHighlight,
+							shortTextTypeList,
+							$elm$core$Array$length(formFields)),
+						formFields))),
+			A2(
+				$author$project$Main$dropDownButton,
+				dropdownState,
+				_Utils_ap(stdOptions, extraOptions)));
+	});
 var $elm$core$Elm$JsArray$map = _JsArray_map;
 var $elm$core$Array$map = F2(
 	function (func, _v0) {
@@ -7934,6 +8011,7 @@ var $author$project$Main$view = function (model) {
 			var _v0 = model.viewMode;
 			switch (_v0.$) {
 				case 'Editor':
+					var maybeHighlight = _v0.a.maybeHighlight;
 					return _Utils_ap(
 						_List_fromArray(
 							[
@@ -7943,7 +8021,8 @@ var $author$project$Main$view = function (model) {
 								_List_fromArray(
 									[
 										_Utils_Tuple2(
-										$author$project$Main$Editor,
+										$author$project$Main$Editor(
+											{maybeHighlight: $elm$core$Maybe$Nothing}),
 										$elm$html$Html$text('Editor')),
 										_Utils_Tuple2(
 										$author$project$Main$Preview,
@@ -7963,7 +8042,7 @@ var $author$project$Main$view = function (model) {
 									]),
 								_List_Nil)
 							]),
-						$author$project$Main$viewFormBuilder(model));
+						A2($author$project$Main$viewFormBuilder, maybeHighlight, model));
 				case 'Preview':
 					return _Utils_ap(
 						_List_fromArray(
@@ -7974,7 +8053,8 @@ var $author$project$Main$view = function (model) {
 								_List_fromArray(
 									[
 										_Utils_Tuple2(
-										$author$project$Main$Editor,
+										$author$project$Main$Editor(
+											{maybeHighlight: $elm$core$Maybe$Nothing}),
 										$elm$html$Html$text('Editor')),
 										_Utils_Tuple2(
 										$author$project$Main$Preview,

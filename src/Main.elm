@@ -18,7 +18,7 @@ port module Main exposing
     , viewModeFromString
     )
 
-import Array exposing (Array, append)
+import Array exposing (Array)
 import Browser
 import Dict exposing (Dict)
 import Html exposing (Html, a, button, div, input, label, li, option, select, text, textarea, ul)
@@ -28,8 +28,10 @@ import Json.Decode
 import Json.Decode.Extra exposing (andMap)
 import Json.Encode
 import Platform.Cmd as Cmd
+import Process
 import Svg exposing (path, svg)
 import Svg.Attributes as SvgAttr
+import Task
 
 
 port outgoing : Json.Encode.Value -> Cmd msg
@@ -71,7 +73,7 @@ type alias Model =
 
 
 type ViewMode
-    = Editor
+    = Editor { maybeHighlight : Maybe Int }
     | Preview
     | CollectData
 
@@ -80,7 +82,7 @@ viewModeFromString : String -> Maybe ViewMode
 viewModeFromString str =
     case str of
         "Editor" ->
-            Just Editor
+            Just (Editor { maybeHighlight = Nothing })
 
         "Preview" ->
             Just Preview
@@ -95,7 +97,7 @@ viewModeFromString str =
 stringFromViewMode : ViewMode -> String
 stringFromViewMode viewMode =
     case viewMode of
-        Editor ->
+        Editor _ ->
             "Editor"
 
         Preview ->
@@ -200,6 +202,7 @@ type Msg
     | MoveFormFieldDown Int
     | OnFormField FormFieldMsg Int String
     | ToggleDropdownState
+    | RemoveHighlight
 
 
 type FormFieldMsg
@@ -257,7 +260,7 @@ init flags =
                 _ =
                     Debug.log "error decoding flags" err
             in
-            ( { viewMode = Editor
+            ( { viewMode = Editor { maybeHighlight = Nothing }
               , formFields = Array.empty
               , formValues = Json.Encode.null
               , shortTextTypeList = []
@@ -310,8 +313,15 @@ update msg model =
                 newFormFields =
                     Array.push newFormField model.formFields
             in
-            ( { model | formFields = newFormFields }
-            , outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
+            ( { model
+                | formFields = newFormFields
+                , viewMode = Editor { maybeHighlight = Just (Array.length newFormFields - 1) }
+              }
+            , Cmd.batch
+                [ outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
+                , Process.sleep 500
+                    |> Task.perform (always RemoveHighlight)
+                ]
             )
 
         DeleteFormField index ->
@@ -331,8 +341,15 @@ update msg model =
                 newFormFields =
                     swapArrayIndex index (index - 1) model.formFields
             in
-            ( { model | formFields = newFormFields }
-            , outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
+            ( { model
+                | formFields = newFormFields
+                , viewMode = Editor { maybeHighlight = Just (index - 1) }
+              }
+            , Cmd.batch
+                [ outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
+                , Process.sleep 1000
+                    |> Task.perform (always RemoveHighlight)
+                ]
             )
 
         MoveFormFieldDown index ->
@@ -340,8 +357,15 @@ update msg model =
                 newFormFields =
                     swapArrayIndex index (index + 1) model.formFields
             in
-            ( { model | formFields = newFormFields }
-            , outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
+            ( { model
+                | formFields = newFormFields
+                , viewMode = Editor { maybeHighlight = Just (index + 1) }
+              }
+            , Cmd.batch
+                [ outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
+                , Process.sleep 1000
+                    |> Task.perform (always RemoveHighlight)
+                ]
             )
 
         OnFormField fmsg index string ->
@@ -371,6 +395,11 @@ update msg model =
                         DropdownClosed ->
                             DropdownOpen
               }
+            , Cmd.none
+            )
+
+        RemoveHighlight ->
+            ( { model | viewMode = Editor { maybeHighlight = Nothing } }
             , Cmd.none
             )
 
@@ -463,9 +492,9 @@ view model =
     -- no padding; easier for embedders to style
     div [ class ("tff tff-mode-" ++ stringFromViewMode model.viewMode) ]
         (case model.viewMode of
-            Editor ->
+            Editor { maybeHighlight } ->
                 [ viewTabs model.viewMode
-                    [ ( Editor, text "Editor" )
+                    [ ( Editor { maybeHighlight = Nothing }, text "Editor" )
                     , ( Preview, text "Preview" )
                     ]
                 , input
@@ -475,11 +504,11 @@ view model =
                     ]
                     []
                 ]
-                    ++ viewFormBuilder model
+                    ++ viewFormBuilder maybeHighlight model
 
             Preview ->
                 [ viewTabs model.viewMode
-                    [ ( Editor, text "Editor" )
+                    [ ( Editor { maybeHighlight = Nothing }, text "Editor" )
                     , ( Preview, text "Preview" )
                     ]
                 , input
@@ -842,8 +871,8 @@ dropDownButton dropdownState options =
     ]
 
 
-viewFormBuilder : { a | dropdownState : DropdownState, formFields : Array FormField, shortTextTypeList : List ( String, Dict String String ) } -> List (Html Msg)
-viewFormBuilder { dropdownState, formFields, shortTextTypeList } =
+viewFormBuilder : Maybe Int -> { a | dropdownState : DropdownState, formFields : Array FormField, shortTextTypeList : List ( String, Dict String String ) } -> List (Html Msg)
+viewFormBuilder maybeHighlight { dropdownState, formFields, shortTextTypeList } =
     let
         stdOptions =
             List.map
@@ -865,7 +894,7 @@ viewFormBuilder { dropdownState, formFields, shortTextTypeList } =
     in
     div [ class "tff-build-fields" ]
         (formFields
-            |> Array.indexedMap (viewFormFieldBuilder shortTextTypeList (Array.length formFields))
+            |> Array.indexedMap (viewFormFieldBuilder maybeHighlight shortTextTypeList (Array.length formFields))
             |> Array.toList
         )
         :: dropDownButton dropdownState (stdOptions ++ extraOptions)
@@ -887,9 +916,16 @@ selectArrowDown =
         ]
 
 
-viewFormFieldBuilder : List ( String, Dict String String ) -> Int -> Int -> FormField -> Html Msg
-viewFormFieldBuilder shortTextTypeList totalLength index formField =
+viewFormFieldBuilder : Maybe Int -> List ( String, Dict String String ) -> Int -> Int -> FormField -> Html Msg
+viewFormFieldBuilder maybeHighlight shortTextTypeList totalLength index formField =
     let
+        buildFieldClass =
+            if maybeHighlight == Just index then
+                "tff-build-field tff-animate-fade"
+
+            else
+                "tff-build-field"
+
         idSuffix =
             String.fromInt index
 
@@ -916,7 +952,7 @@ viewFormFieldBuilder shortTextTypeList totalLength index formField =
                 ]
                 [ text "⨯ Delete" ]
     in
-    div [ class "tff-build-field" ]
+    div [ class buildFieldClass ]
         ([ div [ class "tff-field-group" ]
             [ label [ class "tff-field-label", for ("label-" ++ idSuffix) ] [ text (stringFromInputField formField.type_ ++ " label") ]
             , input
@@ -1218,7 +1254,7 @@ decodeViewMode =
 decodeConfig : Json.Decode.Decoder Config
 decodeConfig =
     Json.Decode.succeed Config
-        |> andMap (Json.Decode.Extra.optionalNullableField "viewMode" decodeViewMode |> Json.Decode.map (Maybe.withDefault Editor))
+        |> andMap (Json.Decode.Extra.optionalNullableField "viewMode" decodeViewMode |> Json.Decode.map (Maybe.withDefault (Editor { maybeHighlight = Nothing })))
         |> andMap (Json.Decode.Extra.optionalNullableField "formFields" decodeFormFields |> Json.Decode.map (Maybe.withDefault Array.empty))
         |> andMap (Json.Decode.Extra.optionalNullableField "formValues" Json.Decode.value |> Json.Decode.map (Maybe.withDefault Json.Encode.null))
         |> andMap (Json.Decode.Extra.optionalNullableField "shortTextTypeList" decodeShortTextTypeList |> Json.Decode.map (Maybe.withDefault [ ( "Text", Dict.fromList [ ( "type", "text" ) ] ) ]))
