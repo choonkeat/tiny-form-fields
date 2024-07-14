@@ -6106,6 +6106,7 @@ var $elm$core$Basics$always = F2(
 	function (a, _v0) {
 		return a;
 	});
+var $author$project$Main$animateFadeDuration = 500;
 var $author$project$Main$PortIncomingViewMode = function (a) {
 	return {$: 'PortIncomingViewMode', a: a};
 };
@@ -6547,7 +6548,7 @@ var $author$project$Main$update = F2(
 								A2(
 								$elm$core$Task$perform,
 								$elm$core$Basics$always($author$project$Main$RemoveHighlight),
-								$elm$core$Process$sleep(500))
+								$elm$core$Process$sleep($author$project$Main$animateFadeDuration))
 							])));
 			case 'DeleteFormField':
 				var index = msg.a;

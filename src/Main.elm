@@ -275,6 +275,11 @@ init flags =
 -- UPDATE
 
 
+animateFadeDuration : Float
+animateFadeDuration =
+    500
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -319,7 +324,7 @@ update msg model =
               }
             , Cmd.batch
                 [ outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
-                , Process.sleep 500
+                , Process.sleep animateFadeDuration
                     |> Task.perform (always RemoveHighlight)
                 ]
             )
