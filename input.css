@@ -254,10 +254,14 @@
    @apply dark:hover:text-white;
 }
 
-.tff-animate-fade {
-    @apply animate-fade;
+.tff-animate-yellowFade {
+    @apply animate-yellowFade;
 }
 
-.tff-animate-fade .tff-text-field {
+.tff-animate-yellowFade .tff-text-field {
     @apply bg-transparent;
+}
+
+.tff-animate-fadeOut {
+    @apply animate-fadeOut;
 }

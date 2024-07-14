@@ -5595,7 +5595,7 @@ var $author$project$Main$viewModeFromString = function (str) {
 		case 'Editor':
 			return $elm$core$Maybe$Just(
 				$author$project$Main$Editor(
-					{maybeHighlight: $elm$core$Maybe$Nothing}));
+					{maybeAnimate: $elm$core$Maybe$Nothing}));
 		case 'Preview':
 			return $elm$core$Maybe$Just($author$project$Main$Preview);
 		case 'CollectData':
@@ -5692,7 +5692,7 @@ var $author$project$Main$decodeConfig = A2(
 					$elm$json$Json$Decode$map,
 					$elm$core$Maybe$withDefault(
 						$author$project$Main$Editor(
-							{maybeHighlight: $elm$core$Maybe$Nothing})),
+							{maybeAnimate: $elm$core$Maybe$Nothing})),
 					A2($elm_community$json_extra$Json$Decode$Extra$optionalNullableField, 'viewMode', $author$project$Main$decodeViewMode)),
 				$elm$json$Json$Decode$succeed($author$project$Main$Config)))));
 var $author$project$Main$choiceToString = function (choice) {
@@ -6077,7 +6077,7 @@ var $author$project$Main$init = function (flags) {
 				shortTextTypeDict: $elm$core$Dict$empty,
 				shortTextTypeList: _List_Nil,
 				viewMode: $author$project$Main$Editor(
-					{maybeHighlight: $elm$core$Maybe$Nothing})
+					{maybeAnimate: $elm$core$Maybe$Nothing})
 			},
 			$elm$core$Platform$Cmd$none);
 	}
@@ -6089,11 +6089,18 @@ var $author$project$Main$incoming = _Platform_incomingPort('incoming', $elm$json
 var $author$project$Main$subscriptions = function (_v0) {
 	return $author$project$Main$incoming($author$project$Main$OnPortIncoming);
 };
+var $author$project$Main$AnimateYellowFade = {$: 'AnimateYellowFade'};
+var $author$project$Main$DoSleepDo = F2(
+	function (a, b) {
+		return {$: 'DoSleepDo', a: a, b: b};
+	});
 var $author$project$Main$DropdownOpen = {$: 'DropdownOpen'};
 var $author$project$Main$PortOutgoingViewMode = function (a) {
 	return {$: 'PortOutgoingViewMode', a: a};
 };
-var $author$project$Main$RemoveHighlight = {$: 'RemoveHighlight'};
+var $author$project$Main$SetEditorAnimate = function (a) {
+	return {$: 'SetEditorAnimate', a: a};
+};
 var $elm$core$Basics$always = F2(
 	function (a, _v0) {
 		return a;
@@ -6475,9 +6482,10 @@ var $author$project$Main$when = F2(
 	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
-		switch (msg.$) {
+		var _v0 = A2($elm$core$Debug$log, 'update', msg);
+		switch (_v0.$) {
 			case 'OnPortIncoming':
-				var value = msg.a;
+				var value = _v0.a;
 				var _v1 = A2($elm$json$Json$Decode$decodeValue, $author$project$Main$decodePortIncomingValue, value);
 				if (_v1.$ === 'Ok') {
 					if (_v1.a.$ === 'PortIncomingViewMode') {
@@ -6499,7 +6507,7 @@ var $author$project$Main$update = F2(
 					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 				}
 			case 'SetViewMode':
-				var viewMode = msg.a;
+				var viewMode = _v0.a;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
@@ -6508,11 +6516,11 @@ var $author$project$Main$update = F2(
 						$author$project$Main$encodePortOutgoingValue(
 							$author$project$Main$PortOutgoingViewMode(viewMode))));
 			case 'AddFormField':
-				var fieldType = msg.a;
+				var fieldType = _v0.a;
+				var currLength = $elm$core$Array$length(model.formFields);
 				var newFormField = {
 					description: '',
-					label: 'Question ' + $elm$core$String$fromInt(
-						$elm$core$Array$length(model.formFields) + 1),
+					label: 'Question ' + $elm$core$String$fromInt(currLength + 1),
 					presence: A2(
 						$author$project$Main$when,
 						$author$project$Main$mustBeOptional(fieldType),
@@ -6523,14 +6531,7 @@ var $author$project$Main$update = F2(
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{
-							formFields: newFormFields,
-							viewMode: $author$project$Main$Editor(
-								{
-									maybeHighlight: $elm$core$Maybe$Just(
-										$elm$core$Array$length(newFormFields) - 1)
-								})
-						}),
+						{formFields: newFormFields}),
 					$elm$core$Platform$Cmd$batch(
 						_List_fromArray(
 							[
@@ -6539,11 +6540,21 @@ var $author$project$Main$update = F2(
 									$author$project$Main$PortOutgoingFormFields(newFormFields))),
 								A2(
 								$elm$core$Task$perform,
-								$elm$core$Basics$always($author$project$Main$RemoveHighlight),
-								$elm$core$Process$sleep($author$project$Main$animateFadeDuration))
+								$elm$core$Basics$identity,
+								$elm$core$Task$succeed(
+									A2(
+										$author$project$Main$DoSleepDo,
+										$author$project$Main$animateFadeDuration,
+										_List_fromArray(
+											[
+												$author$project$Main$SetEditorAnimate(
+												$elm$core$Maybe$Just(
+													_Utils_Tuple2(currLength, $author$project$Main$AnimateYellowFade))),
+												$author$project$Main$SetEditorAnimate($elm$core$Maybe$Nothing)
+											]))))
 							])));
 			case 'DeleteFormField':
-				var index = msg.a;
+				var index = _v0.a;
 				var newFormFields = $elm$core$Array$fromList(
 					A2(
 						$elm$core$List$map,
@@ -6559,22 +6570,25 @@ var $author$project$Main$update = F2(
 					_Utils_update(
 						model,
 						{formFields: newFormFields}),
-					$author$project$Main$outgoing(
-						$author$project$Main$encodePortOutgoingValue(
-							$author$project$Main$PortOutgoingFormFields(newFormFields))));
+					$elm$core$Platform$Cmd$batch(
+						_List_fromArray(
+							[
+								$author$project$Main$outgoing(
+								$author$project$Main$encodePortOutgoingValue(
+									$author$project$Main$PortOutgoingFormFields(newFormFields))),
+								A2(
+								$elm$core$Task$perform,
+								$elm$core$Basics$identity,
+								$elm$core$Task$succeed(
+									$author$project$Main$SetEditorAnimate($elm$core$Maybe$Nothing)))
+							])));
 			case 'MoveFormFieldUp':
-				var index = msg.a;
+				var index = _v0.a;
 				var newFormFields = A3($author$project$Main$swapArrayIndex, index, index - 1, model.formFields);
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{
-							formFields: newFormFields,
-							viewMode: $author$project$Main$Editor(
-								{
-									maybeHighlight: $elm$core$Maybe$Just(index - 1)
-								})
-						}),
+						{formFields: newFormFields}),
 					$elm$core$Platform$Cmd$batch(
 						_List_fromArray(
 							[
@@ -6583,22 +6597,26 @@ var $author$project$Main$update = F2(
 									$author$project$Main$PortOutgoingFormFields(newFormFields))),
 								A2(
 								$elm$core$Task$perform,
-								$elm$core$Basics$always($author$project$Main$RemoveHighlight),
-								$elm$core$Process$sleep(1000))
+								$elm$core$Basics$identity,
+								$elm$core$Task$succeed(
+									A2(
+										$author$project$Main$DoSleepDo,
+										$author$project$Main$animateFadeDuration,
+										_List_fromArray(
+											[
+												$author$project$Main$SetEditorAnimate(
+												$elm$core$Maybe$Just(
+													_Utils_Tuple2(index - 1, $author$project$Main$AnimateYellowFade))),
+												$author$project$Main$SetEditorAnimate($elm$core$Maybe$Nothing)
+											]))))
 							])));
 			case 'MoveFormFieldDown':
-				var index = msg.a;
+				var index = _v0.a;
 				var newFormFields = A3($author$project$Main$swapArrayIndex, index, index + 1, model.formFields);
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{
-							formFields: newFormFields,
-							viewMode: $author$project$Main$Editor(
-								{
-									maybeHighlight: $elm$core$Maybe$Just(index + 1)
-								})
-						}),
+						{formFields: newFormFields}),
 					$elm$core$Platform$Cmd$batch(
 						_List_fromArray(
 							[
@@ -6607,13 +6625,23 @@ var $author$project$Main$update = F2(
 									$author$project$Main$PortOutgoingFormFields(newFormFields))),
 								A2(
 								$elm$core$Task$perform,
-								$elm$core$Basics$always($author$project$Main$RemoveHighlight),
-								$elm$core$Process$sleep(1000))
+								$elm$core$Basics$identity,
+								$elm$core$Task$succeed(
+									A2(
+										$author$project$Main$DoSleepDo,
+										$author$project$Main$animateFadeDuration,
+										_List_fromArray(
+											[
+												$author$project$Main$SetEditorAnimate(
+												$elm$core$Maybe$Just(
+													_Utils_Tuple2(index + 1, $author$project$Main$AnimateYellowFade))),
+												$author$project$Main$SetEditorAnimate($elm$core$Maybe$Nothing)
+											]))))
 							])));
 			case 'OnFormField':
-				var fmsg = msg.a;
-				var index = msg.b;
-				var string = msg.c;
+				var fmsg = _v0.a;
+				var index = _v0.b;
+				var string = _v0.c;
 				var newFormFields = A2(
 					$elm$core$Array$indexedMap,
 					F2(
@@ -6643,15 +6671,40 @@ var $author$project$Main$update = F2(
 							}()
 						}),
 					$elm$core$Platform$Cmd$none);
-			default:
+			case 'SetEditorAnimate':
+				var maybeAnimate = _v0.a;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{
 							viewMode: $author$project$Main$Editor(
-								{maybeHighlight: $elm$core$Maybe$Nothing})
+								{maybeAnimate: maybeAnimate})
 						}),
 					$elm$core$Platform$Cmd$none);
+			default:
+				if (!_v0.b.b) {
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				} else {
+					var duration = _v0.a;
+					var _v5 = _v0.b;
+					var thisMsg = _v5.a;
+					var nextMsgs = _v5.b;
+					var _v6 = A2($author$project$Main$update, thisMsg, model);
+					var newModel = _v6.a;
+					var newCmd = _v6.b;
+					return _Utils_Tuple2(
+						newModel,
+						$elm$core$Platform$Cmd$batch(
+							_List_fromArray(
+								[
+									newCmd,
+									A2(
+									$elm$core$Task$perform,
+									$elm$core$Basics$always(
+										A2($author$project$Main$DoSleepDo, duration, nextMsgs)),
+									$elm$core$Process$sleep(duration))
+								])));
+				}
 		}
 	});
 var $elm$html$Html$Attributes$stringProperty = F2(
@@ -6871,6 +6924,7 @@ var $author$project$Main$stringFromInputField = function (inputField) {
 			return 'Checkboxes';
 	}
 };
+var $author$project$Main$AnimateFadeOut = {$: 'AnimateFadeOut'};
 var $author$project$Main$DeleteFormField = function (a) {
 	return {$: 'DeleteFormField', a: a};
 };
@@ -7204,7 +7258,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 		}
 	});
 var $author$project$Main$viewFormFieldBuilder = F5(
-	function (maybeHighlight, shortTextTypeList, totalLength, index, formField) {
+	function (maybeAnimate, shortTextTypeList, totalLength, index, formField) {
 		var idSuffix = $elm$core$String$fromInt(index);
 		var deleteFieldButton = A2(
 			$elm$html$Html$button,
@@ -7215,7 +7269,16 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 					$elm$html$Html$Attributes$class('tff-delete'),
 					$elm$html$Html$Attributes$title('Delete field'),
 					$elm$html$Html$Events$onClick(
-					$author$project$Main$DeleteFormField(index))
+					A2(
+						$author$project$Main$DoSleepDo,
+						$author$project$Main$animateFadeDuration,
+						_List_fromArray(
+							[
+								$author$project$Main$SetEditorAnimate(
+								$elm$core$Maybe$Just(
+									_Utils_Tuple2(index, $author$project$Main$AnimateFadeOut))),
+								$author$project$Main$DeleteFormField(index)
+							])))
 				]),
 			_List_fromArray(
 				[
@@ -7251,9 +7314,24 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 					_List_Nil),
 					$elm$html$Html$text(' Required field')
 				]));
-		var buildFieldClass = _Utils_eq(
-			maybeHighlight,
-			$elm$core$Maybe$Just(index)) ? 'tff-build-field tff-animate-fade' : 'tff-build-field';
+		var buildFieldClass = function () {
+			if (maybeAnimate.$ === 'Nothing') {
+				return 'tff-build-field';
+			} else {
+				var _v3 = maybeAnimate.a;
+				var i = _v3.a;
+				var animate = _v3.b;
+				if (_Utils_eq(i, index)) {
+					if (animate.$ === 'AnimateYellowFade') {
+						return 'tff-build-field tff-animate-yellowFade';
+					} else {
+						return 'tff-build-field tff-animate-fadeOut';
+					}
+				} else {
+					return 'tff-build-field';
+				}
+			}
+		}();
 		return A2(
 			$elm$html$Html$div,
 			_List_fromArray(
@@ -7420,7 +7498,7 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 						]))));
 	});
 var $author$project$Main$viewFormBuilder = F2(
-	function (maybeHighlight, _v0) {
+	function (maybeAnimate, _v0) {
 		var dropdownState = _v0.dropdownState;
 		var formFields = _v0.formFields;
 		var shortTextTypeList = _v0.shortTextTypeList;
@@ -7455,7 +7533,7 @@ var $author$project$Main$viewFormBuilder = F2(
 						$elm$core$Array$indexedMap,
 						A3(
 							$author$project$Main$viewFormFieldBuilder,
-							maybeHighlight,
+							maybeAnimate,
 							shortTextTypeList,
 							$elm$core$Array$length(formFields)),
 						formFields))),
@@ -8012,7 +8090,7 @@ var $author$project$Main$view = function (model) {
 			var _v0 = model.viewMode;
 			switch (_v0.$) {
 				case 'Editor':
-					var maybeHighlight = _v0.a.maybeHighlight;
+					var editorAttr = _v0.a;
 					return _Utils_ap(
 						_List_fromArray(
 							[
@@ -8022,8 +8100,7 @@ var $author$project$Main$view = function (model) {
 								_List_fromArray(
 									[
 										_Utils_Tuple2(
-										$author$project$Main$Editor(
-											{maybeHighlight: $elm$core$Maybe$Nothing}),
+										$author$project$Main$Editor(editorAttr),
 										$elm$html$Html$text('Editor')),
 										_Utils_Tuple2(
 										$author$project$Main$Preview,
@@ -8043,7 +8120,7 @@ var $author$project$Main$view = function (model) {
 									]),
 								_List_Nil)
 							]),
-						A2($author$project$Main$viewFormBuilder, maybeHighlight, model));
+						A2($author$project$Main$viewFormBuilder, editorAttr.maybeAnimate, model));
 				case 'Preview':
 					return _Utils_ap(
 						_List_fromArray(
@@ -8055,7 +8132,7 @@ var $author$project$Main$view = function (model) {
 									[
 										_Utils_Tuple2(
 										$author$project$Main$Editor(
-											{maybeHighlight: $elm$core$Maybe$Nothing}),
+											{maybeAnimate: $elm$core$Maybe$Nothing}),
 										$elm$html$Html$text('Editor')),
 										_Utils_Tuple2(
 										$author$project$Main$Preview,

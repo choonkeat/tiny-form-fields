@@ -9,14 +9,19 @@ module.exports = {
 
       // that is animation class
       animation: {
-        fade: 'fadeOut 500ms ease-out', // sync with animateFadeDuration
+        yellowFade: 'yellowFadeOut 500ms ease-out', // sync with animateFadeDuration
+        fadeOut: 'fadeOut 500ms ease-out', // sync with animateFadeDuration
       },
 
       // that is actual animation
       keyframes: theme => ({
-        fadeOut: {
+        yellowFadeOut: {
           '0%': { backgroundColor: theme('colors.yellow.200') },
           '100%': { backgroundColor: theme('colors.transparent') },
+        },
+        fadeOut: {
+          '0%': {  },
+          '100%': { opacity: theme('opacity.0'), backgroundColor: theme('colors.yellow.200') },
         },
       }),
     },
