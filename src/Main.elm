@@ -23,7 +23,7 @@ import Browser
 import Dict exposing (Dict)
 import Html exposing (Html, a, button, div, input, label, li, option, select, text, textarea, ul)
 import Html.Attributes exposing (attribute, checked, class, disabled, for, href, id, maxlength, minlength, name, placeholder, readonly, required, selected, tabindex, title, type_, value)
-import Html.Events exposing (onCheck, onClick, onInput, stopPropagationOn)
+import Html.Events exposing (onCheck, onClick, onInput, preventDefaultOn, stopPropagationOn)
 import Json.Decode
 import Json.Decode.Extra exposing (andMap)
 import Json.Encode
@@ -831,7 +831,7 @@ dropDownButton dropdownState options =
                         a
                             [ href "#"
                             , class "tff-dropdown-option"
-                            , onClick msg
+                            , preventDefaultOn "click" (Json.Decode.succeed ( msg, True ))
                             ]
                             [ text labelText ]
                     )
