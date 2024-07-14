@@ -18,7 +18,7 @@ port module Main exposing
     , viewModeFromString
     )
 
-import Array exposing (Array)
+import Array exposing (Array, append)
 import Browser
 import Dict exposing (Dict)
 import Html exposing (Html, a, button, div, input, label, li, option, select, text, textarea, ul)
@@ -150,7 +150,6 @@ allInputField =
     , ChooseOne (List.map choiceFromString [ "Yes", "No" ])
     , ChooseMultiple (List.map choiceFromString [ "Apple", "Banana", "Cantaloupe", "Durian" ])
     , LongText (Just 160)
-    , ShortText "Text" Nothing
     ]
 
 
@@ -158,11 +157,7 @@ stringFromInputField : InputField -> String
 stringFromInputField inputField =
     case inputField of
         ShortText inputType _ ->
-            if String.toLower inputType == "text" then
-                "Single-line free text"
-
-            else
-                inputType
+            inputType
 
         LongText _ ->
             "Multi-line description"
@@ -221,13 +216,30 @@ type FormFieldMsg
 
 init : Flags -> ( Model, Cmd Msg )
 init flags =
+    let
+        defaultShortTextTypeList =
+            [ ( "Single-line free text", Dict.fromList [ ( "type", "text" ) ] ) ]
+
+        defaultShortTextTypeListWithout shortTextTypeList =
+            let
+                attrsList =
+                    List.map Tuple.second shortTextTypeList
+            in
+            List.filter (\( _, dict ) -> not (List.member dict attrsList))
+                defaultShortTextTypeList
+    in
     case Json.Decode.decodeValue decodeConfig flags of
         Ok config ->
+            let
+                effectiveShortTextTypeList =
+                    defaultShortTextTypeListWithout config.shortTextTypeList
+                        ++ config.shortTextTypeList
+            in
             ( { viewMode = config.viewMode
               , formFields = config.formFields
               , formValues = config.formValues
-              , shortTextTypeList = config.shortTextTypeList
-              , shortTextTypeDict = Dict.fromList config.shortTextTypeList
+              , shortTextTypeList = effectiveShortTextTypeList
+              , shortTextTypeDict = Dict.fromList effectiveShortTextTypeList
               , dropdownState = DropdownClosed
               }
             , Cmd.batch

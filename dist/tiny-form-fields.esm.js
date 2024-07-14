@@ -5985,19 +5985,77 @@ var $author$project$Main$encodePortOutgoingValue = function (value) {
 	}
 };
 var $elm$core$Debug$log = _Debug_log;
+var $elm$core$List$any = F2(
+	function (isOkay, list) {
+		any:
+		while (true) {
+			if (!list.b) {
+				return false;
+			} else {
+				var x = list.a;
+				var xs = list.b;
+				if (isOkay(x)) {
+					return true;
+				} else {
+					var $temp$isOkay = isOkay,
+						$temp$list = xs;
+					isOkay = $temp$isOkay;
+					list = $temp$list;
+					continue any;
+				}
+			}
+		}
+	});
+var $elm$core$List$member = F2(
+	function (x, xs) {
+		return A2(
+			$elm$core$List$any,
+			function (a) {
+				return _Utils_eq(a, x);
+			},
+			xs);
+	});
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
+var $elm$core$Basics$not = _Basics_not;
 var $author$project$Main$outgoing = _Platform_outgoingPort('outgoing', $elm$core$Basics$identity);
+var $elm$core$Tuple$second = function (_v0) {
+	var y = _v0.b;
+	return y;
+};
 var $author$project$Main$init = function (flags) {
+	var defaultShortTextTypeList = _List_fromArray(
+		[
+			_Utils_Tuple2(
+			'Single-line free text',
+			$elm$core$Dict$fromList(
+				_List_fromArray(
+					[
+						_Utils_Tuple2('type', 'text')
+					])))
+		]);
+	var defaultShortTextTypeListWithout = function (shortTextTypeList) {
+		var attrsList = A2($elm$core$List$map, $elm$core$Tuple$second, shortTextTypeList);
+		return A2(
+			$elm$core$List$filter,
+			function (_v2) {
+				var dict = _v2.b;
+				return !A2($elm$core$List$member, dict, attrsList);
+			},
+			defaultShortTextTypeList);
+	};
 	var _v0 = A2($elm$json$Json$Decode$decodeValue, $author$project$Main$decodeConfig, flags);
 	if (_v0.$ === 'Ok') {
 		var config = _v0.a;
+		var effectiveShortTextTypeList = _Utils_ap(
+			defaultShortTextTypeListWithout(config.shortTextTypeList),
+			config.shortTextTypeList);
 		return _Utils_Tuple2(
 			{
 				dropdownState: $author$project$Main$DropdownClosed,
 				formFields: config.formFields,
 				formValues: config.formValues,
-				shortTextTypeDict: $elm$core$Dict$fromList(config.shortTextTypeList),
-				shortTextTypeList: config.shortTextTypeList,
+				shortTextTypeDict: $elm$core$Dict$fromList(effectiveShortTextTypeList),
+				shortTextTypeList: effectiveShortTextTypeList,
 				viewMode: config.viewMode
 			},
 			$elm$core$Platform$Cmd$batch(
@@ -6201,10 +6259,6 @@ var $elm$core$Array$push = F2(
 			A2($elm$core$Elm$JsArray$push, a, tail),
 			array);
 	});
-var $elm$core$Tuple$second = function (_v0) {
-	var y = _v0.b;
-	return y;
-};
 var $elm$core$Array$getHelp = F3(
 	function (shift, index, tree) {
 		getHelp:
@@ -6583,8 +6637,7 @@ var $author$project$Main$allInputField = _List_fromArray(
 			_List_fromArray(
 				['Apple', 'Banana', 'Cantaloupe', 'Durian']))),
 		$author$project$Main$LongText(
-		$elm$core$Maybe$Just(160)),
-		A2($author$project$Main$ShortText, 'Text', $elm$core$Maybe$Nothing)
+		$elm$core$Maybe$Just(160))
 	]);
 var $author$project$Main$ToggleDropdownState = {$: 'ToggleDropdownState'};
 var $elm$html$Html$a = _VirtualDom_node('a');
@@ -6740,12 +6793,11 @@ var $author$project$Main$dropDownButton = F2(
 					]))
 			]);
 	});
-var $elm$core$String$toLower = _String_toLower;
 var $author$project$Main$stringFromInputField = function (inputField) {
 	switch (inputField.$) {
 		case 'ShortText':
 			var inputType = inputField.a;
-			return ($elm$core$String$toLower(inputType) === 'text') ? 'Single-line free text' : inputType;
+			return inputType;
 		case 'LongText':
 			return 'Multi-line description';
 		case 'Dropdown':
@@ -7421,37 +7473,6 @@ var $author$project$Main$maybeDecode = F3(
 					A2($elm_community$json_extra$Json$Decode$Extra$optionalField, key, decoder),
 					jsonValue)));
 	});
-var $elm$core$List$any = F2(
-	function (isOkay, list) {
-		any:
-		while (true) {
-			if (!list.b) {
-				return false;
-			} else {
-				var x = list.a;
-				var xs = list.b;
-				if (isOkay(x)) {
-					return true;
-				} else {
-					var $temp$isOkay = isOkay,
-						$temp$list = xs;
-					isOkay = $temp$isOkay;
-					list = $temp$list;
-					continue any;
-				}
-			}
-		}
-	});
-var $elm$core$List$member = F2(
-	function (x, xs) {
-		return A2(
-			$elm$core$List$any,
-			function (a) {
-				return _Utils_eq(a, x);
-			},
-			xs);
-	});
-var $elm$core$Basics$not = _Basics_not;
 var $elm$html$Html$option = _VirtualDom_node('option');
 var $elm$html$Html$select = _VirtualDom_node('select');
 var $elm$svg$Svg$Attributes$clipRule = _VirtualDom_attribute('clip-rule');
