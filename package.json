@@ -1,0 +1,28 @@
+{
+  "name": "tiny-form-fields",
+  "version": "1.0.0",
+  "description": "",
+  "main": "tailwind.config.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/choonkeat/tiny-form-fields.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/choonkeat/tiny-form-fields/issues"
+  },
+  "homepage": "https://github.com/choonkeat/tiny-form-fields#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.45.1",
+    "@types/node": "^20.14.10",
+    "elm": "^0.19.1-6",
+    "elm-live": "^4.0.2",
+    "elm-test": "^0.19.1-revision12"
+  }
+}

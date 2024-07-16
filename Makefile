@@ -13,5 +13,17 @@ run:
 		--start-page index.html \
 		-- --output=dist/tiny-form-fields.js
 
+run-ignore-error:
+	make run || echo ignore error
+
 test:
 	npx elm-test
+
+ping-run:
+	wget --tries=90 --retry-connrefused -SO - http://localhost:8000
+
+test-playwright:
+	npx playwright test
+
+stop-run:
+	killall node
