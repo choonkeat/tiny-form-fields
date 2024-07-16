@@ -103,15 +103,36 @@ test('test', async ({ page }) => {
   await page1.getByText('Football').click();
   await page1.waitForTimeout(500);
   await expect(page1.getByText('Football')).toBeChecked();
+
+  const inputData = {
+    "Any comments": `Sed ${new Date().toISOString()}`,
+    "First dropdown": "Blue",
+    "Free text": `blah string ${Math.random()}!`,
+    "Hobbies": [
+      "Basketball",
+      "Football"
+    ],
+    "Website": `https://example.com?${Math.random()}`,
+    "Yes or no": "Maybe",
+    "Your NRIC": "S0000001D",
+    "Your email": `nobody@domain${Math.random()}.com`
+  }
+
   await page1.locator('textarea[name="Any comments"]').click();
-  await page1.locator('textarea[name="Any comments"]').fill('Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia ');
+  await page1.locator('textarea[name="Any comments"]').fill(inputData["Any comments"]);
   await page1.locator('input[name="Free text"]').click();
-  await page1.locator('input[name="Free text"]').fill('blah string!');
+  await page1.locator('input[name="Free text"]').fill(inputData["Free text"]);
   await page1.locator('input[name="Your email"]').click();
-  await page1.locator('input[name="Your email"]').fill('nobody@example.com');
+  await page1.locator('input[name="Your email"]').fill(inputData["Your email"]);
   await page1.locator('input[name="Your NRIC"]').click();
-  await page1.locator('input[name="Your NRIC"]').fill('S0000001D');
+  await page1.locator('input[name="Your NRIC"]').fill(inputData["Your NRIC"]);
   await page1.locator('input[name="Your NRIC"]').press('Tab');
-  await page1.locator('input[name="Website"]').fill('https://example.com');
+  await page1.locator('input[name="Website"]').fill(inputData["Website"]);
+
+  const responsePromise = page1.waitForResponse('https://httpbin.org/post');
   await page1.getByRole('button', { name: 'Test Submit' }).click();
+  const response = await responsePromise;
+
+  const responseBody = await response.json();
+  expect(responseBody.form).toEqual(inputData);
 });
