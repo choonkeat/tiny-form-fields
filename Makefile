@@ -14,7 +14,7 @@ run:
 		-- --output=dist/tiny-form-fields.js
 
 run-ignore-error:
-	make run || echo ignore error
+	make run || echo shutdown test server
 
 test:
 	npx elm-test
@@ -24,6 +24,7 @@ ping-run:
 
 test-playwright:
 	npx playwright test
+	echo playwright pass
 
 stop-run:
 	killall node
