@@ -6490,10 +6490,9 @@ var $author$project$Main$when = F2(
 	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
-		var _v0 = A2($elm$core$Debug$log, 'update', msg);
-		switch (_v0.$) {
+		switch (msg.$) {
 			case 'OnPortIncoming':
-				var value = _v0.a;
+				var value = msg.a;
 				var _v1 = A2($elm$json$Json$Decode$decodeValue, $author$project$Main$decodePortIncomingValue, value);
 				if (_v1.$ === 'Ok') {
 					if (_v1.a.$ === 'PortIncomingViewMode') {
@@ -6515,7 +6514,7 @@ var $author$project$Main$update = F2(
 					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 				}
 			case 'SetViewMode':
-				var viewMode = _v0.a;
+				var viewMode = msg.a;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
@@ -6524,7 +6523,7 @@ var $author$project$Main$update = F2(
 						$author$project$Main$encodePortOutgoingValue(
 							$author$project$Main$PortOutgoingViewMode(viewMode))));
 			case 'AddFormField':
-				var fieldType = _v0.a;
+				var fieldType = msg.a;
 				var currLength = $elm$core$Array$length(model.formFields);
 				var newFormField = {
 					description: '',
@@ -6562,7 +6561,7 @@ var $author$project$Main$update = F2(
 											]))))
 							])));
 			case 'DeleteFormField':
-				var index = _v0.a;
+				var index = msg.a;
 				var newFormFields = $elm$core$Array$fromList(
 					A2(
 						$elm$core$List$map,
@@ -6591,7 +6590,7 @@ var $author$project$Main$update = F2(
 									$author$project$Main$SetEditorAnimate($elm$core$Maybe$Nothing)))
 							])));
 			case 'MoveFormFieldUp':
-				var index = _v0.a;
+				var index = msg.a;
 				var newFormFields = A3($author$project$Main$swapArrayIndex, index, index - 1, model.formFields);
 				return _Utils_Tuple2(
 					_Utils_update(
@@ -6619,7 +6618,7 @@ var $author$project$Main$update = F2(
 											]))))
 							])));
 			case 'MoveFormFieldDown':
-				var index = _v0.a;
+				var index = msg.a;
 				var newFormFields = A3($author$project$Main$swapArrayIndex, index, index + 1, model.formFields);
 				return _Utils_Tuple2(
 					_Utils_update(
@@ -6647,9 +6646,9 @@ var $author$project$Main$update = F2(
 											]))))
 							])));
 			case 'OnFormField':
-				var fmsg = _v0.a;
-				var index = _v0.b;
-				var string = _v0.c;
+				var fmsg = msg.a;
+				var index = msg.b;
+				var string = msg.c;
 				var newFormFields = A2(
 					$elm$core$Array$indexedMap,
 					F2(
@@ -6680,7 +6679,7 @@ var $author$project$Main$update = F2(
 						}),
 					$elm$core$Platform$Cmd$none);
 			case 'SetEditorAnimate':
-				var maybeAnimate = _v0.a;
+				var maybeAnimate = msg.a;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
@@ -6690,11 +6689,11 @@ var $author$project$Main$update = F2(
 						}),
 					$elm$core$Platform$Cmd$none);
 			default:
-				if (!_v0.b.b) {
+				if (!msg.b.b) {
 					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 				} else {
-					var duration = _v0.a;
-					var _v5 = _v0.b;
+					var duration = msg.a;
+					var _v5 = msg.b;
 					var thisMsg = _v5.a;
 					var nextMsgs = _v5.b;
 					var _v6 = A2($author$project$Main$update, thisMsg, model);

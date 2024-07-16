@@ -129,12 +129,15 @@
                         }
                         break;
                     case 'viewMode':
-                        console.log('viewMode is now', event.viewMode);
+                        hash['viewMode'] = event.viewMode;
+                        console.log('viewMode is now', hash['viewMode']);
                         break;
                     case 'setupCloseDropdown':
                         typeof app.ports.incoming.send; // must exist upfront
                         document.body.addEventListener('click', function(_clickEvent) {
-                            app.ports.incoming.send(event.value);
+                            if (hash['viewMode'] === 'Editor') {
+                                app.ports.incoming.send(event.value);
+                            }
                         });
                         break;
                     default:

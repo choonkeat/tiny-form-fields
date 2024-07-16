@@ -288,7 +288,7 @@ animateFadeDuration =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case Debug.log "update" msg of
+    case msg of
         OnPortIncoming value ->
             case Json.Decode.decodeValue decodePortIncomingValue value of
                 Ok (PortIncomingViewMode viewMode) ->
