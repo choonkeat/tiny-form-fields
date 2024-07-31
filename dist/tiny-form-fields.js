@@ -7659,6 +7659,10 @@ var $author$project$Main$selectArrowDown = A2(
 			_List_Nil)
 		]));
 var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
+var $elm$core$List$singleton = function (value) {
+	return _List_fromArray(
+		[value]);
+};
 var $author$project$Main$viewFormFieldOptionsPreview = F2(
 	function (_v0, formField) {
 		var formValues = _v0.formValues;
@@ -7895,13 +7899,21 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 						]));
 			default:
 				var choices = _v1.a;
+				var decodeListOrSingleton = function (decoder) {
+					return $elm$json$Json$Decode$oneOf(
+						_List_fromArray(
+							[
+								$elm$json$Json$Decode$list(decoder),
+								A2($elm$json$Json$Decode$map, $elm$core$List$singleton, decoder)
+							]));
+				};
 				var values = A2(
 					$elm$core$Maybe$withDefault,
 					_List_Nil,
 					A3(
 						$author$project$Main$maybeDecode,
 						fieldName,
-						$elm$json$Json$Decode$list($elm$json$Json$Decode$string),
+						decodeListOrSingleton($elm$json$Json$Decode$string),
 						formValues));
 				return A2(
 					$elm$html$Html$div,

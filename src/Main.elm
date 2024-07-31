@@ -811,8 +811,14 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formF
 
         ChooseMultiple choices ->
             let
+                decodeListOrSingleton decoder =
+                    Json.Decode.oneOf
+                        [ Json.Decode.list decoder
+                        , decoder |> Json.Decode.map List.singleton
+                        ]
+
                 values =
-                    maybeDecode fieldName (Json.Decode.list Json.Decode.string) formValues
+                    maybeDecode fieldName (decodeListOrSingleton Json.Decode.string) formValues
                         |> Maybe.withDefault []
             in
             -- checkboxes
