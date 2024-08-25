@@ -5336,8 +5336,11 @@ var $author$project$Main$decodeInputField = A2(
 		}
 	},
 	A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string));
-var $author$project$Main$System = function (a) {
-	return {$: 'System', a: a};
+var $author$project$Main$SystemOptional = function (a) {
+	return {$: 'SystemOptional', a: a};
+};
+var $author$project$Main$SystemRequired = function (a) {
+	return {$: 'SystemRequired', a: a};
 };
 var $author$project$Main$Optional = {$: 'Optional'};
 var $author$project$Main$Required = {$: 'Required'};
@@ -5361,21 +5364,35 @@ var $author$project$Main$decodePresence = $elm$json$Json$Decode$oneOf(
 			A2(
 			$elm$json$Json$Decode$andThen,
 			function (type_) {
-				if (type_ === 'System') {
-					return A2(
-						$elm_community$json_extra$Json$Decode$Extra$andMap,
-						A2($elm$json$Json$Decode$field, 'description', $elm$json$Json$Decode$string),
-						A2(
+				switch (type_) {
+					case 'SystemRequired':
+						return A2(
 							$elm_community$json_extra$Json$Decode$Extra$andMap,
-							A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string),
-							$elm$json$Json$Decode$succeed(
-								F2(
-									function (name, description) {
-										return $author$project$Main$System(
-											{description: description, name: name});
-									}))));
-				} else {
-					return $elm$json$Json$Decode$fail('Unknown presence type: ' + type_);
+							A2($elm$json$Json$Decode$field, 'description', $elm$json$Json$Decode$string),
+							A2(
+								$elm_community$json_extra$Json$Decode$Extra$andMap,
+								A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string),
+								$elm$json$Json$Decode$succeed(
+									F2(
+										function (name, description) {
+											return $author$project$Main$SystemRequired(
+												{description: description, name: name});
+										}))));
+					case 'SystemOptional':
+						return A2(
+							$elm_community$json_extra$Json$Decode$Extra$andMap,
+							A2($elm$json$Json$Decode$field, 'description', $elm$json$Json$Decode$string),
+							A2(
+								$elm_community$json_extra$Json$Decode$Extra$andMap,
+								A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string),
+								$elm$json$Json$Decode$succeed(
+									F2(
+										function (name, description) {
+											return $author$project$Main$SystemOptional(
+												{description: description, name: name});
+										}))));
+					default:
+						return $elm$json$Json$Decode$fail('Unknown presence type: ' + type_);
 				}
 			},
 			A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string))
@@ -5866,6 +5883,21 @@ var $author$project$Main$encodePresence = function (presence) {
 			return $elm$json$Json$Encode$string('Required');
 		case 'Optional':
 			return $elm$json$Json$Encode$string('Optional');
+		case 'SystemRequired':
+			var sys = presence.a;
+			return $elm$json$Json$Encode$object(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'type',
+						$elm$json$Json$Encode$string('SystemRequired')),
+						_Utils_Tuple2(
+						'name',
+						$elm$json$Json$Encode$string(sys.name)),
+						_Utils_Tuple2(
+						'description',
+						$elm$json$Json$Encode$string(sys.description))
+					]));
 		default:
 			var sys = presence.a;
 			return $elm$json$Json$Encode$object(
@@ -5873,7 +5905,7 @@ var $author$project$Main$encodePresence = function (presence) {
 					[
 						_Utils_Tuple2(
 						'type',
-						$elm$json$Json$Encode$string('System')),
+						$elm$json$Json$Encode$string('SystemOptional')),
 						_Utils_Tuple2(
 						'name',
 						$elm$json$Json$Encode$string(sys.name)),
@@ -7016,8 +7048,10 @@ var $author$project$Main$requiredData = function (presence) {
 			return true;
 		case 'Optional':
 			return false;
-		default:
+		case 'SystemRequired':
 			return true;
+		default:
+			return false;
 	}
 };
 var $elm$html$Html$Attributes$tabindex = function (n) {
@@ -7113,6 +7147,8 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 											return false;
 										case 'Optional':
 											return false;
+										case 'SystemRequired':
+											return true;
 										default:
 											return true;
 									}
@@ -7393,6 +7429,18 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 											return configureRequiredCheckbox;
 										case 'Optional':
 											return configureRequiredCheckbox;
+										case 'SystemRequired':
+											var sys = _v0.a;
+											return A2(
+												$elm$html$Html$div,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('tff-field-description')
+													]),
+												_List_fromArray(
+													[
+														$elm$html$Html$text(sys.description)
+													]));
 										default:
 											var sys = _v0.a;
 											return A2(
@@ -7497,6 +7545,8 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 											return deleteFieldButton;
 										case 'Optional':
 											return deleteFieldButton;
+										case 'SystemRequired':
+											return $elm$html$Html$text('');
 										default:
 											return $elm$html$Html$text('');
 									}
@@ -7594,6 +7644,9 @@ var $author$project$Main$fieldNameOf = function (formField) {
 			return formField.label;
 		case 'Optional':
 			return formField.label;
+		case 'SystemRequired':
+			var name = _v0.a.name;
+			return name;
 		default:
 			var name = _v0.a.name;
 			return name;
@@ -7683,7 +7736,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 			while (true) {
 				if (_v3.b.b && (!_v3.b.b.b)) {
 					switch (_v3.a.$) {
-						case 'System':
+						case 'SystemRequired':
 							var _v4 = _v3.b;
 							return true;
 						case 'Required':
@@ -8017,8 +8070,10 @@ var $author$project$Main$viewFormFieldPreview = F2(
 											return $elm$html$Html$text('');
 										case 'Optional':
 											return $elm$html$Html$text(' (optional)');
-										default:
+										case 'SystemRequired':
 											return $elm$html$Html$text('');
+										default:
+											return $elm$html$Html$text(' (optional)');
 									}
 								}()
 								])),

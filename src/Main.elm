@@ -112,10 +112,15 @@ stringFromViewMode viewMode =
             "CollectData"
 
 
+type alias System =
+    { name : String, description : String }
+
+
 type Presence
     = Required
     | Optional
-    | System { name : String, description : String }
+    | SystemRequired System
+    | SystemOptional System
 
 
 requiredData : Presence -> Bool
@@ -127,8 +132,11 @@ requiredData presence =
         Optional ->
             False
 
-        System _ ->
+        SystemRequired _ ->
             True
+
+        SystemOptional _ ->
+            False
 
 
 type alias FormField =
@@ -630,8 +638,11 @@ viewFormFieldPreview config formField =
                     Optional ->
                         text " (optional)"
 
-                    System _ ->
+                    SystemRequired _ ->
                         text ""
+
+                    SystemOptional _ ->
+                        text " (optional)"
                 ]
             , viewFormFieldOptionsPreview config formField
             , div [ class "tff-field-description" ]
@@ -669,7 +680,10 @@ fieldNameOf formField =
         Optional ->
             formField.label
 
-        System { name } ->
+        SystemRequired { name } ->
+            name
+
+        SystemOptional { name } ->
             name
 
 
@@ -681,7 +695,7 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formF
 
         chosenForYou choices =
             case ( formField.presence, choices ) of
-                ( System _, [ _ ] ) ->
+                ( SystemRequired _, [ _ ] ) ->
                     True
 
                 ( Required, [ _ ] ) ->
@@ -1038,7 +1052,11 @@ viewFormFieldBuilder maybeAnimate shortTextTypeList totalLength index formField 
                     Optional ->
                         configureRequiredCheckbox
 
-                    System sys ->
+                    SystemRequired sys ->
+                        div [ class "tff-field-description" ]
+                            [ text sys.description ]
+
+                    SystemOptional sys ->
                         div [ class "tff-field-description" ]
                             [ text sys.description ]
             ]
@@ -1086,7 +1104,10 @@ viewFormFieldBuilder maybeAnimate shortTextTypeList totalLength index formField 
                         Optional ->
                             deleteFieldButton
 
-                        System _ ->
+                        SystemRequired _ ->
+                            text ""
+
+                        SystemOptional _ ->
                             text ""
                     ]
                ]
@@ -1114,7 +1135,10 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
                             Optional ->
                                 False
 
-                            System _ ->
+                            SystemRequired _ ->
+                                True
+
+                            SystemOptional _ ->
                                 True
                         )
                     , onInput (OnFormField OnChoicesInput index)
@@ -1337,9 +1361,16 @@ encodePresence presence =
         Optional ->
             Json.Encode.string "Optional"
 
-        System sys ->
+        SystemRequired sys ->
             Json.Encode.object
-                [ ( "type", Json.Encode.string "System" )
+                [ ( "type", Json.Encode.string "SystemRequired" )
+                , ( "name", Json.Encode.string sys.name )
+                , ( "description", Json.Encode.string sys.description )
+                ]
+
+        SystemOptional sys ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "SystemOptional" )
                 , ( "name", Json.Encode.string sys.name )
                 , ( "description", Json.Encode.string sys.description )
                 ]
@@ -1371,7 +1402,18 @@ decodePresence =
                 (\type_ ->
                     case type_ of
                         "System" ->
-                            Json.Decode.succeed (\name description -> System { name = name, description = description })
+                            -- for backwards compatibility of change from System -> SystemRequired
+                            Json.Decode.succeed (\name description -> SystemRequired { name = name, description = description })
+                                |> andMap (Json.Decode.field "name" Json.Decode.string)
+                                |> andMap (Json.Decode.field "description" Json.Decode.string)
+
+                        "SystemRequired" ->
+                            Json.Decode.succeed (\name description -> SystemRequired { name = name, description = description })
+                                |> andMap (Json.Decode.field "name" Json.Decode.string)
+                                |> andMap (Json.Decode.field "description" Json.Decode.string)
+
+                        "SystemOptional" ->
+                            Json.Decode.succeed (\name description -> SystemOptional { name = name, description = description })
                                 |> andMap (Json.Decode.field "name" Json.Decode.string)
                                 |> andMap (Json.Decode.field "description" Json.Decode.string)
 
