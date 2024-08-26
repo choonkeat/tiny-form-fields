@@ -58,7 +58,7 @@ test('test', async ({ page }) => {
   await page.locator('#maxlength-4').click();
   await page.locator('#maxlength-4').fill('100');
   await page.getByRole('button', { name: 'Add question' }).click();
-  await page.getByRole('link', { name: 'Email' }).click();
+  await page.getByRole('link', { name: 'Email', exact: true }).click();
   await page.getByLabel('Email label').click();
   await page.getByLabel('Email label').press('ControlOrMeta+a');
   await page.getByLabel('Email label').fill('Your email');
@@ -83,6 +83,16 @@ test('test', async ({ page }) => {
   await page.locator('#description-7').fill('a url');
   await page.locator('#maxlength-7').click();
   await page.locator('#maxlength-7').fill('256');
+  await page.getByRole('button', { name: 'Add question' }).click();
+  await page.getByRole('link', { name: 'Emails', exact: true }).click();
+  await page.getByLabel('Emails label').click();
+  await page.getByLabel('Emails label').press('ControlOrMeta+a');
+  await page.getByLabel('Emails label').fill('CC Emails');
+  await page.locator('#description-8').click();
+  await page.locator('#description-8').fill('we will send a cc to these emails');
+  await page.locator('#maxlength-8').click();
+  await page.locator('#maxlength-8').fill('256');
+
   await page.getByRole('button', { name: 'Preview' }).click();
   const page1Promise = page.waitForEvent('popup');
   await page.getByRole('link', { name: 'View sample Collect Data page' }).click();
@@ -115,7 +125,9 @@ test('test', async ({ page }) => {
     "Website": `https://example.com?${Math.random()}`,
     "Yes or no": "Maybe",
     "Your NRIC": "S0000001D",
-    "Your email": `nobody@domain${Math.random()}.com`
+    "Your email": `nobody@domain${Math.random()}.com`,
+    "CC Emails": `nobody@domain${Math.random()}.com,somebody@domain${Math.random()}.com`
+
   }
 
   await page1.locator('textarea[name="Any comments"]').click();
@@ -128,6 +140,8 @@ test('test', async ({ page }) => {
   await page1.locator('input[name="Your NRIC"]').fill(inputData["Your NRIC"]);
   await page1.locator('input[name="Your NRIC"]').press('Tab');
   await page1.locator('input[name="Website"]').fill(inputData["Website"]);
+  await page1.locator('input[name="CC Emails"]').click();
+  await page1.locator('input[name="CC Emails"]').fill(inputData["CC Emails"]);
 
   const responsePromise = page1.waitForResponse('https://httpbin.org/post');
   await page1.getByRole('button', { name: 'Test Submit' }).click();

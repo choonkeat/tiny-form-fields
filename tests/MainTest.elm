@@ -52,6 +52,7 @@ suite =
                 [
                     { "Text": { "type": "text" } },
                     { "Email": { "type": "email" } },
+                    { "Emails": { "type": "email" , "multiple": "true" } },
                     { "Digits": { "type": "text", "pattern": "^[0-9]+$" } },
                     { "Nric": { "type": "text", "pattern": "^[STGM][0-9]{7}[ABCDEFGHIZJ]$" } }
                 ]
@@ -61,6 +62,7 @@ suite =
                         (Ok
                             [ ( "Text", Dict.fromList [ ( "type", "text" ) ] )
                             , ( "Email", Dict.fromList [ ( "type", "email" ) ] )
+                            , ( "Emails", Dict.fromList [ ( "type", "email" ), ( "multiple", "true" ) ] )
                             , ( "Digits", Dict.fromList [ ( "pattern", "^[0-9]+$" ), ( "type", "text" ) ] )
                             , ( "Nric", Dict.fromList [ ( "pattern", "^[STGM][0-9]{7}[ABCDEFGHIZJ]$" ), ( "type", "text" ) ] )
                             ]

@@ -5237,11 +5237,12 @@ var $author$project$Main$Dropdown = function (a) {
 var $author$project$Main$LongText = function (a) {
 	return {$: 'LongText', a: a};
 };
-var $author$project$Main$ShortText = F2(
-	function (a, b) {
-		return {$: 'ShortText', a: a, b: b};
+var $author$project$Main$ShortText = F3(
+	function (a, b, c) {
+		return {$: 'ShortText', a: a, b: b, c: c};
 	});
 var $elm$json$Json$Decode$andThen = _Json_andThen;
+var $elm$json$Json$Decode$bool = _Json_decodeBool;
 var $author$project$Main$choiceDelimiter = ' | ';
 var $author$project$Main$choiceFromString = function (s) {
 	var _v0 = A2($elm$core$String$split, $author$project$Main$choiceDelimiter, s);
@@ -5293,12 +5294,18 @@ var $author$project$Main$decodeInputField = A2(
 					$elm_community$json_extra$Json$Decode$Extra$andMap,
 					A2(
 						$elm$json$Json$Decode$field,
-						'maxLength',
-						$elm$json$Json$Decode$nullable($elm$json$Json$Decode$int)),
+						'multiple',
+						$elm$json$Json$Decode$nullable($elm$json$Json$Decode$bool)),
 					A2(
 						$elm_community$json_extra$Json$Decode$Extra$andMap,
-						A2($elm$json$Json$Decode$field, 'inputType', $elm$json$Json$Decode$string),
-						$elm$json$Json$Decode$succeed($author$project$Main$ShortText)));
+						A2(
+							$elm$json$Json$Decode$field,
+							'maxLength',
+							$elm$json$Json$Decode$nullable($elm$json$Json$Decode$int)),
+						A2(
+							$elm_community$json_extra$Json$Decode$Extra$andMap,
+							A2($elm$json$Json$Decode$field, 'inputType', $elm$json$Json$Decode$string),
+							$elm$json$Json$Decode$succeed($author$project$Main$ShortText))));
 			case 'LongText':
 				return A2(
 					$elm_community$json_extra$Json$Decode$Extra$andMap,
@@ -5365,6 +5372,19 @@ var $author$project$Main$decodePresence = $elm$json$Json$Decode$oneOf(
 			$elm$json$Json$Decode$andThen,
 			function (type_) {
 				switch (type_) {
+					case 'System':
+						return A2(
+							$elm_community$json_extra$Json$Decode$Extra$andMap,
+							A2($elm$json$Json$Decode$field, 'description', $elm$json$Json$Decode$string),
+							A2(
+								$elm_community$json_extra$Json$Decode$Extra$andMap,
+								A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string),
+								$elm$json$Json$Decode$succeed(
+									F2(
+										function (name, description) {
+											return $author$project$Main$SystemRequired(
+												{description: description, name: name});
+										}))));
 					case 'SystemRequired':
 						return A2(
 							$elm_community$json_extra$Json$Decode$Extra$andMap,
@@ -5720,6 +5740,7 @@ var $author$project$Main$decodeConfig = A2(
 							{maybeAnimate: $elm$core$Maybe$Nothing})),
 					A2($elm_community$json_extra$Json$Decode$Extra$optionalNullableField, 'viewMode', $author$project$Main$decodeViewMode)),
 				$elm$json$Json$Decode$succeed($author$project$Main$Config)))));
+var $elm$json$Json$Encode$bool = _Json_wrap;
 var $author$project$Main$choiceToString = function (choice) {
 	return _Utils_eq(choice.label, choice.value) ? choice.label : _Utils_ap(
 		choice.value,
@@ -5781,6 +5802,7 @@ var $author$project$Main$encodeInputField = function (inputField) {
 		case 'ShortText':
 			var inputType = inputField.a;
 			var maybeMaxLength = inputField.b;
+			var maybeMultiple = inputField.c;
 			return $elm$json$Json$Encode$object(
 				_List_fromArray(
 					[
@@ -5795,7 +5817,13 @@ var $author$project$Main$encodeInputField = function (inputField) {
 						A2(
 							$elm$core$Maybe$withDefault,
 							$elm$json$Json$Encode$null,
-							A2($elm$core$Maybe$map, $elm$json$Json$Encode$int, maybeMaxLength)))
+							A2($elm$core$Maybe$map, $elm$json$Json$Encode$int, maybeMaxLength))),
+						_Utils_Tuple2(
+						'multiple',
+						A2(
+							$elm$core$Maybe$withDefault,
+							$elm$json$Json$Encode$null,
+							A2($elm$core$Maybe$map, $elm$json$Json$Encode$bool, maybeMultiple)))
 					]));
 		case 'LongText':
 			var maybeMaxLength = inputField.a;
@@ -6492,13 +6520,15 @@ var $author$project$Main$updateFormField = F3(
 				switch (_v2.$) {
 					case 'ShortText':
 						var inputType = _v2.a;
+						var maybeMultiple = _v2.c;
 						return _Utils_update(
 							formField,
 							{
-								type_: A2(
+								type_: A3(
 									$author$project$Main$ShortText,
 									inputType,
-									$elm$core$String$toInt(string))
+									$elm$core$String$toInt(string),
+									maybeMultiple)
 							});
 					case 'LongText':
 						return _Utils_update(
@@ -6754,7 +6784,6 @@ var $elm$html$Html$Attributes$stringProperty = F2(
 			$elm$json$Json$Encode$string(string));
 	});
 var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
-var $elm$json$Json$Encode$bool = _Json_wrap;
 var $elm$html$Html$Attributes$boolProperty = F2(
 	function (key, bool) {
 		return A2(
@@ -6948,6 +6977,49 @@ var $author$project$Main$dropDownButton = F2(
 					]))
 			]);
 	});
+var $elm$core$String$toLower = _String_toLower;
+var $Chadtech$elm_bool_extra$Bool$Extra$fromString = function (str) {
+	var _v0 = $elm$core$String$toLower(str);
+	switch (_v0) {
+		case 'true':
+			return $elm$core$Maybe$Just(true);
+		case 'false':
+			return $elm$core$Maybe$Just(false);
+		default:
+			return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm$core$Dict$get = F2(
+	function (targetKey, dict) {
+		get:
+		while (true) {
+			if (dict.$ === 'RBEmpty_elm_builtin') {
+				return $elm$core$Maybe$Nothing;
+			} else {
+				var key = dict.b;
+				var value = dict.c;
+				var left = dict.d;
+				var right = dict.e;
+				var _v1 = A2($elm$core$Basics$compare, targetKey, key);
+				switch (_v1.$) {
+					case 'LT':
+						var $temp$targetKey = targetKey,
+							$temp$dict = left;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+					case 'EQ':
+						return $elm$core$Maybe$Just(value);
+					default:
+						var $temp$targetKey = targetKey,
+							$temp$dict = right;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+				}
+			}
+		}
+	});
 var $author$project$Main$stringFromInputField = function (inputField) {
 	switch (inputField.$) {
 		case 'ShortText':
@@ -7005,7 +7077,6 @@ var $elm$json$Json$Decode$at = F2(
 	function (fields, decoder) {
 		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
 	});
-var $elm$json$Json$Decode$bool = _Json_decodeBool;
 var $elm$html$Html$Events$targetChecked = A2(
 	$elm$json$Json$Decode$at,
 	_List_fromArray(
@@ -7063,37 +7134,6 @@ var $elm$html$Html$Attributes$tabindex = function (n) {
 var $elm$html$Html$Attributes$title = $elm$html$Html$Attributes$stringProperty('title');
 var $author$project$Main$OnChoicesInput = {$: 'OnChoicesInput'};
 var $author$project$Main$OnMaxLengthInput = {$: 'OnMaxLengthInput'};
-var $elm$core$Dict$get = F2(
-	function (targetKey, dict) {
-		get:
-		while (true) {
-			if (dict.$ === 'RBEmpty_elm_builtin') {
-				return $elm$core$Maybe$Nothing;
-			} else {
-				var key = dict.b;
-				var value = dict.c;
-				var left = dict.d;
-				var right = dict.e;
-				var _v1 = A2($elm$core$Basics$compare, targetKey, key);
-				switch (_v1.$) {
-					case 'LT':
-						var $temp$targetKey = targetKey,
-							$temp$dict = left;
-						targetKey = $temp$targetKey;
-						dict = $temp$dict;
-						continue get;
-					case 'EQ':
-						return $elm$core$Maybe$Just(value);
-					default:
-						var $temp$targetKey = targetKey,
-							$temp$dict = right;
-						targetKey = $temp$targetKey;
-						dict = $temp$dict;
-						continue get;
-				}
-			}
-		}
-	});
 var $elm$core$List$head = function (list) {
 	if (list.b) {
 		var x = list.a;
@@ -7103,6 +7143,7 @@ var $elm$core$List$head = function (list) {
 		return $elm$core$Maybe$Nothing;
 	}
 };
+var $elm$html$Html$Attributes$multiple = $elm$html$Html$Attributes$boolProperty('multiple');
 var $elm$html$Html$Attributes$readonly = $elm$html$Html$Attributes$boolProperty('readOnly');
 var $elm$html$Html$textarea = _VirtualDom_node('textarea');
 var $author$project$Main$viewFormFieldOptionsBuilder = F3(
@@ -7167,6 +7208,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 			case 'ShortText':
 				var inputType = _v0.a;
 				var maybeMaxLength = _v0.b;
+				var maybeMultiple = _v0.c;
 				var maybeShortTextTypeMaxLength = A2(
 					$elm$core$Maybe$andThen,
 					$elm$core$String$toInt,
@@ -7219,6 +7261,8 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 													$elm$core$Maybe$withDefault,
 													'',
 													A2($elm$core$Maybe$map, $elm$core$String$fromInt, maybeMaxLength))),
+												$elm$html$Html$Attributes$multiple(
+												A2($elm$core$Maybe$withDefault, false, maybeMultiple)),
 												$elm$html$Html$Events$onInput(
 												A2($author$project$Main$OnFormField, $author$project$Main$OnMaxLengthInput, index))
 											]),
@@ -7233,7 +7277,9 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 										$elm$html$Html$Attributes$type_('hidden'),
 										$elm$html$Html$Attributes$name('maxlength-' + idSuffix),
 										$elm$html$Html$Attributes$value(
-										$elm$core$String$fromInt(i))
+										$elm$core$String$fromInt(i)),
+										$elm$html$Html$Attributes$multiple(
+										A2($elm$core$Maybe$withDefault, false, maybeMultiple))
 									]),
 								_List_Nil);
 						}
@@ -7571,9 +7617,18 @@ var $author$project$Main$viewFormBuilder = F2(
 			$elm$core$List$map,
 			function (_v1) {
 				var k = _v1.a;
+				var v = _v1.b;
+				var maybeMultiple = A2(
+					$elm$core$Maybe$andThen,
+					$Chadtech$elm_bool_extra$Bool$Extra$fromString,
+					A2($elm$core$Dict$get, 'multiple', v));
+				var maybeMaxLength = A2(
+					$elm$core$Maybe$andThen,
+					$elm$core$String$toInt,
+					A2($elm$core$Dict$get, 'maxlength', v));
 				return _Utils_Tuple2(
 					$author$project$Main$AddFormField(
-						A2($author$project$Main$ShortText, k, $elm$core$Maybe$Nothing)),
+						A3($author$project$Main$ShortText, k, maybeMaxLength, maybeMultiple)),
 					k);
 			},
 			shortTextTypeList);
@@ -7757,6 +7812,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 			case 'ShortText':
 				var inputType = _v1.a;
 				var maybeMaxLength = _v1.b;
+				var maybeMultiple = _v1.c;
 				var shortTextAttrs = A2(
 					$elm$core$List$map,
 					function (_v2) {
@@ -7780,6 +7836,12 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 								return $elm$html$Html$Attributes$maxlength(maxLength);
 							},
 							maybeMaxLength),
+							A2(
+							$elm$core$Maybe$map,
+							function (m) {
+								return $elm$html$Html$Attributes$multiple(m);
+							},
+							maybeMultiple),
 							A2(
 							$elm$core$Maybe$map,
 							function (s) {
