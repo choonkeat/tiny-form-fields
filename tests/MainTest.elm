@@ -51,6 +51,7 @@ suite =
                 """
                 [
                     { "Text": { "type": "text" } },
+                    { "Text": { "type": "text", "maxlength": "10", "multiple": "true" } },
                     { "Email": { "type": "email" } },
                     { "Emails": { "type": "email" , "multiple": "true" } },
                     { "Digits": { "type": "text", "pattern": "^[0-9]+$" } },
@@ -61,6 +62,7 @@ suite =
                     |> Expect.equal
                         (Ok
                             [ ( "Text", Dict.fromList [ ( "type", "text" ) ] )
+                            , ( "Text", Dict.fromList [ ( "type", "text" ), ( "maxlength", "10" ), ( "multiple", "true" ) ] )
                             , ( "Email", Dict.fromList [ ( "type", "email" ) ] )
                             , ( "Emails", Dict.fromList [ ( "type", "email" ), ( "multiple", "true" ) ] )
                             , ( "Digits", Dict.fromList [ ( "pattern", "^[0-9]+$" ), ( "type", "text" ) ] )
