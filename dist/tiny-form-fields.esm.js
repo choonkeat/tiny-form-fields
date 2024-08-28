@@ -5365,6 +5365,19 @@ var $author$project$Main$decodePresence = $elm$json$Json$Decode$oneOf(
 			$elm$json$Json$Decode$andThen,
 			function (type_) {
 				switch (type_) {
+					case 'System':
+						return A2(
+							$elm_community$json_extra$Json$Decode$Extra$andMap,
+							A2($elm$json$Json$Decode$field, 'description', $elm$json$Json$Decode$string),
+							A2(
+								$elm_community$json_extra$Json$Decode$Extra$andMap,
+								A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string),
+								$elm$json$Json$Decode$succeed(
+									F2(
+										function (name, description) {
+											return $author$project$Main$SystemRequired(
+												{description: description, name: name});
+										}))));
 					case 'SystemRequired':
 						return A2(
 							$elm_community$json_extra$Json$Decode$Extra$andMap,
