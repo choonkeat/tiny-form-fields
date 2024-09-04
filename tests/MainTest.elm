@@ -103,19 +103,15 @@ presenceFuzzer =
     Fuzz.oneOf
         [ Fuzz.constant Required
         , Fuzz.constant Optional
-        , Fuzz.map2 (\name description -> SystemRequired { name = name, description = description })
-            Fuzz.string
-            Fuzz.string
-        , Fuzz.map2 (\name description -> SystemOptional { name = name, description = description })
-            Fuzz.string
-            Fuzz.string
+        , Fuzz.constant System
         ]
 
 
 fuzzFormField : Fuzzer FormField
 fuzzFormField =
-    Fuzz.map4 FormField
+    Fuzz.map5 FormField
         string
+        (Fuzz.maybe string)
         presenceFuzzer
         string
         inputFieldFuzzer

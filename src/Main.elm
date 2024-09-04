@@ -112,15 +112,10 @@ stringFromViewMode viewMode =
             "CollectData"
 
 
-type alias System =
-    { name : String, description : String }
-
-
 type Presence
     = Required
     | Optional
-    | SystemRequired System
-    | SystemOptional System
+    | System
 
 
 requiredData : Presence -> Bool
@@ -132,15 +127,13 @@ requiredData presence =
         Optional ->
             False
 
-        SystemRequired _ ->
+        System ->
             True
-
-        SystemOptional _ ->
-            False
 
 
 type alias FormField =
     { label : String
+    , name : Maybe String
     , presence : Presence
     , description : String
     , type_ : InputField
@@ -327,6 +320,7 @@ update msg model =
                 newFormField : FormField
                 newFormField =
                     { label = "Question " ++ String.fromInt (currLength + 1)
+                    , name = Nothing
                     , presence = when (mustBeOptional fieldType) { true = Optional, false = Required }
                     , description = ""
                     , type_ = fieldType
@@ -638,11 +632,8 @@ viewFormFieldPreview config formField =
                     Optional ->
                         text " (optional)"
 
-                    SystemRequired _ ->
+                    System ->
                         text ""
-
-                    SystemOptional _ ->
-                        text " (optional)"
                 ]
             , viewFormFieldOptionsPreview config formField
             , div [ class "tff-field-description" ]
@@ -673,18 +664,7 @@ maybeMaxLengthOf formField =
 
 fieldNameOf : FormField -> String
 fieldNameOf formField =
-    case formField.presence of
-        Required ->
-            formField.label
-
-        Optional ->
-            formField.label
-
-        SystemRequired { name } ->
-            name
-
-        SystemOptional { name } ->
-            name
+    Maybe.withDefault formField.label formField.name
 
 
 viewFormFieldOptionsPreview : { formValues : Json.Encode.Value, customAttrs : List (Html.Attribute Msg), shortTextTypeDict : Dict String (Dict String String) } -> FormField -> Html Msg
@@ -694,15 +674,15 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formF
             fieldNameOf formField
 
         chosenForYou choices =
-            case ( formField.presence, choices ) of
-                ( SystemRequired _, [ _ ] ) ->
-                    True
-
-                ( Required, [ _ ] ) ->
-                    True
-
-                _ ->
+            case formField.presence of
+                Optional ->
                     False
+
+                Required ->
+                    List.length choices == 1
+
+                System ->
+                    List.length choices == 1
     in
     case formField.type_ of
         ShortText inputType maybeMaxLength ->
@@ -1052,13 +1032,9 @@ viewFormFieldBuilder maybeAnimate shortTextTypeList totalLength index formField 
                     Optional ->
                         configureRequiredCheckbox
 
-                    SystemRequired sys ->
+                    System ->
                         div [ class "tff-field-description" ]
-                            [ text sys.description ]
-
-                    SystemOptional sys ->
-                        div [ class "tff-field-description" ]
-                            [ text sys.description ]
+                            [ text formField.description ]
             ]
          , div [ class "tff-field-group" ]
             [ label [ class "tff-field-label", for ("description-" ++ idSuffix) ] [ text "Description (optional)" ]
@@ -1104,10 +1080,7 @@ viewFormFieldBuilder maybeAnimate shortTextTypeList totalLength index formField 
                         Optional ->
                             deleteFieldButton
 
-                        SystemRequired _ ->
-                            text ""
-
-                        SystemOptional _ ->
+                        System ->
                             text ""
                     ]
                ]
@@ -1135,10 +1108,7 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
                             Optional ->
                                 False
 
-                            SystemRequired _ ->
-                                True
-
-                            SystemOptional _ ->
+                            System ->
                                 True
                         )
                     , onInput (OnFormField OnChoicesInput index)
@@ -1361,19 +1331,8 @@ encodePresence presence =
         Optional ->
             Json.Encode.string "Optional"
 
-        SystemRequired sys ->
-            Json.Encode.object
-                [ ( "type", Json.Encode.string "SystemRequired" )
-                , ( "name", Json.Encode.string sys.name )
-                , ( "description", Json.Encode.string sys.description )
-                ]
-
-        SystemOptional sys ->
-            Json.Encode.object
-                [ ( "type", Json.Encode.string "SystemOptional" )
-                , ( "name", Json.Encode.string sys.name )
-                , ( "description", Json.Encode.string sys.description )
-                ]
+        System ->
+            Json.Encode.string "System"
 
 
 decodePresenceString : Json.Decode.Decoder Presence
@@ -1388,6 +1347,9 @@ decodePresenceString =
                     "Optional" ->
                         Json.Decode.succeed Optional
 
+                    "System" ->
+                        Json.Decode.succeed System
+
                     _ ->
                         Json.Decode.fail ("Unknown presence: " ++ str)
             )
@@ -1397,25 +1359,22 @@ decodePresence : Json.Decode.Decoder Presence
 decodePresence =
     Json.Decode.oneOf
         [ decodePresenceString
+
+        -- for backwards compatibility
         , Json.Decode.field "type" Json.Decode.string
             |> Json.Decode.andThen
                 (\type_ ->
                     case type_ of
                         "System" ->
-                            -- for backwards compatibility of change from System -> SystemRequired
-                            Json.Decode.succeed (\name description -> SystemRequired { name = name, description = description })
-                                |> andMap (Json.Decode.field "name" Json.Decode.string)
-                                |> andMap (Json.Decode.field "description" Json.Decode.string)
+                            Json.Decode.succeed System
 
                         "SystemRequired" ->
-                            Json.Decode.succeed (\name description -> SystemRequired { name = name, description = description })
-                                |> andMap (Json.Decode.field "name" Json.Decode.string)
-                                |> andMap (Json.Decode.field "description" Json.Decode.string)
+                            Json.Decode.succeed System
 
                         "SystemOptional" ->
-                            Json.Decode.succeed (\name description -> SystemOptional { name = name, description = description })
-                                |> andMap (Json.Decode.field "name" Json.Decode.string)
-                                |> andMap (Json.Decode.field "description" Json.Decode.string)
+                            -- if we have a system field that is optional, it is just optional
+                            -- doesn't affect end user filling up forms, but form builder can delete it
+                            Json.Decode.succeed Optional
 
                         _ ->
                             Json.Decode.fail ("Unknown presence type: " ++ type_)
@@ -1431,6 +1390,14 @@ encodeFormFields formFields =
             (\formField ->
                 Json.Encode.object
                     ([ ( "label", Json.Encode.string formField.label )
+                     , ( "name"
+                       , case formField.name of
+                            Just name ->
+                                Json.Encode.string name
+
+                            Nothing ->
+                                Json.Encode.null
+                       )
                      , ( "presence", encodePresence formField.presence )
                      , ( "description", Json.Encode.string formField.description )
                      , ( "type", encodeInputField formField.type_ )
@@ -1452,6 +1419,7 @@ decodeFormField : Json.Decode.Decoder FormField
 decodeFormField =
     Json.Decode.succeed FormField
         |> andMap (Json.Decode.field "label" Json.Decode.string)
+        |> andMap (Json.Decode.Extra.optionalNullableField "name" Json.Decode.string)
         |> andMap (Json.Decode.field "presence" decodePresence)
         |> andMap (Json.Decode.field "description" Json.Decode.string)
         |> andMap (Json.Decode.field "type" decodeInputField)
