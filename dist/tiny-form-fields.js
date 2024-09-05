@@ -5213,10 +5213,45 @@ var $author$project$Main$Config = F4(
 		return {formFields: formFields, formValues: formValues, shortTextTypeList: shortTextTypeList, viewMode: viewMode};
 	});
 var $elm_community$json_extra$Json$Decode$Extra$andMap = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
-var $author$project$Main$FormField = F4(
-	function (label, presence, description, type_) {
-		return {description: description, label: label, presence: presence, type_: type_};
+var $author$project$Main$FormField = F5(
+	function (label, name, presence, description, type_) {
+		return {description: description, label: label, name: name, presence: presence, type_: type_};
 	});
+var $elm$json$Json$Decode$field = _Json_decodeField;
+var $elm$json$Json$Decode$at = F2(
+	function (fields, decoder) {
+		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
+	});
+var $elm$json$Json$Decode$oneOf = _Json_oneOf;
+var $elm$json$Json$Decode$string = _Json_decodeString;
+var $author$project$Main$decodeFormFieldDescription = $elm$json$Json$Decode$oneOf(
+	_List_fromArray(
+		[
+			A2(
+			$elm$json$Json$Decode$at,
+			_List_fromArray(
+				['presence', 'description']),
+			$elm$json$Json$Decode$string),
+			A2($elm$json$Json$Decode$field, 'description', $elm$json$Json$Decode$string),
+			$elm$json$Json$Decode$succeed('')
+		]));
+var $author$project$Main$decodeFormFieldMaybeName = $elm$json$Json$Decode$oneOf(
+	_List_fromArray(
+		[
+			A2(
+			$elm$json$Json$Decode$map,
+			$elm$core$Maybe$Just,
+			A2(
+				$elm$json$Json$Decode$at,
+				_List_fromArray(
+					['presence', 'name']),
+				$elm$json$Json$Decode$string)),
+			A2(
+			$elm$json$Json$Decode$map,
+			$elm$core$Maybe$Just,
+			A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string)),
+			$elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing)
+		]));
 var $author$project$Main$ChooseMultiple = function (a) {
 	return {$: 'ChooseMultiple', a: a};
 };
@@ -5260,14 +5295,11 @@ var $author$project$Main$choiceFromString = function (s) {
 		return {label: s, value: s};
 	}
 };
-var $elm$json$Json$Decode$string = _Json_decodeString;
 var $author$project$Main$decodeChoice = A2($elm$json$Json$Decode$map, $author$project$Main$choiceFromString, $elm$json$Json$Decode$string);
 var $elm$json$Json$Decode$fail = _Json_fail;
-var $elm$json$Json$Decode$field = _Json_decodeField;
 var $elm$json$Json$Decode$int = _Json_decodeInt;
 var $elm$json$Json$Decode$list = _Json_decodeList;
 var $elm$json$Json$Decode$null = _Json_decodeNull;
-var $elm$json$Json$Decode$oneOf = _Json_oneOf;
 var $elm$json$Json$Decode$nullable = function (decoder) {
 	return $elm$json$Json$Decode$oneOf(
 		_List_fromArray(
@@ -5328,13 +5360,8 @@ var $author$project$Main$decodeInputField = A2(
 		}
 	},
 	A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string));
-var $author$project$Main$SystemOptional = function (a) {
-	return {$: 'SystemOptional', a: a};
-};
-var $author$project$Main$SystemRequired = function (a) {
-	return {$: 'SystemRequired', a: a};
-};
 var $author$project$Main$Optional = {$: 'Optional'};
+var $author$project$Main$System = {$: 'System'};
 var $author$project$Main$Required = {$: 'Required'};
 var $author$project$Main$decodePresenceString = A2(
 	$elm$json$Json$Decode$andThen,
@@ -5344,6 +5371,8 @@ var $author$project$Main$decodePresenceString = A2(
 				return $elm$json$Json$Decode$succeed($author$project$Main$Required);
 			case 'Optional':
 				return $elm$json$Json$Decode$succeed($author$project$Main$Optional);
+			case 'System':
+				return $elm$json$Json$Decode$succeed($author$project$Main$System);
 			default:
 				return $elm$json$Json$Decode$fail('Unknown presence: ' + str);
 		}
@@ -5357,32 +5386,12 @@ var $author$project$Main$decodePresence = $elm$json$Json$Decode$oneOf(
 			$elm$json$Json$Decode$andThen,
 			function (type_) {
 				switch (type_) {
+					case 'System':
+						return $elm$json$Json$Decode$succeed($author$project$Main$System);
 					case 'SystemRequired':
-						return A2(
-							$elm_community$json_extra$Json$Decode$Extra$andMap,
-							A2($elm$json$Json$Decode$field, 'description', $elm$json$Json$Decode$string),
-							A2(
-								$elm_community$json_extra$Json$Decode$Extra$andMap,
-								A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string),
-								$elm$json$Json$Decode$succeed(
-									F2(
-										function (name, description) {
-											return $author$project$Main$SystemRequired(
-												{description: description, name: name});
-										}))));
+						return $elm$json$Json$Decode$succeed($author$project$Main$System);
 					case 'SystemOptional':
-						return A2(
-							$elm_community$json_extra$Json$Decode$Extra$andMap,
-							A2($elm$json$Json$Decode$field, 'description', $elm$json$Json$Decode$string),
-							A2(
-								$elm_community$json_extra$Json$Decode$Extra$andMap,
-								A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string),
-								$elm$json$Json$Decode$succeed(
-									F2(
-										function (name, description) {
-											return $author$project$Main$SystemOptional(
-												{description: description, name: name});
-										}))));
+						return $elm$json$Json$Decode$succeed($author$project$Main$Optional);
 					default:
 						return $elm$json$Json$Decode$fail('Unknown presence type: ' + type_);
 				}
@@ -5394,14 +5403,17 @@ var $author$project$Main$decodeFormField = A2(
 	A2($elm$json$Json$Decode$field, 'type', $author$project$Main$decodeInputField),
 	A2(
 		$elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2($elm$json$Json$Decode$field, 'description', $elm$json$Json$Decode$string),
+		$author$project$Main$decodeFormFieldDescription,
 		A2(
 			$elm_community$json_extra$Json$Decode$Extra$andMap,
 			A2($elm$json$Json$Decode$field, 'presence', $author$project$Main$decodePresence),
 			A2(
 				$elm_community$json_extra$Json$Decode$Extra$andMap,
-				A2($elm$json$Json$Decode$field, 'label', $elm$json$Json$Decode$string),
-				$elm$json$Json$Decode$succeed($author$project$Main$FormField)))));
+				$author$project$Main$decodeFormFieldMaybeName,
+				A2(
+					$elm_community$json_extra$Json$Decode$Extra$andMap,
+					A2($elm$json$Json$Decode$field, 'label', $elm$json$Json$Decode$string),
+					$elm$json$Json$Decode$succeed($author$project$Main$FormField))))));
 var $elm$core$Array$fromListHelp = F3(
 	function (list, nodeList, nodeListSize) {
 		fromListHelp:
@@ -5875,36 +5887,8 @@ var $author$project$Main$encodePresence = function (presence) {
 			return $elm$json$Json$Encode$string('Required');
 		case 'Optional':
 			return $elm$json$Json$Encode$string('Optional');
-		case 'SystemRequired':
-			var sys = presence.a;
-			return $elm$json$Json$Encode$object(
-				_List_fromArray(
-					[
-						_Utils_Tuple2(
-						'type',
-						$elm$json$Json$Encode$string('SystemRequired')),
-						_Utils_Tuple2(
-						'name',
-						$elm$json$Json$Encode$string(sys.name)),
-						_Utils_Tuple2(
-						'description',
-						$elm$json$Json$Encode$string(sys.description))
-					]));
 		default:
-			var sys = presence.a;
-			return $elm$json$Json$Encode$object(
-				_List_fromArray(
-					[
-						_Utils_Tuple2(
-						'type',
-						$elm$json$Json$Encode$string('SystemOptional')),
-						_Utils_Tuple2(
-						'name',
-						$elm$json$Json$Encode$string(sys.name)),
-						_Utils_Tuple2(
-						'description',
-						$elm$json$Json$Encode$string(sys.description))
-					]));
+			return $elm$json$Json$Encode$string('System');
 	}
 };
 var $author$project$Main$encodeFormFields = function (formFields) {
@@ -5917,8 +5901,8 @@ var $author$project$Main$encodeFormFields = function (formFields) {
 				return $elm$json$Json$Encode$object(
 					A2(
 						$elm$core$List$filter,
-						function (_v0) {
-							var v = _v0.b;
+						function (_v1) {
+							var v = _v1.b;
 							return !_Utils_eq(v, $elm$json$Json$Encode$null);
 						},
 						_List_fromArray(
@@ -5926,6 +5910,17 @@ var $author$project$Main$encodeFormFields = function (formFields) {
 								_Utils_Tuple2(
 								'label',
 								$elm$json$Json$Encode$string(formField.label)),
+								_Utils_Tuple2(
+								'name',
+								function () {
+									var _v0 = formField.name;
+									if (_v0.$ === 'Just') {
+										var name = _v0.a;
+										return $elm$json$Json$Encode$string(name);
+									} else {
+										return $elm$json$Json$Encode$null;
+									}
+								}()),
 								_Utils_Tuple2(
 								'presence',
 								$author$project$Main$encodePresence(formField.presence)),
@@ -6552,6 +6547,7 @@ var $author$project$Main$update = F2(
 				var newFormField = {
 					description: '',
 					label: 'Question ' + $elm$core$String$fromInt(currLength + 1),
+					name: $elm$core$Maybe$Nothing,
 					presence: A2(
 						$author$project$Main$when,
 						$author$project$Main$mustBeOptional(fieldType),
@@ -6993,10 +6989,6 @@ var $elm$html$Html$Events$on = F2(
 			event,
 			$elm$virtual_dom$VirtualDom$Normal(decoder));
 	});
-var $elm$json$Json$Decode$at = F2(
-	function (fields, decoder) {
-		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
-	});
 var $elm$json$Json$Decode$bool = _Json_decodeBool;
 var $elm$html$Html$Events$targetChecked = A2(
 	$elm$json$Json$Decode$at,
@@ -7040,10 +7032,8 @@ var $author$project$Main$requiredData = function (presence) {
 			return true;
 		case 'Optional':
 			return false;
-		case 'SystemRequired':
-			return true;
 		default:
-			return false;
+			return true;
 	}
 };
 var $elm$html$Html$Attributes$tabindex = function (n) {
@@ -7139,8 +7129,6 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 											return false;
 										case 'Optional':
 											return false;
-										case 'SystemRequired':
-											return true;
 										default:
 											return true;
 									}
@@ -7421,20 +7409,7 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 											return configureRequiredCheckbox;
 										case 'Optional':
 											return configureRequiredCheckbox;
-										case 'SystemRequired':
-											var sys = _v0.a;
-											return A2(
-												$elm$html$Html$div,
-												_List_fromArray(
-													[
-														$elm$html$Html$Attributes$class('tff-field-description')
-													]),
-												_List_fromArray(
-													[
-														$elm$html$Html$text(sys.description)
-													]));
 										default:
-											var sys = _v0.a;
 											return A2(
 												$elm$html$Html$div,
 												_List_fromArray(
@@ -7443,7 +7418,7 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 													]),
 												_List_fromArray(
 													[
-														$elm$html$Html$text(sys.description)
+														$elm$html$Html$text(formField.description)
 													]));
 									}
 								}
@@ -7537,8 +7512,6 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 											return deleteFieldButton;
 										case 'Optional':
 											return deleteFieldButton;
-										case 'SystemRequired':
-											return $elm$html$Html$text('');
 										default:
 											return $elm$html$Html$text('');
 									}
@@ -7630,19 +7603,7 @@ var $author$project$Main$maybeMaxLengthOf = function (formField) {
 	}
 };
 var $author$project$Main$fieldNameOf = function (formField) {
-	var _v0 = formField.presence;
-	switch (_v0.$) {
-		case 'Required':
-			return formField.label;
-		case 'Optional':
-			return formField.label;
-		case 'SystemRequired':
-			var name = _v0.a.name;
-			return name;
-		default:
-			var name = _v0.a.name;
-			return name;
-	}
+	return A2($elm$core$Maybe$withDefault, formField.label, formField.name);
 };
 var $elm$core$List$maybeCons = F3(
 	function (f, mx, xs) {
@@ -7723,26 +7684,15 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 		var shortTextTypeDict = _v0.shortTextTypeDict;
 		var fieldName = $author$project$Main$fieldNameOf(formField);
 		var chosenForYou = function (choices) {
-			var _v3 = _Utils_Tuple2(formField.presence, choices);
-			_v3$2:
-			while (true) {
-				if (_v3.b.b && (!_v3.b.b.b)) {
-					switch (_v3.a.$) {
-						case 'SystemRequired':
-							var _v4 = _v3.b;
-							return true;
-						case 'Required':
-							var _v5 = _v3.a;
-							var _v6 = _v3.b;
-							return true;
-						default:
-							break _v3$2;
-					}
-				} else {
-					break _v3$2;
-				}
+			var _v3 = formField.presence;
+			switch (_v3.$) {
+				case 'Optional':
+					return false;
+				case 'Required':
+					return $elm$core$List$length(choices) === 1;
+				default:
+					return $elm$core$List$length(choices) === 1;
 			}
-			return false;
 		};
 		var _v1 = formField.type_;
 		switch (_v1.$) {
@@ -8062,10 +8012,8 @@ var $author$project$Main$viewFormFieldPreview = F2(
 											return $elm$html$Html$text('');
 										case 'Optional':
 											return $elm$html$Html$text(' (optional)');
-										case 'SystemRequired':
-											return $elm$html$Html$text('');
 										default:
-											return $elm$html$Html$text(' (optional)');
+											return $elm$html$Html$text('');
 									}
 								}()
 								])),
