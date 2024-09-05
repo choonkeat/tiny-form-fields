@@ -50,14 +50,13 @@ suite =
                             , ( "Nric", Dict.fromList [ ( "pattern", "^[STGM][0-9]{7}[ABCDEFGHIZJ]$" ), ( "type", "text" ) ] )
                             ]
                         )
-
-        -- , Test.fuzz choiceStringFuzzer "choiceStringToChoice,choiceStringFromString is reversible" <|
-        --     \choice ->
-        --         choice
-        --             |> encodeChoice
-        --             |> Json.Encode.encode 0
-        --             |> Json.Decode.decodeString decodeChoice
-        --             |> Expect.equal (Ok choice)
+        , Test.fuzz choiceStringFuzzer "choiceStringToChoice,choiceStringFromString is reversible" <|
+            \choice ->
+                choice
+                    |> Main.encodeChoice
+                    |> Json.Encode.encode 0
+                    |> Json.Decode.decodeString Main.decodeChoice
+                    |> Expect.equal (Ok choice)
         , Test.fuzz pairOfFormFieldFuzzer "encode old FormField can be decoded with decodeFormField" <|
             \{ oldField, newField } ->
                 oldField
