@@ -5225,6 +5225,41 @@ var $author$project$Main$FormField = F5(
 	function (label, name, presence, description, type_) {
 		return {description: description, label: label, name: name, presence: presence, type_: type_};
 	});
+var $elm$json$Json$Decode$field = _Json_decodeField;
+var $elm$json$Json$Decode$at = F2(
+	function (fields, decoder) {
+		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
+	});
+var $elm$json$Json$Decode$oneOf = _Json_oneOf;
+var $elm$json$Json$Decode$string = _Json_decodeString;
+var $author$project$Main$decodeFormFieldDescription = $elm$json$Json$Decode$oneOf(
+	_List_fromArray(
+		[
+			A2(
+			$elm$json$Json$Decode$at,
+			_List_fromArray(
+				['presence', 'description']),
+			$elm$json$Json$Decode$string),
+			A2($elm$json$Json$Decode$field, 'description', $elm$json$Json$Decode$string),
+			$elm$json$Json$Decode$succeed('')
+		]));
+var $author$project$Main$decodeFormFieldMaybeName = $elm$json$Json$Decode$oneOf(
+	_List_fromArray(
+		[
+			A2(
+			$elm$json$Json$Decode$map,
+			$elm$core$Maybe$Just,
+			A2(
+				$elm$json$Json$Decode$at,
+				_List_fromArray(
+					['presence', 'name']),
+				$elm$json$Json$Decode$string)),
+			A2(
+			$elm$json$Json$Decode$map,
+			$elm$core$Maybe$Just,
+			A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string)),
+			$elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing)
+		]));
 var $author$project$Main$ChooseMultiple = function (a) {
 	return {$: 'ChooseMultiple', a: a};
 };
@@ -5268,14 +5303,11 @@ var $author$project$Main$choiceFromString = function (s) {
 		return {label: s, value: s};
 	}
 };
-var $elm$json$Json$Decode$string = _Json_decodeString;
 var $author$project$Main$decodeChoice = A2($elm$json$Json$Decode$map, $author$project$Main$choiceFromString, $elm$json$Json$Decode$string);
 var $elm$json$Json$Decode$fail = _Json_fail;
-var $elm$json$Json$Decode$field = _Json_decodeField;
 var $elm$json$Json$Decode$int = _Json_decodeInt;
 var $elm$json$Json$Decode$list = _Json_decodeList;
 var $elm$json$Json$Decode$null = _Json_decodeNull;
-var $elm$json$Json$Decode$oneOf = _Json_oneOf;
 var $elm$json$Json$Decode$nullable = function (decoder) {
 	return $elm$json$Json$Decode$oneOf(
 		_List_fromArray(
@@ -5374,58 +5406,18 @@ var $author$project$Main$decodePresence = $elm$json$Json$Decode$oneOf(
 			},
 			A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string))
 		]));
-var $elm$core$Maybe$andThen = F2(
-	function (callback, maybeValue) {
-		if (maybeValue.$ === 'Just') {
-			var value = maybeValue.a;
-			return callback(value);
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
-var $elm$json$Json$Decode$decodeValue = _Json_run;
-var $elm$json$Json$Decode$value = _Json_decodeValue;
-var $elm_community$json_extra$Json$Decode$Extra$optionalField = F2(
-	function (fieldName, decoder) {
-		var finishDecoding = function (json) {
-			var _v0 = A2(
-				$elm$json$Json$Decode$decodeValue,
-				A2($elm$json$Json$Decode$field, fieldName, $elm$json$Json$Decode$value),
-				json);
-			if (_v0.$ === 'Ok') {
-				var val = _v0.a;
-				return A2(
-					$elm$json$Json$Decode$map,
-					$elm$core$Maybe$Just,
-					A2($elm$json$Json$Decode$field, fieldName, decoder));
-			} else {
-				return $elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing);
-			}
-		};
-		return A2($elm$json$Json$Decode$andThen, finishDecoding, $elm$json$Json$Decode$value);
-	});
-var $elm_community$json_extra$Json$Decode$Extra$optionalNullableField = F2(
-	function (fieldName, decoder) {
-		return A2(
-			$elm$json$Json$Decode$map,
-			$elm$core$Maybe$andThen($elm$core$Basics$identity),
-			A2(
-				$elm_community$json_extra$Json$Decode$Extra$optionalField,
-				fieldName,
-				$elm$json$Json$Decode$nullable(decoder)));
-	});
 var $author$project$Main$decodeFormField = A2(
 	$elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2($elm$json$Json$Decode$field, 'type', $author$project$Main$decodeInputField),
 	A2(
 		$elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2($elm$json$Json$Decode$field, 'description', $elm$json$Json$Decode$string),
+		$author$project$Main$decodeFormFieldDescription,
 		A2(
 			$elm_community$json_extra$Json$Decode$Extra$andMap,
 			A2($elm$json$Json$Decode$field, 'presence', $author$project$Main$decodePresence),
 			A2(
 				$elm_community$json_extra$Json$Decode$Extra$andMap,
-				A2($elm_community$json_extra$Json$Decode$Extra$optionalNullableField, 'name', $elm$json$Json$Decode$string),
+				$author$project$Main$decodeFormFieldMaybeName,
 				A2(
 					$elm_community$json_extra$Json$Decode$Extra$andMap,
 					A2($elm$json$Json$Decode$field, 'label', $elm$json$Json$Decode$string),
@@ -5654,6 +5646,46 @@ var $author$project$Main$decodeViewMode = A2(
 	$elm_community$json_extra$Json$Decode$Extra$fromMaybe('Invalid viewMode: Editor | Preview | CollectData'),
 	A2($elm$json$Json$Decode$map, $author$project$Main$viewModeFromString, $elm$json$Json$Decode$string));
 var $elm$json$Json$Encode$null = _Json_encodeNull;
+var $elm$core$Maybe$andThen = F2(
+	function (callback, maybeValue) {
+		if (maybeValue.$ === 'Just') {
+			var value = maybeValue.a;
+			return callback(value);
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $elm$json$Json$Decode$decodeValue = _Json_run;
+var $elm$json$Json$Decode$value = _Json_decodeValue;
+var $elm_community$json_extra$Json$Decode$Extra$optionalField = F2(
+	function (fieldName, decoder) {
+		var finishDecoding = function (json) {
+			var _v0 = A2(
+				$elm$json$Json$Decode$decodeValue,
+				A2($elm$json$Json$Decode$field, fieldName, $elm$json$Json$Decode$value),
+				json);
+			if (_v0.$ === 'Ok') {
+				var val = _v0.a;
+				return A2(
+					$elm$json$Json$Decode$map,
+					$elm$core$Maybe$Just,
+					A2($elm$json$Json$Decode$field, fieldName, decoder));
+			} else {
+				return $elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing);
+			}
+		};
+		return A2($elm$json$Json$Decode$andThen, finishDecoding, $elm$json$Json$Decode$value);
+	});
+var $elm_community$json_extra$Json$Decode$Extra$optionalNullableField = F2(
+	function (fieldName, decoder) {
+		return A2(
+			$elm$json$Json$Decode$map,
+			$elm$core$Maybe$andThen($elm$core$Basics$identity),
+			A2(
+				$elm_community$json_extra$Json$Decode$Extra$optionalField,
+				fieldName,
+				$elm$json$Json$Decode$nullable(decoder)));
+	});
 var $elm$core$Maybe$withDefault = F2(
 	function (_default, maybe) {
 		if (maybe.$ === 'Just') {
@@ -6964,10 +6996,6 @@ var $elm$html$Html$Events$on = F2(
 			$elm$virtual_dom$VirtualDom$on,
 			event,
 			$elm$virtual_dom$VirtualDom$Normal(decoder));
-	});
-var $elm$json$Json$Decode$at = F2(
-	function (fields, decoder) {
-		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
 	});
 var $elm$json$Json$Decode$bool = _Json_decodeBool;
 var $elm$html$Html$Events$targetChecked = A2(

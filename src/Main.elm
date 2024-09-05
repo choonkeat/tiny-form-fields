@@ -9,10 +9,12 @@ port module Main exposing
     , choiceFromString
     , choiceToString
     , decodeChoice
+    , decodeFormField
     , decodeFormFields
     , decodeShortTextTypeList
     , encodeChoice
     , encodeFormFields
+    , encodeInputField
     , main
     , stringFromViewMode
     , viewModeFromString
@@ -1419,10 +1421,32 @@ decodeFormField : Json.Decode.Decoder FormField
 decodeFormField =
     Json.Decode.succeed FormField
         |> andMap (Json.Decode.field "label" Json.Decode.string)
-        |> andMap (Json.Decode.Extra.optionalNullableField "name" Json.Decode.string)
+        |> andMap decodeFormFieldMaybeName
         |> andMap (Json.Decode.field "presence" decodePresence)
-        |> andMap (Json.Decode.field "description" Json.Decode.string)
+        |> andMap decodeFormFieldDescription
         |> andMap (Json.Decode.field "type" decodeInputField)
+
+
+decodeFormFieldMaybeName : Json.Decode.Decoder (Maybe String)
+decodeFormFieldMaybeName =
+    Json.Decode.oneOf
+        [ -- backward compat: presence.name takes precedence
+          Json.Decode.at [ "presence", "name" ] Json.Decode.string
+            |> Json.Decode.map Just
+        , Json.Decode.field "name" Json.Decode.string
+            |> Json.Decode.map Just
+        , Json.Decode.succeed Nothing
+        ]
+
+
+decodeFormFieldDescription : Json.Decode.Decoder String
+decodeFormFieldDescription =
+    Json.Decode.oneOf
+        [ -- backward compat: presence.description takes precedence
+          Json.Decode.at [ "presence", "description" ] Json.Decode.string
+        , Json.Decode.field "description" Json.Decode.string
+        , Json.Decode.succeed ""
+        ]
 
 
 encodeInputField : InputField -> Json.Encode.Value
