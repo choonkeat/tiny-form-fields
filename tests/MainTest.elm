@@ -98,8 +98,18 @@ viewModeFuzzer =
 inputFieldFuzzer : Fuzzer InputField
 inputFieldFuzzer =
     allInputField
+        ++ moreTestInputFields
         |> List.map Fuzz.constant
         |> Fuzz.oneOf
+
+
+moreTestInputFields : List InputField
+moreTestInputFields =
+    [ ShortText "Email" [ ( "type", "email" ) ]
+
+    -- , ShortText "Emails" [ ( "type", "email" ), ( "multiple", "true" ) ]
+    -- , ShortText "Emails with maxlength" [ ( "type", "email" ), ( "multiple", "true" ), ( "maxlength", "20" ) ]
+    ]
 
 
 presenceFuzzer : Fuzzer Presence

@@ -19,13 +19,12 @@ port module Main exposing
     )
 
 import Array exposing (Array)
-import Bool.Extra
 import Browser
 import Dict exposing (Dict)
 import Html exposing (Html, a, button, div, input, label, li, option, select, text, textarea, ul)
-import Html.Attributes exposing (attribute, checked, class, disabled, for, href, id, maxlength, minlength, multiple, name, placeholder, readonly, required, selected, tabindex, title, type_, value)
+import Html.Attributes exposing (attribute, checked, class, disabled, for, href, id, maxlength, minlength, name, placeholder, readonly, required, selected, tabindex, title, type_, value)
 import Html.Events exposing (onCheck, onClick, onInput, preventDefaultOn, stopPropagationOn)
-import Json.Decode exposing (field)
+import Json.Decode
 import Json.Decode.Extra exposing (andMap)
 import Json.Encode
 import Platform.Cmd as Cmd
@@ -148,15 +147,8 @@ type alias FormField =
     }
 
 
-type alias ShortTextAttrs =
-    { type_ : String
-    , maxlength : Maybe Int
-    , multiple : Maybe Bool
-    }
-
-
 type InputField
-    = ShortText ShortTextAttrs
+    = ShortText String (List ( String, String ))
     | LongText (Maybe Int)
     | Dropdown (List Choice)
     | ChooseOne (List Choice)
@@ -179,8 +171,8 @@ allInputField =
 stringFromInputField : InputField -> String
 stringFromInputField inputField =
     case inputField of
-        ShortText { type_ } ->
-            type_
+        ShortText inputType _ ->
+            inputType
 
         LongText _ ->
             "Multi-line description"
@@ -198,7 +190,7 @@ stringFromInputField inputField =
 mustBeOptional : InputField -> Bool
 mustBeOptional inputField =
     case inputField of
-        ShortText _ ->
+        ShortText _ _ ->
             False
 
         LongText _ ->
@@ -259,6 +251,7 @@ init flags =
                 effectiveShortTextTypeList =
                     defaultShortTextTypeListWithout config.shortTextTypeList
                         ++ config.shortTextTypeList
+                        |> Debug.log "effectiveShortTextTypeList"
             in
             ( { viewMode = config.viewMode
               , formFields = config.formFields
@@ -478,7 +471,7 @@ updateFormField msg string formField =
 
         OnChoicesInput ->
             case formField.type_ of
-                ShortText _ ->
+                ShortText _ _ ->
                     formField
 
                 LongText _ ->
@@ -495,8 +488,15 @@ updateFormField msg string formField =
 
         OnMaxLengthInput ->
             case formField.type_ of
-                ShortText a ->
-                    { formField | type_ = ShortText { a | maxlength = String.toInt string } }
+                ShortText inputType attrs ->
+                    { formField
+                        | type_ =
+                            ShortText inputType
+                                (Dict.fromList attrs
+                                    |> Dict.update "maxlength" (\_ -> Just string)
+                                    |> Dict.toList
+                                )
+                    }
 
                 LongText _ ->
                     { formField | type_ = LongText (String.toInt string) }
@@ -669,8 +669,8 @@ viewFormFieldPreview config formField =
 maybeMaxLengthOf : FormField -> Maybe Int
 maybeMaxLengthOf formField =
     case formField.type_ of
-        ShortText { maxlength } ->
-            maxlength
+        ShortText _ attrs ->
+            Dict.fromList attrs |> Dict.get "maxlength" |> Maybe.andThen String.toInt
 
         LongText maybeMaxLength ->
             maybeMaxLength
@@ -713,19 +713,17 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formF
                     False
     in
     case formField.type_ of
-        ShortText attrs ->
+        ShortText inputType attrs ->
             let
                 shortTextAttrs =
-                    Dict.get attrs.type_ shortTextTypeDict
+                    Dict.get inputType shortTextTypeDict
                         |> Maybe.withDefault Dict.empty
                         |> Dict.toList
                         |> List.map (\( k, v ) -> attribute k v)
 
                 extraAttrs =
-                    [ Maybe.map (\maxLength -> maxlength maxLength) attrs.maxlength
-                    , Maybe.map (\m -> multiple m) attrs.multiple
-                    , Maybe.map (\s -> value s) (maybeDecode fieldName Json.Decode.string formValues)
-                    ]
+                    Maybe.map (\s -> value s) (maybeDecode fieldName Json.Decode.string formValues)
+                        :: List.map (\( k, v ) -> Just (Html.Attributes.attribute k v)) attrs
                         |> List.filterMap identity
             in
             input
@@ -953,28 +951,9 @@ viewFormBuilder maybeAnimate { dropdownState, formFields, shortTextTypeList } =
                 allInputField
 
         extraOptions =
-            shortTextTypeList
-                |> List.map
-                    (\( k, v ) ->
-                        let
-                            maybeMaxLength =
-                                Dict.get "maxlength" v
-                                    |> Maybe.andThen String.toInt
-
-                            maybeMultiple =
-                                Dict.get "multiple" v
-                                    |> Maybe.andThen Bool.Extra.fromString
-                        in
-                        ( AddFormField
-                            (ShortText
-                                { type_ = k
-                                , maxlength = maybeMaxLength
-                                , multiple = maybeMultiple
-                                }
-                            )
-                        , k
-                        )
-                    )
+            List.map
+                (\( k, v ) -> ( AddFormField (ShortText k (Dict.toList v)), k ))
+                shortTextTypeList
     in
     div [ class "tff-build-fields" ]
         (formFields
@@ -1174,33 +1153,48 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
                 ]
     in
     case formField.type_ of
-        ShortText attrs ->
+        ShortText inputType attrs ->
             let
+                attrsDict =
+                    Dict.fromList attrs
+
                 maybeShortTextTypeMaxLength =
                     shortTextTypeList
-                        |> List.filter (\( k, _ ) -> k == attrs.type_)
+                        |> List.filter (\( k, _ ) -> k == inputType)
                         |> List.head
                         |> Maybe.map Tuple.second
                         |> Maybe.andThen (Dict.get "minlength")
                         |> Maybe.andThen String.toInt
+
+                otherAttrs =
+                    List.map (\( k, v ) -> Html.Attributes.attribute k v)
+                        attrs
             in
             [ case maybeShortTextTypeMaxLength of
                 Nothing ->
                     div [ class "tff-field-group" ]
                         [ label [ class "tff-field-label", for ("maxlength-" ++ idSuffix) ] [ text "Max length (optional)" ]
                         , input
-                            [ id ("maxlength-" ++ idSuffix)
-                            , type_ "number"
-                            , class "tff-text-field"
-                            , value (Maybe.map String.fromInt attrs.maxlength |> Maybe.withDefault "")
-                            , multiple (attrs.multiple |> Maybe.withDefault False)
-                            , onInput (OnFormField OnMaxLengthInput index)
-                            ]
+                            ([ id ("maxlength-" ++ idSuffix)
+                             , type_ "number"
+                             , class "tff-text-field"
+                             , value (Dict.get "maxlength" attrsDict |> Maybe.withDefault "")
+                             , onInput (OnFormField OnMaxLengthInput index)
+                             ]
+                                ++ otherAttrs
+                            )
                             []
                         ]
 
                 Just i ->
-                    input [ type_ "hidden", name ("maxlength-" ++ idSuffix), value (String.fromInt i), multiple (attrs.multiple |> Maybe.withDefault False) ] []
+                    input
+                        ([ type_ "hidden"
+                         , name ("maxlength-" ++ idSuffix)
+                         , value (String.fromInt i)
+                         ]
+                            ++ otherAttrs
+                        )
+                        []
             ]
 
         LongText maybeMaxLength ->
@@ -1485,12 +1479,11 @@ decodeFormField =
 encodeInputField : InputField -> Json.Encode.Value
 encodeInputField inputField =
     case inputField of
-        ShortText attrs ->
+        ShortText inputType attrs ->
             Json.Encode.object
                 [ ( "type", Json.Encode.string "ShortText" )
-                , ( "inputType", Json.Encode.string attrs.type_ )
-                , ( "maxLength", attrs.maxlength |> Maybe.map Json.Encode.int |> Maybe.withDefault Json.Encode.null )
-                , ( "multiple", attrs.multiple |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
+                , ( "inputType", Json.Encode.string inputType )
+                , ( "attributes", attrs |> List.map (Tuple.mapSecond Json.Encode.string) |> Json.Encode.object )
                 ]
 
         LongText maybeMaxLength ->
@@ -1526,12 +1519,8 @@ decodeInputField =
                 case type_ of
                     "ShortText" ->
                         Json.Decode.succeed ShortText
-                            |> andMap
-                                (Json.Decode.succeed ShortTextAttrs
-                                    |> andMap (Json.Decode.field "inputType" Json.Decode.string)
-                                    |> andMap (Json.Decode.field "maxLength" (Json.Decode.nullable Json.Decode.int))
-                                    |> andMap (Json.Decode.field "multiple" (Json.Decode.nullable Json.Decode.bool))
-                                )
+                            |> andMap (Json.Decode.field "inputType" Json.Decode.string)
+                            |> andMap (Json.Decode.field "attributes" (Json.Decode.keyValuePairs Json.Decode.string))
 
                     "LongText" ->
                         Json.Decode.succeed LongText
