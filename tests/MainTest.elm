@@ -106,9 +106,8 @@ inputFieldFuzzer =
 moreTestInputFields : List InputField
 moreTestInputFields =
     [ ShortText "Email" [ ( "type", "email" ) ]
-
-    -- , ShortText "Emails" [ ( "type", "email" ), ( "multiple", "true" ) ]
-    -- , ShortText "Emails with maxlength" [ ( "type", "email" ), ( "multiple", "true" ), ( "maxlength", "20" ) ]
+    , ShortText "Emails" [ ( "type", "email" ), ( "multiple", "true" ) ]
+    , ShortText "Emails with maxlength" [ ( "type", "email" ), ( "multiple", "true" ), ( "maxlength", "20" ) ]
     ]
 
 

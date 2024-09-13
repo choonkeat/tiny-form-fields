@@ -5285,6 +5285,36 @@ var $elm$json$Json$Decode$nullable = function (decoder) {
 				A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, decoder)
 			]));
 };
+var $elm$json$Json$Decode$decodeValue = _Json_run;
+var $elm$json$Json$Decode$value = _Json_decodeValue;
+var $elm_community$json_extra$Json$Decode$Extra$optionalField = F2(
+	function (fieldName, decoder) {
+		var finishDecoding = function (json) {
+			var _v0 = A2(
+				$elm$json$Json$Decode$decodeValue,
+				A2($elm$json$Json$Decode$field, fieldName, $elm$json$Json$Decode$value),
+				json);
+			if (_v0.$ === 'Ok') {
+				var val = _v0.a;
+				return A2(
+					$elm$json$Json$Decode$map,
+					$elm$core$Maybe$Just,
+					A2($elm$json$Json$Decode$field, fieldName, decoder));
+			} else {
+				return $elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing);
+			}
+		};
+		return A2($elm$json$Json$Decode$andThen, finishDecoding, $elm$json$Json$Decode$value);
+	});
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
 var $author$project$Main$decodeInputField = A2(
 	$elm$json$Json$Decode$andThen,
 	function (type_) {
@@ -5293,9 +5323,12 @@ var $author$project$Main$decodeInputField = A2(
 				return A2(
 					$elm_community$json_extra$Json$Decode$Extra$andMap,
 					A2(
-						$elm$json$Json$Decode$field,
-						'attributes',
-						$elm$json$Json$Decode$keyValuePairs($elm$json$Json$Decode$string)),
+						$elm$json$Json$Decode$map,
+						$elm$core$Maybe$withDefault(_List_Nil),
+						A2(
+							$elm_community$json_extra$Json$Decode$Extra$optionalField,
+							'attributes',
+							$elm$json$Json$Decode$keyValuePairs($elm$json$Json$Decode$string))),
 					A2(
 						$elm_community$json_extra$Json$Decode$Extra$andMap,
 						A2($elm$json$Json$Decode$field, 'inputType', $elm$json$Json$Decode$string),
@@ -5656,27 +5689,6 @@ var $elm$core$Maybe$andThen = F2(
 			return $elm$core$Maybe$Nothing;
 		}
 	});
-var $elm$json$Json$Decode$decodeValue = _Json_run;
-var $elm$json$Json$Decode$value = _Json_decodeValue;
-var $elm_community$json_extra$Json$Decode$Extra$optionalField = F2(
-	function (fieldName, decoder) {
-		var finishDecoding = function (json) {
-			var _v0 = A2(
-				$elm$json$Json$Decode$decodeValue,
-				A2($elm$json$Json$Decode$field, fieldName, $elm$json$Json$Decode$value),
-				json);
-			if (_v0.$ === 'Ok') {
-				var val = _v0.a;
-				return A2(
-					$elm$json$Json$Decode$map,
-					$elm$core$Maybe$Just,
-					A2($elm$json$Json$Decode$field, fieldName, decoder));
-			} else {
-				return $elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing);
-			}
-		};
-		return A2($elm$json$Json$Decode$andThen, finishDecoding, $elm$json$Json$Decode$value);
-	});
 var $elm_community$json_extra$Json$Decode$Extra$optionalNullableField = F2(
 	function (fieldName, decoder) {
 		return A2(
@@ -5686,15 +5698,6 @@ var $elm_community$json_extra$Json$Decode$Extra$optionalNullableField = F2(
 				$elm_community$json_extra$Json$Decode$Extra$optionalField,
 				fieldName,
 				$elm$json$Json$Decode$nullable(decoder)));
-	});
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
 	});
 var $author$project$Main$decodeConfig = A2(
 	$elm_community$json_extra$Json$Decode$Extra$andMap,
@@ -5802,23 +5805,36 @@ var $author$project$Main$encodeInputField = function (inputField) {
 		case 'ShortText':
 			var inputType = inputField.a;
 			var attrs = inputField.b;
+			var encodedAttrs = function () {
+				var _v1 = A2(
+					$elm$core$List$map,
+					$elm$core$Tuple$mapSecond($elm$json$Json$Encode$string),
+					attrs);
+				if (!_v1.b) {
+					return _List_Nil;
+				} else {
+					var pairs = _v1;
+					return _List_fromArray(
+						[
+							_Utils_Tuple2(
+							'attributes',
+							$elm$json$Json$Encode$object(pairs))
+						]);
+				}
+			}();
 			return $elm$json$Json$Encode$object(
-				_List_fromArray(
-					[
-						_Utils_Tuple2(
-						'type',
-						$elm$json$Json$Encode$string('ShortText')),
-						_Utils_Tuple2(
-						'inputType',
-						$elm$json$Json$Encode$string(inputType)),
-						_Utils_Tuple2(
-						'attributes',
-						$elm$json$Json$Encode$object(
-							A2(
-								$elm$core$List$map,
-								$elm$core$Tuple$mapSecond($elm$json$Json$Encode$string),
-								attrs)))
-					]));
+				A2(
+					$elm$core$List$append,
+					_List_fromArray(
+						[
+							_Utils_Tuple2(
+							'type',
+							$elm$json$Json$Encode$string('ShortText')),
+							_Utils_Tuple2(
+							'inputType',
+							$elm$json$Json$Encode$string(inputType))
+						]),
+					encodedAttrs));
 		case 'LongText':
 			var maybeMaxLength = inputField.a;
 			return $elm$json$Json$Encode$object(
@@ -5849,8 +5865,8 @@ var $author$project$Main$encodeInputField = function (inputField) {
 							$author$project$Main$encodeChoice,
 							A2(
 								$elm$core$List$filter,
-								function (_v1) {
-									var value = _v1.value;
+								function (_v2) {
+									var value = _v2.value;
 									return $elm$core$String$trim(value) !== '';
 								},
 								choices)))
@@ -5870,8 +5886,8 @@ var $author$project$Main$encodeInputField = function (inputField) {
 							$author$project$Main$encodeChoice,
 							A2(
 								$elm$core$List$filter,
-								function (_v2) {
-									var value = _v2.value;
+								function (_v3) {
+									var value = _v3.value;
 									return $elm$core$String$trim(value) !== '';
 								},
 								choices)))
@@ -5891,8 +5907,8 @@ var $author$project$Main$encodeInputField = function (inputField) {
 							$author$project$Main$encodeChoice,
 							A2(
 								$elm$core$List$filter,
-								function (_v3) {
-									var value = _v3.value;
+								function (_v4) {
+									var value = _v4.value;
 									return $elm$core$String$trim(value) !== '';
 								},
 								choices)))

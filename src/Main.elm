@@ -1480,11 +1480,23 @@ encodeInputField : InputField -> Json.Encode.Value
 encodeInputField inputField =
     case inputField of
         ShortText inputType attrs ->
+            let
+                encodedAttrs =
+                    case List.map (Tuple.mapSecond Json.Encode.string) attrs of
+                        [] ->
+                            -- don't need to encode `"attributes": []` all the time
+                            []
+
+                        pairs ->
+                            [ ( "attributes", Json.Encode.object pairs ) ]
+            in
             Json.Encode.object
-                [ ( "type", Json.Encode.string "ShortText" )
-                , ( "inputType", Json.Encode.string inputType )
-                , ( "attributes", attrs |> List.map (Tuple.mapSecond Json.Encode.string) |> Json.Encode.object )
-                ]
+                (List.append
+                    [ ( "type", Json.Encode.string "ShortText" )
+                    , ( "inputType", Json.Encode.string inputType )
+                    ]
+                    encodedAttrs
+                )
 
         LongText maybeMaxLength ->
             Json.Encode.object
@@ -1520,7 +1532,10 @@ decodeInputField =
                     "ShortText" ->
                         Json.Decode.succeed ShortText
                             |> andMap (Json.Decode.field "inputType" Json.Decode.string)
-                            |> andMap (Json.Decode.field "attributes" (Json.Decode.keyValuePairs Json.Decode.string))
+                            |> andMap
+                                (Json.Decode.Extra.optionalField "attributes" (Json.Decode.keyValuePairs Json.Decode.string)
+                                    |> Json.Decode.map (Maybe.withDefault [])
+                                )
 
                     "LongText" ->
                         Json.Decode.succeed LongText
