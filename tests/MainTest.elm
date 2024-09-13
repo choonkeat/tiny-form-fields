@@ -99,7 +99,7 @@ moreTestInputFields : List Main.InputField
 moreTestInputFields =
     [ Main.ShortText "Email" [ ( "type", "email" ) ]
     , Main.ShortText "Emails" [ ( "type", "email" ), ( "multiple", "true" ) ]
-    , Main.ShortText "Emails with maxlength" [ ( "type", "email" ), ( "multiple", "true" ), ( "maxlength", "20" ) ]
+    , Main.ShortText "Emails with maxlength" [ ( "type", "email" ), ( "multiple", "true" ), ( "maxlength", "20" ), ( "data-extra-thing", "[1,2,3]" ) ]
     ]
 
 

@@ -246,7 +246,6 @@ init flags =
                 effectiveShortTextTypeList =
                     defaultShortTextTypeListWithout config.shortTextTypeList
                         ++ config.shortTextTypeList
-                        |> Debug.log "effectiveShortTextTypeList"
             in
             ( { viewMode = config.viewMode
               , formFields = config.formFields
@@ -489,7 +488,7 @@ updateFormField msg string formField =
                         | type_ =
                             ShortText inputType
                                 (Dict.fromList attrs
-                                    |> Dict.update "maxlength" (\_ -> Just string)
+                                    |> Dict.insert "maxlength" string
                                     |> Dict.toList
                                 )
                     }
@@ -1137,35 +1136,27 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
                         |> Maybe.map Tuple.second
                         |> Maybe.andThen (Dict.get "minlength")
                         |> Maybe.andThen String.toInt
-
-                otherAttrs =
-                    List.map (\( k, v ) -> Html.Attributes.attribute k v)
-                        attrs
             in
             [ case maybeShortTextTypeMaxLength of
                 Nothing ->
                     div [ class "tff-field-group" ]
                         [ label [ class "tff-field-label", for ("maxlength-" ++ idSuffix) ] [ text "Max length (optional)" ]
                         , input
-                            ([ id ("maxlength-" ++ idSuffix)
-                             , type_ "number"
-                             , class "tff-text-field"
-                             , value (Dict.get "maxlength" attrsDict |> Maybe.withDefault "")
-                             , onInput (OnFormField OnMaxLengthInput index)
-                             ]
-                                ++ otherAttrs
-                            )
+                            [ id ("maxlength-" ++ idSuffix)
+                            , type_ "number"
+                            , class "tff-text-field"
+                            , value (Dict.get "maxlength" attrsDict |> Maybe.withDefault "")
+                            , onInput (OnFormField OnMaxLengthInput index)
+                            ]
                             []
                         ]
 
                 Just i ->
                     input
-                        ([ type_ "hidden"
-                         , name ("maxlength-" ++ idSuffix)
-                         , value (String.fromInt i)
-                         ]
-                            ++ otherAttrs
-                        )
+                        [ type_ "hidden"
+                        , name ("maxlength-" ++ idSuffix)
+                        , value (String.fromInt i)
+                        ]
                         []
             ]
 
