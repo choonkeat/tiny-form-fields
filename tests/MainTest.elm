@@ -36,7 +36,9 @@ suite =
                 """
                 [
                     { "Text": { "type": "text" } },
+                    { "Text": { "type": "text", "maxlength": "10", "multiple": "true" } },
                     { "Email": { "type": "email" } },
+                    { "Emails": { "type": "email" , "multiple": "true" } },
                     { "Digits": { "type": "text", "pattern": "^[0-9]+$" } },
                     { "Nric": { "type": "text", "pattern": "^[STGM][0-9]{7}[ABCDEFGHIZJ]$" } }
                 ]
@@ -45,7 +47,9 @@ suite =
                     |> Expect.equal
                         (Ok
                             [ ( "Text", Dict.fromList [ ( "type", "text" ) ] )
+                            , ( "Text", Dict.fromList [ ( "type", "text" ), ( "maxlength", "10" ), ( "multiple", "true" ) ] )
                             , ( "Email", Dict.fromList [ ( "type", "email" ) ] )
+                            , ( "Emails", Dict.fromList [ ( "type", "email" ), ( "multiple", "true" ) ] )
                             , ( "Digits", Dict.fromList [ ( "pattern", "^[0-9]+$" ), ( "type", "text" ) ] )
                             , ( "Nric", Dict.fromList [ ( "pattern", "^[STGM][0-9]{7}[ABCDEFGHIZJ]$" ), ( "type", "text" ) ] )
                             ]
@@ -86,8 +90,17 @@ viewModeFuzzer =
 inputFieldFuzzer : Fuzzer Main.InputField
 inputFieldFuzzer =
     Main.allInputField
+        ++ moreTestInputFields
         |> List.map Fuzz.constant
         |> Fuzz.oneOf
+
+
+moreTestInputFields : List Main.InputField
+moreTestInputFields =
+    [ Main.ShortText "Email" [ ( "type", "email" ) ]
+    , Main.ShortText "Emails" [ ( "type", "email" ), ( "multiple", "true" ) ]
+    , Main.ShortText "Emails with maxlength" [ ( "type", "email" ), ( "multiple", "true" ), ( "maxlength", "20" ), ( "data-extra-thing", "[1,2,3]" ) ]
+    ]
 
 
 presenceFuzzer : Fuzzer Main.Presence

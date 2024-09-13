@@ -5298,6 +5298,7 @@ var $author$project$Main$choiceFromString = function (s) {
 var $author$project$Main$decodeChoice = A2($elm$json$Json$Decode$map, $author$project$Main$choiceFromString, $elm$json$Json$Decode$string);
 var $elm$json$Json$Decode$fail = _Json_fail;
 var $elm$json$Json$Decode$int = _Json_decodeInt;
+var $elm$json$Json$Decode$keyValuePairs = _Json_decodeKeyValuePairs;
 var $elm$json$Json$Decode$list = _Json_decodeList;
 var $elm$json$Json$Decode$null = _Json_decodeNull;
 var $elm$json$Json$Decode$nullable = function (decoder) {
@@ -5308,6 +5309,36 @@ var $elm$json$Json$Decode$nullable = function (decoder) {
 				A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, decoder)
 			]));
 };
+var $elm$json$Json$Decode$decodeValue = _Json_run;
+var $elm$json$Json$Decode$value = _Json_decodeValue;
+var $elm_community$json_extra$Json$Decode$Extra$optionalField = F2(
+	function (fieldName, decoder) {
+		var finishDecoding = function (json) {
+			var _v0 = A2(
+				$elm$json$Json$Decode$decodeValue,
+				A2($elm$json$Json$Decode$field, fieldName, $elm$json$Json$Decode$value),
+				json);
+			if (_v0.$ === 'Ok') {
+				var val = _v0.a;
+				return A2(
+					$elm$json$Json$Decode$map,
+					$elm$core$Maybe$Just,
+					A2($elm$json$Json$Decode$field, fieldName, decoder));
+			} else {
+				return $elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing);
+			}
+		};
+		return A2($elm$json$Json$Decode$andThen, finishDecoding, $elm$json$Json$Decode$value);
+	});
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
 var $author$project$Main$decodeInputField = A2(
 	$elm$json$Json$Decode$andThen,
 	function (type_) {
@@ -5316,9 +5347,12 @@ var $author$project$Main$decodeInputField = A2(
 				return A2(
 					$elm_community$json_extra$Json$Decode$Extra$andMap,
 					A2(
-						$elm$json$Json$Decode$field,
-						'maxLength',
-						$elm$json$Json$Decode$nullable($elm$json$Json$Decode$int)),
+						$elm$json$Json$Decode$map,
+						$elm$core$Maybe$withDefault(_List_Nil),
+						A2(
+							$elm_community$json_extra$Json$Decode$Extra$optionalField,
+							'attributes',
+							$elm$json$Json$Decode$keyValuePairs($elm$json$Json$Decode$string))),
 					A2(
 						$elm_community$json_extra$Json$Decode$Extra$andMap,
 						A2($elm$json$Json$Decode$field, 'inputType', $elm$json$Json$Decode$string),
@@ -5592,7 +5626,6 @@ var $elm$core$Dict$fromList = function (assocs) {
 		$elm$core$Dict$empty,
 		assocs);
 };
-var $elm$json$Json$Decode$keyValuePairs = _Json_decodeKeyValuePairs;
 var $elm$json$Json$Decode$dict = function (decoder) {
 	return A2(
 		$elm$json$Json$Decode$map,
@@ -5647,27 +5680,6 @@ var $elm$core$Maybe$andThen = F2(
 			return $elm$core$Maybe$Nothing;
 		}
 	});
-var $elm$json$Json$Decode$decodeValue = _Json_run;
-var $elm$json$Json$Decode$value = _Json_decodeValue;
-var $elm_community$json_extra$Json$Decode$Extra$optionalField = F2(
-	function (fieldName, decoder) {
-		var finishDecoding = function (json) {
-			var _v0 = A2(
-				$elm$json$Json$Decode$decodeValue,
-				A2($elm$json$Json$Decode$field, fieldName, $elm$json$Json$Decode$value),
-				json);
-			if (_v0.$ === 'Ok') {
-				var val = _v0.a;
-				return A2(
-					$elm$json$Json$Decode$map,
-					$elm$core$Maybe$Just,
-					A2($elm$json$Json$Decode$field, fieldName, decoder));
-			} else {
-				return $elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing);
-			}
-		};
-		return A2($elm$json$Json$Decode$andThen, finishDecoding, $elm$json$Json$Decode$value);
-	});
 var $elm_community$json_extra$Json$Decode$Extra$optionalNullableField = F2(
 	function (fieldName, decoder) {
 		return A2(
@@ -5677,15 +5689,6 @@ var $elm_community$json_extra$Json$Decode$Extra$optionalNullableField = F2(
 				$elm_community$json_extra$Json$Decode$Extra$optionalField,
 				fieldName,
 				$elm$json$Json$Decode$nullable(decoder)));
-	});
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
 	});
 var $author$project$Main$decodeConfig = A2(
 	$elm_community$json_extra$Json$Decode$Extra$andMap,
@@ -5765,6 +5768,14 @@ var $elm$core$Maybe$map = F2(
 			return $elm$core$Maybe$Nothing;
 		}
 	});
+var $elm$core$Tuple$mapSecond = F2(
+	function (func, _v0) {
+		var x = _v0.a;
+		var y = _v0.b;
+		return _Utils_Tuple2(
+			x,
+			func(y));
+	});
 var $elm$core$Basics$neq = _Utils_notEqual;
 var $elm$json$Json$Encode$object = function (pairs) {
 	return _Json_wrap(
@@ -5784,23 +5795,37 @@ var $author$project$Main$encodeInputField = function (inputField) {
 	switch (inputField.$) {
 		case 'ShortText':
 			var inputType = inputField.a;
-			var maybeMaxLength = inputField.b;
+			var attrs = inputField.b;
+			var encodedAttrs = function () {
+				var _v1 = A2(
+					$elm$core$List$map,
+					$elm$core$Tuple$mapSecond($elm$json$Json$Encode$string),
+					attrs);
+				if (!_v1.b) {
+					return _List_Nil;
+				} else {
+					var pairs = _v1;
+					return _List_fromArray(
+						[
+							_Utils_Tuple2(
+							'attributes',
+							$elm$json$Json$Encode$object(pairs))
+						]);
+				}
+			}();
 			return $elm$json$Json$Encode$object(
-				_List_fromArray(
-					[
-						_Utils_Tuple2(
-						'type',
-						$elm$json$Json$Encode$string('ShortText')),
-						_Utils_Tuple2(
-						'inputType',
-						$elm$json$Json$Encode$string(inputType)),
-						_Utils_Tuple2(
-						'maxLength',
-						A2(
-							$elm$core$Maybe$withDefault,
-							$elm$json$Json$Encode$null,
-							A2($elm$core$Maybe$map, $elm$json$Json$Encode$int, maybeMaxLength)))
-					]));
+				A2(
+					$elm$core$List$append,
+					_List_fromArray(
+						[
+							_Utils_Tuple2(
+							'type',
+							$elm$json$Json$Encode$string('ShortText')),
+							_Utils_Tuple2(
+							'inputType',
+							$elm$json$Json$Encode$string(inputType))
+						]),
+					encodedAttrs));
 		case 'LongText':
 			var maybeMaxLength = inputField.a;
 			return $elm$json$Json$Encode$object(
@@ -5831,8 +5856,8 @@ var $author$project$Main$encodeInputField = function (inputField) {
 							$author$project$Main$encodeChoice,
 							A2(
 								$elm$core$List$filter,
-								function (_v1) {
-									var value = _v1.value;
+								function (_v2) {
+									var value = _v2.value;
 									return $elm$core$String$trim(value) !== '';
 								},
 								choices)))
@@ -5852,8 +5877,8 @@ var $author$project$Main$encodeInputField = function (inputField) {
 							$author$project$Main$encodeChoice,
 							A2(
 								$elm$core$List$filter,
-								function (_v2) {
-									var value = _v2.value;
+								function (_v3) {
+									var value = _v3.value;
 									return $elm$core$String$trim(value) !== '';
 								},
 								choices)))
@@ -5873,8 +5898,8 @@ var $author$project$Main$encodeInputField = function (inputField) {
 							$author$project$Main$encodeChoice,
 							A2(
 								$elm$core$List$filter,
-								function (_v3) {
-									var value = _v3.value;
+								function (_v4) {
+									var value = _v4.value;
 									return $elm$core$String$trim(value) !== '';
 								},
 								choices)))
@@ -6479,13 +6504,19 @@ var $author$project$Main$updateFormField = F3(
 				switch (_v2.$) {
 					case 'ShortText':
 						var inputType = _v2.a;
+						var attrs = _v2.b;
 						return _Utils_update(
 							formField,
 							{
 								type_: A2(
 									$author$project$Main$ShortText,
 									inputType,
-									$elm$core$String$toInt(string))
+									$elm$core$Dict$toList(
+										A3(
+											$elm$core$Dict$insert,
+											'maxlength',
+											string,
+											$elm$core$Dict$fromList(attrs))))
 							});
 					case 'LongText':
 						return _Utils_update(
@@ -7146,7 +7177,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 		switch (_v0.$) {
 			case 'ShortText':
 				var inputType = _v0.a;
-				var maybeMaxLength = _v0.b;
+				var attrs = _v0.b;
 				var maybeShortTextTypeMaxLength = A2(
 					$elm$core$Maybe$andThen,
 					$elm$core$String$toInt,
@@ -7164,6 +7195,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 										return _Utils_eq(k, inputType);
 									},
 									shortTextTypeList)))));
+				var attrsDict = $elm$core$Dict$fromList(attrs);
 				return _List_fromArray(
 					[
 						function () {
@@ -7198,7 +7230,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 												A2(
 													$elm$core$Maybe$withDefault,
 													'',
-													A2($elm$core$Maybe$map, $elm$core$String$fromInt, maybeMaxLength))),
+													A2($elm$core$Dict$get, 'maxlength', attrsDict))),
 												$elm$html$Html$Events$onInput(
 												A2($author$project$Main$OnFormField, $author$project$Main$OnMaxLengthInput, index))
 											]),
@@ -7536,9 +7568,13 @@ var $author$project$Main$viewFormBuilder = F2(
 			$elm$core$List$map,
 			function (_v1) {
 				var k = _v1.a;
+				var v = _v1.b;
 				return _Utils_Tuple2(
 					$author$project$Main$AddFormField(
-						A2($author$project$Main$ShortText, k, $elm$core$Maybe$Nothing)),
+						A2(
+							$author$project$Main$ShortText,
+							k,
+							$elm$core$Dict$toList(v))),
 					k);
 			},
 			shortTextTypeList);
@@ -7593,8 +7629,14 @@ var $author$project$Main$maybeMaxLengthOf = function (formField) {
 	var _v0 = formField.type_;
 	switch (_v0.$) {
 		case 'ShortText':
-			var maybeMaxLength = _v0.b;
-			return maybeMaxLength;
+			var attrs = _v0.b;
+			return A2(
+				$elm$core$Maybe$andThen,
+				$elm$core$String$toInt,
+				A2(
+					$elm$core$Dict$get,
+					'maxlength',
+					$elm$core$Dict$fromList(attrs)));
 		case 'LongText':
 			var maybeMaxLength = _v0.a;
 			return maybeMaxLength;
@@ -7684,8 +7726,8 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 		var shortTextTypeDict = _v0.shortTextTypeDict;
 		var fieldName = $author$project$Main$fieldNameOf(formField);
 		var chosenForYou = function (choices) {
-			var _v3 = formField.presence;
-			switch (_v3.$) {
+			var _v4 = formField.presence;
+			switch (_v4.$) {
 				case 'Optional':
 					return false;
 				case 'Required':
@@ -7698,12 +7740,12 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 		switch (_v1.$) {
 			case 'ShortText':
 				var inputType = _v1.a;
-				var maybeMaxLength = _v1.b;
+				var attrs = _v1.b;
 				var shortTextAttrs = A2(
 					$elm$core$List$map,
-					function (_v2) {
-						var k = _v2.a;
-						var v = _v2.b;
+					function (_v3) {
+						var k = _v3.a;
+						var v = _v3.b;
 						return A2($elm$html$Html$Attributes$attribute, k, v);
 					},
 					$elm$core$Dict$toList(
@@ -7714,21 +7756,23 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 				var extraAttrs = A2(
 					$elm$core$List$filterMap,
 					$elm$core$Basics$identity,
-					_List_fromArray(
-						[
-							A2(
-							$elm$core$Maybe$map,
-							function (maxLength) {
-								return $elm$html$Html$Attributes$maxlength(maxLength);
-							},
-							maybeMaxLength),
-							A2(
+					A2(
+						$elm$core$List$cons,
+						A2(
 							$elm$core$Maybe$map,
 							function (s) {
 								return $elm$html$Html$Attributes$value(s);
 							},
-							A3($author$project$Main$maybeDecode, fieldName, $elm$json$Json$Decode$string, formValues))
-						]));
+							A3($author$project$Main$maybeDecode, fieldName, $elm$json$Json$Decode$string, formValues)),
+						A2(
+							$elm$core$List$map,
+							function (_v2) {
+								var k = _v2.a;
+								var v = _v2.b;
+								return $elm$core$Maybe$Just(
+									A2($elm$html$Html$Attributes$attribute, k, v));
+							},
+							attrs)));
 				return A2(
 					$elm$html$Html$input,
 					_Utils_ap(
