@@ -7717,6 +7717,13 @@ var $author$project$Main$maybeMaxLengthOf = function (formField) {
 			return $elm$core$Maybe$Nothing;
 	}
 };
+var $author$project$Main$boolAttribute = F2(
+	function (key, bool) {
+		return bool ? _List_fromArray(
+			[
+				A2($elm$html$Html$Attributes$attribute, key, key)
+			]) : _List_Nil;
+	});
 var $author$project$Main$fieldNameOf = function (formField) {
 	return A2($elm$core$Maybe$withDefault, formField.label, formField.name);
 };
@@ -7863,13 +7870,16 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 							[
 								$elm$html$Html$Attributes$class('tff-text-field'),
 								$elm$html$Html$Attributes$name(fieldName),
-								$elm$html$Html$Attributes$required(
-								$author$project$Main$requiredData(formField.presence)),
 								$elm$html$Html$Attributes$placeholder(' ')
 							]),
 						_Utils_ap(
-							shortTextAttrs,
-							_Utils_ap(extraAttrs, customAttrs))),
+							A2(
+								$author$project$Main$boolAttribute,
+								'required',
+								$author$project$Main$requiredData(formField.presence)),
+							_Utils_ap(
+								shortTextAttrs,
+								_Utils_ap(extraAttrs, customAttrs)))),
 					_List_Nil);
 			case 'LongText':
 				var maybeMaxLength = _v1.a;

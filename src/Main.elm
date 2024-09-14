@@ -705,6 +705,18 @@ fieldNameOf formField =
     Maybe.withDefault formField.label formField.name
 
 
+{-| boolProperty like `required` doesn't work well with `transferAttributes`
+approach when using Custom Elements
+-}
+boolAttribute : String -> Bool -> List (Html.Attribute msg)
+boolAttribute key bool =
+    if bool then
+        [ attribute key key ]
+
+    else
+        []
+
+
 viewFormFieldOptionsPreview : { formValues : Json.Encode.Value, customAttrs : List (Html.Attribute Msg), shortTextTypeDict : Dict String CustomElement } -> FormField -> Html Msg
 viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formField =
     let
@@ -740,9 +752,9 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formF
             Html.node customElement.inputTag
                 ([ class "tff-text-field"
                  , name fieldName
-                 , required (requiredData formField.presence)
                  , placeholder " "
                  ]
+                    ++ boolAttribute "required" (requiredData formField.presence)
                     ++ shortTextAttrs
                     ++ extraAttrs
                     ++ customAttrs

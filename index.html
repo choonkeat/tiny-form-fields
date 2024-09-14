@@ -10,6 +10,109 @@
 </head>
 
 <body class="bg-gray-200">
+<!-- Include this script in your HTML -->
+<script>
+class ValidatedInput extends HTMLElement {
+  constructor() {
+    super();
+
+    // Create the internal input element
+    this.input = document.createElement('input');
+
+    // Bind event listeners to perform validation
+    this.input.addEventListener('input', () => {
+      this.validate();
+    });
+
+    // Initial validation
+    // this.validate();
+  }
+
+  connectedCallback() {
+    // Append the input to the custom element (Light DOM) if not already appended
+    if (!this.contains(this.input)) {
+      this.appendChild(this.input);
+    }
+
+    // Transfer attributes from the custom element to the internal input
+    this._transferAttributes();
+
+    // Initialize the MutationObserver
+    this._observer = new MutationObserver((mutationsList) => {
+      for (const mutation of mutationsList) {
+        if (mutation.type === 'attributes') {
+          const attrName = mutation.attributeName;
+          const newValue = this.getAttribute(attrName);
+
+          // Update the internal input's attribute
+          if (newValue !== null) {
+            this.input.setAttribute(attrName, newValue);
+          } else {
+            this.input.removeAttribute(attrName);
+          }
+
+          // Remove the attribute from the custom element
+          if (!this._attributesToKeep.includes(attrName)) {
+            // Temporarily disconnect to prevent infinite loops
+            this._observer.disconnect();
+            this.removeAttribute(attrName);
+            this._observer.observe(this, { attributes: true });
+          }
+        }
+      }
+    });
+
+    // Start observing attribute changes on the custom element
+    this._observer.observe(this, { attributes: true });
+  }
+
+  disconnectedCallback() {
+    // Disconnect the observer when the element is removed from the DOM
+    if (this._observer) {
+      this._observer.disconnect();
+    }
+  }
+
+  // List of attributes to keep on the custom element
+  _attributesToKeep = []; // Empty array to remove all attributes from the custom element
+
+  // Transfer attributes from the custom element to the internal input
+  _transferAttributes() {
+    for (let attr of Array.from(this.attributes)) {
+      const attrName = attr.name;
+      const attrValue = attr.value;
+
+      // Transfer the attribute to the internal input
+      this.input.setAttribute(attrName, attrValue);
+
+      // Remove the attribute from the custom element
+      if (!this._attributesToKeep.includes(attrName)) {
+        this.removeAttribute(attrName);
+      }
+    }
+  }
+
+  // Custom validation logic
+  validate() {
+    const value = this.input.value;
+    let validityMessage = '';
+
+    if (this.input.hasAttribute('required') && value === '') {
+      validityMessage = 'This field is required.';
+    } else if (value.length !== 9) {
+      validityMessage = 'Input must be exactly 9 characters long.';
+    } else {
+      validityMessage = '';
+    }
+
+    // Set custom validity on the internal input
+    this.input.setCustomValidity(validityMessage);
+  }
+}
+
+customElements.define('validated-input', ValidatedInput);
+</script>
+
     <!--
         Bring your own <form> to submit to the server; tiny-form-fields don't deal with it for you.
         In "Editor" or "Preview" mode, form submit will carry a `tiny-form-fields` form field
@@ -57,6 +160,13 @@
                 // {
                 //     "Short text": { "type": "text" } // default name is 'Single-line free text'; change it here
                 // },
+                {
+                    "Custom Element": {
+                        "inputTag": "validated-input",
+                        "attributes": {
+                        }
+                    }
+                },
                 {
                     "Email": {
                         "type": "email"
