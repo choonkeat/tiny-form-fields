@@ -23,7 +23,7 @@ port module Main exposing
 import Array exposing (Array)
 import Browser
 import Dict exposing (Dict)
-import Html exposing (Html, a, button, div, input, label, li, option, select, text, textarea, ul)
+import Html exposing (Html, a, button, div, h3, input, label, li, option, pre, select, text, textarea, ul)
 import Html.Attributes exposing (attribute, checked, class, disabled, for, href, id, maxlength, minlength, name, placeholder, readonly, required, selected, tabindex, title, type_, value)
 import Html.Events exposing (onCheck, onClick, onInput, preventDefaultOn, stopPropagationOn)
 import Json.Decode
@@ -66,6 +66,7 @@ type alias Config =
 
 type alias Model =
     { viewMode : ViewMode
+    , initError : Maybe String
     , formFields : Array FormField
     , formValues : Json.Encode.Value
     , shortTextTypeList : List ( String, Dict String String )
@@ -248,6 +249,7 @@ init flags =
                         ++ config.shortTextTypeList
             in
             ( { viewMode = config.viewMode
+              , initError = Nothing
               , formFields = config.formFields
               , formValues = config.formValues
               , shortTextTypeList = effectiveShortTextTypeList
@@ -265,11 +267,8 @@ init flags =
             )
 
         Err err ->
-            let
-                _ =
-                    Debug.log "error decoding flags" err
-            in
             ( { viewMode = Editor { maybeAnimate = Nothing }
+              , initError = Just (Json.Decode.errorToString err)
               , formFields = Array.empty
               , formValues = Json.Encode.null
               , shortTextTypeList = []
@@ -540,6 +539,19 @@ swapArrayIndex i j arr =
 
 view : Model -> Html Msg
 view model =
+    case model.initError of
+        Just errString ->
+            div [ class "tff-error" ]
+                [ h3 [] [ text "This form could not be initialized: " ]
+                , pre [] [ text errString ]
+                ]
+
+        Nothing ->
+            viewMain model
+
+
+viewMain : Model -> Html Msg
+viewMain model =
     -- no padding; easier for embedders to style
     div [ class ("tff tff-mode-" ++ stringFromViewMode model.viewMode) ]
         (case model.viewMode of

@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+.tff-error h3 {
+    @apply font-bold;
+    @apply text-lg;
+}
+
+.tff-error pre {
+    @apply text-sm;
+    @apply whitespace-pre-wrap;
+}
+
+
 .tff-tabs {
     @apply flex;
     @apply flex-wrap;

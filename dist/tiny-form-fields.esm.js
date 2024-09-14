@@ -6042,7 +6042,6 @@ var $author$project$Main$encodePortOutgoingValue = function (value) {
 					]));
 	}
 };
-var $elm$core$Debug$log = _Debug_log;
 var $elm$core$List$any = F2(
 	function (isOkay, list) {
 		any:
@@ -6095,8 +6094,8 @@ var $author$project$Main$init = function (flags) {
 		var attrsList = A2($elm$core$List$map, $elm$core$Tuple$second, shortTextTypeList);
 		return A2(
 			$elm$core$List$filter,
-			function (_v2) {
-				var dict = _v2.b;
+			function (_v1) {
+				var dict = _v1.b;
 				return !A2($elm$core$List$member, dict, attrsList);
 			},
 			defaultShortTextTypeList);
@@ -6112,6 +6111,7 @@ var $author$project$Main$init = function (flags) {
 				dropdownState: $author$project$Main$DropdownClosed,
 				formFields: config.formFields,
 				formValues: config.formValues,
+				initError: $elm$core$Maybe$Nothing,
 				shortTextTypeDict: $elm$core$Dict$fromList(effectiveShortTextTypeList),
 				shortTextTypeList: effectiveShortTextTypeList,
 				viewMode: config.viewMode
@@ -6128,12 +6128,13 @@ var $author$project$Main$init = function (flags) {
 					])));
 	} else {
 		var err = _v0.a;
-		var _v1 = A2($elm$core$Debug$log, 'error decoding flags', err);
 		return _Utils_Tuple2(
 			{
 				dropdownState: $author$project$Main$DropdownClosed,
 				formFields: $elm$core$Array$empty,
 				formValues: $elm$json$Json$Encode$null,
+				initError: $elm$core$Maybe$Just(
+					$elm$json$Json$Decode$errorToString(err)),
 				shortTextTypeDict: $elm$core$Dict$empty,
 				shortTextTypeList: _List_Nil,
 				viewMode: $author$project$Main$Editor(
@@ -6781,6 +6782,11 @@ var $elm$html$Html$Attributes$stringProperty = F2(
 			$elm$json$Json$Encode$string(string));
 	});
 var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
+var $elm$html$Html$div = _VirtualDom_node('div');
+var $elm$html$Html$h3 = _VirtualDom_node('h3');
+var $elm$html$Html$pre = _VirtualDom_node('pre');
+var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $elm$json$Json$Encode$bool = _Json_wrap;
 var $elm$html$Html$Attributes$boolProperty = F2(
 	function (key, bool) {
@@ -6790,11 +6796,8 @@ var $elm$html$Html$Attributes$boolProperty = F2(
 			$elm$json$Json$Encode$bool(bool));
 	});
 var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty('disabled');
-var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$html$Html$input = _VirtualDom_node('input');
 var $elm$html$Html$Attributes$name = $elm$html$Html$Attributes$stringProperty('name');
-var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
 var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
 var $author$project$Main$AddFormField = function (a) {
@@ -8144,7 +8147,7 @@ var $author$project$Main$viewTabs = F2(
 				},
 				tabs));
 	});
-var $author$project$Main$view = function (model) {
+var $author$project$Main$viewMain = function (model) {
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
@@ -8229,6 +8232,37 @@ var $author$project$Main$view = function (model) {
 					return A2($author$project$Main$viewFormPreview, _List_Nil, model);
 			}
 		}());
+};
+var $author$project$Main$view = function (model) {
+	var _v0 = model.initError;
+	if (_v0.$ === 'Just') {
+		var errString = _v0.a;
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('tff-error')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$h3,
+					_List_Nil,
+					_List_fromArray(
+						[
+							$elm$html$Html$text('This form could not be initialized: ')
+						])),
+					A2(
+					$elm$html$Html$pre,
+					_List_Nil,
+					_List_fromArray(
+						[
+							$elm$html$Html$text(errString)
+						]))
+				]));
+	} else {
+		return $author$project$Main$viewMain(model);
+	}
 };
 var $author$project$Main$main = $elm$browser$Browser$element(
 	{init: $author$project$Main$init, subscriptions: $author$project$Main$subscriptions, update: $author$project$Main$update, view: $author$project$Main$view});
