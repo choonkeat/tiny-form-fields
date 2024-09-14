@@ -40,18 +40,20 @@ suite =
                     { "Email": { "type": "email" } },
                     { "Emails": { "type": "email" , "multiple": "true" } },
                     { "Digits": { "type": "text", "pattern": "^[0-9]+$" } },
+                    { "Nric2": { "inputTag": "nric-custom-ele", "attributes": { "type": "text", "pattern": "^[STGM][0-9]{7}[ABCDEFGHIZJ]$" } } },
                     { "Nric": { "type": "text", "pattern": "^[STGM][0-9]{7}[ABCDEFGHIZJ]$" } }
                 ]
                 """
                     |> Json.Decode.decodeString Main.decodeShortTextTypeList
                     |> Expect.equal
                         (Ok
-                            [ ( "Text", Dict.fromList [ ( "type", "text" ) ] )
-                            , ( "Text", Dict.fromList [ ( "type", "text" ), ( "maxlength", "10" ), ( "multiple", "true" ) ] )
-                            , ( "Email", Dict.fromList [ ( "type", "email" ) ] )
-                            , ( "Emails", Dict.fromList [ ( "type", "email" ), ( "multiple", "true" ) ] )
-                            , ( "Digits", Dict.fromList [ ( "pattern", "^[0-9]+$" ), ( "type", "text" ) ] )
-                            , ( "Nric", Dict.fromList [ ( "pattern", "^[STGM][0-9]{7}[ABCDEFGHIZJ]$" ), ( "type", "text" ) ] )
+                            [ { inputType = "Text", inputTag = "input", attributes = Dict.fromList [ ( "type", "text" ) ] }
+                            , { inputType = "Text", inputTag = "input", attributes = Dict.fromList [ ( "type", "text" ), ( "maxlength", "10" ), ( "multiple", "true" ) ] }
+                            , { inputType = "Email", inputTag = "input", attributes = Dict.fromList [ ( "type", "email" ) ] }
+                            , { inputType = "Emails", inputTag = "input", attributes = Dict.fromList [ ( "type", "email" ), ( "multiple", "true" ) ] }
+                            , { inputType = "Digits", inputTag = "input", attributes = Dict.fromList [ ( "pattern", "^[0-9]+$" ), ( "type", "text" ) ] }
+                            , { inputType = "Nric2", inputTag = "nric-custom-ele", attributes = Dict.fromList [ ( "pattern", "^[STGM][0-9]{7}[ABCDEFGHIZJ]$" ), ( "type", "text" ) ] }
+                            , { inputType = "Nric", inputTag = "input", attributes = Dict.fromList [ ( "pattern", "^[STGM][0-9]{7}[ABCDEFGHIZJ]$" ), ( "type", "text" ) ] }
                             ]
                         )
         , Test.fuzz choiceStringFuzzer "choiceStringToChoice,choiceStringFromString is reversible" <|
@@ -97,9 +99,9 @@ inputFieldFuzzer =
 
 moreTestInputFields : List Main.InputField
 moreTestInputFields =
-    [ Main.ShortText "Email" [ ( "type", "email" ) ]
-    , Main.ShortText "Emails" [ ( "type", "email" ), ( "multiple", "true" ) ]
-    , Main.ShortText "Emails with maxlength" [ ( "type", "email" ), ( "multiple", "true" ), ( "maxlength", "20" ), ( "data-extra-thing", "[1,2,3]" ) ]
+    [ Main.ShortText { inputType = "Email", inputTag = "input", attributes = Dict.fromList [ ( "type", "email" ) ] }
+    , Main.ShortText { inputType = "Emails", inputTag = "input", attributes = Dict.fromList [ ( "type", "email" ), ( "multiple", "true" ) ] }
+    , Main.ShortText { inputType = "Emails with maxlength", inputTag = "input", attributes = Dict.fromList [ ( "type", "email" ), ( "multiple", "true" ), ( "maxlength", "20" ), ( "data-extra-thing", "[1,2,3]" ) ] }
     ]
 
 

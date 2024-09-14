@@ -5272,10 +5272,9 @@ var $author$project$Main$Dropdown = function (a) {
 var $author$project$Main$LongText = function (a) {
 	return {$: 'LongText', a: a};
 };
-var $author$project$Main$ShortText = F2(
-	function (a, b) {
-		return {$: 'ShortText', a: a, b: b};
-	});
+var $author$project$Main$ShortText = function (a) {
+	return {$: 'ShortText', a: a};
+};
 var $elm$json$Json$Decode$andThen = _Json_andThen;
 var $author$project$Main$choiceDelimiter = ' | ';
 var $author$project$Main$choiceFromString = function (s) {
@@ -5304,19 +5303,135 @@ var $author$project$Main$choiceFromString = function (s) {
 	}
 };
 var $author$project$Main$decodeChoice = A2($elm$json$Json$Decode$map, $author$project$Main$choiceFromString, $elm$json$Json$Decode$string);
-var $elm$json$Json$Decode$fail = _Json_fail;
-var $elm$json$Json$Decode$int = _Json_decodeInt;
-var $elm$json$Json$Decode$keyValuePairs = _Json_decodeKeyValuePairs;
-var $elm$json$Json$Decode$list = _Json_decodeList;
-var $elm$json$Json$Decode$null = _Json_decodeNull;
-var $elm$json$Json$Decode$nullable = function (decoder) {
-	return $elm$json$Json$Decode$oneOf(
-		_List_fromArray(
-			[
-				$elm$json$Json$Decode$null($elm$core$Maybe$Nothing),
-				A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, decoder)
-			]));
+var $author$project$Main$CustomElement = F3(
+	function (inputType, inputTag, attributes) {
+		return {attributes: attributes, inputTag: inputTag, inputType: inputType};
+	});
+var $author$project$Main$defaultInputTag = 'input';
+var $elm$core$Dict$RBEmpty_elm_builtin = {$: 'RBEmpty_elm_builtin'};
+var $elm$core$Dict$empty = $elm$core$Dict$RBEmpty_elm_builtin;
+var $elm$core$Dict$Black = {$: 'Black'};
+var $elm$core$Dict$RBNode_elm_builtin = F5(
+	function (a, b, c, d, e) {
+		return {$: 'RBNode_elm_builtin', a: a, b: b, c: c, d: d, e: e};
+	});
+var $elm$core$Dict$Red = {$: 'Red'};
+var $elm$core$Dict$balance = F5(
+	function (color, key, value, left, right) {
+		if ((right.$ === 'RBNode_elm_builtin') && (right.a.$ === 'Red')) {
+			var _v1 = right.a;
+			var rK = right.b;
+			var rV = right.c;
+			var rLeft = right.d;
+			var rRight = right.e;
+			if ((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Red')) {
+				var _v3 = left.a;
+				var lK = left.b;
+				var lV = left.c;
+				var lLeft = left.d;
+				var lRight = left.e;
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					$elm$core$Dict$Red,
+					key,
+					value,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, lK, lV, lLeft, lRight),
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, rK, rV, rLeft, rRight));
+			} else {
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					color,
+					rK,
+					rV,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, key, value, left, rLeft),
+					rRight);
+			}
+		} else {
+			if ((((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Red')) && (left.d.$ === 'RBNode_elm_builtin')) && (left.d.a.$ === 'Red')) {
+				var _v5 = left.a;
+				var lK = left.b;
+				var lV = left.c;
+				var _v6 = left.d;
+				var _v7 = _v6.a;
+				var llK = _v6.b;
+				var llV = _v6.c;
+				var llLeft = _v6.d;
+				var llRight = _v6.e;
+				var lRight = left.e;
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					$elm$core$Dict$Red,
+					lK,
+					lV,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, llK, llV, llLeft, llRight),
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, key, value, lRight, right));
+			} else {
+				return A5($elm$core$Dict$RBNode_elm_builtin, color, key, value, left, right);
+			}
+		}
+	});
+var $elm$core$Basics$compare = _Utils_compare;
+var $elm$core$Dict$insertHelp = F3(
+	function (key, value, dict) {
+		if (dict.$ === 'RBEmpty_elm_builtin') {
+			return A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, key, value, $elm$core$Dict$RBEmpty_elm_builtin, $elm$core$Dict$RBEmpty_elm_builtin);
+		} else {
+			var nColor = dict.a;
+			var nKey = dict.b;
+			var nValue = dict.c;
+			var nLeft = dict.d;
+			var nRight = dict.e;
+			var _v1 = A2($elm$core$Basics$compare, key, nKey);
+			switch (_v1.$) {
+				case 'LT':
+					return A5(
+						$elm$core$Dict$balance,
+						nColor,
+						nKey,
+						nValue,
+						A3($elm$core$Dict$insertHelp, key, value, nLeft),
+						nRight);
+				case 'EQ':
+					return A5($elm$core$Dict$RBNode_elm_builtin, nColor, nKey, value, nLeft, nRight);
+				default:
+					return A5(
+						$elm$core$Dict$balance,
+						nColor,
+						nKey,
+						nValue,
+						nLeft,
+						A3($elm$core$Dict$insertHelp, key, value, nRight));
+			}
+		}
+	});
+var $elm$core$Dict$insert = F3(
+	function (key, value, dict) {
+		var _v0 = A3($elm$core$Dict$insertHelp, key, value, dict);
+		if ((_v0.$ === 'RBNode_elm_builtin') && (_v0.a.$ === 'Red')) {
+			var _v1 = _v0.a;
+			var k = _v0.b;
+			var v = _v0.c;
+			var l = _v0.d;
+			var r = _v0.e;
+			return A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, k, v, l, r);
+		} else {
+			var x = _v0;
+			return x;
+		}
+	});
+var $elm$core$Dict$fromList = function (assocs) {
+	return A3(
+		$elm$core$List$foldl,
+		F2(
+			function (_v0, dict) {
+				var key = _v0.a;
+				var value = _v0.b;
+				return A3($elm$core$Dict$insert, key, value, dict);
+			}),
+		$elm$core$Dict$empty,
+		assocs);
 };
+var $elm$json$Json$Decode$keyValuePairs = _Json_decodeKeyValuePairs;
 var $elm$json$Json$Decode$decodeValue = _Json_run;
 var $elm$json$Json$Decode$value = _Json_decodeValue;
 var $elm_community$json_extra$Json$Decode$Extra$optionalField = F2(
@@ -5347,24 +5462,46 @@ var $elm$core$Maybe$withDefault = F2(
 			return _default;
 		}
 	});
+var $author$project$Main$decodeCustomElement = A2(
+	$elm_community$json_extra$Json$Decode$Extra$andMap,
+	A2(
+		$elm$json$Json$Decode$map,
+		$elm$core$Dict$fromList,
+		A2(
+			$elm$json$Json$Decode$map,
+			$elm$core$Maybe$withDefault(_List_Nil),
+			A2(
+				$elm_community$json_extra$Json$Decode$Extra$optionalField,
+				'attributes',
+				$elm$json$Json$Decode$keyValuePairs($elm$json$Json$Decode$string)))),
+	A2(
+		$elm_community$json_extra$Json$Decode$Extra$andMap,
+		A2(
+			$elm$json$Json$Decode$map,
+			$elm$core$Maybe$withDefault($author$project$Main$defaultInputTag),
+			A2($elm_community$json_extra$Json$Decode$Extra$optionalField, 'inputTag', $elm$json$Json$Decode$string)),
+		A2(
+			$elm_community$json_extra$Json$Decode$Extra$andMap,
+			A2($elm$json$Json$Decode$field, 'inputType', $elm$json$Json$Decode$string),
+			$elm$json$Json$Decode$succeed($author$project$Main$CustomElement))));
+var $elm$json$Json$Decode$fail = _Json_fail;
+var $elm$json$Json$Decode$int = _Json_decodeInt;
+var $elm$json$Json$Decode$list = _Json_decodeList;
+var $elm$json$Json$Decode$null = _Json_decodeNull;
+var $elm$json$Json$Decode$nullable = function (decoder) {
+	return $elm$json$Json$Decode$oneOf(
+		_List_fromArray(
+			[
+				$elm$json$Json$Decode$null($elm$core$Maybe$Nothing),
+				A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, decoder)
+			]));
+};
 var $author$project$Main$decodeInputField = A2(
 	$elm$json$Json$Decode$andThen,
 	function (type_) {
 		switch (type_) {
 			case 'ShortText':
-				return A2(
-					$elm_community$json_extra$Json$Decode$Extra$andMap,
-					A2(
-						$elm$json$Json$Decode$map,
-						$elm$core$Maybe$withDefault(_List_Nil),
-						A2(
-							$elm_community$json_extra$Json$Decode$Extra$optionalField,
-							'attributes',
-							$elm$json$Json$Decode$keyValuePairs($elm$json$Json$Decode$string))),
-					A2(
-						$elm_community$json_extra$Json$Decode$Extra$andMap,
-						A2($elm$json$Json$Decode$field, 'inputType', $elm$json$Json$Decode$string),
-						$elm$json$Json$Decode$succeed($author$project$Main$ShortText)));
+				return A2($elm$json$Json$Decode$map, $author$project$Main$ShortText, $author$project$Main$decodeCustomElement);
 			case 'LongText':
 				return A2(
 					$elm_community$json_extra$Json$Decode$Extra$andMap,
@@ -5511,144 +5648,63 @@ var $elm$core$List$append = F2(
 var $elm$core$List$concat = function (lists) {
 	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
 };
-var $elm$core$Dict$RBEmpty_elm_builtin = {$: 'RBEmpty_elm_builtin'};
-var $elm$core$Dict$empty = $elm$core$Dict$RBEmpty_elm_builtin;
-var $elm$core$Dict$Black = {$: 'Black'};
-var $elm$core$Dict$RBNode_elm_builtin = F5(
-	function (a, b, c, d, e) {
-		return {$: 'RBNode_elm_builtin', a: a, b: b, c: c, d: d, e: e};
-	});
-var $elm$core$Dict$Red = {$: 'Red'};
-var $elm$core$Dict$balance = F5(
-	function (color, key, value, left, right) {
-		if ((right.$ === 'RBNode_elm_builtin') && (right.a.$ === 'Red')) {
-			var _v1 = right.a;
-			var rK = right.b;
-			var rV = right.c;
-			var rLeft = right.d;
-			var rRight = right.e;
-			if ((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Red')) {
-				var _v3 = left.a;
-				var lK = left.b;
-				var lV = left.c;
-				var lLeft = left.d;
-				var lRight = left.e;
-				return A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					$elm$core$Dict$Red,
-					key,
-					value,
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, lK, lV, lLeft, lRight),
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, rK, rV, rLeft, rRight));
-			} else {
-				return A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					color,
-					rK,
-					rV,
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, key, value, left, rLeft),
-					rRight);
-			}
-		} else {
-			if ((((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Red')) && (left.d.$ === 'RBNode_elm_builtin')) && (left.d.a.$ === 'Red')) {
-				var _v5 = left.a;
-				var lK = left.b;
-				var lV = left.c;
-				var _v6 = left.d;
-				var _v7 = _v6.a;
-				var llK = _v6.b;
-				var llV = _v6.c;
-				var llLeft = _v6.d;
-				var llRight = _v6.e;
-				var lRight = left.e;
-				return A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					$elm$core$Dict$Red,
-					lK,
-					lV,
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, llK, llV, llLeft, llRight),
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, key, value, lRight, right));
-			} else {
-				return A5($elm$core$Dict$RBNode_elm_builtin, color, key, value, left, right);
-			}
-		}
-	});
-var $elm$core$Basics$compare = _Utils_compare;
-var $elm$core$Dict$insertHelp = F3(
-	function (key, value, dict) {
-		if (dict.$ === 'RBEmpty_elm_builtin') {
-			return A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, key, value, $elm$core$Dict$RBEmpty_elm_builtin, $elm$core$Dict$RBEmpty_elm_builtin);
-		} else {
-			var nColor = dict.a;
-			var nKey = dict.b;
-			var nValue = dict.c;
-			var nLeft = dict.d;
-			var nRight = dict.e;
-			var _v1 = A2($elm$core$Basics$compare, key, nKey);
-			switch (_v1.$) {
-				case 'LT':
-					return A5(
-						$elm$core$Dict$balance,
-						nColor,
-						nKey,
-						nValue,
-						A3($elm$core$Dict$insertHelp, key, value, nLeft),
-						nRight);
-				case 'EQ':
-					return A5($elm$core$Dict$RBNode_elm_builtin, nColor, nKey, value, nLeft, nRight);
-				default:
-					return A5(
-						$elm$core$Dict$balance,
-						nColor,
-						nKey,
-						nValue,
-						nLeft,
-						A3($elm$core$Dict$insertHelp, key, value, nRight));
-			}
-		}
-	});
-var $elm$core$Dict$insert = F3(
-	function (key, value, dict) {
-		var _v0 = A3($elm$core$Dict$insertHelp, key, value, dict);
-		if ((_v0.$ === 'RBNode_elm_builtin') && (_v0.a.$ === 'Red')) {
-			var _v1 = _v0.a;
-			var k = _v0.b;
-			var v = _v0.c;
-			var l = _v0.d;
-			var r = _v0.e;
-			return A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, k, v, l, r);
-		} else {
-			var x = _v0;
-			return x;
-		}
-	});
-var $elm$core$Dict$fromList = function (assocs) {
-	return A3(
-		$elm$core$List$foldl,
-		F2(
-			function (_v0, dict) {
-				var key = _v0.a;
-				var value = _v0.b;
-				return A3($elm$core$Dict$insert, key, value, dict);
-			}),
-		$elm$core$Dict$empty,
-		assocs);
-};
 var $elm$json$Json$Decode$dict = function (decoder) {
 	return A2(
 		$elm$json$Json$Decode$map,
 		$elm$core$Dict$fromList,
 		$elm$json$Json$Decode$keyValuePairs(decoder));
 };
-var $author$project$Main$decodeShortTextTypeList = A2(
-	$elm$json$Json$Decode$map,
-	A2(
-		$elm$core$Basics$composeR,
-		$elm$core$List$map($elm$core$Dict$toList),
-		$elm$core$List$concat),
-	$elm$json$Json$Decode$list(
-		$elm$json$Json$Decode$dict(
-			$elm$json$Json$Decode$dict($elm$json$Json$Decode$string))));
+var $elm$core$Tuple$pair = F2(
+	function (a, b) {
+		return _Utils_Tuple2(a, b);
+	});
+var $author$project$Main$decodeShortTextTypeList = function () {
+	var decodeInputTagAttributes = A2(
+		$elm_community$json_extra$Json$Decode$Extra$andMap,
+		A2(
+			$elm$json$Json$Decode$map,
+			$elm$core$Dict$fromList,
+			A2(
+				$elm$json$Json$Decode$field,
+				'attributes',
+				$elm$json$Json$Decode$keyValuePairs($elm$json$Json$Decode$string))),
+		A2(
+			$elm_community$json_extra$Json$Decode$Extra$andMap,
+			A2(
+				$elm$json$Json$Decode$map,
+				$elm$core$Maybe$withDefault($author$project$Main$defaultInputTag),
+				A2($elm_community$json_extra$Json$Decode$Extra$optionalField, 'inputTag', $elm$json$Json$Decode$string)),
+			$elm$json$Json$Decode$succeed($elm$core$Tuple$pair)));
+	var decodeAttributes = A2(
+		$elm$json$Json$Decode$map,
+		function (attributes) {
+			return _Utils_Tuple2($author$project$Main$defaultInputTag, attributes);
+		},
+		$elm$json$Json$Decode$dict($elm$json$Json$Decode$string));
+	var customElementsFrom = function (dict) {
+		return A2(
+			$elm$core$List$map,
+			function (_v0) {
+				var inputType = _v0.a;
+				var _v1 = _v0.b;
+				var inputTag = _v1.a;
+				var attributes = _v1.b;
+				return {attributes: attributes, inputTag: inputTag, inputType: inputType};
+			},
+			$elm$core$Dict$toList(dict));
+	};
+	return A2(
+		$elm$json$Json$Decode$map,
+		A2(
+			$elm$core$Basics$composeR,
+			$elm$core$List$map(customElementsFrom),
+			$elm$core$List$concat),
+		$elm$json$Json$Decode$list(
+			$elm$json$Json$Decode$dict(
+				$elm$json$Json$Decode$oneOf(
+					_List_fromArray(
+						[decodeInputTagAttributes, decodeAttributes])))));
+}();
 var $elm_community$json_extra$Json$Decode$Extra$fromMaybe = F2(
 	function (error, val) {
 		if (val.$ === 'Just') {
@@ -5705,13 +5761,15 @@ var $author$project$Main$decodeConfig = A2(
 		$elm$core$Maybe$withDefault(
 			_List_fromArray(
 				[
-					_Utils_Tuple2(
-					'Text',
-					$elm$core$Dict$fromList(
+					{
+					attributes: $elm$core$Dict$fromList(
 						_List_fromArray(
 							[
 								_Utils_Tuple2('type', 'text')
-							])))
+							])),
+					inputTag: $author$project$Main$defaultInputTag,
+					inputType: 'Text'
+				}
 				])),
 		A2($elm_community$json_extra$Json$Decode$Extra$optionalNullableField, 'shortTextTypeList', $author$project$Main$decodeShortTextTypeList)),
 	A2(
@@ -5745,6 +5803,58 @@ var $author$project$Main$encodeChoice = function (choice) {
 	return $elm$json$Json$Encode$string(
 		$author$project$Main$choiceToString(choice));
 };
+var $elm$core$Tuple$mapSecond = F2(
+	function (func, _v0) {
+		var x = _v0.a;
+		var y = _v0.b;
+		return _Utils_Tuple2(
+			x,
+			func(y));
+	});
+var $elm$json$Json$Encode$object = function (pairs) {
+	return _Json_wrap(
+		A3(
+			$elm$core$List$foldl,
+			F2(
+				function (_v0, obj) {
+					var k = _v0.a;
+					var v = _v0.b;
+					return A3(_Json_addField, k, v, obj);
+				}),
+			_Json_emptyObject(_Utils_Tuple0),
+			pairs));
+};
+var $author$project$Main$encodePairsFromCustomElements = function (customElement) {
+	var inputTagAttrs = _Utils_eq(customElement.inputTag, $author$project$Main$defaultInputTag) ? _List_Nil : _List_fromArray(
+		[
+			_Utils_Tuple2(
+			'inputTag',
+			$elm$json$Json$Encode$string(customElement.inputTag))
+		]);
+	var encodedAttrs = function () {
+		var _v0 = A2(
+			$elm$core$List$map,
+			$elm$core$Tuple$mapSecond($elm$json$Json$Encode$string),
+			$elm$core$Dict$toList(customElement.attributes));
+		if (!_v0.b) {
+			return _List_Nil;
+		} else {
+			var pairs = _v0;
+			return _List_fromArray(
+				[
+					_Utils_Tuple2(
+					'attributes',
+					$elm$json$Json$Encode$object(pairs))
+				]);
+		}
+	}();
+	return A2(
+		$elm$core$List$cons,
+		_Utils_Tuple2(
+			'inputType',
+			$elm$json$Json$Encode$string(customElement.inputType)),
+		_Utils_ap(inputTagAttrs, encodedAttrs));
+};
 var $elm$core$List$filter = F2(
 	function (isGood, list) {
 		return A3(
@@ -5776,64 +5886,19 @@ var $elm$core$Maybe$map = F2(
 			return $elm$core$Maybe$Nothing;
 		}
 	});
-var $elm$core$Tuple$mapSecond = F2(
-	function (func, _v0) {
-		var x = _v0.a;
-		var y = _v0.b;
-		return _Utils_Tuple2(
-			x,
-			func(y));
-	});
 var $elm$core$Basics$neq = _Utils_notEqual;
-var $elm$json$Json$Encode$object = function (pairs) {
-	return _Json_wrap(
-		A3(
-			$elm$core$List$foldl,
-			F2(
-				function (_v0, obj) {
-					var k = _v0.a;
-					var v = _v0.b;
-					return A3(_Json_addField, k, v, obj);
-				}),
-			_Json_emptyObject(_Utils_Tuple0),
-			pairs));
-};
 var $elm$core$String$trim = _String_trim;
 var $author$project$Main$encodeInputField = function (inputField) {
 	switch (inputField.$) {
 		case 'ShortText':
-			var inputType = inputField.a;
-			var attrs = inputField.b;
-			var encodedAttrs = function () {
-				var _v1 = A2(
-					$elm$core$List$map,
-					$elm$core$Tuple$mapSecond($elm$json$Json$Encode$string),
-					attrs);
-				if (!_v1.b) {
-					return _List_Nil;
-				} else {
-					var pairs = _v1;
-					return _List_fromArray(
-						[
-							_Utils_Tuple2(
-							'attributes',
-							$elm$json$Json$Encode$object(pairs))
-						]);
-				}
-			}();
+			var customElement = inputField.a;
 			return $elm$json$Json$Encode$object(
 				A2(
-					$elm$core$List$append,
-					_List_fromArray(
-						[
-							_Utils_Tuple2(
-							'type',
-							$elm$json$Json$Encode$string('ShortText')),
-							_Utils_Tuple2(
-							'inputType',
-							$elm$json$Json$Encode$string(inputType))
-						]),
-					encodedAttrs));
+					$elm$core$List$cons,
+					_Utils_Tuple2(
+						'type',
+						$elm$json$Json$Encode$string('ShortText')),
+					$author$project$Main$encodePairsFromCustomElements(customElement)));
 		case 'LongText':
 			var maybeMaxLength = inputField.a;
 			return $elm$json$Json$Encode$object(
@@ -5864,8 +5929,8 @@ var $author$project$Main$encodeInputField = function (inputField) {
 							$author$project$Main$encodeChoice,
 							A2(
 								$elm$core$List$filter,
-								function (_v2) {
-									var value = _v2.value;
+								function (_v1) {
+									var value = _v1.value;
 									return $elm$core$String$trim(value) !== '';
 								},
 								choices)))
@@ -5885,8 +5950,8 @@ var $author$project$Main$encodeInputField = function (inputField) {
 							$author$project$Main$encodeChoice,
 							A2(
 								$elm$core$List$filter,
-								function (_v3) {
-									var value = _v3.value;
+								function (_v2) {
+									var value = _v2.value;
 									return $elm$core$String$trim(value) !== '';
 								},
 								choices)))
@@ -5906,8 +5971,8 @@ var $author$project$Main$encodeInputField = function (inputField) {
 							$author$project$Main$encodeChoice,
 							A2(
 								$elm$core$List$filter,
-								function (_v4) {
-									var value = _v4.value;
+								function (_v3) {
+									var value = _v3.value;
 									return $elm$core$String$trim(value) !== '';
 								},
 								choices)))
@@ -6075,28 +6140,24 @@ var $elm$core$List$member = F2(
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $elm$core$Basics$not = _Basics_not;
 var $author$project$Main$outgoing = _Platform_outgoingPort('outgoing', $elm$core$Basics$identity);
-var $elm$core$Tuple$second = function (_v0) {
-	var y = _v0.b;
-	return y;
-};
 var $author$project$Main$init = function (flags) {
 	var defaultShortTextTypeList = _List_fromArray(
 		[
-			_Utils_Tuple2(
-			'Single-line free text',
-			$elm$core$Dict$fromList(
+			{
+			attributes: $elm$core$Dict$fromList(
 				_List_fromArray(
 					[
 						_Utils_Tuple2('type', 'text')
-					])))
+					])),
+			inputTag: $author$project$Main$defaultInputTag,
+			inputType: 'Single-line free text'
+		}
 		]);
 	var defaultShortTextTypeListWithout = function (shortTextTypeList) {
-		var attrsList = A2($elm$core$List$map, $elm$core$Tuple$second, shortTextTypeList);
 		return A2(
 			$elm$core$List$filter,
-			function (_v1) {
-				var dict = _v1.b;
-				return !A2($elm$core$List$member, dict, attrsList);
+			function (a) {
+				return !A2($elm$core$List$member, a, shortTextTypeList);
 			},
 			defaultShortTextTypeList);
 	};
@@ -6112,7 +6173,13 @@ var $author$project$Main$init = function (flags) {
 				formFields: config.formFields,
 				formValues: config.formValues,
 				initError: $elm$core$Maybe$Nothing,
-				shortTextTypeDict: $elm$core$Dict$fromList(effectiveShortTextTypeList),
+				shortTextTypeDict: $elm$core$Dict$fromList(
+					A2(
+						$elm$core$List$map,
+						function (customElement) {
+							return _Utils_Tuple2(customElement.inputType, customElement);
+						},
+						effectiveShortTextTypeList)),
 				shortTextTypeList: effectiveShortTextTypeList,
 				viewMode: config.viewMode
 			},
@@ -6242,10 +6309,44 @@ var $elm$core$Array$length = function (_v0) {
 	var len = _v0.a;
 	return len;
 };
+var $elm$core$Dict$get = F2(
+	function (targetKey, dict) {
+		get:
+		while (true) {
+			if (dict.$ === 'RBEmpty_elm_builtin') {
+				return $elm$core$Maybe$Nothing;
+			} else {
+				var key = dict.b;
+				var value = dict.c;
+				var left = dict.d;
+				var right = dict.e;
+				var _v1 = A2($elm$core$Basics$compare, targetKey, key);
+				switch (_v1.$) {
+					case 'LT':
+						var $temp$targetKey = targetKey,
+							$temp$dict = left;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+					case 'EQ':
+						return $elm$core$Maybe$Just(value);
+					default:
+						var $temp$targetKey = targetKey,
+							$temp$dict = right;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+				}
+			}
+		}
+	});
 var $author$project$Main$mustBeOptional = function (inputField) {
 	switch (inputField.$) {
 		case 'ShortText':
-			return false;
+			var attributes = inputField.a.attributes;
+			return _Utils_eq(
+				A2($elm$core$Dict$get, 'multiple', attributes),
+				$elm$core$Maybe$Just('true'));
 		case 'LongText':
 			return false;
 		case 'Dropdown':
@@ -6339,6 +6440,10 @@ var $elm$core$Array$push = F2(
 			A2($elm$core$Elm$JsArray$push, a, tail),
 			array);
 	});
+var $elm$core$Tuple$second = function (_v0) {
+	var y = _v0.b;
+	return y;
+};
 var $elm$core$Process$sleep = _Process_sleep;
 var $elm$core$Array$getHelp = F3(
 	function (shift, index, tree) {
@@ -6512,20 +6617,16 @@ var $author$project$Main$updateFormField = F3(
 				var _v2 = formField.type_;
 				switch (_v2.$) {
 					case 'ShortText':
-						var inputType = _v2.a;
-						var attrs = _v2.b;
+						var customElement = _v2.a;
+						var newCustomElement = _Utils_update(
+							customElement,
+							{
+								attributes: A3($elm$core$Dict$insert, 'maxlength', string, customElement.attributes)
+							});
 						return _Utils_update(
 							formField,
 							{
-								type_: A2(
-									$author$project$Main$ShortText,
-									inputType,
-									$elm$core$Dict$toList(
-										A3(
-											$elm$core$Dict$insert,
-											'maxlength',
-											string,
-											$elm$core$Dict$fromList(attrs))))
+								type_: $author$project$Main$ShortText(newCustomElement)
 							});
 					case 'LongText':
 						return _Utils_update(
@@ -6981,7 +7082,7 @@ var $author$project$Main$dropDownButton = F2(
 var $author$project$Main$stringFromInputField = function (inputField) {
 	switch (inputField.$) {
 		case 'ShortText':
-			var inputType = inputField.a;
+			var inputType = inputField.a.inputType;
 			return inputType;
 		case 'LongText':
 			return 'Multi-line description';
@@ -7087,37 +7188,6 @@ var $elm$html$Html$Attributes$tabindex = function (n) {
 var $elm$html$Html$Attributes$title = $elm$html$Html$Attributes$stringProperty('title');
 var $author$project$Main$OnChoicesInput = {$: 'OnChoicesInput'};
 var $author$project$Main$OnMaxLengthInput = {$: 'OnMaxLengthInput'};
-var $elm$core$Dict$get = F2(
-	function (targetKey, dict) {
-		get:
-		while (true) {
-			if (dict.$ === 'RBEmpty_elm_builtin') {
-				return $elm$core$Maybe$Nothing;
-			} else {
-				var key = dict.b;
-				var value = dict.c;
-				var left = dict.d;
-				var right = dict.e;
-				var _v1 = A2($elm$core$Basics$compare, targetKey, key);
-				switch (_v1.$) {
-					case 'LT':
-						var $temp$targetKey = targetKey,
-							$temp$dict = left;
-						targetKey = $temp$targetKey;
-						dict = $temp$dict;
-						continue get;
-					case 'EQ':
-						return $elm$core$Maybe$Just(value);
-					default:
-						var $temp$targetKey = targetKey,
-							$temp$dict = right;
-						targetKey = $temp$targetKey;
-						dict = $temp$dict;
-						continue get;
-				}
-			}
-		}
-	});
 var $elm$core$List$head = function (list) {
 	if (list.b) {
 		var x = list.a;
@@ -7187,26 +7257,26 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 		var _v0 = formField.type_;
 		switch (_v0.$) {
 			case 'ShortText':
-				var inputType = _v0.a;
-				var attrs = _v0.b;
+				var customElement = _v0.a;
 				var maybeShortTextTypeMaxLength = A2(
 					$elm$core$Maybe$andThen,
 					$elm$core$String$toInt,
 					A2(
 						$elm$core$Maybe$andThen,
-						$elm$core$Dict$get('minlength'),
+						$elm$core$Dict$get('maxlength'),
 						A2(
 							$elm$core$Maybe$map,
-							$elm$core$Tuple$second,
+							function ($) {
+								return $.attributes;
+							},
 							$elm$core$List$head(
 								A2(
 									$elm$core$List$filter,
 									function (_v2) {
-										var k = _v2.a;
-										return _Utils_eq(k, inputType);
+										var inputType = _v2.inputType;
+										return _Utils_eq(inputType, customElement.inputType);
 									},
 									shortTextTypeList)))));
-				var attrsDict = $elm$core$Dict$fromList(attrs);
 				return _List_fromArray(
 					[
 						function () {
@@ -7241,7 +7311,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 												A2(
 													$elm$core$Maybe$withDefault,
 													'',
-													A2($elm$core$Dict$get, 'maxlength', attrsDict))),
+													A2($elm$core$Dict$get, 'maxlength', customElement.attributes))),
 												$elm$html$Html$Events$onInput(
 												A2($author$project$Main$OnFormField, $author$project$Main$OnMaxLengthInput, index))
 											]),
@@ -7577,16 +7647,11 @@ var $author$project$Main$viewFormBuilder = F2(
 			$author$project$Main$allInputField);
 		var extraOptions = A2(
 			$elm$core$List$map,
-			function (_v1) {
-				var k = _v1.a;
-				var v = _v1.b;
+			function (customElement) {
 				return _Utils_Tuple2(
 					$author$project$Main$AddFormField(
-						A2(
-							$author$project$Main$ShortText,
-							k,
-							$elm$core$Dict$toList(v))),
-					k);
+						$author$project$Main$ShortText(customElement)),
+					customElement.inputType);
 			},
 			shortTextTypeList);
 		return A2(
@@ -7640,14 +7705,11 @@ var $author$project$Main$maybeMaxLengthOf = function (formField) {
 	var _v0 = formField.type_;
 	switch (_v0.$) {
 		case 'ShortText':
-			var attrs = _v0.b;
+			var attributes = _v0.a.attributes;
 			return A2(
 				$elm$core$Maybe$andThen,
 				$elm$core$String$toInt,
-				A2(
-					$elm$core$Dict$get,
-					'maxlength',
-					$elm$core$Dict$fromList(attrs)));
+				A2($elm$core$Dict$get, 'maxlength', attributes));
 		case 'LongText':
 			var maybeMaxLength = _v0.a;
 			return maybeMaxLength;
@@ -7701,6 +7763,11 @@ var $author$project$Main$maybeDecode = F3(
 					A2($elm_community$json_extra$Json$Decode$Extra$optionalField, key, decoder),
 					jsonValue)));
 	});
+var $elm$virtual_dom$VirtualDom$node = function (tag) {
+	return _VirtualDom_node(
+		_VirtualDom_noScript(tag));
+};
+var $elm$html$Html$node = $elm$virtual_dom$VirtualDom$node;
 var $elm$html$Html$option = _VirtualDom_node('option');
 var $elm$html$Html$select = _VirtualDom_node('select');
 var $elm$svg$Svg$Attributes$clipRule = _VirtualDom_attribute('clip-rule');
@@ -7750,8 +7817,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 		var _v1 = formField.type_;
 		switch (_v1.$) {
 			case 'ShortText':
-				var inputType = _v1.a;
-				var attrs = _v1.b;
+				var customElement = _v1.a;
 				var shortTextAttrs = A2(
 					$elm$core$List$map,
 					function (_v3) {
@@ -7763,7 +7829,12 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 						A2(
 							$elm$core$Maybe$withDefault,
 							$elm$core$Dict$empty,
-							A2($elm$core$Dict$get, inputType, shortTextTypeDict))));
+							A2(
+								$elm$core$Maybe$map,
+								function ($) {
+									return $.attributes;
+								},
+								A2($elm$core$Dict$get, customElement.inputType, shortTextTypeDict)))));
 				var extraAttrs = A2(
 					$elm$core$List$filterMap,
 					$elm$core$Basics$identity,
@@ -7783,9 +7854,10 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 								return $elm$core$Maybe$Just(
 									A2($elm$html$Html$Attributes$attribute, k, v));
 							},
-							attrs)));
-				return A2(
-					$elm$html$Html$input,
+							$elm$core$Dict$toList(customElement.attributes))));
+				return A3(
+					$elm$html$Html$node,
+					customElement.inputTag,
 					_Utils_ap(
 						_List_fromArray(
 							[
