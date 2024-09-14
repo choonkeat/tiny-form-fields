@@ -750,9 +750,8 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formF
                         |> List.filterMap identity
             in
             Html.node customElement.inputTag
-                ([ class "tff-text-field"
-                 , name fieldName
-                 , placeholder " "
+                ([ attribute "class" "tff-text-field"
+                 , attribute "name" fieldName
                  ]
                     ++ boolAttribute "required" (requiredData formField.presence)
                     ++ shortTextAttrs

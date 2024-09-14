@@ -7854,9 +7854,8 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 					_Utils_ap(
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class('tff-text-field'),
-								$elm$html$Html$Attributes$name(fieldName),
-								$elm$html$Html$Attributes$placeholder(' ')
+								A2($elm$html$Html$Attributes$attribute, 'class', 'tff-text-field'),
+								A2($elm$html$Html$Attributes$attribute, 'name', fieldName)
 							]),
 						_Utils_ap(
 							A2(
