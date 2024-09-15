@@ -12,20 +12,23 @@
 <body class="bg-gray-200">
 <!-- Include this script in your HTML -->
 <script>
-class ValidatedInput extends HTMLElement {
+class BaseValidatedInput extends HTMLElement {
   constructor() {
     super();
 
     // Create the internal input element
     this.input = document.createElement('input');
 
-    // Bind event listeners to perform validation
+    // Bind event listeners
     this.input.addEventListener('input', () => {
       this.validate();
     });
 
+    // Forward events from the internal input to the custom element
+    this._forwardEvents(['change', 'input', 'focus', 'blur']);
+
     // Initial validation
-    // this.validate();
+    this.validate();
   }
 
   connectedCallback() {
@@ -74,7 +77,7 @@ class ValidatedInput extends HTMLElement {
   }
 
   // List of attributes to keep on the custom element
-  _attributesToKeep = []; // Empty array to remove all attributes from the custom element
+  _attributesToKeep = []; // Adjust as needed
 
   // Transfer attributes from the custom element to the internal input
   _transferAttributes() {
@@ -92,17 +95,92 @@ class ValidatedInput extends HTMLElement {
     }
   }
 
-  // Custom validation logic
+  // Method to forward events from the internal input to the custom element
+  _forwardEvents(events) {
+    events.forEach((eventName) => {
+      this.input.addEventListener(eventName, (event) => {
+        // Re-dispatch the event from the custom element
+        const newEvent = new event.constructor(event.type, event);
+        this.dispatchEvent(newEvent);
+      });
+    });
+  }
+
+  // Default validate method
   validate() {
+    // Clear any custom validity messages
+    this.input.setCustomValidity('');
+
+    // The browser will handle standard validation attributes automatically
+  }
+
+  // Expose the 'value' property
+  get value() {
+    return this.input.value;
+  }
+
+  set value(val) {
+    this.input.value = val;
+    this.validate();
+  }
+
+  // Expose the 'name' property
+  get name() {
+    return this.input.getAttribute('name');
+  }
+
+  set name(value) {
+    this.input.setAttribute('name', value);
+  }
+
+  // Expose validation methods and properties
+  checkValidity() {
+    return this.input.checkValidity();
+  }
+
+  reportValidity() {
+    return this.input.reportValidity();
+  }
+
+  get validity() {
+    return this.input.validity;
+  }
+
+  get validationMessage() {
+    return this.input.validationMessage;
+  }
+
+  get willValidate() {
+    return this.input.willValidate;
+  }
+
+  // Define properties for attributes that may be set as properties
+  get required() {
+    return this.input.required;
+  }
+
+  set required(isRequired) {
+    this.input.required = isRequired;
+  }
+
+  // Similarly, define other properties as needed (e.g., 'disabled', 'maxlength', 'pattern')
+}
+
+class ValidatedInput extends BaseValidatedInput {
+  constructor() {
+    super();
+  }
+
+  validate() {
+    // First, clear any previous custom validity message
+    super.validate();
+
     const value = this.input.value;
     let validityMessage = '';
 
-    if (this.input.hasAttribute('required') && value === '') {
-      validityMessage = 'This field is required.';
-    } else if (value.length !== 9) {
+    // Custom validation logic
+    if (value.length !== 9 && value !== '') {
       validityMessage = 'Input must be exactly 9 characters long.';
-    } else {
-      validityMessage = '';
     }
 
     // Set custom validity on the internal input
@@ -164,6 +242,7 @@ customElements.define('validated-input', ValidatedInput);
                     "Custom Element": {
                         "inputTag": "validated-input",
                         "attributes": {
+                            "type": "url"
                         }
                     }
                 },
