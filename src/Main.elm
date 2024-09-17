@@ -60,7 +60,9 @@ type alias Config =
     { viewMode : ViewMode
     , formFields : Array FormField
     , formValues : Json.Encode.Value
-    , shortTextTypeList : List ( String, Dict String String )
+
+    -- List because order matters
+    , shortTextTypeList : List CustomElement
     }
 
 
@@ -69,8 +71,12 @@ type alias Model =
     , initError : Maybe String
     , formFields : Array FormField
     , formValues : Json.Encode.Value
-    , shortTextTypeList : List ( String, Dict String String )
-    , shortTextTypeDict : Dict String (Dict String String)
+
+    -- List because order matters
+    , shortTextTypeList : List CustomElement
+
+    -- Dict to lookup by `inputType`
+    , shortTextTypeDict : Dict String CustomElement
     , dropdownState : DropdownState
     }
 
@@ -143,8 +149,15 @@ type alias FormField =
     }
 
 
+type alias CustomElement =
+    { inputType : String
+    , inputTag : String
+    , attributes : Dict String String
+    }
+
+
 type InputField
-    = ShortText String (List ( String, String ))
+    = ShortText CustomElement
     | LongText (Maybe Int)
     | Dropdown (List Choice)
     | ChooseOne (List Choice)
@@ -167,7 +180,7 @@ allInputField =
 stringFromInputField : InputField -> String
 stringFromInputField inputField =
     case inputField of
-        ShortText inputType _ ->
+        ShortText { inputType } ->
             inputType
 
         LongText _ ->
@@ -186,8 +199,8 @@ stringFromInputField inputField =
 mustBeOptional : InputField -> Bool
 mustBeOptional inputField =
     case inputField of
-        ShortText _ _ ->
-            False
+        ShortText { attributes } ->
+            Dict.get "multiple" attributes == Just "true"
 
         LongText _ ->
             False
@@ -230,15 +243,17 @@ type FormFieldMsg
 init : Flags -> ( Model, Cmd Msg )
 init flags =
     let
+        defaultShortTextTypeList : List CustomElement
         defaultShortTextTypeList =
-            [ ( "Single-line free text", Dict.fromList [ ( "type", "text" ) ] ) ]
+            [ { inputType = "Single-line free text"
+              , inputTag = defaultInputTag
+              , attributes = Dict.fromList [ ( "type", "text" ) ]
+              }
+            ]
 
+        defaultShortTextTypeListWithout : List CustomElement -> List CustomElement
         defaultShortTextTypeListWithout shortTextTypeList =
-            let
-                attrsList =
-                    List.map Tuple.second shortTextTypeList
-            in
-            List.filter (\( _, dict ) -> not (List.member dict attrsList))
+            List.filter (\a -> not (List.member a shortTextTypeList))
                 defaultShortTextTypeList
     in
     case Json.Decode.decodeValue decodeConfig flags of
@@ -253,7 +268,10 @@ init flags =
               , formFields = config.formFields
               , formValues = config.formValues
               , shortTextTypeList = effectiveShortTextTypeList
-              , shortTextTypeDict = Dict.fromList effectiveShortTextTypeList
+              , shortTextTypeDict =
+                    effectiveShortTextTypeList
+                        |> List.map (\customElement -> ( customElement.inputType, customElement ))
+                        |> Dict.fromList
               , dropdownState = DropdownClosed
               }
             , Cmd.batch
@@ -465,7 +483,7 @@ updateFormField msg string formField =
 
         OnChoicesInput ->
             case formField.type_ of
-                ShortText _ _ ->
+                ShortText _ ->
                     formField
 
                 LongText _ ->
@@ -482,15 +500,12 @@ updateFormField msg string formField =
 
         OnMaxLengthInput ->
             case formField.type_ of
-                ShortText inputType attrs ->
-                    { formField
-                        | type_ =
-                            ShortText inputType
-                                (Dict.fromList attrs
-                                    |> Dict.insert "maxlength" string
-                                    |> Dict.toList
-                                )
-                    }
+                ShortText customElement ->
+                    let
+                        newCustomElement =
+                            { customElement | attributes = Dict.insert "maxlength" string customElement.attributes }
+                    in
+                    { formField | type_ = ShortText newCustomElement }
 
                 LongText _ ->
                     { formField | type_ = LongText (String.toInt string) }
@@ -616,7 +631,7 @@ viewTabs active tabs =
         )
 
 
-viewFormPreview : List (Html.Attribute Msg) -> { a | formFields : Array FormField, formValues : Json.Encode.Value, shortTextTypeDict : Dict String (Dict String String) } -> List (Html Msg)
+viewFormPreview : List (Html.Attribute Msg) -> { a | formFields : Array FormField, formValues : Json.Encode.Value, shortTextTypeDict : Dict String CustomElement } -> List (Html Msg)
 viewFormPreview customAttrs { formFields, formValues, shortTextTypeDict } =
     let
         config =
@@ -639,7 +654,7 @@ when bool condition =
         condition.false
 
 
-viewFormFieldPreview : { formValues : Json.Encode.Value, customAttrs : List (Html.Attribute Msg), shortTextTypeDict : Dict String (Dict String String) } -> FormField -> Html Msg
+viewFormFieldPreview : { formValues : Json.Encode.Value, customAttrs : List (Html.Attribute Msg), shortTextTypeDict : Dict String CustomElement } -> FormField -> Html Msg
 viewFormFieldPreview config formField =
     div [ class "tff-tabs-preview" ]
         [ div
@@ -673,8 +688,10 @@ viewFormFieldPreview config formField =
 maybeMaxLengthOf : FormField -> Maybe Int
 maybeMaxLengthOf formField =
     case formField.type_ of
-        ShortText _ attrs ->
-            Dict.fromList attrs |> Dict.get "maxlength" |> Maybe.andThen String.toInt
+        ShortText { attributes } ->
+            attributes
+                |> Dict.get "maxlength"
+                |> Maybe.andThen String.toInt
 
         LongText maybeMaxLength ->
             maybeMaxLength
@@ -688,7 +705,7 @@ fieldNameOf formField =
     Maybe.withDefault formField.label formField.name
 
 
-viewFormFieldOptionsPreview : { formValues : Json.Encode.Value, customAttrs : List (Html.Attribute Msg), shortTextTypeDict : Dict String (Dict String String) } -> FormField -> Html Msg
+viewFormFieldOptionsPreview : { formValues : Json.Encode.Value, customAttrs : List (Html.Attribute Msg), shortTextTypeDict : Dict String CustomElement } -> FormField -> Html Msg
 viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formField =
     let
         fieldName =
@@ -706,24 +723,24 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formF
                     List.length choices == 1
     in
     case formField.type_ of
-        ShortText inputType attrs ->
+        ShortText customElement ->
             let
                 shortTextAttrs =
-                    Dict.get inputType shortTextTypeDict
+                    Dict.get customElement.inputType shortTextTypeDict
+                        |> Maybe.map .attributes
                         |> Maybe.withDefault Dict.empty
                         |> Dict.toList
                         |> List.map (\( k, v ) -> attribute k v)
 
                 extraAttrs =
                     Maybe.map (\s -> value s) (maybeDecode fieldName Json.Decode.string formValues)
-                        :: List.map (\( k, v ) -> Just (Html.Attributes.attribute k v)) attrs
+                        :: List.map (\( k, v ) -> Just (attribute k v)) (Dict.toList customElement.attributes)
                         |> List.filterMap identity
             in
-            input
-                ([ class "tff-text-field"
+            Html.node customElement.inputTag
+                ([ attribute "class" "tff-text-field"
                  , name fieldName
                  , required (requiredData formField.presence)
-                 , placeholder " "
                  ]
                     ++ shortTextAttrs
                     ++ extraAttrs
@@ -931,7 +948,7 @@ dropDownButton dropdownState options =
     ]
 
 
-viewFormBuilder : Maybe ( Int, Animate ) -> { a | dropdownState : DropdownState, formFields : Array FormField, shortTextTypeList : List ( String, Dict String String ) } -> List (Html Msg)
+viewFormBuilder : Maybe ( Int, Animate ) -> { a | dropdownState : DropdownState, formFields : Array FormField, shortTextTypeList : List CustomElement } -> List (Html Msg)
 viewFormBuilder maybeAnimate { dropdownState, formFields, shortTextTypeList } =
     let
         stdOptions =
@@ -945,7 +962,7 @@ viewFormBuilder maybeAnimate { dropdownState, formFields, shortTextTypeList } =
 
         extraOptions =
             List.map
-                (\( k, v ) -> ( AddFormField (ShortText k (Dict.toList v)), k ))
+                (\customElement -> ( AddFormField (ShortText customElement), customElement.inputType ))
                 shortTextTypeList
     in
     div [ class "tff-build-fields" ]
@@ -972,7 +989,7 @@ selectArrowDown =
         ]
 
 
-viewFormFieldBuilder : Maybe ( Int, Animate ) -> List ( String, Dict String String ) -> Int -> Int -> FormField -> Html Msg
+viewFormFieldBuilder : Maybe ( Int, Animate ) -> List CustomElement -> Int -> Int -> FormField -> Html Msg
 viewFormFieldBuilder maybeAnimate shortTextTypeList totalLength index formField =
     let
         buildFieldClass =
@@ -1103,7 +1120,7 @@ viewFormFieldBuilder maybeAnimate shortTextTypeList totalLength index formField 
         )
 
 
-viewFormFieldOptionsBuilder : List ( String, Dict String String ) -> Int -> FormField -> List (Html Msg)
+viewFormFieldOptionsBuilder : List CustomElement -> Int -> FormField -> List (Html Msg)
 viewFormFieldOptionsBuilder shortTextTypeList index formField =
     let
         idSuffix =
@@ -1136,17 +1153,14 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
                 ]
     in
     case formField.type_ of
-        ShortText inputType attrs ->
+        ShortText customElement ->
             let
-                attrsDict =
-                    Dict.fromList attrs
-
                 maybeShortTextTypeMaxLength =
                     shortTextTypeList
-                        |> List.filter (\( k, _ ) -> k == inputType)
+                        |> List.filter (\{ inputType } -> inputType == customElement.inputType)
                         |> List.head
-                        |> Maybe.map Tuple.second
-                        |> Maybe.andThen (Dict.get "minlength")
+                        |> Maybe.map .attributes
+                        |> Maybe.andThen (Dict.get "maxlength")
                         |> Maybe.andThen String.toInt
             in
             [ case maybeShortTextTypeMaxLength of
@@ -1157,7 +1171,7 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
                             [ id ("maxlength-" ++ idSuffix)
                             , type_ "number"
                             , class "tff-text-field"
-                            , value (Dict.get "maxlength" attrsDict |> Maybe.withDefault "")
+                            , value (Dict.get "maxlength" customElement.attributes |> Maybe.withDefault "")
                             , onInput (OnFormField OnMaxLengthInput index)
                             ]
                             []
@@ -1282,6 +1296,11 @@ decodePortIncomingValue =
 --  ENCODERS DECODERS
 
 
+defaultInputTag : String
+defaultInputTag =
+    "input"
+
+
 choiceDelimiter : String
 choiceDelimiter =
     " | "
@@ -1336,7 +1355,14 @@ decodeConfig =
         |> andMap (Json.Decode.Extra.optionalNullableField "viewMode" decodeViewMode |> Json.Decode.map (Maybe.withDefault (Editor { maybeAnimate = Nothing })))
         |> andMap (Json.Decode.Extra.optionalNullableField "formFields" decodeFormFields |> Json.Decode.map (Maybe.withDefault Array.empty))
         |> andMap (Json.Decode.Extra.optionalNullableField "formValues" Json.Decode.value |> Json.Decode.map (Maybe.withDefault Json.Encode.null))
-        |> andMap (Json.Decode.Extra.optionalNullableField "shortTextTypeList" decodeShortTextTypeList |> Json.Decode.map (Maybe.withDefault [ ( "Text", Dict.fromList [ ( "type", "text" ) ] ) ]))
+        |> andMap
+            (Json.Decode.Extra.optionalNullableField "shortTextTypeList" decodeShortTextTypeList
+                |> Json.Decode.map
+                    (Maybe.withDefault
+                        [ { inputType = "Text", attributes = Dict.fromList [ ( "type", "text" ) ], inputTag = defaultInputTag }
+                        ]
+                    )
+            )
 
 
 maybeDecode : String -> Json.Decode.Decoder b -> Json.Decode.Value -> Maybe b
@@ -1471,26 +1497,52 @@ decodeFormFieldDescription =
         ]
 
 
+decodeCustomElement : Json.Decode.Decoder CustomElement
+decodeCustomElement =
+    Json.Decode.succeed CustomElement
+        |> andMap (Json.Decode.field "inputType" Json.Decode.string)
+        |> andMap
+            (Json.Decode.Extra.optionalField "inputTag" Json.Decode.string
+                |> Json.Decode.map (Maybe.withDefault defaultInputTag)
+            )
+        |> andMap
+            (Json.Decode.Extra.optionalField "attributes" (Json.Decode.keyValuePairs Json.Decode.string)
+                |> Json.Decode.map (Maybe.withDefault [])
+                |> Json.Decode.map Dict.fromList
+            )
+
+
+encodePairsFromCustomElements : CustomElement -> List ( String, Json.Encode.Value )
+encodePairsFromCustomElements customElement =
+    let
+        inputTagAttrs =
+            if customElement.inputTag == defaultInputTag then
+                []
+
+            else
+                [ ( "inputTag", Json.Encode.string customElement.inputTag ) ]
+
+        encodedAttrs =
+            case List.map (Tuple.mapSecond Json.Encode.string) (Dict.toList customElement.attributes) of
+                [] ->
+                    -- don't need to encode `"attributes": []` all the time
+                    []
+
+                pairs ->
+                    [ ( "attributes", Json.Encode.object pairs ) ]
+    in
+    ( "inputType", Json.Encode.string customElement.inputType )
+        :: inputTagAttrs
+        ++ encodedAttrs
+
+
 encodeInputField : InputField -> Json.Encode.Value
 encodeInputField inputField =
     case inputField of
-        ShortText inputType attrs ->
-            let
-                encodedAttrs =
-                    case List.map (Tuple.mapSecond Json.Encode.string) attrs of
-                        [] ->
-                            -- don't need to encode `"attributes": []` all the time
-                            []
-
-                        pairs ->
-                            [ ( "attributes", Json.Encode.object pairs ) ]
-            in
+        ShortText customElement ->
             Json.Encode.object
-                (List.append
-                    [ ( "type", Json.Encode.string "ShortText" )
-                    , ( "inputType", Json.Encode.string inputType )
-                    ]
-                    encodedAttrs
+                (( "type", Json.Encode.string "ShortText" )
+                    :: encodePairsFromCustomElements customElement
                 )
 
         LongText maybeMaxLength ->
@@ -1525,12 +1577,7 @@ decodeInputField =
             (\type_ ->
                 case type_ of
                     "ShortText" ->
-                        Json.Decode.succeed ShortText
-                            |> andMap (Json.Decode.field "inputType" Json.Decode.string)
-                            |> andMap
-                                (Json.Decode.Extra.optionalField "attributes" (Json.Decode.keyValuePairs Json.Decode.string)
-                                    |> Json.Decode.map (Maybe.withDefault [])
-                                )
+                        Json.Decode.map ShortText decodeCustomElement
 
                     "LongText" ->
                         Json.Decode.succeed LongText
@@ -1553,7 +1600,38 @@ decodeInputField =
             )
 
 
-decodeShortTextTypeList : Json.Decode.Decoder (List ( String, Dict String String ))
+decodeShortTextTypeList : Json.Decode.Decoder (List CustomElement)
 decodeShortTextTypeList =
-    Json.Decode.list (Json.Decode.dict (Json.Decode.dict Json.Decode.string))
-        |> Json.Decode.map (List.map Dict.toList >> List.concat)
+    let
+        customElementsFrom : Dict String ( String, Dict String String ) -> List CustomElement
+        customElementsFrom dict =
+            dict
+                |> Dict.toList
+                |> List.map
+                    (\( inputType, ( inputTag, attributes ) ) ->
+                        { inputType = inputType
+                        , inputTag = inputTag
+                        , attributes = attributes
+                        }
+                    )
+
+        decodeAttributes : Json.Decode.Decoder ( String, Dict String String )
+        decodeAttributes =
+            -- backward compatible decoder for old json
+            Json.Decode.dict Json.Decode.string
+                |> Json.Decode.map (\attributes -> ( defaultInputTag, attributes ))
+
+        decodeInputTagAttributes : Json.Decode.Decoder ( String, Dict String String )
+        decodeInputTagAttributes =
+            Json.Decode.succeed Tuple.pair
+                |> andMap
+                    (Json.Decode.Extra.optionalField "inputTag" Json.Decode.string
+                        |> Json.Decode.map (Maybe.withDefault defaultInputTag)
+                    )
+                |> andMap
+                    (Json.Decode.field "attributes" (Json.Decode.keyValuePairs Json.Decode.string)
+                        |> Json.Decode.map Dict.fromList
+                    )
+    in
+    Json.Decode.list (Json.Decode.dict (Json.Decode.oneOf [ decodeInputTagAttributes, decodeAttributes ]))
+        |> Json.Decode.map (List.map customElementsFrom >> List.concat)

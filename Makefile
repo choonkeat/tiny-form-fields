@@ -1,6 +1,6 @@
 dist/tiny-form-fields.esm.js: css src/Main.elm Makefile test
-	elm make src/Main.elm --optimize --output dist/tiny-form-fields.js
-	npx elm-esm make src/Main.elm --output=dist/tiny-form-fields.esm.js
+	elm         make src/Main.elm --optimize --output dist/tiny-form-fields.js
+	npx elm-esm make src/Main.elm --optimize --output=dist/tiny-form-fields.esm.js
 
 css: dist/tiny-form-fields.min.css
 
