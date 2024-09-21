@@ -1,5 +1,6 @@
 port module Main exposing
-    ( Choice
+    ( AttributeOptional(..)
+    , Choice
     , FormField
     , InputField(..)
     , Presence(..)
@@ -144,8 +145,115 @@ type alias FormField =
     { label : String
     , name : Maybe String
     , presence : Presence
-    , description : String
+    , description : AttributeOptional String
     , type_ : InputField
+    }
+
+
+type AttributeOptional a
+    = AttributeNotNeeded (Maybe a)
+    | AttributeInvalid String
+    | AttributeGiven a
+
+
+toggleAttributeOptional : Bool -> AttributeOptional a -> AttributeOptional a
+toggleAttributeOptional toggle attributeOptional =
+    case attributeOptional of
+        AttributeNotNeeded Nothing ->
+            if toggle then
+                AttributeInvalid ""
+
+            else
+                attributeOptional
+
+        AttributeNotNeeded (Just a) ->
+            if toggle then
+                AttributeGiven a
+
+            else
+                attributeOptional
+
+        AttributeInvalid _ ->
+            if toggle then
+                attributeOptional
+
+            else
+                AttributeNotNeeded Nothing
+
+        AttributeGiven a ->
+            if toggle then
+                AttributeGiven a
+
+            else
+                AttributeNotNeeded (Just a)
+
+
+inputAttributeOptional :
+    { onCheck : Bool -> msg
+    , onInput : String -> msg
+    , toString : a -> String
+    , label : String
+    , attrs : List (Html.Attribute msg)
+    }
+    -> AttributeOptional a
+    -> Html msg
+inputAttributeOptional options attributeOptional =
+    case attributeOptional of
+        AttributeNotNeeded _ ->
+            div
+                [ class "tff-toggle-group" ]
+                [ label [ class "tff-field-label" ]
+                    [ input
+                        [ type_ "checkbox"
+                        , tabindex 0
+                        , checked False
+                        , onCheck options.onCheck
+                        ]
+                        []
+                    , text " "
+                    , text options.label
+                    ]
+                ]
+
+        AttributeInvalid str ->
+            div
+                [ class "tff-toggle-group" ]
+                [ label [ class "tff-field-label" ]
+                    [ input
+                        [ type_ "checkbox"
+                        , tabindex 0
+                        , checked True
+                        , onCheck options.onCheck
+                        ]
+                        []
+                    , text " "
+                    , text options.label
+                    ]
+                , input ([ required True, onInput options.onInput, value str ] ++ options.attrs) []
+                ]
+
+        AttributeGiven a ->
+            div
+                [ class "tff-toggle-group" ]
+                [ label [ class "tff-field-label" ]
+                    [ input
+                        [ type_ "checkbox"
+                        , tabindex 0
+                        , checked True
+                        , onCheck options.onCheck
+                        ]
+                        []
+                    , text " "
+                    , text options.label
+                    ]
+                , input ([ required True, onInput options.onInput, value (options.toString a) ] ++ options.attrs) []
+                ]
+
+
+type alias RawCustomElement =
+    { inputType : String
+    , inputTag : String
+    , attributes : Dict String String
     }
 
 
@@ -153,12 +261,51 @@ type alias CustomElement =
     { inputType : String
     , inputTag : String
     , attributes : Dict String String
+    , maxlength : AttributeOptional Int
+    }
+
+
+fromRawCustomElement : RawCustomElement -> CustomElement
+fromRawCustomElement ele =
+    { inputTag = ele.inputTag
+    , inputType = ele.inputType
+    , attributes = ele.attributes
+    , maxlength =
+        case Dict.get "maxlength" ele.attributes of
+            Just "" ->
+                AttributeNotNeeded Nothing
+
+            Just value ->
+                case String.toInt value of
+                    Just int ->
+                        AttributeGiven int
+
+                    Nothing ->
+                        AttributeInvalid value
+
+            _ ->
+                AttributeNotNeeded Nothing
+    }
+
+
+toRawCustomElement : CustomElement -> RawCustomElement
+toRawCustomElement ele =
+    { inputTag = ele.inputTag
+    , inputType = ele.inputType
+    , attributes =
+        case ele.maxlength of
+            AttributeGiven int ->
+                Dict.insert "maxlength" (String.fromInt int) ele.attributes
+
+            _ ->
+                ele.attributes
+                    |> Dict.filter (\k v -> k /= "maxlength")
     }
 
 
 type InputField
     = ShortText CustomElement
-    | LongText (Maybe Int)
+    | LongText (AttributeOptional Int)
     | Dropdown (List Choice)
     | ChooseOne (List Choice)
     | ChooseMultiple (List Choice)
@@ -173,7 +320,7 @@ allInputField =
     [ Dropdown (List.map choiceFromString [ "Red", "Orange", "Yellow", "Green", "Blue", "Indigo", "Violet" ])
     , ChooseOne (List.map choiceFromString [ "Yes", "No" ])
     , ChooseMultiple (List.map choiceFromString [ "Apple", "Banana", "Cantaloupe", "Durian" ])
-    , LongText (Just 160)
+    , LongText (AttributeGiven 160)
     ]
 
 
@@ -231,8 +378,10 @@ type Msg
 type FormFieldMsg
     = OnLabelInput
     | OnDescriptionInput
+    | OnDescriptionToggle Bool
     | OnRequiredInput Bool
     | OnChoicesInput
+    | OnMaxLengthToggle Bool
     | OnMaxLengthInput
 
 
@@ -245,10 +394,11 @@ init flags =
     let
         defaultShortTextTypeList : List CustomElement
         defaultShortTextTypeList =
-            [ { inputType = "Single-line free text"
-              , inputTag = defaultInputTag
-              , attributes = Dict.fromList [ ( "type", "text" ) ]
-              }
+            [ fromRawCustomElement
+                { inputType = "Single-line free text"
+                , inputTag = defaultInputTag
+                , attributes = Dict.fromList [ ( "type", "text" ) ]
+                }
             ]
 
         defaultShortTextTypeListWithout : List CustomElement -> List CustomElement
@@ -341,7 +491,7 @@ update msg model =
                     { label = "Question " ++ String.fromInt (currLength + 1)
                     , name = Nothing
                     , presence = when (mustBeOptional fieldType) { true = Optional, false = Required }
-                    , description = ""
+                    , description = AttributeNotNeeded Nothing
                     , type_ = fieldType
                     }
 
@@ -472,7 +622,14 @@ updateFormField msg string formField =
             { formField | label = string }
 
         OnDescriptionInput ->
-            { formField | description = string }
+            if string == "" then
+                { formField | description = AttributeInvalid "" }
+
+            else
+                { formField | description = AttributeGiven string }
+
+        OnDescriptionToggle bool ->
+            { formField | description = toggleAttributeOptional bool formField.description }
 
         OnRequiredInput bool ->
             if bool then
@@ -498,17 +655,55 @@ updateFormField msg string formField =
                 ChooseMultiple _ ->
                     { formField | type_ = ChooseMultiple (List.map choiceFromString (String.lines string)) }
 
+        OnMaxLengthToggle bool ->
+            case formField.type_ of
+                ShortText customElement ->
+                    let
+                        newCustomElement =
+                            { customElement | maxlength = toggleAttributeOptional bool customElement.maxlength }
+                    in
+                    { formField | type_ = ShortText newCustomElement }
+
+                LongText maxlength ->
+                    { formField | type_ = LongText (toggleAttributeOptional bool maxlength) }
+
+                Dropdown _ ->
+                    formField
+
+                ChooseOne _ ->
+                    formField
+
+                ChooseMultiple _ ->
+                    formField
+
         OnMaxLengthInput ->
             case formField.type_ of
                 ShortText customElement ->
                     let
                         newCustomElement =
-                            { customElement | attributes = Dict.insert "maxlength" string customElement.attributes }
+                            { customElement
+                                | maxlength =
+                                    case String.toInt string of
+                                        Just i ->
+                                            AttributeGiven i
+
+                                        Nothing ->
+                                            AttributeInvalid string
+                            }
                     in
                     { formField | type_ = ShortText newCustomElement }
 
-                LongText _ ->
-                    { formField | type_ = LongText (String.toInt string) }
+                LongText maxlength ->
+                    let
+                        newMaxlength =
+                            case String.toInt string of
+                                Just i ->
+                                    AttributeGiven i
+
+                                Nothing ->
+                                    AttributeInvalid string
+                    in
+                    { formField | type_ = LongText newMaxlength }
 
                 Dropdown _ ->
                     formField
@@ -673,7 +868,17 @@ viewFormFieldPreview config formField =
                 ]
             , viewFormFieldOptionsPreview config formField
             , div [ class "tff-field-description" ]
-                [ text formField.description
+                [ text
+                    (case formField.description of
+                        AttributeNotNeeded _ ->
+                            ""
+
+                        AttributeInvalid s ->
+                            s
+
+                        AttributeGiven s ->
+                            s
+                    )
                 , case maybeMaxLengthOf formField of
                     Just maxLength ->
                         text (" (max " ++ String.fromInt maxLength ++ " characters)")
@@ -688,13 +893,27 @@ viewFormFieldPreview config formField =
 maybeMaxLengthOf : FormField -> Maybe Int
 maybeMaxLengthOf formField =
     case formField.type_ of
-        ShortText { attributes } ->
-            attributes
-                |> Dict.get "maxlength"
-                |> Maybe.andThen String.toInt
+        ShortText { maxlength } ->
+            case maxlength of
+                AttributeGiven i ->
+                    Just i
 
-        LongText maybeMaxLength ->
-            maybeMaxLength
+                AttributeInvalid _ ->
+                    Nothing
+
+                AttributeNotNeeded _ ->
+                    Nothing
+
+        LongText maxlength ->
+            case maxlength of
+                AttributeGiven i ->
+                    Just i
+
+                AttributeInvalid _ ->
+                    Nothing
+
+                AttributeNotNeeded _ ->
+                    Nothing
 
         _ ->
             Nothing
@@ -748,10 +967,10 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formF
                 )
                 []
 
-        LongText maybeMaxLength ->
+        LongText _ ->
             let
                 extraAttrs =
-                    [ Maybe.map (\maxLength -> maxlength maxLength) maybeMaxLength
+                    [ Maybe.map (\maxLength -> maxlength maxLength) (maybeMaxLengthOf formField)
                     , Maybe.map (\s -> value s) (maybeDecode fieldName Json.Decode.string formValues)
                     ]
                         |> List.filterMap identity
@@ -1022,7 +1241,8 @@ viewFormFieldBuilder maybeAnimate shortTextTypeList totalLength index formField 
                     , onCheck (\b -> OnFormField (OnRequiredInput b) index "")
                     ]
                     []
-                , text " Required field"
+                , text " "
+                , text "Required field"
                 ]
 
         deleteFieldButton =
@@ -1042,7 +1262,7 @@ viewFormFieldBuilder maybeAnimate shortTextTypeList totalLength index formField 
     in
     div [ class buildFieldClass ]
         ([ div [ class "tff-field-group" ]
-            [ label [ class "tff-field-label", for ("label-" ++ idSuffix) ] [ text (stringFromInputField formField.type_ ++ " label") ]
+            [ label [ class "tff-field-label", for ("label-" ++ idSuffix) ] [ text (stringFromInputField formField.type_ ++ " question title") ]
             , input
                 [ type_ "text"
                 , id ("label-" ++ idSuffix)
@@ -1054,31 +1274,28 @@ viewFormFieldBuilder maybeAnimate shortTextTypeList totalLength index formField 
                 , onInput (OnFormField OnLabelInput index)
                 ]
                 []
-            , if mustBeOptional formField.type_ then
-                text ""
-
-              else
-                case formField.presence of
-                    Required ->
-                        configureRequiredCheckbox
-
-                    Optional ->
-                        configureRequiredCheckbox
-
-                    System ->
-                        div [ class "tff-field-description" ]
-                            [ text formField.description ]
             ]
-         , div [ class "tff-field-group" ]
-            [ label [ class "tff-field-label", for ("description-" ++ idSuffix) ] [ text "Description (optional)" ]
-            , input
-                [ id ("description-" ++ idSuffix)
-                , class "tff-text-field"
-                , value formField.description
-                , onInput (OnFormField OnDescriptionInput index)
-                ]
-                []
-            ]
+         , if mustBeOptional formField.type_ then
+            text ""
+
+           else
+            case formField.presence of
+                Required ->
+                    configureRequiredCheckbox
+
+                Optional ->
+                    configureRequiredCheckbox
+
+                System ->
+                    text ""
+         , inputAttributeOptional
+            { onCheck = \b -> OnFormField (OnDescriptionToggle b) index ""
+            , onInput = OnFormField OnDescriptionInput index
+            , label = "Question description"
+            , toString = identity
+            , attrs = [ class "tff-text-field" ]
+            }
+            formField.description
          ]
             ++ viewFormFieldOptionsBuilder shortTextTypeList index formField
             ++ [ div [ class "tff-build-field-buttons" ]
@@ -1165,17 +1382,14 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
             in
             [ case maybeShortTextTypeMaxLength of
                 Nothing ->
-                    div [ class "tff-field-group" ]
-                        [ label [ class "tff-field-label", for ("maxlength-" ++ idSuffix) ] [ text "Max length (optional)" ]
-                        , input
-                            [ id ("maxlength-" ++ idSuffix)
-                            , type_ "number"
-                            , class "tff-text-field"
-                            , value (Dict.get "maxlength" customElement.attributes |> Maybe.withDefault "")
-                            , onInput (OnFormField OnMaxLengthInput index)
-                            ]
-                            []
-                        ]
+                    inputAttributeOptional
+                        { onCheck = \b -> OnFormField (OnMaxLengthToggle b) index ""
+                        , onInput = OnFormField OnMaxLengthInput index
+                        , label = "Limit number of characters"
+                        , toString = String.fromInt
+                        , attrs = [ class "tff-text-field", type_ "number", Html.Attributes.min "1" ]
+                        }
+                        customElement.maxlength
 
                 Just i ->
                     input
@@ -1186,18 +1400,15 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
                         []
             ]
 
-        LongText maybeMaxLength ->
-            [ div [ class "tff-field-group" ]
-                [ label [ class "tff-field-label", for ("maxlength-" ++ idSuffix) ] [ text "Max length (optional)" ]
-                , input
-                    [ id ("maxlength-" ++ idSuffix)
-                    , type_ "number"
-                    , class "tff-text-field"
-                    , value (Maybe.map String.fromInt maybeMaxLength |> Maybe.withDefault "")
-                    , onInput (OnFormField OnMaxLengthInput index)
-                    ]
-                    []
-                ]
+        LongText optionalMaxLength ->
+            [ inputAttributeOptional
+                { onCheck = \b -> OnFormField (OnMaxLengthToggle b) index ""
+                , onInput = OnFormField OnMaxLengthInput index
+                , label = "Limit number of characters"
+                , toString = String.fromInt
+                , attrs = [ class "tff-text-field", type_ "number", Html.Attributes.min "1" ]
+                }
+                optionalMaxLength
             ]
 
         Dropdown choices ->
@@ -1359,7 +1570,11 @@ decodeConfig =
             (Json.Decode.Extra.optionalNullableField "shortTextTypeList" decodeShortTextTypeList
                 |> Json.Decode.map
                     (Maybe.withDefault
-                        [ { inputType = "Text", attributes = Dict.fromList [ ( "type", "text" ) ], inputTag = defaultInputTag }
+                        [ fromRawCustomElement
+                            { inputType = "Text"
+                            , inputTag = defaultInputTag
+                            , attributes = Dict.fromList [ ( "type", "text" ) ]
+                            }
                         ]
                     )
             )
@@ -1432,6 +1647,29 @@ decodePresence =
         ]
 
 
+encodeAttributeOptional : (a -> Json.Encode.Value) -> AttributeOptional a -> Json.Encode.Value
+encodeAttributeOptional encodeValue attributeOptional =
+    case attributeOptional of
+        AttributeNotNeeded _ ->
+            Json.Encode.null
+
+        AttributeInvalid _ ->
+            -- we only decode into AttributeNotNeeded or AttributeGiven
+            Json.Encode.null
+
+        AttributeGiven value ->
+            encodeValue value
+
+
+decodeAttributeOptional : Json.Decode.Decoder a -> Json.Decode.Decoder (AttributeOptional a)
+decodeAttributeOptional decodeValue =
+    Json.Decode.oneOf
+        [ Json.Decode.null (AttributeNotNeeded Nothing)
+        , decodeValue
+            |> Json.Decode.map (\a -> AttributeGiven a)
+        ]
+
+
 encodeFormFields : Array FormField -> Json.Encode.Value
 encodeFormFields formFields =
     formFields
@@ -1449,7 +1687,7 @@ encodeFormFields formFields =
                                 Json.Encode.null
                        )
                      , ( "presence", encodePresence formField.presence )
-                     , ( "description", Json.Encode.string formField.description )
+                     , ( "description", encodeAttributeOptional Json.Encode.string formField.description )
                      , ( "type", encodeInputField formField.type_ )
                      ]
                         -- smaller output json than if we encoded `null` all the time
@@ -1487,19 +1725,19 @@ decodeFormFieldMaybeName =
         ]
 
 
-decodeFormFieldDescription : Json.Decode.Decoder String
+decodeFormFieldDescription : Json.Decode.Decoder (AttributeOptional String)
 decodeFormFieldDescription =
     Json.Decode.oneOf
         [ -- backward compat: presence.description takes precedence
-          Json.Decode.at [ "presence", "description" ] Json.Decode.string
-        , Json.Decode.field "description" Json.Decode.string
-        , Json.Decode.succeed ""
+          Json.Decode.at [ "presence", "description" ] (decodeAttributeOptional Json.Decode.string)
+        , Json.Decode.field "description" (decodeAttributeOptional Json.Decode.string)
+        , Json.Decode.succeed (AttributeNotNeeded Nothing)
         ]
 
 
 decodeCustomElement : Json.Decode.Decoder CustomElement
 decodeCustomElement =
-    Json.Decode.succeed CustomElement
+    Json.Decode.succeed RawCustomElement
         |> andMap (Json.Decode.field "inputType" Json.Decode.string)
         |> andMap
             (Json.Decode.Extra.optionalField "inputTag" Json.Decode.string
@@ -1510,9 +1748,10 @@ decodeCustomElement =
                 |> Json.Decode.map (Maybe.withDefault [])
                 |> Json.Decode.map Dict.fromList
             )
+        |> Json.Decode.map fromRawCustomElement
 
 
-encodePairsFromCustomElements : CustomElement -> List ( String, Json.Encode.Value )
+encodePairsFromCustomElements : RawCustomElement -> List ( String, Json.Encode.Value )
 encodePairsFromCustomElements customElement =
     let
         inputTagAttrs =
@@ -1542,13 +1781,13 @@ encodeInputField inputField =
         ShortText customElement ->
             Json.Encode.object
                 (( "type", Json.Encode.string "ShortText" )
-                    :: encodePairsFromCustomElements customElement
+                    :: encodePairsFromCustomElements (toRawCustomElement customElement)
                 )
 
-        LongText maybeMaxLength ->
+        LongText optionalMaxLength ->
             Json.Encode.object
                 [ ( "type", Json.Encode.string "LongText" )
-                , ( "maxLength", maybeMaxLength |> Maybe.map Json.Encode.int |> Maybe.withDefault Json.Encode.null )
+                , ( "maxLength", encodeAttributeOptional Json.Encode.int optionalMaxLength )
                 ]
 
         Dropdown choices ->
@@ -1581,7 +1820,7 @@ decodeInputField =
 
                     "LongText" ->
                         Json.Decode.succeed LongText
-                            |> andMap (Json.Decode.field "maxLength" (Json.Decode.nullable Json.Decode.int))
+                            |> andMap (Json.Decode.field "maxLength" (decodeAttributeOptional Json.Decode.int))
 
                     "Dropdown" ->
                         Json.Decode.field "choices" (Json.Decode.list decodeChoice)
@@ -1609,10 +1848,11 @@ decodeShortTextTypeList =
                 |> Dict.toList
                 |> List.map
                     (\( inputType, ( inputTag, attributes ) ) ->
-                        { inputType = inputType
-                        , inputTag = inputTag
-                        , attributes = attributes
-                        }
+                        fromRawCustomElement
+                            { inputType = inputType
+                            , inputTag = inputTag
+                            , attributes = attributes
+                            }
                     )
 
         decodeAttributes : Json.Decode.Decoder ( String, Dict String String )

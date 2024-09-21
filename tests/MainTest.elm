@@ -47,13 +47,13 @@ suite =
                     |> Json.Decode.decodeString Main.decodeShortTextTypeList
                     |> Expect.equal
                         (Ok
-                            [ { inputType = "Text", inputTag = "input", attributes = Dict.fromList [ ( "type", "text" ) ] }
-                            , { inputType = "Text", inputTag = "input", attributes = Dict.fromList [ ( "type", "text" ), ( "maxlength", "10" ), ( "multiple", "true" ) ] }
-                            , { inputType = "Email", inputTag = "input", attributes = Dict.fromList [ ( "type", "email" ) ] }
-                            , { inputType = "Emails", inputTag = "input", attributes = Dict.fromList [ ( "type", "email" ), ( "multiple", "true" ) ] }
-                            , { inputType = "Digits", inputTag = "input", attributes = Dict.fromList [ ( "pattern", "^[0-9]+$" ), ( "type", "text" ) ] }
-                            , { inputType = "Nric2", inputTag = "nric-custom-ele", attributes = Dict.fromList [ ( "pattern", "^[STGM][0-9]{7}[ABCDEFGHIZJ]$" ), ( "type", "text" ) ] }
-                            , { inputType = "Nric", inputTag = "input", attributes = Dict.fromList [ ( "pattern", "^[STGM][0-9]{7}[ABCDEFGHIZJ]$" ), ( "type", "text" ) ] }
+                            [ { inputType = "Text", inputTag = "input", attributes = Dict.fromList [ ( "type", "text" ) ], maxlength = Main.AttributeNotNeeded Nothing }
+                            , { inputType = "Text", inputTag = "input", attributes = Dict.fromList [ ( "type", "text" ), ( "maxlength", "10" ), ( "multiple", "true" ) ], maxlength = Main.AttributeGiven 10 }
+                            , { inputType = "Email", inputTag = "input", attributes = Dict.fromList [ ( "type", "email" ) ], maxlength = Main.AttributeNotNeeded Nothing }
+                            , { inputType = "Emails", inputTag = "input", attributes = Dict.fromList [ ( "type", "email" ), ( "multiple", "true" ) ], maxlength = Main.AttributeNotNeeded Nothing }
+                            , { inputType = "Digits", inputTag = "input", attributes = Dict.fromList [ ( "pattern", "^[0-9]+$" ), ( "type", "text" ) ], maxlength = Main.AttributeNotNeeded Nothing }
+                            , { inputType = "Nric2", inputTag = "nric-custom-ele", attributes = Dict.fromList [ ( "pattern", "^[STGM][0-9]{7}[ABCDEFGHIZJ]$" ), ( "type", "text" ) ], maxlength = Main.AttributeNotNeeded Nothing }
+                            , { inputType = "Nric", inputTag = "input", attributes = Dict.fromList [ ( "pattern", "^[STGM][0-9]{7}[ABCDEFGHIZJ]$" ), ( "type", "text" ) ], maxlength = Main.AttributeNotNeeded Nothing }
                             ]
                         )
         , Test.fuzz choiceStringFuzzer "choiceStringToChoice,choiceStringFromString is reversible" <|
@@ -99,9 +99,32 @@ inputFieldFuzzer =
 
 moreTestInputFields : List Main.InputField
 moreTestInputFields =
-    [ Main.ShortText { inputType = "Email", inputTag = "input", attributes = Dict.fromList [ ( "type", "email" ) ] }
-    , Main.ShortText { inputType = "Emails", inputTag = "input", attributes = Dict.fromList [ ( "type", "email" ), ( "multiple", "true" ) ] }
-    , Main.ShortText { inputType = "Emails with maxlength", inputTag = "input", attributes = Dict.fromList [ ( "type", "email" ), ( "multiple", "true" ), ( "maxlength", "20" ), ( "data-extra-thing", "[1,2,3]" ) ] }
+    [ Main.ShortText
+        { inputType = "Email"
+        , inputTag = "input"
+        , attributes =
+            Dict.fromList [ ( "type", "email" ) ]
+        , maxlength = Main.AttributeNotNeeded Nothing
+        }
+    , Main.ShortText
+        { inputType = "Emails"
+        , inputTag = "input"
+        , attributes =
+            Dict.fromList [ ( "type", "email" ), ( "multiple", "true" ) ]
+        , maxlength = Main.AttributeNotNeeded Nothing
+        }
+    , Main.ShortText
+        { inputType = "Emails with maxlength"
+        , inputTag = "input"
+        , attributes =
+            Dict.fromList
+                [ ( "type", "email" )
+                , ( "multiple", "true" )
+                , ( "maxlength", "20" )
+                , ( "data-extra-thing", "[1,2,3]" )
+                ]
+        , maxlength = Main.AttributeGiven 20
+        }
     ]
 
 
@@ -120,8 +143,21 @@ fuzzFormField =
         string
         (Fuzz.maybe string)
         presenceFuzzer
-        string
+        (attributeOptionalFuzzer string { blank = "" })
         inputFieldFuzzer
+
+
+attributeOptionalFuzzer : Fuzzer a -> { blank : a } -> Fuzzer (Main.AttributeOptional a)
+attributeOptionalFuzzer fuzzer { blank } =
+    fuzzer
+        |> Fuzz.andThen
+            (\value ->
+                if value == blank then
+                    Fuzz.constant (Main.AttributeNotNeeded Nothing)
+
+                else
+                    Fuzz.constant (Main.AttributeGiven value)
+            )
 
 
 choiceStringFuzzer : Fuzzer Main.Choice
@@ -216,21 +252,30 @@ newFieldFromOldField oldField =
         maybeDescription =
             case oldField.presence of
                 System { description } ->
-                    Just description
+                    Main.AttributeGiven description
 
                 SystemRequired { description } ->
-                    Just description
+                    Main.AttributeGiven description
 
                 SystemOptional { description } ->
-                    Just description
+                    Main.AttributeGiven description
 
                 _ ->
-                    Nothing
+                    Main.AttributeNotNeeded Nothing
     in
     { label = oldField.label
     , name = maybeName
     , presence = newPresence
-    , description = Maybe.withDefault oldField.description maybeDescription
+    , description =
+        case maybeDescription of
+            Main.AttributeGiven description ->
+                maybeDescription
+
+            Main.AttributeInvalid _ ->
+                Main.AttributeGiven oldField.description
+
+            Main.AttributeNotNeeded _ ->
+                Main.AttributeGiven oldField.description
     , type_ = oldField.type_
     }
 
