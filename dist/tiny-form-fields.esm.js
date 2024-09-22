@@ -6379,6 +6379,29 @@ var $elm$core$Basics$always = F2(
 		return a;
 	});
 var $author$project$Main$animateFadeDuration = 500;
+var $elm$core$Basics$composeL = F3(
+	function (g, f, x) {
+		return g(
+			f(x));
+	});
+var $elm$core$Task$onError = _Scheduler_onError;
+var $elm$core$Task$attempt = F2(
+	function (resultToMessage, task) {
+		return $elm$core$Task$command(
+			A2(
+				$elm$core$Task$onError,
+				A2(
+					$elm$core$Basics$composeL,
+					A2($elm$core$Basics$composeL, $elm$core$Task$succeed, resultToMessage),
+					$elm$core$Result$Err),
+				A2(
+					$elm$core$Task$andThen,
+					A2(
+						$elm$core$Basics$composeL,
+						A2($elm$core$Basics$composeL, $elm$core$Task$succeed, resultToMessage),
+						$elm$core$Result$Ok),
+					task)));
+	});
 var $author$project$Main$PortIncomingViewMode = function (a) {
 	return {$: 0, a: a};
 };
@@ -6407,6 +6430,7 @@ var $author$project$Main$decodePortIncomingValue = A2(
 		}
 	},
 	A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string));
+var $elm$browser$Browser$Dom$focus = _Browser_call('focus');
 var $elm$core$Elm$JsArray$foldl = _JsArray_foldl;
 var $elm$core$Elm$JsArray$indexedMap = _JsArray_indexedMap;
 var $elm$core$Bitwise$shiftLeftBy = _Bitwise_shiftLeftBy;
@@ -6901,9 +6925,8 @@ var $author$project$Main$update = F2(
 								$author$project$Main$encodePortOutgoingValue(
 									$author$project$Main$PortOutgoingFormFields(newFormFields))),
 								A2(
-								$elm$core$Task$perform,
-								$elm$core$Basics$identity,
-								$elm$core$Task$succeed(
+								$elm$core$Task$attempt,
+								$elm$core$Basics$always(
 									A2(
 										$author$project$Main$DoSleepDo,
 										$author$project$Main$animateFadeDuration,
@@ -6913,7 +6936,9 @@ var $author$project$Main$update = F2(
 												$elm$core$Maybe$Just(
 													_Utils_Tuple2(currLength, 0))),
 												$author$project$Main$SetEditorAnimate($elm$core$Maybe$Nothing)
-											]))))
+											]))),
+								$elm$browser$Browser$Dom$focus(
+									'label-' + $elm$core$String$fromInt(currLength)))
 							])));
 			case 3:
 				var index = msg.a;
@@ -7960,31 +7985,6 @@ var $author$project$Main$viewFormBuilder = F2(
 				dropdownState,
 				_Utils_ap(stdOptions, extraOptions)));
 	});
-var $elm$core$Elm$JsArray$map = _JsArray_map;
-var $elm$core$Array$map = F2(
-	function (func, _v0) {
-		var len = _v0.a;
-		var startShift = _v0.b;
-		var tree = _v0.c;
-		var tail = _v0.d;
-		var helper = function (node) {
-			if (!node.$) {
-				var subTree = node.a;
-				return $elm$core$Array$SubTree(
-					A2($elm$core$Elm$JsArray$map, helper, subTree));
-			} else {
-				var values = node.a;
-				return $elm$core$Array$Leaf(
-					A2($elm$core$Elm$JsArray$map, func, values));
-			}
-		};
-		return A4(
-			$elm$core$Array$Array_elm_builtin,
-			len,
-			startShift,
-			A2($elm$core$Elm$JsArray$map, helper, tree),
-			A2($elm$core$Elm$JsArray$map, func, tail));
-	});
 var $author$project$Main$maybeMaxLengthOf = function (formField) {
 	var _v0 = formField.p;
 	switch (_v0.$) {
@@ -8094,8 +8094,8 @@ var $elm$core$List$singleton = function (value) {
 	return _List_fromArray(
 		[value]);
 };
-var $author$project$Main$viewFormFieldOptionsPreview = F2(
-	function (_v0, formField) {
+var $author$project$Main$viewFormFieldOptionsPreview = F3(
+	function (_v0, fieldID, formField) {
 		var formValues = _v0.Q;
 		var customAttrs = _v0.a2;
 		var shortTextTypeDict = _v0.aj;
@@ -8160,6 +8160,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 							[
 								A2($elm$html$Html$Attributes$attribute, 'class', 'tff-text-field'),
 								$elm$html$Html$Attributes$name(fieldName),
+								$elm$html$Html$Attributes$id(fieldID),
 								$elm$html$Html$Attributes$required(
 								$author$project$Main$requiredData(formField.u))
 							]),
@@ -8193,6 +8194,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 							[
 								$elm$html$Html$Attributes$class('tff-text-field'),
 								$elm$html$Html$Attributes$name(fieldName),
+								$elm$html$Html$Attributes$id(fieldID),
 								$elm$html$Html$Attributes$required(
 								$author$project$Main$requiredData(formField.u)),
 								$elm$html$Html$Attributes$placeholder(' ')
@@ -8216,6 +8218,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 							_List_fromArray(
 								[
 									$elm$html$Html$Attributes$name(fieldName),
+									$elm$html$Html$Attributes$id(fieldID),
 									A2(
 									$elm$core$List$member,
 									$elm$html$Html$Attributes$disabled(true),
@@ -8396,8 +8399,9 @@ var $author$project$Main$viewFormFieldOptionsPreview = F2(
 						]));
 		}
 	});
-var $author$project$Main$viewFormFieldPreview = F2(
-	function (config, formField) {
+var $author$project$Main$viewFormFieldPreview = F3(
+	function (config, index, formField) {
+		var fieldID = 'tff-field-input-' + $elm$core$String$fromInt(index);
 		return A2(
 			$elm$html$Html$div,
 			_List_fromArray(
@@ -8422,7 +8426,8 @@ var $author$project$Main$viewFormFieldPreview = F2(
 							$elm$html$Html$label,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('tff-field-label')
+									$elm$html$Html$Attributes$class('tff-field-label'),
+									$elm$html$Html$Attributes$for(fieldID)
 								]),
 							_List_fromArray(
 								[
@@ -8439,7 +8444,7 @@ var $author$project$Main$viewFormFieldPreview = F2(
 									}
 								}()
 								])),
-							A2($author$project$Main$viewFormFieldOptionsPreview, config, formField),
+							A3($author$project$Main$viewFormFieldOptionsPreview, config, fieldID, formField),
 							A2(
 							$elm$html$Html$div,
 							_List_fromArray(
@@ -8484,7 +8489,7 @@ var $author$project$Main$viewFormPreview = F2(
 		var config = {a2: customAttrs, Q: formValues, aj: shortTextTypeDict};
 		return $elm$core$Array$toList(
 			A2(
-				$elm$core$Array$map,
+				$elm$core$Array$indexedMap,
 				$author$project$Main$viewFormFieldPreview(config),
 				formFields));
 	});

@@ -23,6 +23,7 @@ port module Main exposing
 
 import Array exposing (Array)
 import Browser
+import Browser.Dom
 import Dict exposing (Dict)
 import Html exposing (Html, a, button, div, h3, input, label, li, option, pre, select, text, textarea, ul)
 import Html.Attributes exposing (attribute, checked, class, disabled, for, href, id, maxlength, minlength, name, placeholder, readonly, required, selected, tabindex, title, type_, value)
@@ -501,12 +502,17 @@ update msg model =
             ( { model | formFields = newFormFields }
             , Cmd.batch
                 [ outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
-                , DoSleepDo animateFadeDuration
-                    [ SetEditorAnimate (Just ( currLength, AnimateYellowFade ))
-                    , SetEditorAnimate Nothing
-                    ]
-                    |> Task.succeed
-                    |> Task.perform identity
+                , Browser.Dom.focus ("label-" ++ String.fromInt currLength)
+                    |> Task.attempt
+                        -- ignoring result of focus
+                        -- and always returning `DoSleepDo...`
+                        (always
+                            (DoSleepDo animateFadeDuration
+                                [ SetEditorAnimate (Just ( currLength, AnimateYellowFade ))
+                                , SetEditorAnimate Nothing
+                                ]
+                            )
+                        )
                 ]
             )
 
@@ -836,7 +842,7 @@ viewFormPreview customAttrs { formFields, formValues, shortTextTypeDict } =
             }
     in
     formFields
-        |> Array.map (viewFormFieldPreview config)
+        |> Array.indexedMap (viewFormFieldPreview config)
         |> Array.toList
 
 
@@ -849,12 +855,17 @@ when bool condition =
         condition.false
 
 
-viewFormFieldPreview : { formValues : Json.Encode.Value, customAttrs : List (Html.Attribute Msg), shortTextTypeDict : Dict String CustomElement } -> FormField -> Html Msg
-viewFormFieldPreview config formField =
+viewFormFieldPreview : { formValues : Json.Encode.Value, customAttrs : List (Html.Attribute Msg), shortTextTypeDict : Dict String CustomElement } -> Int -> FormField -> Html Msg
+viewFormFieldPreview config index formField =
+    let
+        fieldID =
+            -- so clicking on label will focus on field
+            "tff-field-input-" ++ String.fromInt index
+    in
     div [ class "tff-tabs-preview" ]
         [ div
             [ class ("tff-field-group" ++ when (requiredData formField.presence) { true = " tff-required", false = "" }) ]
-            [ label [ class "tff-field-label" ]
+            [ label [ class "tff-field-label", for fieldID ]
                 [ text formField.label
                 , case formField.presence of
                     Required ->
@@ -866,7 +877,7 @@ viewFormFieldPreview config formField =
                     System ->
                         text ""
                 ]
-            , viewFormFieldOptionsPreview config formField
+            , viewFormFieldOptionsPreview config fieldID formField
             , div [ class "tff-field-description" ]
                 [ text
                     (case formField.description of
@@ -924,8 +935,8 @@ fieldNameOf formField =
     Maybe.withDefault formField.label formField.name
 
 
-viewFormFieldOptionsPreview : { formValues : Json.Encode.Value, customAttrs : List (Html.Attribute Msg), shortTextTypeDict : Dict String CustomElement } -> FormField -> Html Msg
-viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formField =
+viewFormFieldOptionsPreview : { formValues : Json.Encode.Value, customAttrs : List (Html.Attribute Msg), shortTextTypeDict : Dict String CustomElement } -> String -> FormField -> Html Msg
+viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } fieldID formField =
     let
         fieldName =
             fieldNameOf formField
@@ -959,6 +970,7 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formF
             Html.node customElement.inputTag
                 ([ attribute "class" "tff-text-field"
                  , name fieldName
+                 , id fieldID
                  , required (requiredData formField.presence)
                  ]
                     ++ shortTextAttrs
@@ -978,6 +990,7 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formF
             textarea
                 ([ class "tff-text-field"
                  , name fieldName
+                 , id fieldID
                  , required (requiredData formField.presence)
                  , placeholder " "
                  ]
@@ -995,6 +1008,7 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } formF
                 [ selectArrowDown
                 , select
                     [ name fieldName
+                    , id fieldID
 
                     -- when we're disabling `<select>` we actually only
                     -- want to disable the `<option>`s so user can see the options but cannot choose
