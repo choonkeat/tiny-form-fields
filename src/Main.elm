@@ -1845,9 +1845,22 @@ decodeFormField =
     Json.Decode.succeed FormField
         |> andMap (Json.Decode.field "label" Json.Decode.string)
         |> andMap decodeFormFieldMaybeName
-        |> andMap (Json.Decode.field "presence" decodePresence)
+        |> andMap (Json.Decode.oneOf [ Json.Decode.field "presence" decodePresence, decodeRequired ])
         |> andMap decodeFormFieldDescription
         |> andMap (Json.Decode.field "type" decodeInputField)
+
+
+decodeRequired : Json.Decode.Decoder Presence
+decodeRequired =
+    Json.Decode.field "required" Json.Decode.bool
+        |> Json.Decode.map
+            (\b ->
+                if b then
+                    Required
+
+                else
+                    Optional
+            )
 
 
 decodeFormFieldMaybeName : Json.Decode.Decoder (Maybe String)

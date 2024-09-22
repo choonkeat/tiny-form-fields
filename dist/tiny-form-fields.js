@@ -5709,6 +5709,13 @@ var $author$project$Main$decodePresence = $elm$json$Json$Decode$oneOf(
 			},
 			A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string))
 		]));
+var $elm$json$Json$Decode$bool = _Json_decodeBool;
+var $author$project$Main$decodeRequired = A2(
+	$elm$json$Json$Decode$map,
+	function (b) {
+		return b ? 0 : 1;
+	},
+	A2($elm$json$Json$Decode$field, 'required', $elm$json$Json$Decode$bool));
 var $author$project$Main$decodeFormField = A2(
 	$elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2($elm$json$Json$Decode$field, 'type', $author$project$Main$decodeInputField),
@@ -5717,7 +5724,12 @@ var $author$project$Main$decodeFormField = A2(
 		$author$project$Main$decodeFormFieldDescription,
 		A2(
 			$elm_community$json_extra$Json$Decode$Extra$andMap,
-			A2($elm$json$Json$Decode$field, 'presence', $author$project$Main$decodePresence),
+			$elm$json$Json$Decode$oneOf(
+				_List_fromArray(
+					[
+						A2($elm$json$Json$Decode$field, 'presence', $author$project$Main$decodePresence),
+						$author$project$Main$decodeRequired
+					])),
 			A2(
 				$elm_community$json_extra$Json$Decode$Extra$andMap,
 				$author$project$Main$decodeFormFieldMaybeName,
@@ -7454,7 +7466,6 @@ var $elm$html$Html$Events$on = F2(
 			event,
 			$elm$virtual_dom$VirtualDom$Normal(decoder));
 	});
-var $elm$json$Json$Decode$bool = _Json_decodeBool;
 var $elm$html$Html$Events$targetChecked = A2(
 	$elm$json$Json$Decode$at,
 	_List_fromArray(

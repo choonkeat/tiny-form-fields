@@ -162,6 +162,300 @@ suite =
         ]
 
 
+oldjson : Test
+oldjson =
+    describe "Old JSON"
+        [ test "initial a7fd507" <|
+            \_ ->
+                """
+                [
+                    {
+                        "label": "Short text 1",
+                        "required": true,
+                        "description": "description 1",
+                        "type": {
+                        "type": "ShortText",
+                        "inputType": "text",
+                        "maxLength": 12
+                        }
+                    },
+                    {
+                        "label": "Email 2",
+                        "required": true,
+                        "description": "your personal email",
+                        "type": {
+                        "type": "ShortText",
+                        "inputType": "email",
+                        "maxLength": 23
+                        }
+                    },
+                    {
+                        "label": "Long text 3",
+                        "required": true,
+                        "description": "any comments",
+                        "type": {
+                        "type": "LongText",
+                        "maxLength": 280
+                        }
+                    },
+                    {
+                        "label": "Dropdown 4",
+                        "required": true,
+                        "description": "Binary choice",
+                        "type": {
+                        "type": "ChooseOne",
+                        "choices": [
+                            "Yes",
+                            "No"
+                        ]
+                        }
+                    },
+                    {
+                        "label": "Checkboxes 5",
+                        "required": true,
+                        "description": "Choose many or none",
+                        "type": {
+                        "type": "ChooseMultiple",
+                        "choices": [
+                            "Apple",
+                            "Banana",
+                            "Cantaloupe",
+                            "Durian"
+                        ]
+                        }
+                    }
+                ]
+                """
+                    |> Json.Decode.decodeString Main.decodeFormFields
+                    |> Expect.equal
+                        (Ok
+                            (Array.fromList
+                                [ { description = Main.AttributeGiven "description 1"
+                                  , label = "Short text 1"
+                                  , name = Nothing
+                                  , presence = Main.Required
+                                  , type_ =
+                                        Main.ShortText
+                                            { attributes = Dict.fromList []
+                                            , datalist = Main.AttributeNotNeeded Nothing
+                                            , inputTag = "input"
+                                            , inputType = "text"
+                                            , maxlength = Main.AttributeNotNeeded Nothing
+                                            }
+                                  }
+                                , { description = Main.AttributeGiven "your personal email"
+                                  , label = "Email 2"
+                                  , name = Nothing
+                                  , presence = Main.Required
+                                  , type_ =
+                                        Main.ShortText
+                                            { attributes = Dict.fromList []
+                                            , datalist = Main.AttributeNotNeeded Nothing
+                                            , inputTag = "input"
+                                            , inputType = "email"
+                                            , maxlength = Main.AttributeNotNeeded Nothing
+                                            }
+                                  }
+                                , { description = Main.AttributeGiven "any comments"
+                                  , label = "Long text 3"
+                                  , name = Nothing
+                                  , presence = Main.Required
+                                  , type_ = Main.LongText (Main.AttributeGiven 280)
+                                  }
+                                , { description = Main.AttributeGiven "Binary choice"
+                                  , label = "Dropdown 4"
+                                  , name = Nothing
+                                  , presence = Main.Required
+                                  , type_ =
+                                        Main.ChooseOne
+                                            [ { label = "Yes"
+                                              , value = "Yes"
+                                              }
+                                            , { label = "No"
+                                              , value = "No"
+                                              }
+                                            ]
+                                  }
+                                , { description = Main.AttributeGiven "Choose many or none"
+                                  , label = "Checkboxes 5"
+                                  , name = Nothing
+                                  , presence = Main.Required
+                                  , type_ =
+                                        Main.ChooseMultiple
+                                            [ { label = "Apple"
+                                              , value = "Apple"
+                                              }
+                                            , { label = "Banana"
+                                              , value = "Banana"
+                                              }
+                                            , { label = "Cantaloupe"
+                                              , value = "Cantaloupe"
+                                              }
+                                            , { label = "Durian"
+                                              , value = "Durian"
+                                              }
+                                            ]
+                                  }
+                                ]
+                            )
+                        )
+        , test "initial aee8a74" <|
+            \_ ->
+                """
+                [
+                    {
+                        "label": "Question 1",
+                        "presence": "Required",
+                        "description": "dropdown desc",
+                        "type": {
+                        "type": "Dropdown",
+                        "choices": [
+                            "Red",
+                            "Orange",
+                            "Yellow",
+                            "Green",
+                            "Blue",
+                            "Indigo",
+                            "Violet"
+                        ]
+                        }
+                    },
+                    {
+                        "label": "Question 2",
+                        "presence": "Required",
+                        "description": "my radio desc",
+                        "type": {
+                        "type": "ChooseOne",
+                        "choices": [
+                            "Yes",
+                            "No"
+                        ]
+                        }
+                    },
+                    {
+                        "label": "Question 3",
+                        "presence": "Optional",
+                        "description": "My checkboxes desc",
+                        "type": {
+                        "type": "ChooseMultiple",
+                        "choices": [
+                            "Apple",
+                            "Banana",
+                            "Cantaloupe",
+                            "Durian"
+                        ]
+                        }
+                    },
+                    {
+                        "label": "Question 4",
+                        "presence": "Required",
+                        "description": "any comments",
+                        "type": {
+                        "type": "LongText",
+                        "maxLength": 280
+                        }
+                    },
+                    {
+                        "label": "Question 5",
+                        "presence": "Required",
+                        "description": "any text",
+                        "type": {
+                        "type": "ShortText",
+                        "inputType": "Single-line free text",
+                        "maxLength": 140
+                        }
+                    },
+                    {
+                        "label": "Question 6",
+                        "presence": "Required",
+                        "description": "custom nric format",
+                        "type": {
+                        "type": "ShortText",
+                        "inputType": "NRIC",
+                        "maxLength": null
+                        }
+                    }
+                ]
+                """
+                    |> Json.Decode.decodeString Main.decodeFormFields
+                    |> Expect.equal
+                        (Ok
+                            (Array.fromList
+                                [ { description = Main.AttributeGiven "dropdown desc"
+                                  , label = "Question 1"
+                                  , name = Nothing
+                                  , presence = Main.Required
+                                  , type_ =
+                                        Main.Dropdown
+                                            [ { label = "Red", value = "Red" }
+                                            , { label = "Orange", value = "Orange" }
+                                            , { label = "Yellow", value = "Yellow" }
+                                            , { label = "Green", value = "Green" }
+                                            , { label = "Blue", value = "Blue" }
+                                            , { label = "Indigo", value = "Indigo" }
+                                            , { label = "Violet", value = "Violet" }
+                                            ]
+                                  }
+                                , { description = Main.AttributeGiven "my radio desc"
+                                  , label = "Question 2"
+                                  , name = Nothing
+                                  , presence = Main.Required
+                                  , type_ =
+                                        Main.ChooseOne
+                                            [ { label = "Yes", value = "Yes" }
+                                            , { label = "No", value = "No" }
+                                            ]
+                                  }
+                                , { description = Main.AttributeGiven "My checkboxes desc"
+                                  , label = "Question 3"
+                                  , name = Nothing
+                                  , presence = Main.Optional
+                                  , type_ =
+                                        Main.ChooseMultiple
+                                            [ { label = "Apple", value = "Apple" }
+                                            , { label = "Banana", value = "Banana" }
+                                            , { label = "Cantaloupe", value = "Cantaloupe" }
+                                            , { label = "Durian", value = "Durian" }
+                                            ]
+                                  }
+                                , { description = Main.AttributeGiven "any comments"
+                                  , label = "Question 4"
+                                  , name = Nothing
+                                  , presence = Main.Required
+                                  , type_ = Main.LongText (Main.AttributeGiven 280)
+                                  }
+                                , { description = Main.AttributeGiven "any text"
+                                  , label = "Question 5"
+                                  , name = Nothing
+                                  , presence = Main.Required
+                                  , type_ =
+                                        Main.ShortText
+                                            { attributes = Dict.fromList []
+                                            , datalist = Main.AttributeNotNeeded Nothing
+                                            , inputTag = "input"
+                                            , inputType = "Single-line free text"
+                                            , maxlength = Main.AttributeNotNeeded Nothing
+                                            }
+                                  }
+                                , { description = Main.AttributeGiven "custom nric format"
+                                  , label = "Question 6"
+                                  , name = Nothing
+                                  , presence = Main.Required
+                                  , type_ =
+                                        Main.ShortText
+                                            { attributes = Dict.fromList []
+                                            , datalist = Main.AttributeNotNeeded Nothing
+                                            , inputTag = "input"
+                                            , inputType = "NRIC"
+                                            , maxlength = Main.AttributeNotNeeded Nothing
+                                            }
+                                  }
+                                ]
+                            )
+                        )
+        ]
+
+
 
 --
 
