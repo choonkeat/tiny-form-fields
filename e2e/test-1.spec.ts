@@ -18,7 +18,7 @@ test("test", async ({ page }) => {
     { link: "Radio buttons", label: "Yes or no", description: "boolean", choices: ["No", "Yes", "Maybe"], value: randomOne(["No", "Yes", "Maybe"]) },
     { link: "Checkboxes", label: "Hobbies", description: "sports", choices: sports, values: randomFew(sports) },
     { link: "Multi-line description", label: "Any comments", description: "say something", maxlength: 100, value: `Sed ${new Date().toISOString()}` },
-    { link: "Single-line free text", label: "Free text", description: "anything", maxlength: 100, value: `blah string ${Math.random()}!` },
+    { link: "Single-line free text", label: "Free text", description: "anything", maxlength: 20, value: `blah string ${Math.random()}!` }, // cropped
     { link: "Custom Element", label: "Length 9 Custom Element URL", description: "some url", maxlength: 100, value: "http://lo" },
     { link: "Email", label: "some email addr", description: "work email only", maxlength: 100, value: "email1@example.com" },
     { link: "Emails", label: "multiple emails", description: "friends", maxlength: 100, value: "email2@example.com,email3@example.com" },
@@ -87,7 +87,7 @@ test("test", async ({ page }) => {
     if (input.values) {
       acc[input.label] = input.values;
     } else {
-      acc[input.label] = input.value;
+      acc[input.label] = input.value.substring(0, input.maxlength || input.value.length);
     }
     return acc;
   }, {});
