@@ -194,6 +194,7 @@ inputAttributeOptional :
     , onInput : String -> msg
     , toString : a -> String
     , label : String
+    , htmlNode : List (Html.Attribute msg) -> List (Html msg) -> Html msg
     , attrs : List (Html.Attribute msg)
     }
     -> AttributeOptional a
@@ -230,7 +231,7 @@ inputAttributeOptional options attributeOptional =
                     , text " "
                     , text options.label
                     ]
-                , input ([ required True, onInput options.onInput, value str ] ++ options.attrs) []
+                , options.htmlNode ([ required True, onInput options.onInput, value str ] ++ options.attrs) []
                 ]
 
         AttributeGiven a ->
@@ -247,7 +248,7 @@ inputAttributeOptional options attributeOptional =
                     , text " "
                     , text options.label
                     ]
-                , input ([ required True, onInput options.onInput, value (options.toString a) ] ++ options.attrs) []
+                , options.htmlNode ([ required True, onInput options.onInput, value (options.toString a) ] ++ options.attrs) []
                 ]
 
 
@@ -263,6 +264,7 @@ type alias CustomElement =
     , inputTag : String
     , attributes : Dict String String
     , maxlength : AttributeOptional Int
+    , datalist : AttributeOptional (List Choice)
     }
 
 
@@ -270,7 +272,9 @@ fromRawCustomElement : RawCustomElement -> CustomElement
 fromRawCustomElement ele =
     { inputTag = ele.inputTag
     , inputType = ele.inputType
-    , attributes = ele.attributes
+    , attributes =
+        ele.attributes
+            |> Dict.filter (\k v -> k /= "list" && not (String.contains "\n" v))
     , maxlength =
         case Dict.get "maxlength" ele.attributes of
             Just "" ->
@@ -286,21 +290,49 @@ fromRawCustomElement ele =
 
             _ ->
                 AttributeNotNeeded Nothing
+    , datalist =
+        case Dict.get "list" ele.attributes of
+            Just s ->
+                case String.split "\n" (String.trim s) of
+                    [] ->
+                        AttributeNotNeeded Nothing
+
+                    [ _ ] ->
+                        AttributeNotNeeded Nothing
+
+                    list ->
+                        AttributeGiven (List.map choiceFromString list)
+
+            Nothing ->
+                AttributeNotNeeded Nothing
     }
 
 
 toRawCustomElement : CustomElement -> RawCustomElement
 toRawCustomElement ele =
+    let
+        addMaxLengthIfGiven dict =
+            case ele.maxlength of
+                AttributeGiven int ->
+                    Dict.insert "maxlength" (String.fromInt int) dict
+
+                _ ->
+                    Dict.filter (\k _ -> k /= "maxlength") dict
+
+        addDatalistIfGiven dict =
+            case ele.datalist of
+                AttributeGiven list ->
+                    Dict.insert "list" (String.join "\n" (List.map choiceToString list)) dict
+
+                _ ->
+                    Dict.filter (\k _ -> k /= "list") dict
+    in
     { inputTag = ele.inputTag
     , inputType = ele.inputType
     , attributes =
-        case ele.maxlength of
-            AttributeGiven int ->
-                Dict.insert "maxlength" (String.fromInt int) ele.attributes
-
-            _ ->
-                ele.attributes
-                    |> Dict.filter (\k v -> k /= "maxlength")
+        ele.attributes
+            |> addMaxLengthIfGiven
+            |> addDatalistIfGiven
     }
 
 
@@ -384,6 +416,8 @@ type FormFieldMsg
     | OnChoicesInput
     | OnMaxLengthToggle Bool
     | OnMaxLengthInput
+    | OnDatalistToggle Bool
+    | OnDatalistInput
 
 
 
@@ -699,7 +733,7 @@ updateFormField msg string formField =
                     in
                     { formField | type_ = ShortText newCustomElement }
 
-                LongText maxlength ->
+                LongText _ ->
                     let
                         newMaxlength =
                             case String.toInt string of
@@ -710,6 +744,59 @@ updateFormField msg string formField =
                                     AttributeInvalid string
                     in
                     { formField | type_ = LongText newMaxlength }
+
+                Dropdown _ ->
+                    formField
+
+                ChooseOne _ ->
+                    formField
+
+                ChooseMultiple _ ->
+                    formField
+
+        OnDatalistToggle bool ->
+            case formField.type_ of
+                ShortText customElement ->
+                    let
+                        newCustomElement =
+                            { customElement | datalist = toggleAttributeOptional bool customElement.datalist }
+                    in
+                    { formField | type_ = ShortText newCustomElement }
+
+                LongText _ ->
+                    formField
+
+                Dropdown _ ->
+                    formField
+
+                ChooseOne _ ->
+                    formField
+
+                ChooseMultiple _ ->
+                    formField
+
+        OnDatalistInput ->
+            case formField.type_ of
+                ShortText customElement ->
+                    let
+                        newCustomElement =
+                            { customElement
+                                | datalist =
+                                    case String.split "\n" string of
+                                        [] ->
+                                            AttributeInvalid string
+
+                                        [ _ ] ->
+                                            AttributeInvalid string
+
+                                        list ->
+                                            AttributeGiven (List.map choiceFromString list)
+                            }
+                    in
+                    { formField | type_ = ShortText newCustomElement }
+
+                LongText _ ->
+                    formField
 
                 Dropdown _ ->
                     formField
@@ -955,6 +1042,25 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } field
     case formField.type_ of
         ShortText customElement ->
             let
+                ( dataListAttrs, dataListElement ) =
+                    case customElement.datalist of
+                        AttributeGiven list ->
+                            ( [ attribute "list" (fieldID ++ "-datalist") ]
+                            , Html.datalist
+                                [ id (fieldID ++ "-datalist") ]
+                                (List.map
+                                    (\choice ->
+                                        Html.option
+                                            [ value choice.value ]
+                                            [ text choice.label ]
+                                    )
+                                    list
+                                )
+                            )
+
+                        _ ->
+                            ( [], text "" )
+
                 shortTextAttrs =
                     Dict.get customElement.inputType shortTextTypeDict
                         |> Maybe.map .attributes
@@ -967,17 +1073,21 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } field
                         :: List.map (\( k, v ) -> Just (attribute k v)) (Dict.toList customElement.attributes)
                         |> List.filterMap identity
             in
-            Html.node customElement.inputTag
-                ([ attribute "class" "tff-text-field"
-                 , name fieldName
-                 , id fieldID
-                 , required (requiredData formField.presence)
-                 ]
-                    ++ shortTextAttrs
-                    ++ extraAttrs
-                    ++ customAttrs
-                )
-                []
+            div []
+                [ Html.node customElement.inputTag
+                    ([ attribute "class" "tff-text-field"
+                     , name fieldName
+                     , id fieldID
+                     , required (requiredData formField.presence)
+                     ]
+                        ++ dataListAttrs
+                        ++ shortTextAttrs
+                        ++ extraAttrs
+                        ++ customAttrs
+                    )
+                    []
+                , dataListElement
+                ]
 
         LongText _ ->
             let
@@ -1307,6 +1417,7 @@ viewFormFieldBuilder maybeAnimate shortTextTypeList totalLength index formField 
             , onInput = OnFormField OnDescriptionInput index
             , label = "Question description"
             , toString = identity
+            , htmlNode = Html.input
             , attrs = [ class "tff-text-field" ]
             }
             formField.description
@@ -1401,6 +1512,7 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
                         , onInput = OnFormField OnMaxLengthInput index
                         , label = "Limit number of characters"
                         , toString = String.fromInt
+                        , htmlNode = Html.input
                         , attrs = [ class "tff-text-field", type_ "number", Html.Attributes.min "1" ]
                         }
                         customElement.maxlength
@@ -1412,6 +1524,15 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
                         , value (String.fromInt i)
                         ]
                         []
+            , inputAttributeOptional
+                { onCheck = \b -> OnFormField (OnDatalistToggle b) index ""
+                , onInput = OnFormField OnDatalistInput index
+                , label = "Suggested values"
+                , toString = List.map choiceToString >> String.join "\n"
+                , htmlNode = Html.textarea
+                , attrs = [ class "tff-text-field", placeholder "Enter one suggestion per line" ]
+                }
+                customElement.datalist
             ]
 
         LongText optionalMaxLength ->
@@ -1420,6 +1541,7 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
                 , onInput = OnFormField OnMaxLengthInput index
                 , label = "Limit number of characters"
                 , toString = String.fromInt
+                , htmlNode = Html.input
                 , attrs = [ class "tff-text-field", type_ "number", Html.Attributes.min "1" ]
                 }
                 optionalMaxLength
