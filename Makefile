@@ -26,5 +26,8 @@ test-playwright:
 	npx playwright test
 	echo playwright pass
 
+test-playwright-ui:
+	npx playwright test --ui
+
 stop-run:
 	killall node

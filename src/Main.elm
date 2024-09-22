@@ -274,7 +274,8 @@ fromRawCustomElement ele =
     , inputType = ele.inputType
     , attributes =
         ele.attributes
-            |> Dict.filter (\k v -> k /= "list" && not (String.contains "\n" v))
+            -- list="some-id" is not a `datalist : AttributeOptional (List Choice)`, we keep it in `.attributes`
+            |> Dict.filter (\k v -> not (k == "list" && String.contains "\n" v))
     , maxlength =
         case Dict.get "maxlength" ele.attributes of
             Just "" ->

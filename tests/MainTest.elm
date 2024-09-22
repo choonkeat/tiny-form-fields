@@ -37,6 +37,8 @@ suite =
                 [
                     { "Text": { "type": "text" } },
                     { "Text": { "type": "text", "maxlength": "10", "multiple": "true" } },
+                    { "Text": { "type": "text", "list": "someid" } },
+                    { "Text": { "type": "text", "list": "one | uno !\\ntwo | dos\\nthree | tres\\nfour" } },
                     { "Email": { "type": "email" } },
                     { "Emails": { "type": "email" , "multiple": "true" } },
                     { "Digits": { "type": "text", "pattern": "^[0-9]+$" } },
@@ -47,13 +49,100 @@ suite =
                     |> Json.Decode.decodeString Main.decodeShortTextTypeList
                     |> Expect.equal
                         (Ok
-                            [ { inputType = "Text", inputTag = "input", attributes = Dict.fromList [ ( "type", "text" ) ], maxlength = Main.AttributeNotNeeded Nothing }
-                            , { inputType = "Text", inputTag = "input", attributes = Dict.fromList [ ( "type", "text" ), ( "maxlength", "10" ), ( "multiple", "true" ) ], maxlength = Main.AttributeGiven 10 }
-                            , { inputType = "Email", inputTag = "input", attributes = Dict.fromList [ ( "type", "email" ) ], maxlength = Main.AttributeNotNeeded Nothing }
-                            , { inputType = "Emails", inputTag = "input", attributes = Dict.fromList [ ( "type", "email" ), ( "multiple", "true" ) ], maxlength = Main.AttributeNotNeeded Nothing }
-                            , { inputType = "Digits", inputTag = "input", attributes = Dict.fromList [ ( "pattern", "^[0-9]+$" ), ( "type", "text" ) ], maxlength = Main.AttributeNotNeeded Nothing }
-                            , { inputType = "Nric2", inputTag = "nric-custom-ele", attributes = Dict.fromList [ ( "pattern", "^[STGM][0-9]{7}[ABCDEFGHIZJ]$" ), ( "type", "text" ) ], maxlength = Main.AttributeNotNeeded Nothing }
-                            , { inputType = "Nric", inputTag = "input", attributes = Dict.fromList [ ( "pattern", "^[STGM][0-9]{7}[ABCDEFGHIZJ]$" ), ( "type", "text" ) ], maxlength = Main.AttributeNotNeeded Nothing }
+                            [ { inputType = "Text"
+                              , inputTag = "input"
+                              , attributes =
+                                    Dict.fromList
+                                        [ ( "type", "text" )
+                                        ]
+                              , maxlength = Main.AttributeNotNeeded Nothing
+                              , datalist = Main.AttributeNotNeeded Nothing
+                              }
+                            , { inputType = "Text"
+                              , inputTag = "input"
+                              , attributes =
+                                    Dict.fromList
+                                        [ ( "type", "text" )
+                                        , ( "maxlength", "10" )
+                                        , ( "multiple", "true" )
+                                        ]
+                              , maxlength = Main.AttributeGiven 10
+                              , datalist = Main.AttributeNotNeeded Nothing
+                              }
+                            , { inputType = "Text"
+                              , inputTag = "input"
+                              , attributes =
+                                    Dict.fromList
+                                        [ ( "type", "text" )
+                                        , ( "list", "someid" )
+                                        ]
+                              , maxlength = Main.AttributeNotNeeded Nothing
+                              , datalist = Main.AttributeNotNeeded Nothing
+                              }
+                            , { inputType = "Text"
+                              , inputTag = "input"
+                              , attributes =
+                                    Dict.fromList
+                                        [ ( "type", "text" )
+                                        ]
+                              , maxlength = Main.AttributeNotNeeded Nothing
+                              , datalist =
+                                    Main.AttributeGiven
+                                        [ { label = "uno !", value = "one" }
+                                        , { label = "dos", value = "two" }
+                                        , { label = "tres", value = "three" }
+                                        , { label = "four", value = "four" }
+                                        ]
+                              }
+                            , { inputType = "Email"
+                              , inputTag = "input"
+                              , attributes =
+                                    Dict.fromList
+                                        [ ( "type", "email" )
+                                        ]
+                              , maxlength = Main.AttributeNotNeeded Nothing
+                              , datalist = Main.AttributeNotNeeded Nothing
+                              }
+                            , { inputType = "Emails"
+                              , inputTag = "input"
+                              , attributes =
+                                    Dict.fromList
+                                        [ ( "type", "email" )
+                                        , ( "multiple", "true" )
+                                        ]
+                              , maxlength = Main.AttributeNotNeeded Nothing
+                              , datalist = Main.AttributeNotNeeded Nothing
+                              }
+                            , { inputType = "Digits"
+                              , inputTag = "input"
+                              , attributes =
+                                    Dict.fromList
+                                        [ ( "pattern", "^[0-9]+$" )
+                                        , ( "type", "text" )
+                                        ]
+                              , maxlength = Main.AttributeNotNeeded Nothing
+                              , datalist = Main.AttributeNotNeeded Nothing
+                              }
+                            , { inputType = "Nric2"
+                              , inputTag = "nric-custom-ele"
+                              , attributes =
+                                    Dict.fromList
+                                        [ ( "pattern", "^[STGM][0-9]{7}[ABCDEFGHIZJ]$" )
+                                        , ( "type", "text" )
+                                        ]
+                              , maxlength = Main.AttributeNotNeeded Nothing
+                              , datalist = Main.AttributeNotNeeded Nothing
+                              }
+                            , { inputType = "Nric"
+                              , inputTag = "input"
+                              , attributes =
+                                    Dict.fromList
+                                        [ ( "pattern", "^[STGM][0-9]{7}[ABCDEFGHIZJ]$" )
+                                        , ( "type", "text" )
+                                        ]
+                              , maxlength = Main.AttributeNotNeeded Nothing
+                              , datalist = Main.AttributeNotNeeded Nothing
+                              }
                             ]
                         )
         , Test.fuzz choiceStringFuzzer "choiceStringToChoice,choiceStringFromString is reversible" <|
@@ -105,6 +194,7 @@ moreTestInputFields =
         , attributes =
             Dict.fromList [ ( "type", "email" ) ]
         , maxlength = Main.AttributeNotNeeded Nothing
+        , datalist = Main.AttributeNotNeeded Nothing
         }
     , Main.ShortText
         { inputType = "Emails"
@@ -112,6 +202,7 @@ moreTestInputFields =
         , attributes =
             Dict.fromList [ ( "type", "email" ), ( "multiple", "true" ) ]
         , maxlength = Main.AttributeNotNeeded Nothing
+        , datalist = Main.AttributeNotNeeded Nothing
         }
     , Main.ShortText
         { inputType = "Emails with maxlength"
@@ -124,6 +215,7 @@ moreTestInputFields =
                 , ( "data-extra-thing", "[1,2,3]" )
                 ]
         , maxlength = Main.AttributeGiven 20
+        , datalist = Main.AttributeNotNeeded Nothing
         }
     ]
 
@@ -268,7 +360,7 @@ newFieldFromOldField oldField =
     , presence = newPresence
     , description =
         case maybeDescription of
-            Main.AttributeGiven description ->
+            Main.AttributeGiven _ ->
                 maybeDescription
 
             Main.AttributeInvalid _ ->
