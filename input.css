@@ -58,6 +58,7 @@
     @apply mb-2
 }
 
+.tff-toggle-group input:not(:placeholder-shown):invalid,
 .tff-field-group input:not(:placeholder-shown):invalid {
     border-color: red;
 }
