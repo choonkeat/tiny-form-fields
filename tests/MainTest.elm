@@ -47,6 +47,8 @@ suite =
                 ]
                 """
                     |> Json.Decode.decodeString Main.decodeShortTextTypeList
+                    |> Result.map (Json.Encode.list (Main.encodePairsFromCustomElement >> Json.Encode.object))
+                    |> Result.andThen (Json.Decode.decodeValue (Json.Decode.list Main.decodeCustomElement))
                     |> Expect.equal
                         (Ok
                             [ { inputType = "Text"
@@ -227,6 +229,8 @@ oldjson =
                 ]
                 """
                     |> Json.Decode.decodeString Main.decodeFormFields
+                    |> Result.map Main.encodeFormFields
+                    |> Result.andThen (Json.Decode.decodeValue Main.decodeFormFields)
                     |> Expect.equal
                         (Ok
                             (Array.fromList
@@ -378,6 +382,8 @@ oldjson =
                 ]
                 """
                     |> Json.Decode.decodeString Main.decodeFormFields
+                    |> Result.map Main.encodeFormFields
+                    |> Result.andThen (Json.Decode.decodeValue Main.decodeFormFields)
                     |> Expect.equal
                         (Ok
                             (Array.fromList

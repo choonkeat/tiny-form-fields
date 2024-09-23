@@ -10,12 +10,14 @@ port module Main exposing
     , choiceFromString
     , choiceToString
     , decodeChoice
+    , decodeCustomElement
     , decodeFormField
     , decodeFormFields
     , decodeShortTextTypeList
     , encodeChoice
     , encodeFormFields
     , encodeInputField
+    , encodePairsFromCustomElement
     , main
     , stringFromViewMode
     , viewModeFromString
@@ -325,8 +327,13 @@ toRawCustomElement ele =
                 AttributeGiven list ->
                     Dict.insert "list" (String.join "\n" (List.map choiceToString list)) dict
 
-                _ ->
-                    Dict.filter (\k _ -> k /= "list") dict
+                AttributeInvalid _ ->
+                    -- see `fromRawCustomElement`, keep the "list":"someid" we keep in `.attributes`
+                    dict
+
+                AttributeNotNeeded _ ->
+                    -- see `fromRawCustomElement`, keep the "list":"someid" we keep in `.attributes`
+                    dict
     in
     { inputTag = ele.inputTag
     , inputType = ele.inputType
@@ -1901,8 +1908,8 @@ decodeCustomElement =
         |> Json.Decode.map fromRawCustomElement
 
 
-encodePairsFromCustomElements : RawCustomElement -> List ( String, Json.Encode.Value )
-encodePairsFromCustomElements customElement =
+encodePairsFromRawCustomElements : RawCustomElement -> List ( String, Json.Encode.Value )
+encodePairsFromRawCustomElements customElement =
     let
         inputTagAttrs =
             if customElement.inputTag == defaultInputTag then
@@ -1925,13 +1932,18 @@ encodePairsFromCustomElements customElement =
         ++ encodedAttrs
 
 
+encodePairsFromCustomElement : CustomElement -> List ( String, Json.Encode.Value )
+encodePairsFromCustomElement customElement =
+    encodePairsFromRawCustomElements (toRawCustomElement customElement)
+
+
 encodeInputField : InputField -> Json.Encode.Value
 encodeInputField inputField =
     case inputField of
         ShortText customElement ->
             Json.Encode.object
                 (( "type", Json.Encode.string "ShortText" )
-                    :: encodePairsFromCustomElements (toRawCustomElement customElement)
+                    :: encodePairsFromCustomElement customElement
                 )
 
         LongText optionalMaxLength ->

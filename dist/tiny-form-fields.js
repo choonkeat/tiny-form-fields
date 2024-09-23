@@ -5990,7 +5990,7 @@ var $elm$json$Json$Encode$object = function (pairs) {
 			_Json_emptyObject(0),
 			pairs));
 };
-var $author$project$Main$encodePairsFromCustomElements = function (customElement) {
+var $author$project$Main$encodePairsFromRawCustomElements = function (customElement) {
 	var inputTagAttrs = _Utils_eq(customElement.F, $author$project$Main$defaultInputTag) ? _List_Nil : _List_fromArray(
 		[
 			_Utils_Tuple2(
@@ -6021,6 +6021,57 @@ var $author$project$Main$encodePairsFromCustomElements = function (customElement
 			$elm$json$Json$Encode$string(customElement.u)),
 		_Utils_ap(inputTagAttrs, encodedAttrs));
 };
+var $elm$core$Basics$neq = _Utils_notEqual;
+var $author$project$Main$toRawCustomElement = function (ele) {
+	var addMaxLengthIfGiven = function (dict) {
+		var _v1 = ele.T;
+		if (_v1.$ === 2) {
+			var _int = _v1.a;
+			return A3(
+				$elm$core$Dict$insert,
+				'maxlength',
+				$elm$core$String$fromInt(_int),
+				dict);
+		} else {
+			return A2(
+				$elm$core$Dict$filter,
+				F2(
+					function (k, _v2) {
+						return k !== 'maxlength';
+					}),
+				dict);
+		}
+	};
+	var addDatalistIfGiven = function (dict) {
+		var _v0 = ele.Q;
+		switch (_v0.$) {
+			case 2:
+				var list = _v0.a;
+				return A3(
+					$elm$core$Dict$insert,
+					'list',
+					A2(
+						$elm$core$String$join,
+						'\n',
+						A2($elm$core$List$map, $author$project$Main$choiceToString, list)),
+					dict);
+			case 1:
+				return dict;
+			default:
+				return dict;
+		}
+	};
+	return {
+		t: addDatalistIfGiven(
+			addMaxLengthIfGiven(ele.t)),
+		F: ele.F,
+		u: ele.u
+	};
+};
+var $author$project$Main$encodePairsFromCustomElement = function (customElement) {
+	return $author$project$Main$encodePairsFromRawCustomElements(
+		$author$project$Main$toRawCustomElement(customElement));
+};
 var $elm$core$List$filter = F2(
 	function (isGood, list) {
 		return A3(
@@ -6042,56 +6093,6 @@ var $elm$json$Json$Encode$list = F2(
 				_Json_emptyArray(0),
 				entries));
 	});
-var $elm$core$Basics$neq = _Utils_notEqual;
-var $author$project$Main$toRawCustomElement = function (ele) {
-	var addMaxLengthIfGiven = function (dict) {
-		var _v2 = ele.T;
-		if (_v2.$ === 2) {
-			var _int = _v2.a;
-			return A3(
-				$elm$core$Dict$insert,
-				'maxlength',
-				$elm$core$String$fromInt(_int),
-				dict);
-		} else {
-			return A2(
-				$elm$core$Dict$filter,
-				F2(
-					function (k, _v3) {
-						return k !== 'maxlength';
-					}),
-				dict);
-		}
-	};
-	var addDatalistIfGiven = function (dict) {
-		var _v0 = ele.Q;
-		if (_v0.$ === 2) {
-			var list = _v0.a;
-			return A3(
-				$elm$core$Dict$insert,
-				'list',
-				A2(
-					$elm$core$String$join,
-					'\n',
-					A2($elm$core$List$map, $author$project$Main$choiceToString, list)),
-				dict);
-		} else {
-			return A2(
-				$elm$core$Dict$filter,
-				F2(
-					function (k, _v1) {
-						return k !== 'list';
-					}),
-				dict);
-		}
-	};
-	return {
-		t: addDatalistIfGiven(
-			addMaxLengthIfGiven(ele.t)),
-		F: ele.F,
-		u: ele.u
-	};
-};
 var $author$project$Main$encodeInputField = function (inputField) {
 	switch (inputField.$) {
 		case 0:
@@ -6102,8 +6103,7 @@ var $author$project$Main$encodeInputField = function (inputField) {
 					_Utils_Tuple2(
 						'type',
 						$elm$json$Json$Encode$string('ShortText')),
-					$author$project$Main$encodePairsFromCustomElements(
-						$author$project$Main$toRawCustomElement(customElement))));
+					$author$project$Main$encodePairsFromCustomElement(customElement)));
 		case 1:
 			var optionalMaxLength = inputField.a;
 			return $elm$json$Json$Encode$object(
