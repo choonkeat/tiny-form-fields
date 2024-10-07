@@ -1805,12 +1805,19 @@ encodeAttributeOptional encodeValue attributeOptional =
             encodeValue value
 
 
-decodeAttributeOptional : Json.Decode.Decoder a -> Json.Decode.Decoder (AttributeOptional a)
-decodeAttributeOptional decodeValue =
+decodeAttributeOptional : Maybe a -> Json.Decode.Decoder a -> Json.Decode.Decoder (AttributeOptional a)
+decodeAttributeOptional maybeNotNeeded decodeValue =
     Json.Decode.oneOf
         [ Json.Decode.null (AttributeNotNeeded Nothing)
         , decodeValue
-            |> Json.Decode.map (\a -> AttributeGiven a)
+            |> Json.Decode.map
+                (\a ->
+                    if Just a == maybeNotNeeded then
+                        AttributeNotNeeded Nothing
+
+                    else
+                        AttributeGiven a
+                )
         ]
 
 
@@ -1886,8 +1893,8 @@ decodeFormFieldDescription : Json.Decode.Decoder (AttributeOptional String)
 decodeFormFieldDescription =
     Json.Decode.oneOf
         [ -- backward compat: presence.description takes precedence
-          Json.Decode.at [ "presence", "description" ] (decodeAttributeOptional Json.Decode.string)
-        , Json.Decode.field "description" (decodeAttributeOptional Json.Decode.string)
+          Json.Decode.at [ "presence", "description" ] (decodeAttributeOptional (Just "") Json.Decode.string)
+        , Json.Decode.field "description" (decodeAttributeOptional (Just "") Json.Decode.string)
         , Json.Decode.succeed (AttributeNotNeeded Nothing)
         ]
 
@@ -1982,7 +1989,7 @@ decodeInputField =
 
                     "LongText" ->
                         Json.Decode.succeed LongText
-                            |> andMap (Json.Decode.field "maxLength" (decodeAttributeOptional Json.Decode.int))
+                            |> andMap (Json.Decode.field "maxLength" (decodeAttributeOptional Nothing Json.Decode.int))
 
                     "Dropdown" ->
                         Json.Decode.field "choices" (Json.Decode.list decodeChoice)

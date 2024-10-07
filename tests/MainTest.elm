@@ -624,7 +624,7 @@ newFieldFromOldField oldField =
                 SystemOptional _ ->
                     Main.Optional
 
-        maybeName =
+        maybePresenceName =
             case oldField.presence of
                 System { name } ->
                     Just name
@@ -641,7 +641,7 @@ newFieldFromOldField oldField =
                 Optional ->
                     Nothing
 
-        maybeDescription =
+        maybePresenceDescription =
             case oldField.presence of
                 System { description } ->
                     Main.AttributeGiven description
@@ -654,20 +654,35 @@ newFieldFromOldField oldField =
 
                 _ ->
                     Main.AttributeNotNeeded Nothing
+
+        preferNotNeeded attr =
+            case attr of
+                Main.AttributeNotNeeded _ ->
+                    attr
+
+                Main.AttributeInvalid _ ->
+                    Main.AttributeNotNeeded Nothing
+
+                Main.AttributeGiven "" ->
+                    Main.AttributeNotNeeded Nothing
+
+                Main.AttributeGiven s ->
+                    Main.AttributeGiven s
     in
     { label = oldField.label
-    , name = maybeName
+    , name = maybePresenceName
     , presence = newPresence
     , description =
-        case maybeDescription of
-            Main.AttributeGiven _ ->
-                maybeDescription
+        preferNotNeeded <|
+            case maybePresenceDescription of
+                Main.AttributeGiven _ ->
+                    maybePresenceDescription
 
-            Main.AttributeInvalid _ ->
-                Main.AttributeGiven oldField.description
+                Main.AttributeInvalid _ ->
+                    Main.AttributeGiven oldField.description
 
-            Main.AttributeNotNeeded _ ->
-                Main.AttributeGiven oldField.description
+                Main.AttributeNotNeeded _ ->
+                    Main.AttributeGiven oldField.description
     , type_ = oldField.type_
     }
 

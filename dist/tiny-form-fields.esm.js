@@ -5232,20 +5232,23 @@ var $author$project$Main$AttributeGiven = function (a) {
 };
 var $elm$json$Json$Decode$null = _Json_decodeNull;
 var $elm$json$Json$Decode$oneOf = _Json_oneOf;
-var $author$project$Main$decodeAttributeOptional = function (decodeValue) {
-	return $elm$json$Json$Decode$oneOf(
-		_List_fromArray(
-			[
-				$elm$json$Json$Decode$null(
-				$author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing)),
-				A2(
-				$elm$json$Json$Decode$map,
-				function (a) {
-					return $author$project$Main$AttributeGiven(a);
-				},
-				decodeValue)
-			]));
-};
+var $author$project$Main$decodeAttributeOptional = F2(
+	function (maybeNotNeeded, decodeValue) {
+		return $elm$json$Json$Decode$oneOf(
+			_List_fromArray(
+				[
+					$elm$json$Json$Decode$null(
+					$author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing)),
+					A2(
+					$elm$json$Json$Decode$map,
+					function (a) {
+						return _Utils_eq(
+							$elm$core$Maybe$Just(a),
+							maybeNotNeeded) ? $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing) : $author$project$Main$AttributeGiven(a);
+					},
+					decodeValue)
+				]));
+	});
 var $elm$json$Json$Decode$string = _Json_decodeString;
 var $author$project$Main$decodeFormFieldDescription = $elm$json$Json$Decode$oneOf(
 	_List_fromArray(
@@ -5254,11 +5257,17 @@ var $author$project$Main$decodeFormFieldDescription = $elm$json$Json$Decode$oneO
 			$elm$json$Json$Decode$at,
 			_List_fromArray(
 				['presence', 'description']),
-			$author$project$Main$decodeAttributeOptional($elm$json$Json$Decode$string)),
+			A2(
+				$author$project$Main$decodeAttributeOptional,
+				$elm$core$Maybe$Just(''),
+				$elm$json$Json$Decode$string)),
 			A2(
 			$elm$json$Json$Decode$field,
 			'description',
-			$author$project$Main$decodeAttributeOptional($elm$json$Json$Decode$string)),
+			A2(
+				$author$project$Main$decodeAttributeOptional,
+				$elm$core$Maybe$Just(''),
+				$elm$json$Json$Decode$string)),
 			$elm$json$Json$Decode$succeed(
 			$author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing))
 		]));
@@ -5648,7 +5657,7 @@ var $author$project$Main$decodeInputField = A2(
 					A2(
 						$elm$json$Json$Decode$field,
 						'maxLength',
-						$author$project$Main$decodeAttributeOptional($elm$json$Json$Decode$int)),
+						A2($author$project$Main$decodeAttributeOptional, $elm$core$Maybe$Nothing, $elm$json$Json$Decode$int)),
 					$elm$json$Json$Decode$succeed($author$project$Main$LongText));
 			case 'Dropdown':
 				return A2(
