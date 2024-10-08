@@ -130,7 +130,6 @@
     @apply rounded;
 }
 
-.tff-dropdown-group select:invalid,
 .tff-dropdown-group select.tff-select-disabled {
     @apply text-gray-300;
 }
