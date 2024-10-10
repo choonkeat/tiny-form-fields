@@ -21,8 +21,6 @@
     @apply text-gray-500;
     @apply border-b;
     @apply border-gray-200;
-    @apply dark:border-gray-700;
-    @apply dark:text-gray-400;
     @apply mb-4;
 }
 
@@ -35,12 +33,10 @@
     @apply p-4;
     @apply text-blue-600;
     @apply rounded-t-lg;
-    @apply dark:text-blue-500;
 }
 
 .tff-tabs li .tff-tabs-active {
     @apply bg-gray-200;
-    @apply dark:bg-gray-800;
     @apply border-b;
     @apply border-gray-200;
     @apply -mb-1;
@@ -115,15 +111,10 @@
     @apply row-start-1;
     @apply col-start-1;
     @apply bg-slate-50;
-    @apply dark:bg-slate-800;
     @apply hover:border-cyan-500;
-    @apply dark:hover:border-cyan-700;
     @apply hover:bg-white;
-    @apply dark:hover:bg-slate-700;
     @apply border-slate-300;
-    @apply dark:border-slate-600;
     @apply text-slate-700;
-    @apply dark:text-slate-200;
     @apply p-2;
     @apply rounded;
 }
@@ -244,14 +235,12 @@
     @apply rounded-lg;
     @apply shadow;
     @apply w-44;
-    @apply dark:bg-gray-700;
 }
 
 .tff-dropdown-list {
     @apply py-2;
     @apply text-sm;
     @apply text-gray-700;
-    @apply dark:text-gray-200;
 }
 
 .tff-dropdown-option {
@@ -259,8 +248,6 @@
     @apply px-4;
     @apply py-2;
     @apply hover:bg-gray-100;
-    @apply dark:hover:bg-gray-600;
-    @apply dark:hover:text-white;
 }
 
 .tff-animate-yellowFade {
