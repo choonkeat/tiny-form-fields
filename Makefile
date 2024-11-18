@@ -1,4 +1,7 @@
-dist/tiny-form-fields.esm.js: css src/Main.elm Makefile test
+SHELL = /bin/bash -u -e -o pipefail
+export PATH := node_modules/.bin:$(PATH)
+
+dist/tiny-form-fields.esm.js: css src/Main.elm Makefile elm-review test
 	elm         make src/Main.elm --optimize --output dist/tiny-form-fields.js
 	npx elm-esm make src/Main.elm --optimize --output=dist/tiny-form-fields.esm.js
 
@@ -31,3 +34,6 @@ test-playwright-ui:
 
 stop-run:
 	killall node
+
+elm-review:
+	npx elm-review --fix-all

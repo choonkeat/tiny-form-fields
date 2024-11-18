@@ -1308,9 +1308,8 @@ viewFormBuilder maybeAnimate model =
 
         rightPanelClasses =
             String.join " " <|
-                [ "tff-right-panel"
-                ]
-                    ++ (if rightPanelVisible then
+                "tff-right-panel"
+                    :: (if rightPanelVisible then
                             [ "tff-panel-visible" ]
 
                         else
