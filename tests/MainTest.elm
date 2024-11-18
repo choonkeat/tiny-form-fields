@@ -240,7 +240,7 @@ oldjson =
                                   , presence = Main.Required
                                   , type_ =
                                         Main.ShortText
-                                            { attributes = Dict.fromList []
+                                            { attributes = Dict.empty
                                             , datalist = Main.AttributeNotNeeded Nothing
                                             , inputTag = "input"
                                             , inputType = "text"
@@ -253,7 +253,7 @@ oldjson =
                                   , presence = Main.Required
                                   , type_ =
                                         Main.ShortText
-                                            { attributes = Dict.fromList []
+                                            { attributes = Dict.empty
                                             , datalist = Main.AttributeNotNeeded Nothing
                                             , inputTag = "input"
                                             , inputType = "email"
@@ -436,7 +436,7 @@ oldjson =
                                   , presence = Main.Required
                                   , type_ =
                                         Main.ShortText
-                                            { attributes = Dict.fromList []
+                                            { attributes = Dict.empty
                                             , datalist = Main.AttributeNotNeeded Nothing
                                             , inputTag = "input"
                                             , inputType = "Single-line free text"
@@ -449,7 +449,7 @@ oldjson =
                                   , presence = Main.Required
                                   , type_ =
                                         Main.ShortText
-                                            { attributes = Dict.fromList []
+                                            { attributes = Dict.empty
                                             , datalist = Main.AttributeNotNeeded Nothing
                                             , inputTag = "input"
                                             , inputType = "NRIC"
@@ -473,7 +473,6 @@ viewModeFuzzer =
           -- we don't encode/decode `maybeHighlight` because it is transient value
           -- maybeHighlight is always Nothing
           Fuzz.constant (Main.Editor { maybeAnimate = Nothing })
-        , Fuzz.constant Main.Preview
         , Fuzz.constant Main.CollectData
         ]
 

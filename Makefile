@@ -11,7 +11,7 @@ dist/tiny-form-fields.min.css: input.css tailwind.config.js index.html src/Main.
 run:
 	npx elm-live src/Main.elm \
 		--start-page index.html \
-		-- --output=dist/tiny-form-fields.js
+		-- --output=dist/tiny-form-fields.js --debug
 
 run-ignore-error:
 	make run || echo shutdown test server

@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 function randomOne(items) {
-  return items[Math.floor((Math.random()*items.length))];
+  return items[Math.floor((Math.random() * items.length))];
 }
 
 function randomFew(items) {
@@ -18,7 +18,7 @@ test("test", async ({ page }) => {
     { link: "Radio buttons", label: "Yes or no", description: "boolean", choices: ["No", "Yes", "Maybe"], value: randomOne(["No", "Yes", "Maybe"]) },
     { link: "Checkboxes", label: "Hobbies", description: "sports", choices: sports, values: randomFew(sports) },
     { link: "Multi-line description", label: "Any comments", description: "say something", maxlength: 100, value: `Sed ${new Date().toISOString()}` },
-    { link: "Single-line free text", label: "Free text", description: "anything", maxlength: 20, value: `blah string ${Math.random()}!` }, // cropped
+    { link: "Single-line free text", label: "Free text", description: "anything", maxlength: 20, value: (`blah string ${Math.random()}!`).substring(0, 20) },
     { link: "Custom Element", label: "Length 9 Custom Element URL", description: "some url", maxlength: 100, value: "http://lo" },
     { link: "Email", label: "some email addr", description: "work email only", maxlength: 100, value: "email1@example.com" },
     { link: "Emails", label: "multiple emails", description: "friends", maxlength: 100, value: "email2@example.com,email3@example.com" },
@@ -27,8 +27,11 @@ test("test", async ({ page }) => {
   ];
 
   for (const input of inputs) {
-    await page.getByRole("button", { name: "Add question" }).click();
-    await page.getByRole("link", { name: input.link, exact: true }).click();
+    await page.getByRole("button", { name: input.link, exact: true }).click();
+    await page.waitForTimeout(600);
+    await expect(page.getByText(`${input.link} question title`)).toHaveCount(0);
+    await page.locator('.tff-field-container').last().click();
+    await page.waitForTimeout(600);
     await page.getByText(`${input.link} question title`).click();
     await page.keyboard.press("ControlOrMeta+a");
     await page.keyboard.type(input.label);
@@ -51,7 +54,9 @@ test("test", async ({ page }) => {
     }
   }
 
-  await page.getByRole("button", { name: "Preview" }).click();
+  await page.locator('.tff-close-button').click();
+  await expect(page.locator('.tff-panel-visible:has-text("Field Settings")')).toHaveCount(0);
+
   const page1Promise = page.waitForEvent("popup");
   await page
     .getByRole("link", { name: "View sample Collect Data page" })
