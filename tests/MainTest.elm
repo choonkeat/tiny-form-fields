@@ -10,10 +10,323 @@ import Main
 import Test exposing (..)
 
 
+rawCustomElement : Main.RawCustomElement
+rawCustomElement =
+    { inputType = "Text"
+    , inputTag = "input"
+    , attributes = Dict.empty
+    }
+
+
+field1 : Main.FormField
+field1 =
+    { label = "Field 1"
+    , type_ = Main.ShortText (Main.fromRawCustomElement rawCustomElement)
+    , presence = Main.Required
+    , description = Main.AttributeNotNeeded Nothing
+    , name = Nothing
+    }
+
+
+field2 : Main.FormField
+field2 =
+    { label = "Field 2"
+    , type_ = Main.ShortText (Main.fromRawCustomElement rawCustomElement)
+    , presence = Main.Required
+    , description = Main.AttributeNotNeeded Nothing
+    , name = Nothing
+    }
+
+
+field3 : Main.FormField
+field3 =
+    { label = "Field 3"
+    , type_ = Main.ShortText (Main.fromRawCustomElement rawCustomElement)
+    , presence = Main.Required
+    , description = Main.AttributeNotNeeded Nothing
+    , name = Nothing
+    }
+
+
+fields : List Main.FormField
+fields =
+    [ field1
+    , field2
+    , field3
+    ]
+
+
+draggedField : Main.FormField
+draggedField =
+    { label = "New Field"
+    , type_ = Main.ShortText (Main.fromRawCustomElement rawCustomElement)
+    , presence = Main.Required
+    , description = Main.AttributeNotNeeded Nothing
+    , name = Nothing
+    }
+
+
+emptyMouseEvent : { pageY : Int, clientY : Int, offsetY : Int }
+emptyMouseEvent =
+    { pageY = 0
+    , clientY = 0
+    , offsetY = 0
+    }
+
+
 suite : Test
 suite =
     describe "Main"
-        [ Test.fuzz (Fuzz.intRange 0 100) "{encode,decode}InputField is reversible" <|
+        [ describe "fieldsWithPlaceholder"
+            [ test "replaces dragged existing field with Nothing" <|
+                \_ ->
+                    let
+                        dragged =
+                            Main.DragExisting
+                                { dragIndex = 1
+                                , dropIndex = Nothing
+                                }
+                    in
+                    Main.fieldsWithPlaceholder [ field1, field2, field3 ] (Just dragged)
+                        |> Expect.equal
+                            [ Just field1
+                            , Just field2
+                            , Just field3
+                            ]
+            , test "replaces dragged existing field with Nothing, with dropIndex" <|
+                \_ ->
+                    let
+                        dragged =
+                            Main.DragExisting
+                                { dragIndex = 1
+                                , dropIndex = Just ( 0, Just field1 )
+                                }
+                    in
+                    Main.fieldsWithPlaceholder [ field1, field2, field3 ] (Just dragged)
+                        |> Expect.equal
+                            [ Nothing
+                            , Just field1
+                            , Just field3
+                            ]
+            , test "replaces dragged existing field with Nothing, with dropIndex 2" <|
+                \_ ->
+                    let
+                        dragged =
+                            Main.DragExisting
+                                { dragIndex = 1
+                                , dropIndex = Just ( 2, Just field3 )
+                                }
+                    in
+                    Main.fieldsWithPlaceholder [ field1, field2, field3 ] (Just dragged)
+                        |> Expect.equal
+                            [ Just field1
+                            , Just field3
+                            , Nothing
+                            ]
+            , test "replaces dragged new field with Nothing" <|
+                \_ ->
+                    let
+                        newField =
+                            { field1 | label = "New Field" }
+
+                        dragged =
+                            Main.DragNew
+                                { field = newField
+                                , dropIndex = Just ( 2, Just field3 )
+                                }
+                    in
+                    Main.fieldsWithPlaceholder [ field1, field2, field3 ] (Just dragged)
+                        |> Expect.equal
+                            [ Just field1
+                            , Just field2
+                            , Nothing
+                            , Just field3
+                            ]
+            , test "replaces dragged new field with Nothing, with dropIndex -1" <|
+                \_ ->
+                    let
+                        newField =
+                            { field1 | label = "New Field" }
+
+                        dragged =
+                            Main.DragNew
+                                { field = newField
+                                , dropIndex = Nothing
+                                }
+                    in
+                    Main.fieldsWithPlaceholder [ field1, field2, field3 ] (Just dragged)
+                        |> Expect.equal
+                            [ Just field1
+                            , Just field2
+                            , Just field3
+                            ]
+            ]
+        , describe "onDropped"
+            [ test "dropping an existing field at index 0" <|
+                \_ ->
+                    let
+                        model =
+                            { dragged =
+                                Just
+                                    (Main.DragExisting
+                                        { dragIndex = 1
+                                        , dropIndex = Just ( 0, Just field1 )
+                                        }
+                                    )
+                            , formFields =
+                                Array.fromList
+                                    [ field1
+                                    , field2
+                                    , field3
+                                    ]
+                            }
+                    in
+                    Main.onDropped (Just 0) model
+                        |> .formFields
+                        |> Array.toList
+                        |> Expect.equal
+                            [ field2
+                            , field1
+                            , field3
+                            ]
+            , test "dropping an existing field at index 2" <|
+                \_ ->
+                    let
+                        model =
+                            { dragged =
+                                Just
+                                    (Main.DragExisting
+                                        { dragIndex = 1
+                                        , dropIndex = Just ( 2, Just field3 )
+                                        }
+                                    )
+                            , formFields =
+                                Array.fromList
+                                    [ field1
+                                    , field2
+                                    , field3
+                                    ]
+                            }
+                    in
+                    Main.onDropped (Just 2) model
+                        |> .formFields
+                        |> Array.toList
+                        |> Expect.equal
+                            [ field1
+                            , field3
+                            , field2
+                            ]
+            , test "dropping a new field at index 2" <|
+                \_ ->
+                    let
+                        newField =
+                            { field1 | label = "New Field" }
+
+                        model =
+                            { dragged =
+                                Just
+                                    (Main.DragNew
+                                        { field = newField
+                                        , dropIndex = Just ( 2, Just field3 )
+                                        }
+                                    )
+                            , formFields =
+                                Array.fromList
+                                    [ field1
+                                    , field2
+                                    , field3
+                                    ]
+                            }
+                    in
+                    Main.onDropped (Just 2) model
+                        |> .formFields
+                        |> Array.toList
+                        |> Expect.equal
+                            [ field1
+                            , field2
+                            , newField
+                            , field3
+                            ]
+            , test "dropping outside valid area resets dragged state" <|
+                \_ ->
+                    let
+                        model =
+                            { dragged = Just (Main.DragExisting { dragIndex = 1, dropIndex = Nothing })
+                            , formFields =
+                                Array.fromList
+                                    [ field1
+                                    , field2
+                                    , field3
+                                    ]
+                            }
+                    in
+                    Main.onDropped Nothing model
+                        |> .dragged
+                        |> Expect.equal Nothing
+            , test "dropping on original position does not change fields" <|
+                \_ ->
+                    let
+                        model =
+                            { dragged = Just (Main.DragExisting { dragIndex = 1, dropIndex = Just ( 1, Just field2 ) })
+                            , formFields =
+                                Array.fromList
+                                    [ field1
+                                    , field2
+                                    , field3
+                                    ]
+                            }
+                    in
+                    Main.onDropped (Just 1) model
+                        |> .formFields
+                        |> Array.toList
+                        |> Expect.equal
+                            [ field1
+                            , field2
+                            , field3
+                            ]
+            , test "dropping with no drag state does nothing" <|
+                \_ ->
+                    let
+                        model =
+                            { dragged = Nothing
+                            , formFields =
+                                Array.fromList
+                                    [ field1
+                                    , field2
+                                    , field3
+                                    ]
+                            }
+                    in
+                    Main.onDropped (Just 1) model
+                        |> .formFields
+                        |> Array.toList
+                        |> Expect.equal
+                            [ field1
+                            , field2
+                            , field3
+                            ]
+            ]
+        , describe "dragOverDecoder"
+            [ test "decodes dragover event with formfield" <|
+                \_ ->
+                    let
+                        event =
+                            Json.Encode.object
+                                [ ( "pageY", Json.Encode.int 100 )
+                                , ( "clientY", Json.Encode.int 200 )
+                                , ( "offsetY", Json.Encode.int 50 )
+                                ]
+                    in
+                    Json.Decode.decodeValue (Main.dragOverDecoder 1 (Just field1)) event
+                        |> Result.map Tuple.first
+                        |> Expect.equal
+                            (Ok
+                                (Main.DragOver
+                                    (Just ( 1, Just field1 ))
+                                )
+                            )
+            ]
+        , Test.fuzz (Fuzz.intRange 0 100) "{encode,decode}InputField is reversible" <|
             \size ->
                 let
                     formFields =
@@ -463,6 +776,7 @@ oldjson =
 
 
 
+--
 --
 
 

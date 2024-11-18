@@ -1,9 +1,12 @@
 port module Main exposing
     ( AttributeOptional(..)
     , Choice
+    , Dragged(..)
     , FormField
     , InputField(..)
+    , Msg(..)
     , Presence(..)
+    , RawCustomElement
     , ViewMode(..)
     , allInputField
     , choiceDelimiter
@@ -14,25 +17,29 @@ port module Main exposing
     , decodeFormField
     , decodeFormFields
     , decodeShortTextTypeList
+    , dragOverDecoder
     , encodeChoice
     , encodeFormFields
     , encodeInputField
     , encodePairsFromCustomElement
+    , fieldsWithPlaceholder
+    , fromRawCustomElement
     , main
+    , onDropped
     , stringFromViewMode
     , viewModeFromString
     )
 
 import Array exposing (Array)
 import Browser
-import Browser.Dom
 import Dict exposing (Dict)
-import Html exposing (Html, a, button, div, h3, input, label, option, pre, select, text, textarea)
+import Html exposing (Html, a, button, div, h2, h3, input, label, option, pre, select, text, textarea)
 import Html.Attributes exposing (attribute, checked, class, classList, disabled, for, id, maxlength, minlength, name, placeholder, readonly, required, selected, tabindex, title, type_, value)
 import Html.Events exposing (on, onCheck, onClick, onInput, preventDefaultOn, stopPropagationOn)
 import Json.Decode
 import Json.Decode.Extra exposing (andMap)
 import Json.Encode
+import List.Extra
 import Platform.Cmd as Cmd
 import Process
 import Svg exposing (path, rect, svg)
@@ -83,9 +90,7 @@ type alias Model =
     , shortTextTypeDict : Dict String CustomElement
     , dropdownState : DropdownState
     , selectedFieldIndex : Maybe Int
-    , draggedIndex : Maybe Int
-    , draggedNewField : Maybe FormField
-    , dropTargetIndex : Maybe Int
+    , dragged : Maybe Dragged
     }
 
 
@@ -325,9 +330,13 @@ type Msg
     | DragStart Int
     | DragStartNew FormField
     | DragEnd
-    | DragOver Int
-    | Drop Int
+    | DragOver (Maybe Droppable)
+    | Drop (Maybe Int)
     | DoSleepDo Float (List Msg)
+
+
+type alias Droppable =
+    ( Int, Maybe FormField )
 
 
 type FormFieldMsg
@@ -381,9 +390,7 @@ init flags =
                         |> Dict.fromList
               , dropdownState = DropdownClosed
               , selectedFieldIndex = Nothing
-              , draggedIndex = Nothing
-              , draggedNewField = Nothing
-              , dropTargetIndex = Nothing
+              , dragged = Nothing
               }
             , Cmd.batch
                 [ outgoing (encodePortOutgoingValue (PortOutgoingFormFields config.formFields))
@@ -404,9 +411,7 @@ init flags =
               , shortTextTypeDict = Dict.empty
               , dropdownState = DropdownClosed
               , selectedFieldIndex = Nothing
-              , draggedIndex = Nothing
-              , draggedNewField = Nothing
-              , dropTargetIndex = Nothing
+              , dragged = Nothing
               }
             , Cmd.none
             )
@@ -568,152 +573,50 @@ update msg model =
                     )
 
         DragStart index ->
-            ( { model | draggedIndex = Just index }
-            , Cmd.none
-            )
-
-        DragStartNew field ->
-            ( { model | draggedNewField = Just field }
-            , Cmd.none
-            )
-
-        DragEnd ->
             ( { model
-                | draggedIndex = Nothing
-                , draggedNewField = Nothing
-                , dropTargetIndex = Nothing
+                | dragged = Just (DragExisting { dragIndex = index, dropIndex = Nothing }) -- use index as initial dropTargetIndex
+                , selectedFieldIndex = Nothing
               }
             , Cmd.none
             )
 
-        DragOver index ->
-            if index >= 0 && index < Array.length model.formFields then
-                ( { model | dropTargetIndex = Just index }
-                , Cmd.none
-                )
+        DragStartNew field ->
+            ( { model
+                | dragged = Just (DragNew { field = field, dropIndex = Just ( 0, Nothing ) }) -- new field starts at index 0
+              }
+            , Cmd.none
+            )
 
-            else
-                ( { model | dropTargetIndex = Nothing }
-                , Cmd.none
-                )
+        DragEnd ->
+            case model.dragged of
+                Just (DragExisting { dropIndex }) ->
+                    update (Drop (Maybe.map Tuple.first dropIndex)) model
 
-        Drop targetIndex ->
-            case ( model.draggedIndex, model.draggedNewField, model.dropTargetIndex ) of
-                ( Just draggedIndex, Nothing, Just dropTargetIndex ) ->
-                    -- Original drag drop logic for existing fields
-                    if draggedIndex == dropTargetIndex then
-                        -- dropping on original position, just reset state
-                        ( { model
-                            | draggedIndex = Nothing
-                            , dropTargetIndex = Nothing
-                          }
-                        , Cmd.none
-                        )
+                Just (DragNew { dropIndex }) ->
+                    update (Drop (Maybe.map Tuple.first dropIndex)) model
 
-                    else
-                        let
-                            newFormFields =
-                                model.formFields
-                                    |> Array.toList
-                                    |> List.indexedMap Tuple.pair
-                                    |> List.sortBy
-                                        (\( i, _ ) ->
-                                            if i == draggedIndex then
-                                                if draggedIndex > dropTargetIndex then
-                                                    dropTargetIndex
-
-                                                else
-                                                    dropTargetIndex + 1
-
-                                            else if i >= min dropTargetIndex draggedIndex && i <= max dropTargetIndex draggedIndex then
-                                                if draggedIndex > dropTargetIndex then
-                                                    i + 1
-
-                                                else
-                                                    i - 1
-
-                                            else
-                                                i
-                                        )
-                                    |> List.map Tuple.second
-                                    |> Array.fromList
-
-                            newSelectedFieldIndex =
-                                case model.selectedFieldIndex of
-                                    Nothing ->
-                                        Nothing
-
-                                    Just selectedIndex ->
-                                        if selectedIndex == draggedIndex then
-                                            -- We're dragging the selected field
-                                            Just dropTargetIndex
-
-                                        else if selectedIndex >= min dropTargetIndex draggedIndex && selectedIndex <= max dropTargetIndex draggedIndex then
-                                            -- Selected field is in the affected range
-                                            if draggedIndex > dropTargetIndex then
-                                                -- Dragging up, shift selected down
-                                                if selectedIndex >= dropTargetIndex then
-                                                    Just (selectedIndex + 1)
-
-                                                else
-                                                    Just selectedIndex
-
-                                            else
-                                            -- Dragging down, shift selected up
-                                            if
-                                                selectedIndex > draggedIndex
-                                            then
-                                                Just (selectedIndex - 1)
-
-                                            else
-                                                Just selectedIndex
-
-                                        else
-                                            -- Selected field is outside affected range
-                                            Just selectedIndex
-                        in
-                        ( { model
-                            | formFields = newFormFields
-                            , draggedIndex = Nothing
-                            , dropTargetIndex = Nothing
-                            , selectedFieldIndex = newSelectedFieldIndex
-                          }
-                        , outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
-                        )
-
-                ( Nothing, Just newField, Just dropTargetIndex ) ->
-                    -- Dropping a new field
-                    let
-                        newFormFields =
-                            Array.toList model.formFields
-                                |> List.indexedMap Tuple.pair
-                                |> List.sortBy
-                                    (\( i, _ ) ->
-                                        if i == dropTargetIndex then
-                                            dropTargetIndex + 1
-
-                                        else if i > dropTargetIndex then
-                                            i + 1
-
-                                        else
-                                            i
-                                    )
-                                |> List.map Tuple.second
-                                |> (\list -> List.take dropTargetIndex list ++ [ newField ] ++ List.drop dropTargetIndex list)
-                                |> Array.fromList
-                    in
-                    ( { model
-                        | formFields = newFormFields
-                        , draggedNewField = Nothing
-                        , dropTargetIndex = Nothing
-                      }
-                    , outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
-                    )
-
-                _ ->
-                    ( { model | draggedIndex = Nothing, dropTargetIndex = Nothing }
+                Nothing ->
+                    ( { model | dragged = Nothing }
                     , Cmd.none
                     )
+
+        DragOver maybeDroppable ->
+            ( { model | dragged = Maybe.map (updateDragged maybeDroppable) model.dragged }
+            , Cmd.none
+            )
+
+        Drop targetIndex ->
+            let
+                newModel =
+                    onDropped targetIndex model
+            in
+            ( newModel
+            , if newModel.formFields /= model.formFields then
+                outgoing (encodePortOutgoingValue (PortOutgoingFormFields newModel.formFields))
+
+              else
+                Cmd.none
+            )
 
         DoSleepDo _ [] ->
             ( model
@@ -885,6 +788,101 @@ updateFormField msg string formField =
 
                 ChooseMultiple _ ->
                     formField
+
+
+onDropped : Maybe Int -> { a | dragged : Maybe Dragged, formFields : Array FormField } -> { a | dragged : Maybe Dragged, formFields : Array FormField }
+onDropped targetIndex model =
+    case model.dragged of
+        Just (DragExisting { dragIndex, dropIndex }) ->
+            case targetIndex of
+                Nothing ->
+                    -- dropping outside valid area, just reset state
+                    { model | dragged = Nothing }
+
+                Just index ->
+                    case dropIndex of
+                        Just ( dropTargetIndex, _ ) ->
+                            if dragIndex == index || index /= dropTargetIndex then
+                                -- dropping on original position or different from last DragOver
+                                { model | dragged = Nothing }
+
+                            else
+                                -- Dropping an existing field in a new position
+                                let
+                                    newFormFields =
+                                        model.formFields
+                                            |> Array.toList
+                                            |> List.indexedMap Tuple.pair
+                                            |> List.filter (\( i, _ ) -> i /= dragIndex)
+                                            |> List.map Tuple.second
+                                            |> (\list ->
+                                                    let
+                                                        ( before, after ) =
+                                                            List.Extra.splitAt index list
+
+                                                        draggedField =
+                                                            Array.get dragIndex model.formFields
+                                                    in
+                                                    case draggedField of
+                                                        Just field ->
+                                                            List.concat
+                                                                [ before
+                                                                , [ field ]
+                                                                , after
+                                                                ]
+
+                                                        Nothing ->
+                                                            list
+                                               )
+                                            |> Array.fromList
+                                in
+                                { model
+                                    | formFields = newFormFields
+                                    , dragged = Nothing
+                                }
+
+                        Nothing ->
+                            -- dropping on original position
+                            { model | dragged = Nothing }
+
+        Just (DragNew { field, dropIndex }) ->
+            case targetIndex of
+                Nothing ->
+                    -- dropping outside valid area, just reset state
+                    { model | dragged = Nothing }
+
+                Just index ->
+                    case dropIndex of
+                        Just ( dropTargetIndex, _ ) ->
+                            if index /= dropTargetIndex then
+                                -- dropping on different from last DragOver
+                                { model | dragged = Nothing }
+
+                            else
+                                -- Dropping a new field
+                                let
+                                    newFormFields =
+                                        Array.toList model.formFields
+                                            |> (\list ->
+                                                    let
+                                                        ( before, after ) =
+                                                            List.Extra.splitAt index list
+                                                    in
+                                                    before ++ [ field ] ++ after
+                                               )
+                                            |> Array.fromList
+                                in
+                                { model
+                                    | formFields = newFormFields
+                                    , dragged = Nothing
+                                }
+
+                        Nothing ->
+                            -- dropping on original position
+                            { model | dragged = Nothing }
+
+        Nothing ->
+            { model | dragged = Nothing }
 
 
 subscriptions : Model -> Sub Msg
@@ -1254,45 +1252,125 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } field
                 ]
 
 
+renderFormField : Maybe ( Int, Animate ) -> Model -> Int -> Maybe FormField -> Html Msg
+renderFormField maybeAnimate model index maybeFormField =
+    case maybeFormField of
+        Nothing ->
+            div
+                [ class "tff-field-container"
+                , preventDefaultOn "dragover" (dragOverDecoder index Nothing)
+                ]
+                [ div [ class "tff-field-placeholder" ] [] ]
 
---
+        Just formField ->
+            div
+                [ class "tff-field-container"
+                , preventDefaultOn "dragover" (dragOverDecoder index (Just formField))
+                ]
+                [ div
+                    [ class "tff-field-wrapper"
+                    ]
+                    [ div
+                        [ class "tff-field-preview"
+                        , classList
+                            [ ( "tff-animate-fadeOut"
+                              , case maybeAnimate of
+                                    Just ( i, AnimateFadeOut ) ->
+                                        i == index
+
+                                    _ ->
+                                        False
+                              )
+                            , ( "tff-animate-yellowFade"
+                              , case maybeAnimate of
+                                    Just ( i, AnimateYellowFade ) ->
+                                        i == index
+
+                                    _ ->
+                                        False
+                              )
+                            ]
+                        , stopPropagationOn "click" (Json.Decode.succeed ( SelectField (Just index), True ))
+                        , attribute "data-selected"
+                            (if model.selectedFieldIndex == Just index then
+                                "true"
+
+                             else
+                                "false"
+                            )
+                        , attribute "draggable" "true"
+                        , on "dragstart" (Json.Decode.succeed (DragStart index))
+                        , on "dragend" (Json.Decode.succeed DragEnd)
+                        ]
+                        [ div [ class "tff-drag-handle" ] [ dragHandleIcon ]
+                        , viewFormFieldPreview
+                            { customAttrs = [ disabled False, readonly True ]
+                            , formValues = model.formValues
+                            , shortTextTypeDict = model.shortTextTypeDict
+                            }
+                            index
+                            formField
+                        ]
+                    ]
+                ]
 
 
-type DropdownState
-    = DropdownOpen
-    | DropdownClosed
+{-| Given a list of form fields and drag state, returns a list of Maybe FormField
+where:
 
+  - Dragged existing field is replaced with Nothing
+  - For new field drag, Nothing is inserted at dropTargetIndex
+  - For new field drag without dropTargetIndex, Nothing is prepended
 
-dragHandleIcon : Html msg
-dragHandleIcon =
-    svg
-        [ SvgAttr.viewBox "0 0 16 16"
-        , SvgAttr.fill "currentColor"
-        , attribute "aria-hidden" "true"
-        , SvgAttr.class "tff-drag-handle-icon"
-        ]
-        [ rect
-            [ SvgAttr.x "4"
-            , SvgAttr.y "4"
-            , SvgAttr.width "8"
-            , SvgAttr.height "1.5"
-            ]
-            []
-        , rect
-            [ SvgAttr.x "4"
-            , SvgAttr.y "7.25"
-            , SvgAttr.width "8"
-            , SvgAttr.height "1.5"
-            ]
-            []
-        , rect
-            [ SvgAttr.x "4"
-            , SvgAttr.y "10.5"
-            , SvgAttr.width "8"
-            , SvgAttr.height "1.5"
-            ]
-            []
-        ]
+-}
+fieldsWithPlaceholder : List FormField -> Maybe Dragged -> List (Maybe FormField)
+fieldsWithPlaceholder fields dragged =
+    case dragged of
+        Nothing ->
+            List.map Just fields
+
+        Just (DragExisting { dragIndex, dropIndex }) ->
+            case dropIndex of
+                Nothing ->
+                    -- When dragging outside valid drop area, keep all fields as is
+                    List.map Just fields
+
+                Just ( index, _ ) ->
+                    let
+                        withoutDragged =
+                            List.indexedMap
+                                (\i formField ->
+                                    if i == dragIndex then
+                                        Nothing
+
+                                    else
+                                        Just formField
+                                )
+                                fields
+                                |> List.filterMap identity
+                    in
+                    List.concat
+                        [ List.take index (List.map Just withoutDragged)
+                        , [ Nothing ]
+                        , List.drop index (List.map Just withoutDragged)
+                        ]
+
+        Just (DragNew { dropIndex }) ->
+            case dropIndex of
+                Nothing ->
+                    -- When dragging outside valid drop area, keep all fields as is
+                    List.map Just fields
+
+                Just ( index, _ ) ->
+                    let
+                        fieldsWithJust =
+                            List.map Just fields
+                    in
+                    List.concat
+                        [ List.take index fieldsWithJust
+                        , [ Nothing ]
+                        , List.drop index fieldsWithJust
+                        ]
 
 
 viewFormBuilder : Maybe ( Int, Animate ) -> Model -> List (Html Msg)
@@ -1303,204 +1381,34 @@ viewFormBuilder maybeAnimate model =
                 (\customElement -> ShortText customElement)
                 model.shortTextTypeList
 
-        rightPanelVisible =
-            model.selectedFieldIndex /= Nothing
-
-        rightPanelClasses =
-            String.join " " <|
-                "tff-right-panel"
-                    :: (if rightPanelVisible then
-                            [ "tff-panel-visible" ]
-
-                        else
-                            []
-                       )
+        maybeFieldsList =
+            fieldsWithPlaceholder
+                (Array.toList model.formFields)
+                model.dragged
     in
-    [ div [ class "tff-editor-layout" ]
-        [ -- Left Panel: Available Form Fields
-          div
+    [ div
+        [ class "tff-editor-layout"
+        ]
+        [ div
             [ class "tff-left-panel"
-            , classList [ ( "tff-panel-hidden", rightPanelVisible ) ]
+            , classList [ ( "tff-panel-hidden", model.selectedFieldIndex /= Nothing ) ]
             ]
-            [ h3 [ class "tff-panel-header" ] [ text "Add Questions" ]
-            , div [ class "tff-field-list" ]
-                (List.map
-                    (\inputField ->
-                        div
-                            [ class "tff-field-list-item"
-                            , attribute "role" "button"
-                            , onClick (AddFormField inputField)
-                            , attribute "draggable" "true"
-                            , on "dragstart"
-                                (Json.Decode.succeed
-                                    (DragStartNew
-                                        { label = stringFromInputField inputField
-                                        , name = Nothing
-                                        , presence = when (mustBeOptional inputField) { true = Optional, false = Required }
-                                        , description = AttributeNotNeeded Nothing
-                                        , type_ = inputField
-                                        }
-                                    )
-                                )
-                            , on "dragend" (Json.Decode.succeed DragEnd)
-                            ]
-                            [ text (stringFromInputField inputField) ]
-                    )
-                    (allInputField ++ extraOptions)
-                )
+            [ h2 [ class "tff-panel-header" ] [ text "Form Fields" ]
+            , viewAddQuestionsList (allInputField ++ extraOptions)
             ]
-        , -- Center Panel: Form Fields with Preview
-          div
+        , div
             [ class "tff-center-panel"
-            , classList [ ( "tff-panel-hidden", rightPanelVisible ) ]
+            , classList [ ( "tff-panel-hidden", model.selectedFieldIndex /= Nothing ) ]
             , onClick (SelectField Nothing)
             ]
             [ div
                 [ class "tff-fields-container"
-                , stopPropagationOn "click" (Json.Decode.succeed ( NoOp, True ))
-                , preventDefaultOn "dragover" (Json.Decode.succeed ( NoOp, True ))
-                , on "dragleave" (Json.Decode.succeed (DragOver -1))
+
+                -- , preventDefaultOn "drop" (Json.Decode.succeed ( Drop Nothing, True ))
                 ]
-                (Array.toList
-                    (Array.indexedMap
-                        (\index formField ->
-                            let
-                                showPlaceholderBefore =
-                                    case ( model.draggedIndex, model.draggedNewField, model.dropTargetIndex ) of
-                                        ( Just draggedIndex, Nothing, Just dropTargetIndex ) ->
-                                            -- Original logic for existing fields
-                                            if draggedIndex == dropTargetIndex then
-                                                False
-
-                                            else if draggedIndex > dropTargetIndex && index == dropTargetIndex then
-                                                True
-
-                                            else
-                                                draggedIndex < dropTargetIndex && index == dropTargetIndex + 1
-
-                                        ( Nothing, Just _, Just dropTargetIndex ) ->
-                                            -- New field being dragged
-                                            index == dropTargetIndex
-
-                                        _ ->
-                                            False
-
-                                isLastField =
-                                    index == Array.length model.formFields - 1
-
-                                showPlaceholderAfter =
-                                    case ( model.draggedIndex, model.draggedNewField, model.dropTargetIndex ) of
-                                        ( Just draggedIndex, Nothing, Just dropTargetIndex ) ->
-                                            -- Original logic for existing fields
-                                            isLastField && index == dropTargetIndex && draggedIndex < dropTargetIndex
-
-                                        ( Nothing, Just _, Just dropTargetIndex ) ->
-                                            -- New field being dragged
-                                            False
-
-                                        -- Never show placeholder after when dragging new field
-                                        _ ->
-                                            False
-                            in
-                            div
-                                [ class "tff-field-wrapper"
-                                , preventDefaultOn "dragover" (Json.Decode.succeed ( DragOver index, True ))
-                                , preventDefaultOn "drop" (Json.Decode.succeed ( Drop index, True ))
-                                , on "dragend" (Json.Decode.succeed DragEnd)
-                                ]
-                                [ if showPlaceholderBefore then
-                                    div [ class "tff-field-placeholder" ] []
-
-                                  else
-                                    text ""
-                                , div
-                                    [ class "tff-field-container"
-                                    ]
-                                    [ div
-                                        [ class "tff-field-preview"
-                                        , classList
-                                            [ ( "tff-field-ghost", model.draggedIndex == Just index )
-                                            , ( "tff-field-ghost-target", model.draggedIndex == Just index && model.dropTargetIndex == Just index )
-                                            , ( "tff-animate-fadeOut"
-                                              , case maybeAnimate of
-                                                    Just ( i, AnimateFadeOut ) ->
-                                                        i == index
-
-                                                    _ ->
-                                                        False
-                                              )
-                                            , ( "tff-animate-yellowFade"
-                                              , case maybeAnimate of
-                                                    Just ( i, AnimateYellowFade ) ->
-                                                        i == index
-
-                                                    _ ->
-                                                        False
-                                              )
-                                            ]
-                                        , onClick (SelectField (Just index))
-                                        , attribute "data-selected"
-                                            (if model.selectedFieldIndex == Just index then
-                                                "true"
-
-                                             else
-                                                "false"
-                                            )
-                                        , attribute "draggable" "true"
-                                        , on "dragstart" (Json.Decode.succeed (DragStart index))
-                                        ]
-                                        (if model.draggedIndex == Just index then
-                                            [ div [ class "tff-field-placeholder" ] [] ]
-
-                                         else
-                                            [ div [ class "tff-drag-handle" ] [ dragHandleIcon ]
-                                            , viewFormFieldPreview
-                                                { customAttrs = [ readonly True ]
-                                                , formValues = model.formValues
-                                                , shortTextTypeDict = model.shortTextTypeDict
-                                                }
-                                                index
-                                                formField
-                                            ]
-                                        )
-                                    ]
-                                , if showPlaceholderAfter then
-                                    div [ class "tff-field-placeholder" ] []
-
-                                  else
-                                    text ""
-                                ]
-                        )
-                        model.formFields
-                    )
-                )
+                (List.indexedMap (renderFormField maybeAnimate model) maybeFieldsList)
             ]
-        , -- Right Panel: Field Settings
-          div
-            [ class rightPanelClasses ]
-            [ div [ class "tff-panel-header" ]
-                [ h3 [] [ text "Field Settings" ]
-                , button
-                    [ class "tff-close-button"
-                    , type_ "button"
-                    , onClick (SelectField Nothing)
-                    ]
-                    [ text "×" ]
-                ]
-            , div [ class "tff-settings-content" ]
-                [ case model.selectedFieldIndex of
-                    Just index ->
-                        case Array.get index model.formFields of
-                            Just formField ->
-                                viewFormFieldBuilder model.shortTextTypeList (Array.length model.formFields) index formField
-
-                            Nothing ->
-                                text "Select a field to edit its settings"
-
-                    Nothing ->
-                        text "Select a field to edit its settings"
-                ]
-            ]
+        , viewRightPanel model
         ]
     ]
 
@@ -1522,7 +1430,7 @@ selectArrowDown =
 
 
 viewFormFieldBuilder : List CustomElement -> Int -> Int -> FormField -> Html Msg
-viewFormFieldBuilder shortTextTypeList totalLength index formField =
+viewFormFieldBuilder shortTextTypeList index totalLength formField =
     let
         buildFieldClass =
             "tff-build-field"
@@ -1548,9 +1456,9 @@ viewFormFieldBuilder shortTextTypeList totalLength index formField =
 
         deleteFieldButton =
             button
-                [ type_ "button"
+                [ class "tff-delete"
+                , type_ "button"
                 , tabindex 0
-                , class "tff-delete"
                 , title "Delete field"
                 , onClick
                     (DoSleepDo animateFadeDuration
@@ -1636,6 +1544,112 @@ viewFormFieldBuilder shortTextTypeList totalLength index formField =
                             text ""
                     ]
                ]
+        )
+
+
+viewRightPanel : Model -> Html Msg
+viewRightPanel modelData =
+    let
+        rightPanelClasses =
+            String.join " " <|
+                "tff-right-panel"
+                    :: (if modelData.selectedFieldIndex /= Nothing then
+                            [ "tff-panel-visible" ]
+
+                        else
+                            []
+                       )
+    in
+    div
+        [ class rightPanelClasses ]
+        [ div [ class "tff-panel-header" ]
+            [ h3 [] [ text "Field Settings" ]
+            , button
+                [ class "tff-close-button"
+                , type_ "button"
+                , onClick (SelectField Nothing)
+                ]
+                [ text "×" ]
+            ]
+        , div [ class "tff-settings-content" ]
+            [ case modelData.selectedFieldIndex of
+                Just index ->
+                    case Array.get index modelData.formFields of
+                        Just formField ->
+                            viewFormFieldBuilder modelData.shortTextTypeList index (Array.length modelData.formFields) formField
+
+                        Nothing ->
+                            text "Select a field to edit its settings"
+
+                Nothing ->
+                    text "Select a field to edit its settings"
+            ]
+        ]
+
+
+type DropdownState
+    = DropdownOpen
+    | DropdownClosed
+
+
+dragHandleIcon : Html msg
+dragHandleIcon =
+    svg
+        [ SvgAttr.viewBox "0 0 16 16"
+        , SvgAttr.fill "currentColor"
+        , attribute "aria-hidden" "true"
+        , SvgAttr.class "tff-drag-handle-icon"
+        ]
+        [ rect
+            [ SvgAttr.x "4"
+            , SvgAttr.y "4"
+            , SvgAttr.width "8"
+            , SvgAttr.height "1.5"
+            ]
+            []
+        , rect
+            [ SvgAttr.x "4"
+            , SvgAttr.y "7.25"
+            , SvgAttr.width "8"
+            , SvgAttr.height "1.5"
+            ]
+            []
+        , rect
+            [ SvgAttr.x "4"
+            , SvgAttr.y "10.5"
+            , SvgAttr.width "8"
+            , SvgAttr.height "1.5"
+            ]
+            []
+        ]
+
+
+viewAddQuestionsList : List InputField -> Html Msg
+viewAddQuestionsList inputFields =
+    div [ class "tff-field-list" ]
+        (List.map
+            (\inputField ->
+                div
+                    [ class "tff-field-list-item"
+                    , attribute "role" "button"
+                    , onClick (AddFormField inputField)
+                    , attribute "draggable" "true"
+                    , on "dragstart"
+                        (Json.Decode.succeed
+                            (DragStartNew
+                                { label = stringFromInputField inputField
+                                , name = Nothing
+                                , presence = when (mustBeOptional inputField) { true = Optional, false = Required }
+                                , description = AttributeNotNeeded Nothing
+                                , type_ = inputField
+                                }
+                            )
+                        )
+                    , on "dragend" (Json.Decode.succeed DragEnd)
+                    ]
+                    [ text (stringFromInputField inputField) ]
+            )
+            inputFields
         )
 
 
@@ -1893,7 +1907,7 @@ decodeConfig =
             )
 
 
-maybeDecode : String -> Json.Decode.Decoder b -> Json.Decode.Value -> Maybe b
+maybeDecode : String -> Json.Decode.Decoder b -> Json.Encode.Value -> Maybe b
 maybeDecode key decoder jsonValue =
     Json.Decode.decodeValue (Json.Decode.Extra.optionalField key decoder) jsonValue
         |> Result.toMaybe
@@ -2303,3 +2317,49 @@ toRawCustomElement ele =
             |> addMaxLengthIfGiven
             |> addDatalistIfGiven
     }
+
+
+type Dragged
+    = DragExisting { dragIndex : Int, dropIndex : Maybe Droppable } -- Maybe (Int, FormField) from DragOver msg
+    | DragNew { field : FormField, dropIndex : Maybe Droppable } -- Maybe (Int, FormField) from DragOver msg
+
+
+updateDragged : Maybe Droppable -> Dragged -> Dragged
+updateDragged maybeDroppable dragged =
+    case maybeDroppable of
+        Nothing ->
+            dragged
+
+        Just ( _, targetField ) ->
+            case dragged of
+                DragExisting details ->
+                    case details.dropIndex of
+                        Just ( _, existingField ) ->
+                            if existingField == targetField then
+                                dragged
+
+                            else
+                                DragExisting { details | dropIndex = maybeDroppable }
+
+                        Nothing ->
+                            DragExisting { details | dropIndex = maybeDroppable }
+
+                DragNew details ->
+                    case details.dropIndex of
+                        Just ( _, existingField ) ->
+                            if existingField == targetField then
+                                dragged
+
+                            else
+                                DragNew { details | dropIndex = maybeDroppable }
+
+                        Nothing ->
+                            DragNew { details | dropIndex = maybeDroppable }
+
+
+dragOverDecoder : Int -> Maybe FormField -> Json.Decode.Decoder ( Msg, Bool )
+dragOverDecoder index maybeFormField =
+    Json.Decode.succeed
+        ( DragOver (Just ( index, maybeFormField ))
+        , True
+        )

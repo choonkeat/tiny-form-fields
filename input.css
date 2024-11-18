@@ -332,13 +332,12 @@
 }
 
 .tff-field-placeholder {
-    @apply h-16;
+    @apply h-32;
     @apply border-2;
     @apply border-dashed;
     @apply border-blue-200;
     @apply rounded-lg;
     @apply bg-blue-50;
-    @apply mb-4;
 }
 
 .tff-field-placeholder-above {
@@ -363,7 +362,6 @@
 .tff-field-container {
     @apply relative;
     @apply min-h-[40px];
-    @apply mb-2;
 }
 
 .tff-field-preview[data-selected="true"] {
