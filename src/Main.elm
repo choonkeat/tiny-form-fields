@@ -1,41 +1,45 @@
 port module Main exposing
     ( AttributeOptional(..)
     , Choice
+    , Dragged(..)
     , FormField
     , InputField(..)
+    , Msg(..)
     , Presence(..)
+    , RawCustomElement
     , ViewMode(..)
     , allInputField
-    , choiceDelimiter
-    , choiceFromString
-    , choiceToString
     , decodeChoice
     , decodeCustomElement
     , decodeFormField
     , decodeFormFields
     , decodeShortTextTypeList
+    , dragOverDecoder
     , encodeChoice
     , encodeFormFields
     , encodeInputField
     , encodePairsFromCustomElement
+    , fieldsWithPlaceholder
+    , fromRawCustomElement
     , main
+    , onDropped
     , stringFromViewMode
     , viewModeFromString
     )
 
 import Array exposing (Array)
 import Browser
-import Browser.Dom
 import Dict exposing (Dict)
-import Html exposing (Html, a, button, div, h3, input, label, li, option, pre, select, text, textarea, ul)
-import Html.Attributes exposing (attribute, checked, class, disabled, for, href, id, maxlength, minlength, name, placeholder, readonly, required, selected, tabindex, title, type_, value)
-import Html.Events exposing (onCheck, onClick, onInput, preventDefaultOn, stopPropagationOn)
+import Html exposing (Html, button, div, h2, h3, input, label, option, pre, select, text, textarea)
+import Html.Attributes exposing (attribute, checked, class, classList, disabled, for, id, maxlength, minlength, name, placeholder, readonly, required, selected, tabindex, title, type_, value)
+import Html.Events exposing (on, onCheck, onClick, onInput, preventDefaultOn, stopPropagationOn)
 import Json.Decode
 import Json.Decode.Extra exposing (andMap)
 import Json.Encode
+import List.Extra
 import Platform.Cmd as Cmd
 import Process
-import Svg exposing (path, svg)
+import Svg exposing (path, rect, svg)
 import Svg.Attributes as SvgAttr
 import Task
 
@@ -82,6 +86,8 @@ type alias Model =
     -- Dict to lookup by `inputType`
     , shortTextTypeDict : Dict String CustomElement
     , dropdownState : DropdownState
+    , selectedFieldIndex : Maybe Int
+    , dragged : Maybe Dragged
     }
 
 
@@ -92,7 +98,6 @@ type Animate
 
 type ViewMode
     = Editor { maybeAnimate : Maybe ( Int, Animate ) }
-    | Preview
     | CollectData
 
 
@@ -101,9 +106,6 @@ viewModeFromString str =
     case str of
         "Editor" ->
             Just (Editor { maybeAnimate = Nothing })
-
-        "Preview" ->
-            Just Preview
 
         "CollectData" ->
             Just CollectData
@@ -117,9 +119,6 @@ stringFromViewMode viewMode =
     case viewMode of
         Editor _ ->
             "Editor"
-
-        Preview ->
-            "Preview"
 
         CollectData ->
             "CollectData"
@@ -254,94 +253,8 @@ inputAttributeOptional options attributeOptional =
                 ]
 
 
-type alias RawCustomElement =
-    { inputType : String
-    , inputTag : String
-    , attributes : Dict String String
-    }
-
-
-type alias CustomElement =
-    { inputType : String
-    , inputTag : String
-    , attributes : Dict String String
-    , maxlength : AttributeOptional Int
-    , datalist : AttributeOptional (List Choice)
-    }
-
-
-fromRawCustomElement : RawCustomElement -> CustomElement
-fromRawCustomElement ele =
-    { inputTag = ele.inputTag
-    , inputType = ele.inputType
-    , attributes =
-        ele.attributes
-            -- list="some-id" is not a `datalist : AttributeOptional (List Choice)`, we keep it in `.attributes`
-            |> Dict.filter (\k v -> not (k == "list" && String.contains "\n" v))
-    , maxlength =
-        case Dict.get "maxlength" ele.attributes of
-            Just "" ->
-                AttributeNotNeeded Nothing
-
-            Just value ->
-                case String.toInt value of
-                    Just int ->
-                        AttributeGiven int
-
-                    Nothing ->
-                        AttributeInvalid value
-
-            _ ->
-                AttributeNotNeeded Nothing
-    , datalist =
-        case Dict.get "list" ele.attributes of
-            Just s ->
-                case String.split "\n" (String.trim s) of
-                    [] ->
-                        AttributeNotNeeded Nothing
-
-                    [ _ ] ->
-                        AttributeNotNeeded Nothing
-
-                    list ->
-                        AttributeGiven (List.map choiceFromString list)
-
-            Nothing ->
-                AttributeNotNeeded Nothing
-    }
-
-
-toRawCustomElement : CustomElement -> RawCustomElement
-toRawCustomElement ele =
-    let
-        addMaxLengthIfGiven dict =
-            case ele.maxlength of
-                AttributeGiven int ->
-                    Dict.insert "maxlength" (String.fromInt int) dict
-
-                _ ->
-                    Dict.filter (\k _ -> k /= "maxlength") dict
-
-        addDatalistIfGiven dict =
-            case ele.datalist of
-                AttributeGiven list ->
-                    Dict.insert "list" (String.join "\n" (List.map choiceToString list)) dict
-
-                AttributeInvalid _ ->
-                    -- see `fromRawCustomElement`, keep the "list":"someid" we keep in `.attributes`
-                    dict
-
-                AttributeNotNeeded _ ->
-                    -- see `fromRawCustomElement`, keep the "list":"someid" we keep in `.attributes`
-                    dict
-    in
-    { inputTag = ele.inputTag
-    , inputType = ele.inputType
-    , attributes =
-        ele.attributes
-            |> addMaxLengthIfGiven
-            |> addDatalistIfGiven
-    }
+type alias Choice =
+    { label : String, value : String }
 
 
 type InputField
@@ -350,10 +263,6 @@ type InputField
     | Dropdown (List Choice)
     | ChooseOne (List Choice)
     | ChooseMultiple (List Choice)
-
-
-type alias Choice =
-    { label : String, value : String }
 
 
 allInputField : List InputField
@@ -404,16 +313,25 @@ mustBeOptional inputField =
 
 
 type Msg
-    = OnPortIncoming Json.Encode.Value
-    | SetViewMode ViewMode
+    = NoOp
+    | OnPortIncoming Json.Encode.Value
     | AddFormField InputField
     | DeleteFormField Int
     | MoveFormFieldUp Int
     | MoveFormFieldDown Int
     | OnFormField FormFieldMsg Int String
-    | ToggleDropdownState
     | SetEditorAnimate (Maybe ( Int, Animate ))
+    | SelectField (Maybe Int)
+    | DragStart Int
+    | DragStartNew FormField
+    | DragEnd
+    | DragOver (Maybe Droppable)
+    | Drop (Maybe Int)
     | DoSleepDo Float (List Msg)
+
+
+type alias Droppable =
+    ( Int, Maybe FormField )
 
 
 type FormFieldMsg
@@ -466,6 +384,8 @@ init flags =
                         |> List.map (\customElement -> ( customElement.inputType, customElement ))
                         |> Dict.fromList
               , dropdownState = DropdownClosed
+              , selectedFieldIndex = Nothing
+              , dragged = Nothing
               }
             , Cmd.batch
                 [ outgoing (encodePortOutgoingValue (PortOutgoingFormFields config.formFields))
@@ -485,6 +405,8 @@ init flags =
               , shortTextTypeList = []
               , shortTextTypeDict = Dict.empty
               , dropdownState = DropdownClosed
+              , selectedFieldIndex = Nothing
+              , dragged = Nothing
               }
             , Cmd.none
             )
@@ -502,6 +424,9 @@ animateFadeDuration =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        NoOp ->
+            ( model, Cmd.none )
+
         OnPortIncoming value ->
             case Json.Decode.decodeValue decodePortIncomingValue value of
                 Ok (PortIncomingViewMode viewMode) ->
@@ -516,13 +441,6 @@ update msg model =
 
                 Err _ ->
                     ( model, Cmd.none )
-
-        SetViewMode viewMode ->
-            ( { model
-                | viewMode = viewMode
-              }
-            , outgoing (encodePortOutgoingValue (PortOutgoingViewMode viewMode))
-            )
 
         AddFormField fieldType ->
             let
@@ -540,21 +458,21 @@ update msg model =
 
                 newFormFields =
                     Array.push newFormField model.formFields
+
+                newIndex =
+                    Array.length newFormFields - 1
             in
-            ( { model | formFields = newFormFields }
+            ( { model
+                | formFields = newFormFields
+              }
             , Cmd.batch
                 [ outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
-                , Browser.Dom.focus ("label-" ++ String.fromInt currLength)
-                    |> Task.attempt
-                        -- ignoring result of focus
-                        -- and always returning `DoSleepDo...`
-                        (always
-                            (DoSleepDo animateFadeDuration
-                                [ SetEditorAnimate (Just ( currLength, AnimateYellowFade ))
-                                , SetEditorAnimate Nothing
-                                ]
-                            )
-                        )
+                , DoSleepDo animateFadeDuration
+                    [ SetEditorAnimate (Just ( newIndex, AnimateYellowFade ))
+                    , SetEditorAnimate Nothing
+                    ]
+                    |> Task.succeed
+                    |> Task.perform identity
                 ]
             )
 
@@ -566,13 +484,8 @@ update msg model =
                         |> List.map Tuple.second
                         |> Array.fromList
             in
-            ( { model | formFields = newFormFields }
-            , Cmd.batch
-                [ outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
-                , SetEditorAnimate Nothing
-                    |> Task.succeed
-                    |> Task.perform identity
-                ]
+            ( { model | formFields = newFormFields, selectedFieldIndex = Nothing }
+            , outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
             )
 
         MoveFormFieldUp index ->
@@ -580,16 +493,11 @@ update msg model =
                 newFormFields =
                     swapArrayIndex index (index - 1) model.formFields
             in
-            ( { model | formFields = newFormFields }
-            , Cmd.batch
-                [ outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
-                , DoSleepDo animateFadeDuration
-                    [ SetEditorAnimate (Just ( index - 1, AnimateYellowFade ))
-                    , SetEditorAnimate Nothing
-                    ]
-                    |> Task.succeed
-                    |> Task.perform identity
-                ]
+            ( { model
+                | formFields = newFormFields
+                , selectedFieldIndex = Just (index - 1)
+              }
+            , outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
             )
 
         MoveFormFieldDown index ->
@@ -597,16 +505,11 @@ update msg model =
                 newFormFields =
                     swapArrayIndex index (index + 1) model.formFields
             in
-            ( { model | formFields = newFormFields }
-            , Cmd.batch
-                [ outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
-                , DoSleepDo animateFadeDuration
-                    [ SetEditorAnimate (Just ( index + 1, AnimateYellowFade ))
-                    , SetEditorAnimate Nothing
-                    ]
-                    |> Task.succeed
-                    |> Task.perform identity
-                ]
+            ( { model
+                | formFields = newFormFields
+                , selectedFieldIndex = Just (index + 1)
+              }
+            , outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
             )
 
         OnFormField fmsg index string ->
@@ -626,22 +529,70 @@ update msg model =
             , outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
             )
 
-        ToggleDropdownState ->
-            ( { model
-                | dropdownState =
-                    case model.dropdownState of
-                        DropdownOpen ->
-                            DropdownClosed
+        SetEditorAnimate maybeAnimate ->
+            ( { model | viewMode = Editor { maybeAnimate = maybeAnimate } }
+            , Cmd.none
+            )
 
-                        DropdownClosed ->
-                            DropdownOpen
+        SelectField index ->
+            case ( model.selectedFieldIndex, index ) of
+                ( Just prevIndex, Nothing ) ->
+                    ( { model
+                        | selectedFieldIndex = Nothing
+                        , viewMode = Editor { maybeAnimate = Just ( prevIndex, AnimateYellowFade ) }
+                      }
+                    , Cmd.none
+                    )
+
+                _ ->
+                    ( { model | selectedFieldIndex = index }
+                    , Cmd.none
+                    )
+
+        DragStart index ->
+            ( { model
+                | dragged = Just (DragExisting { dragIndex = index, dropIndex = Nothing }) -- use index as initial dropTargetIndex
+                , selectedFieldIndex = Nothing
               }
             , Cmd.none
             )
 
-        SetEditorAnimate maybeAnimate ->
-            ( { model | viewMode = Editor { maybeAnimate = maybeAnimate } }
+        DragStartNew field ->
+            ( { model
+                | dragged = Just (DragNew { field = field, dropIndex = Just ( 0, Nothing ) }) -- new field starts at index 0
+              }
             , Cmd.none
+            )
+
+        DragEnd ->
+            case model.dragged of
+                Just (DragExisting { dropIndex }) ->
+                    update (Drop (Maybe.map Tuple.first dropIndex)) model
+
+                Just (DragNew { dropIndex }) ->
+                    update (Drop (Maybe.map Tuple.first dropIndex)) model
+
+                Nothing ->
+                    ( { model | dragged = Nothing }
+                    , Cmd.none
+                    )
+
+        DragOver maybeDroppable ->
+            ( { model | dragged = Maybe.map (updateDragged maybeDroppable) model.dragged }
+            , Cmd.none
+            )
+
+        Drop targetIndex ->
+            let
+                newModel =
+                    onDropped targetIndex model
+            in
+            ( newModel
+            , if newModel.formFields /= model.formFields then
+                outgoing (encodePortOutgoingValue (PortOutgoingFormFields newModel.formFields))
+
+              else
+                Cmd.none
             )
 
         DoSleepDo _ [] ->
@@ -816,6 +767,101 @@ updateFormField msg string formField =
                     formField
 
 
+onDropped : Maybe Int -> { a | dragged : Maybe Dragged, formFields : Array FormField } -> { a | dragged : Maybe Dragged, formFields : Array FormField }
+onDropped targetIndex model =
+    case model.dragged of
+        Just (DragExisting { dragIndex, dropIndex }) ->
+            case targetIndex of
+                Nothing ->
+                    -- dropping outside valid area, just reset state
+                    { model | dragged = Nothing }
+
+                Just index ->
+                    case dropIndex of
+                        Just ( dropTargetIndex, _ ) ->
+                            if dragIndex == index || index /= dropTargetIndex then
+                                -- dropping on original position or different from last DragOver
+                                { model | dragged = Nothing }
+
+                            else
+                                -- Dropping an existing field in a new position
+                                let
+                                    newFormFields =
+                                        model.formFields
+                                            |> Array.toList
+                                            |> List.indexedMap Tuple.pair
+                                            |> List.filter (\( i, _ ) -> i /= dragIndex)
+                                            |> List.map Tuple.second
+                                            |> (\list ->
+                                                    let
+                                                        ( before, after ) =
+                                                            List.Extra.splitAt index list
+
+                                                        draggedField =
+                                                            Array.get dragIndex model.formFields
+                                                    in
+                                                    case draggedField of
+                                                        Just field ->
+                                                            List.concat
+                                                                [ before
+                                                                , [ field ]
+                                                                , after
+                                                                ]
+
+                                                        Nothing ->
+                                                            list
+                                               )
+                                            |> Array.fromList
+                                in
+                                { model
+                                    | formFields = newFormFields
+                                    , dragged = Nothing
+                                }
+
+                        Nothing ->
+                            -- dropping on original position
+                            { model | dragged = Nothing }
+
+        Just (DragNew { field, dropIndex }) ->
+            case targetIndex of
+                Nothing ->
+                    -- dropping outside valid area, just reset state
+                    { model | dragged = Nothing }
+
+                Just index ->
+                    case dropIndex of
+                        Just ( dropTargetIndex, _ ) ->
+                            if index /= dropTargetIndex then
+                                -- dropping on different from last DragOver
+                                { model | dragged = Nothing }
+
+                            else
+                                -- Dropping a new field
+                                let
+                                    newFormFields =
+                                        Array.toList model.formFields
+                                            |> (\list ->
+                                                    let
+                                                        ( before, after ) =
+                                                            List.Extra.splitAt index list
+                                                    in
+                                                    before ++ [ field ] ++ after
+                                               )
+                                            |> Array.fromList
+                                in
+                                { model
+                                    | formFields = newFormFields
+                                    , dragged = Nothing
+                                }
+
+                        Nothing ->
+                            -- dropping on original position
+                            { model | dragged = Nothing }
+
+        Nothing ->
+            { model | dragged = Nothing }
+
+
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     incoming OnPortIncoming
@@ -867,63 +913,16 @@ viewMain model =
     div [ class ("tff tff-mode-" ++ stringFromViewMode model.viewMode) ]
         (case model.viewMode of
             Editor editorAttr ->
-                [ viewTabs model.viewMode
-                    [ ( Editor editorAttr, text "Editor" )
-                    , ( Preview, text "Preview" )
-                    ]
-                , input
+                input
                     [ type_ "hidden"
                     , name "tiny-form-fields"
                     , value (Json.Encode.encode 0 (encodeFormFields model.formFields))
                     ]
                     []
-                ]
-                    ++ viewFormBuilder editorAttr.maybeAnimate model
-
-            Preview ->
-                [ viewTabs model.viewMode
-                    [ ( Editor { maybeAnimate = Nothing }, text "Editor" )
-                    , ( Preview, text "Preview" )
-                    ]
-                , input
-                    [ type_ "hidden"
-                    , name "tiny-form-fields"
-                    , value (Json.Encode.encode 0 (encodeFormFields model.formFields))
-                    ]
-                    []
-                ]
-                    ++ viewFormPreview [ disabled True ] model
+                    :: viewFormBuilder editorAttr.maybeAnimate model
 
             CollectData ->
                 viewFormPreview [] model
-        )
-
-
-viewTabs : ViewMode -> List ( ViewMode, Html Msg ) -> Html Msg
-viewTabs active tabs =
-    ul
-        [ class "tff-tabs"
-        ]
-        (List.map
-            (\( tab, content ) ->
-                li []
-                    [ button
-                        [ type_ "button"
-                        , tabindex 0
-                        , attribute "aria-current" "page"
-                        , class
-                            (if tab == active then
-                                "tff-tabs-active"
-
-                             else
-                                "tff-tabs-inactive"
-                            )
-                        , onClick (SetViewMode tab)
-                        ]
-                        [ content ]
-                    ]
-            )
-            tabs
         )
 
 
@@ -957,7 +956,7 @@ viewFormFieldPreview config index formField =
             -- so clicking on label will focus on field
             "tff-field-input-" ++ String.fromInt index
     in
-    div [ class "tff-tabs-preview" ]
+    div []
         [ div
             [ class ("tff-field-group" ++ when (requiredData formField.presence) { true = " tff-required", false = "" }) ]
             [ label [ class "tff-field-label", for fieldID ]
@@ -1230,98 +1229,166 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } field
                 ]
 
 
-
---
-
-
-type DropdownState
-    = DropdownOpen
-    | DropdownClosed
-
-
-dropDownButton : DropdownState -> List ( Msg, String ) -> List (Html Msg)
-dropDownButton dropdownState options =
-    let
-        dropDownButtonClass =
-            case dropdownState of
-                DropdownOpen ->
-                    "tff-dropdown-open"
-
-                DropdownClosed ->
-                    "tff-dropdown-closed"
-    in
-    [ button
-        [ id "dropdownDefaultButton"
-        , attribute "data-dropdown-toggle" "dropdown"
-        , class "tff-dropdown-button"
-        , type_ "button"
-        , stopPropagationOn "click" (Json.Decode.succeed ( ToggleDropdownState, True ))
-        ]
-        [ text " Add question "
-        , svg
-            [ SvgAttr.class "tff-dropdown-svg"
-            , attribute "aria-hidden" "true"
-            , SvgAttr.fill "none"
-            , SvgAttr.viewBox "0 0 10 6"
-            ]
-            [ path
-                [ SvgAttr.stroke "currentColor"
-                , SvgAttr.strokeLinecap "round"
-                , SvgAttr.strokeLinejoin "round"
-                , SvgAttr.strokeWidth "2"
-                , SvgAttr.d "m1 1 4 4 4-4"
+renderFormField : Maybe ( Int, Animate ) -> Model -> Int -> Maybe FormField -> Html Msg
+renderFormField maybeAnimate model index maybeFormField =
+    case maybeFormField of
+        Nothing ->
+            div
+                [ class "tff-field-container"
+                , preventDefaultOn "dragover" (dragOverDecoder index Nothing)
                 ]
-                []
-            ]
-        ]
-    , div
-        [ id "dropdown"
-        , class ("tff-dropdown-options-wrapper " ++ dropDownButtonClass)
-        ]
-        [ ul
-            [ class "tff-dropdown-list"
-            , attribute "aria-labelledby" "dropdownDefaultButton"
-            ]
-            [ li []
-                (List.map
-                    (\( msg, labelText ) ->
-                        a
-                            [ href "#"
-                            , class "tff-dropdown-option"
-                            , preventDefaultOn "click" (Json.Decode.succeed ( msg, True ))
+                [ div [ class "tff-field-placeholder" ] [] ]
+
+        Just formField ->
+            div
+                [ class "tff-field-container"
+                , preventDefaultOn "dragover" (dragOverDecoder index (Just formField))
+                ]
+                [ div
+                    [ class "tff-field-wrapper"
+                    ]
+                    [ div
+                        [ class "tff-field-preview"
+                        , classList
+                            [ ( "tff-animate-fadeOut"
+                              , case maybeAnimate of
+                                    Just ( i, AnimateFadeOut ) ->
+                                        i == index
+
+                                    _ ->
+                                        False
+                              )
+                            , ( "tff-animate-yellowFade"
+                              , case maybeAnimate of
+                                    Just ( i, AnimateYellowFade ) ->
+                                        i == index
+
+                                    _ ->
+                                        False
+                              )
                             ]
-                            [ text labelText ]
-                    )
-                    options
-                )
-            ]
-        ]
-    ]
+                        , stopPropagationOn "click" (Json.Decode.succeed ( SelectField (Just index), True ))
+                        , attribute "data-selected"
+                            (if model.selectedFieldIndex == Just index then
+                                "true"
+
+                             else
+                                "false"
+                            )
+                        , attribute "draggable" "true"
+                        , on "dragstart" (Json.Decode.succeed (DragStart index))
+                        , on "dragend" (Json.Decode.succeed DragEnd)
+                        ]
+                        [ div [ class "tff-drag-handle" ] [ dragHandleIcon ]
+                        , viewFormFieldPreview
+                            { customAttrs = [ disabled False, readonly True ]
+                            , formValues = model.formValues
+                            , shortTextTypeDict = model.shortTextTypeDict
+                            }
+                            index
+                            formField
+                        ]
+                    ]
+                ]
 
 
-viewFormBuilder : Maybe ( Int, Animate ) -> { a | dropdownState : DropdownState, formFields : Array FormField, shortTextTypeList : List CustomElement } -> List (Html Msg)
-viewFormBuilder maybeAnimate { dropdownState, formFields, shortTextTypeList } =
+{-| Given a list of form fields and drag state, returns a list of Maybe FormField
+where:
+
+  - Dragged existing field is replaced with Nothing
+  - For new field drag, Nothing is inserted at dropTargetIndex
+  - For new field drag without dropTargetIndex, Nothing is prepended
+
+-}
+fieldsWithPlaceholder : List FormField -> Maybe Dragged -> List (Maybe FormField)
+fieldsWithPlaceholder fields dragged =
+    case dragged of
+        Nothing ->
+            List.map Just fields
+
+        Just (DragExisting { dragIndex, dropIndex }) ->
+            case dropIndex of
+                Nothing ->
+                    -- When dragging outside valid drop area, keep all fields as is
+                    List.map Just fields
+
+                Just ( index, _ ) ->
+                    let
+                        withoutDragged =
+                            List.indexedMap
+                                (\i formField ->
+                                    if i == dragIndex then
+                                        Nothing
+
+                                    else
+                                        Just formField
+                                )
+                                fields
+                                |> List.filterMap identity
+                    in
+                    List.concat
+                        [ List.take index (List.map Just withoutDragged)
+                        , [ Nothing ]
+                        , List.drop index (List.map Just withoutDragged)
+                        ]
+
+        Just (DragNew { dropIndex }) ->
+            case dropIndex of
+                Nothing ->
+                    -- When dragging outside valid drop area, keep all fields as is
+                    List.map Just fields
+
+                Just ( index, _ ) ->
+                    let
+                        fieldsWithJust =
+                            List.map Just fields
+                    in
+                    List.concat
+                        [ List.take index fieldsWithJust
+                        , [ Nothing ]
+                        , List.drop index fieldsWithJust
+                        ]
+
+
+viewFormBuilder : Maybe ( Int, Animate ) -> Model -> List (Html Msg)
+viewFormBuilder maybeAnimate model =
     let
-        stdOptions =
-            List.map
-                (\inputField ->
-                    ( AddFormField inputField
-                    , stringFromInputField inputField
-                    )
-                )
-                allInputField
-
         extraOptions =
             List.map
-                (\customElement -> ( AddFormField (ShortText customElement), customElement.inputType ))
-                shortTextTypeList
+                (\customElement -> ShortText customElement)
+                model.shortTextTypeList
+
+        maybeFieldsList =
+            fieldsWithPlaceholder
+                (Array.toList model.formFields)
+                model.dragged
     in
-    div [ class "tff-build-fields" ]
-        (formFields
-            |> Array.indexedMap (viewFormFieldBuilder maybeAnimate shortTextTypeList (Array.length formFields))
-            |> Array.toList
-        )
-        :: dropDownButton dropdownState (stdOptions ++ extraOptions)
+    [ div
+        [ class "tff-editor-layout"
+        , preventDefaultOn "dragover" (Json.Decode.succeed ( NoOp, True )) -- so dragged image don't snap back
+        ]
+        [ div
+            [ class "tff-left-panel"
+            , classList [ ( "tff-panel-hidden", model.selectedFieldIndex /= Nothing ) ]
+            ]
+            [ h2 [ class "tff-panel-header" ] [ text "Form Fields" ]
+            , viewAddQuestionsList (allInputField ++ extraOptions)
+            ]
+        , div
+            [ class "tff-center-panel"
+            , classList [ ( "tff-panel-hidden", model.selectedFieldIndex /= Nothing ) ]
+            , onClick (SelectField Nothing)
+            ]
+            [ div
+                [ class "tff-fields-container"
+
+                -- , preventDefaultOn "drop" (Json.Decode.succeed ( Drop Nothing, True ))
+                ]
+                (List.indexedMap (renderFormField maybeAnimate model) maybeFieldsList)
+            ]
+        , viewRightPanel model
+        ]
+    ]
 
 
 selectArrowDown : Html msg
@@ -1340,48 +1407,36 @@ selectArrowDown =
         ]
 
 
-viewFormFieldBuilder : Maybe ( Int, Animate ) -> List CustomElement -> Int -> Int -> FormField -> Html Msg
-viewFormFieldBuilder maybeAnimate shortTextTypeList totalLength index formField =
+viewFormFieldBuilder : List CustomElement -> Int -> Int -> FormField -> Html Msg
+viewFormFieldBuilder shortTextTypeList index totalLength formField =
     let
         buildFieldClass =
-            case maybeAnimate of
-                Nothing ->
-                    "tff-build-field"
-
-                Just ( i, animate ) ->
-                    if i == index then
-                        case animate of
-                            AnimateYellowFade ->
-                                "tff-build-field tff-animate-yellowFade"
-
-                            AnimateFadeOut ->
-                                "tff-build-field tff-animate-fadeOut"
-
-                    else
-                        "tff-build-field"
+            "tff-build-field"
 
         idSuffix =
             String.fromInt index
 
         configureRequiredCheckbox =
-            label [ class "tff-field-label", for ("required-" ++ idSuffix) ]
-                [ input
-                    [ id ("required-" ++ idSuffix)
-                    , type_ "checkbox"
-                    , tabindex 0
-                    , checked (requiredData formField.presence)
-                    , onCheck (\b -> OnFormField (OnRequiredInput b) index "")
+            div [ class "tff-field-group" ]
+                [ label [ class "tff-field-label", for ("required-" ++ idSuffix) ]
+                    [ input
+                        [ id ("required-" ++ idSuffix)
+                        , type_ "checkbox"
+                        , tabindex 0
+                        , checked (requiredData formField.presence)
+                        , onCheck (\b -> OnFormField (OnRequiredInput b) index "")
+                        ]
+                        []
+                    , text " "
+                    , text "Required field"
                     ]
-                    []
-                , text " "
-                , text "Required field"
                 ]
 
         deleteFieldButton =
             button
-                [ type_ "button"
+                [ class "tff-delete"
+                , type_ "button"
                 , tabindex 0
-                , class "tff-delete"
                 , title "Delete field"
                 , onClick
                     (DoSleepDo animateFadeDuration
@@ -1467,6 +1522,111 @@ viewFormFieldBuilder maybeAnimate shortTextTypeList totalLength index formField 
                             text ""
                     ]
                ]
+        )
+
+
+viewRightPanel : Model -> Html Msg
+viewRightPanel modelData =
+    let
+        rightPanelClasses =
+            String.join " " <|
+                "tff-right-panel"
+                    :: (if modelData.selectedFieldIndex /= Nothing then
+                            [ "tff-panel-visible" ]
+
+                        else
+                            []
+                       )
+    in
+    div
+        [ class rightPanelClasses ]
+        [ div [ class "tff-panel-header" ]
+            [ h3 [] [ text "Field Settings" ]
+            , button
+                [ class "tff-close-button"
+                , type_ "button"
+                , onClick (SelectField Nothing)
+                ]
+                [ text "×" ]
+            ]
+        , div [ class "tff-settings-content" ]
+            [ case modelData.selectedFieldIndex of
+                Just index ->
+                    case Array.get index modelData.formFields of
+                        Just formField ->
+                            viewFormFieldBuilder modelData.shortTextTypeList index (Array.length modelData.formFields) formField
+
+                        Nothing ->
+                            text "Select a field to edit its settings"
+
+                Nothing ->
+                    text "Select a field to edit its settings"
+            ]
+        ]
+
+
+type DropdownState
+    = DropdownClosed
+
+
+dragHandleIcon : Html msg
+dragHandleIcon =
+    svg
+        [ SvgAttr.viewBox "0 0 16 16"
+        , SvgAttr.fill "currentColor"
+        , attribute "aria-hidden" "true"
+        , SvgAttr.class "tff-drag-handle-icon"
+        ]
+        [ rect
+            [ SvgAttr.x "4"
+            , SvgAttr.y "4"
+            , SvgAttr.width "8"
+            , SvgAttr.height "1.5"
+            ]
+            []
+        , rect
+            [ SvgAttr.x "4"
+            , SvgAttr.y "7.25"
+            , SvgAttr.width "8"
+            , SvgAttr.height "1.5"
+            ]
+            []
+        , rect
+            [ SvgAttr.x "4"
+            , SvgAttr.y "10.5"
+            , SvgAttr.width "8"
+            , SvgAttr.height "1.5"
+            ]
+            []
+        ]
+
+
+viewAddQuestionsList : List InputField -> Html Msg
+viewAddQuestionsList inputFields =
+    div [ class "tff-field-list" ]
+        (List.map
+            (\inputField ->
+                div
+                    [ class "tff-field-list-item"
+                    , attribute "role" "button"
+                    , onClick (AddFormField inputField)
+                    , attribute "draggable" "true"
+                    , on "dragstart"
+                        (Json.Decode.succeed
+                            (DragStartNew
+                                { label = stringFromInputField inputField
+                                , name = Nothing
+                                , presence = when (mustBeOptional inputField) { true = Optional, false = Required }
+                                , description = AttributeNotNeeded Nothing
+                                , type_ = inputField
+                                }
+                            )
+                        )
+                    , on "dragend" (Json.Decode.succeed DragEnd)
+                    ]
+                    [ text (stringFromInputField inputField) ]
+            )
+            inputFields
         )
 
 
@@ -1574,7 +1734,6 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
 
 type PortOutgoingValue
     = PortOutgoingFormFields (Array FormField)
-    | PortOutgoingViewMode ViewMode
     | PortOutgoingSetupCloseDropdown PortIncomingValue
 
 
@@ -1585,12 +1744,6 @@ encodePortOutgoingValue value =
             Json.Encode.object
                 [ ( "type", Json.Encode.string "formFields" )
                 , ( "formFields", encodeFormFields formFields )
-                ]
-
-        PortOutgoingViewMode viewMode ->
-            Json.Encode.object
-                [ ( "type", Json.Encode.string "viewMode" )
-                , ( "viewMode", Json.Encode.string (stringFromViewMode viewMode) )
                 ]
 
         PortOutgoingSetupCloseDropdown incomingValue ->
@@ -1724,7 +1877,7 @@ decodeConfig =
             )
 
 
-maybeDecode : String -> Json.Decode.Decoder b -> Json.Decode.Value -> Maybe b
+maybeDecode : String -> Json.Decode.Decoder b -> Json.Encode.Value -> Maybe b
 maybeDecode key decoder jsonValue =
     Json.Decode.decodeValue (Json.Decode.Extra.optionalField key decoder) jsonValue
         |> Result.toMaybe
@@ -2043,4 +2196,140 @@ decodeShortTextTypeList =
                     )
     in
     Json.Decode.list (Json.Decode.dict (Json.Decode.oneOf [ decodeInputTagAttributes, decodeAttributes ]))
-        |> Json.Decode.map (List.map customElementsFrom >> List.concat)
+        |> Json.Decode.map (List.concatMap customElementsFrom)
+
+
+type alias RawCustomElement =
+    { inputType : String
+    , inputTag : String
+    , attributes : Dict String String
+    }
+
+
+type alias CustomElement =
+    { inputType : String
+    , inputTag : String
+    , attributes : Dict String String
+    , maxlength : AttributeOptional Int
+    , datalist : AttributeOptional (List Choice)
+    }
+
+
+fromRawCustomElement : RawCustomElement -> CustomElement
+fromRawCustomElement ele =
+    { inputTag = ele.inputTag
+    , inputType = ele.inputType
+    , attributes =
+        ele.attributes
+            -- list="some-id" is not a `datalist : AttributeOptional (List Choice)`, we keep it in `.attributes`
+            |> Dict.filter (\k v -> not (k == "list" && String.contains "\n" v))
+    , maxlength =
+        case Dict.get "maxlength" ele.attributes of
+            Just "" ->
+                AttributeNotNeeded Nothing
+
+            Just value ->
+                case String.toInt value of
+                    Just int ->
+                        AttributeGiven int
+
+                    Nothing ->
+                        AttributeInvalid value
+
+            _ ->
+                AttributeNotNeeded Nothing
+    , datalist =
+        case Dict.get "list" ele.attributes of
+            Just s ->
+                case String.split "\n" (String.trim s) of
+                    [] ->
+                        AttributeNotNeeded Nothing
+
+                    [ _ ] ->
+                        AttributeNotNeeded Nothing
+
+                    list ->
+                        AttributeGiven (List.map choiceFromString list)
+
+            Nothing ->
+                AttributeNotNeeded Nothing
+    }
+
+
+toRawCustomElement : CustomElement -> RawCustomElement
+toRawCustomElement ele =
+    let
+        addMaxLengthIfGiven dict =
+            case ele.maxlength of
+                AttributeGiven int ->
+                    Dict.insert "maxlength" (String.fromInt int) dict
+
+                _ ->
+                    Dict.filter (\k _ -> k /= "maxlength") dict
+
+        addDatalistIfGiven dict =
+            case ele.datalist of
+                AttributeGiven list ->
+                    Dict.insert "list" (String.join "\n" (List.map choiceToString list)) dict
+
+                AttributeInvalid _ ->
+                    -- see `fromRawCustomElement`, keep the "list":"someid" we keep in `.attributes`
+                    dict
+
+                AttributeNotNeeded _ ->
+                    -- see `fromRawCustomElement`, keep the "list":"someid" we keep in `.attributes`
+                    dict
+    in
+    { inputTag = ele.inputTag
+    , inputType = ele.inputType
+    , attributes =
+        ele.attributes
+            |> addMaxLengthIfGiven
+            |> addDatalistIfGiven
+    }
+
+
+type Dragged
+    = DragExisting { dragIndex : Int, dropIndex : Maybe Droppable } -- Maybe (Int, FormField) from DragOver msg
+    | DragNew { field : FormField, dropIndex : Maybe Droppable } -- Maybe (Int, FormField) from DragOver msg
+
+
+updateDragged : Maybe Droppable -> Dragged -> Dragged
+updateDragged maybeDroppable dragged =
+    case maybeDroppable of
+        Nothing ->
+            dragged
+
+        Just ( _, targetField ) ->
+            case dragged of
+                DragExisting details ->
+                    case details.dropIndex of
+                        Just ( _, existingField ) ->
+                            if existingField == targetField then
+                                dragged
+
+                            else
+                                DragExisting { details | dropIndex = maybeDroppable }
+
+                        Nothing ->
+                            DragExisting { details | dropIndex = maybeDroppable }
+
+                DragNew details ->
+                    case details.dropIndex of
+                        Just ( _, existingField ) ->
+                            if existingField == targetField then
+                                dragged
+
+                            else
+                                DragNew { details | dropIndex = maybeDroppable }
+
+                        Nothing ->
+                            DragNew { details | dropIndex = maybeDroppable }
+
+
+dragOverDecoder : Int -> Maybe FormField -> Json.Decode.Decoder ( Msg, Bool )
+dragOverDecoder index maybeFormField =
+    Json.Decode.succeed
+        ( DragOver (Just ( index, maybeFormField ))
+        , True
+        )

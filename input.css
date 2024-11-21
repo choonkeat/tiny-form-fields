@@ -49,8 +49,24 @@
     @apply mb-4;
 }
 
+.tff-settings-content .tff-field-group,
+.tff-settings-content .tff-toggle-group {
+    @apply mb-4;
+}
+
+.tff-center-panel .tff-field-group,
+.tff-center-panel .tff-toggle-group {
+    @apply mb-4;
+}
+
+
 .tff-field-group {
-    @apply mb-2;
+    @apply relative;
+    @apply mb-12;
+}
+
+.tff-toggle-group {
+    @apply mb-12;
 }
 
 .tff-toggle-group input:not(:placeholder-shown):invalid,
@@ -250,14 +266,342 @@
     @apply hover:bg-gray-100;
 }
 
-.tff-animate-yellowFade {
-    @apply animate-yellowFade;
+@keyframes fadeOut {
+    0% {
+        @apply opacity-100;
+    }
+
+    100% {
+        @apply opacity-0;
+    }
 }
 
-.tff-animate-yellowFade .tff-text-field {
-    @apply bg-transparent;
+@keyframes yellowFade {
+    0% {
+        @apply bg-blue-100;
+    }
+
+    100% {
+        @apply bg-transparent;
+    }
 }
 
 .tff-animate-fadeOut {
-    @apply animate-fadeOut;
+    animation: fadeOut 0.5s ease-in-out;
+}
+
+.tff-animate-yellowFade {
+    animation: yellowFade 0.5s ease-in-out;
+}
+
+.tff-field-preview {
+    @apply relative;
+    @apply bg-white;
+    @apply rounded-lg;
+    @apply p-4;
+    @apply mb-2;
+    @apply cursor-pointer;
+    @apply transition-all;
+    @apply duration-200;
+    @apply border;
+    @apply border-white;
+}
+
+.tff-field-preview:not(.tff-field-ghost):hover {
+    @apply border-gray-200;
+    @apply shadow-md;
+}
+
+.tff-field-preview.tff-field-ghost {
+    @apply h-16;
+    @apply opacity-0;
+}
+
+.tff-field-preview.tff-field-ghost-target {
+    @apply opacity-100;
+    @apply border-2;
+    @apply border-dashed;
+    @apply border-blue-200;
+    @apply rounded-lg;
+    @apply bg-blue-50;
+}
+
+.tff-field-preview.tff-field-ghost .tff-field-placeholder,
+.tff-field-preview.tff-field-ghost-target .tff-field-placeholder {
+    display: none;
+}
+
+.tff-field-placeholder {
+    @apply h-32;
+    @apply border-2;
+    @apply border-dashed;
+    @apply border-blue-200;
+    @apply rounded-lg;
+    @apply bg-blue-50;
+}
+
+.tff-field-placeholder-above {
+    @apply -translate-y-full;
+}
+
+.tff-field-placeholder-below {
+    @apply translate-y-full;
+}
+
+.tff-field-wrapper {
+    @apply flex;
+    @apply flex-col;
+    @apply gap-0;
+    @apply cursor-move;
+}
+
+.tff-field-preview {
+    @apply cursor-pointer;
+}
+
+.tff-field-container {
+    @apply relative;
+    @apply min-h-[40px];
+}
+
+.tff-field-preview[data-selected="true"] {
+    @apply border-blue-500;
+    @apply shadow-md;
+    @apply bg-blue-50;
+}
+
+.tff-field-preview[data-selected="true"] .tff-drag-handle {
+    @apply opacity-100;
+}
+
+.tff-field-preview[data-selected="true"]:hover {
+    @apply border-blue-500;
+}
+
+.tff-field-preview>div:last-child {
+    @apply flex-grow;
+}
+
+.tff-field-preview[data-dragging="true"] {
+    @apply opacity-50;
+    @apply shadow-md;
+}
+
+.tff-drag-handle {
+    @apply absolute;
+    @apply top-0;
+    @apply left-1/2;
+    @apply -translate-x-1/2;
+    @apply cursor-move;
+    @apply flex;
+    @apply items-center;
+    @apply justify-center;
+    @apply w-6;
+    @apply mt-1;
+    @apply opacity-0;
+    @apply transition-opacity;
+}
+
+.tff-drag-handle-icon {
+    @apply w-4 h-4 text-gray-400;
+}
+
+.tff-field-preview:hover .tff-drag-handle,
+.tff-field-preview[data-selected="true"] .tff-drag-handle {
+    @apply opacity-100;
+}
+
+.tff-settings-content {
+    @apply overflow-y-auto;
+    @apply flex-grow;
+}
+
+.tff-field-preview.tff-field-ghost .tff-field-placeholder {
+    @apply h-full;
+    @apply border-0;
+    @apply bg-transparent;
+    @apply m-0;
+}
+
+.tff-field-preview.tff-field-ghost-target .tff-field-placeholder {
+    @apply opacity-100;
+    @apply border-2;
+    @apply border-dashed;
+    @apply border-blue-200;
+    @apply rounded-lg;
+    @apply bg-blue-50;
+}
+
+/* Base layout - Mobile first */
+.tff-editor-layout {
+    @apply flex;
+    @apply flex-col;
+    @apply min-h-screen;
+    @apply bg-white;
+    @apply relative;
+}
+
+/* Mobile view panels */
+.tff-center-panel {
+    @apply flex-grow;
+    @apply bg-white;
+    @apply p-4;
+    @apply w-full;
+    @apply min-h-[50vh];
+    @apply overflow-y-auto;
+    @apply order-1;
+}
+
+.tff-left-panel {
+    @apply w-full;
+    @apply bg-gray-50;
+    @apply p-4;
+    @apply border-t;
+    @apply border-gray-200;
+    @apply order-2;
+}
+
+.tff-right-panel {
+    @apply w-full;
+    @apply bg-gray-50;
+    @apply p-4;
+    @apply fixed;
+    @apply inset-0;
+    @apply z-50;
+    @apply transform;
+    @apply transition-transform;
+    @apply duration-300;
+    @apply translate-x-full;
+}
+
+.tff-right-panel.tff-panel-visible {
+    @apply translate-x-0;
+}
+
+/* Desktop view */
+@media (min-width: 768px) {
+    .tff-editor-layout {
+        @apply flex-row;
+        @apply h-screen;
+        @apply overflow-hidden;
+    }
+
+    .tff-left-panel {
+        @apply w-64;
+        @apply border-t-0;
+        @apply border-r;
+        @apply order-none;
+        @apply overflow-y-auto;
+        @apply relative;
+        @apply flex-shrink-0;
+    }
+
+    .tff-center-panel {
+        @apply flex-1;
+        @apply order-none;
+        @apply overflow-y-auto;
+        @apply relative;
+        @apply min-w-0;
+    }
+
+    .tff-right-panel {
+        @apply w-80;
+        @apply static;
+        @apply transform-none;
+        @apply translate-x-0;
+        @apply order-none;
+        @apply overflow-y-auto;
+        @apply border-l;
+        @apply flex-shrink-0;
+        @apply transition-[width];
+    }
+
+    /* Handle right panel visibility in desktop */
+    .tff-right-panel:not(.tff-panel-visible) {
+        @apply w-0;
+        @apply border-l-0;
+        @apply p-0;
+        @apply overflow-hidden;
+    }
+
+    /* Remove mobile-specific panel hiding */
+    .tff-panel-hidden {
+        @apply block;
+    }
+}
+
+.tff-panel-header {
+    @apply flex;
+    @apply justify-between;
+    @apply items-center;
+    @apply mb-4;
+}
+
+.tff-close-button {
+    @apply text-gray-500;
+    @apply hover:text-gray-700;
+    @apply text-2xl;
+    @apply font-bold;
+    @apply p-2;
+    @apply -mr-2;
+}
+
+.tff-panel-header {
+    @apply font-bold;
+    @apply text-lg;
+    @apply px-4;
+    @apply py-3;
+    @apply border-b;
+    @apply border-gray-200;
+    @apply bg-white;
+    @apply flex;
+    @apply items-center;
+    @apply justify-between;
+}
+
+.tff-panel-header .tff-close-button {
+    @apply text-gray-500;
+    @apply hover:text-gray-700;
+    @apply text-xl;
+    @apply font-medium;
+    @apply ml-2;
+}
+
+.tff-field-list {
+    @apply overflow-y-auto;
+}
+
+.tff-right-panel>div:last-child {
+    @apply overflow-y-auto;
+}
+
+.tff-center-panel {
+    @apply bg-white;
+    @apply p-4 pb-24;
+    @apply overflow-y-auto;
+}
+
+.tff-field-list {
+    @apply space-y-2;
+}
+
+.tff-field-list-item {
+    @apply p-2;
+    @apply bg-white;
+    @apply rounded;
+    @apply shadow-sm;
+    @apply hover:shadow;
+    @apply cursor-pointer;
+    @apply border;
+    @apply border-gray-200;
+}
+
+/* Field preview and settings layout */
+.tff-fields-container {
+    @apply min-h-[200px];
+}
+
+.tff-field-container {
+    @apply relative;
+    @apply min-h-[40px];
 }
