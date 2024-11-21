@@ -9,9 +9,6 @@ port module Main exposing
     , RawCustomElement
     , ViewMode(..)
     , allInputField
-    , choiceDelimiter
-    , choiceFromString
-    , choiceToString
     , decodeChoice
     , decodeCustomElement
     , decodeFormField
@@ -33,7 +30,7 @@ port module Main exposing
 import Array exposing (Array)
 import Browser
 import Dict exposing (Dict)
-import Html exposing (Html, a, button, div, h2, h3, input, label, option, pre, select, text, textarea)
+import Html exposing (Html, button, div, h2, h3, input, label, option, pre, select, text, textarea)
 import Html.Attributes exposing (attribute, checked, class, classList, disabled, for, id, maxlength, minlength, name, placeholder, readonly, required, selected, tabindex, title, type_, value)
 import Html.Events exposing (on, onCheck, onClick, onInput, preventDefaultOn, stopPropagationOn)
 import Json.Decode
@@ -318,13 +315,11 @@ mustBeOptional inputField =
 type Msg
     = NoOp
     | OnPortIncoming Json.Encode.Value
-    | SetViewMode ViewMode
     | AddFormField InputField
     | DeleteFormField Int
     | MoveFormFieldUp Int
     | MoveFormFieldDown Int
     | OnFormField FormFieldMsg Int String
-    | ToggleDropdownState
     | SetEditorAnimate (Maybe ( Int, Animate ))
     | SelectField (Maybe Int)
     | DragStart Int
@@ -447,11 +442,6 @@ update msg model =
                 Err _ ->
                     ( model, Cmd.none )
 
-        SetViewMode viewMode ->
-            ( { model | viewMode = viewMode }
-            , outgoing (encodePortOutgoingValue (PortOutgoingViewMode viewMode))
-            )
-
         AddFormField fieldType ->
             let
                 currLength =
@@ -537,19 +527,6 @@ update msg model =
             in
             ( { model | formFields = newFormFields }
             , outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
-            )
-
-        ToggleDropdownState ->
-            ( { model
-                | dropdownState =
-                    case model.dropdownState of
-                        DropdownOpen ->
-                            DropdownClosed
-
-                        DropdownClosed ->
-                            DropdownOpen
-              }
-            , Cmd.none
             )
 
         SetEditorAnimate maybeAnimate ->
@@ -1388,6 +1365,7 @@ viewFormBuilder maybeAnimate model =
     in
     [ div
         [ class "tff-editor-layout"
+        , preventDefaultOn "dragover" (Json.Decode.succeed ( NoOp, True )) -- so dragged image don't snap back
         ]
         [ div
             [ class "tff-left-panel"
@@ -1588,8 +1566,7 @@ viewRightPanel modelData =
 
 
 type DropdownState
-    = DropdownOpen
-    | DropdownClosed
+    = DropdownClosed
 
 
 dragHandleIcon : Html msg
@@ -1757,7 +1734,6 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
 
 type PortOutgoingValue
     = PortOutgoingFormFields (Array FormField)
-    | PortOutgoingViewMode ViewMode
     | PortOutgoingSetupCloseDropdown PortIncomingValue
 
 
@@ -1768,12 +1744,6 @@ encodePortOutgoingValue value =
             Json.Encode.object
                 [ ( "type", Json.Encode.string "formFields" )
                 , ( "formFields", encodeFormFields formFields )
-                ]
-
-        PortOutgoingViewMode viewMode ->
-            Json.Encode.object
-                [ ( "type", Json.Encode.string "viewMode" )
-                , ( "viewMode", Json.Encode.string (stringFromViewMode viewMode) )
                 ]
 
         PortOutgoingSetupCloseDropdown incomingValue ->

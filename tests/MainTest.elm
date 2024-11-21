@@ -48,32 +48,6 @@ field3 =
     }
 
 
-fields : List Main.FormField
-fields =
-    [ field1
-    , field2
-    , field3
-    ]
-
-
-draggedField : Main.FormField
-draggedField =
-    { label = "New Field"
-    , type_ = Main.ShortText (Main.fromRawCustomElement rawCustomElement)
-    , presence = Main.Required
-    , description = Main.AttributeNotNeeded Nothing
-    , name = Nothing
-    }
-
-
-emptyMouseEvent : { pageY : Int, clientY : Int, offsetY : Int }
-emptyMouseEvent =
-    { pageY = 0
-    , clientY = 0
-    , offsetY = 0
-    }
-
-
 suite : Test
 suite =
     describe "Main"
@@ -1000,16 +974,12 @@ newFieldFromOldField oldField =
     }
 
 
-type alias NameDescription =
-    { name : String, description : String }
-
-
 type Presence
     = Required
     | Optional
-    | System NameDescription
-    | SystemRequired NameDescription
-    | SystemOptional NameDescription
+    | System { name : String, description : String }
+    | SystemRequired { name : String, description : String }
+    | SystemOptional { name : String, description : String }
 
 
 encodePresence : Presence -> Json.Encode.Value
