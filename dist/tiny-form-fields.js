@@ -7783,7 +7783,6 @@ var $author$project$Main$dragOverDecoder = F2(
 						_Utils_Tuple2(index, maybeFormField))),
 				true));
 	});
-var $elm$html$Html$Attributes$readonly = $elm$html$Html$Attributes$boolProperty('readOnly');
 var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
 	return {$: 1, a: a};
 };
@@ -8463,8 +8462,7 @@ var $author$project$Main$renderFormField = F4(
 										{
 											aQ: _List_fromArray(
 												[
-													$elm$html$Html$Attributes$disabled(false),
-													$elm$html$Html$Attributes$readonly(true)
+													$elm$html$Html$Attributes$disabled(true)
 												]),
 											M: model.M,
 											Z: model.Z
@@ -8749,6 +8747,7 @@ var $elm$core$List$head = function (list) {
 	}
 };
 var $elm$html$Html$Attributes$min = $elm$html$Html$Attributes$stringProperty('min');
+var $elm$html$Html$Attributes$readonly = $elm$html$Html$Attributes$boolProperty('readOnly');
 var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 	function (shortTextTypeList, index, formField) {
 		var idSuffix = $elm$core$String$fromInt(index);
@@ -9278,7 +9277,7 @@ var $author$project$Main$viewFormBuilder = F2(
 									]),
 								_List_fromArray(
 									[
-										$elm$html$Html$text('Form Fields')
+										$elm$html$Html$text('Add Form Field')
 									])),
 								$author$project$Main$viewAddQuestionsList(
 								_Utils_ap($author$project$Main$allInputField, extraOptions))
@@ -9333,7 +9332,7 @@ var $author$project$Main$viewMain = function (model) {
 		_List_fromArray(
 			[
 				$elm$html$Html$Attributes$class(
-				'tff tff-mode-' + $author$project$Main$stringFromViewMode(model.R))
+				'tff tff-container tff-mode-' + $author$project$Main$stringFromViewMode(model.R))
 			]),
 		function () {
 			var _v0 = model.R;

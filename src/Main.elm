@@ -910,7 +910,9 @@ view model =
 viewMain : Model -> Html Msg
 viewMain model =
     -- no padding; easier for embedders to style
-    div [ class ("tff tff-mode-" ++ stringFromViewMode model.viewMode) ]
+    div
+        [ class ("tff tff-container tff-mode-" ++ stringFromViewMode model.viewMode)
+        ]
         (case model.viewMode of
             Editor editorAttr ->
                 input
@@ -1281,7 +1283,7 @@ renderFormField maybeAnimate model index maybeFormField =
                         ]
                         [ div [ class "tff-drag-handle" ] [ dragHandleIcon ]
                         , viewFormFieldPreview
-                            { customAttrs = [ disabled False, readonly True ]
+                            { customAttrs = [ disabled True ]
                             , formValues = model.formValues
                             , shortTextTypeDict = model.shortTextTypeDict
                             }
@@ -1371,7 +1373,7 @@ viewFormBuilder maybeAnimate model =
             [ class "tff-left-panel"
             , classList [ ( "tff-panel-hidden", model.selectedFieldIndex /= Nothing ) ]
             ]
-            [ h2 [ class "tff-panel-header" ] [ text "Form Fields" ]
+            [ h2 [ class "tff-panel-header" ] [ text "Add Form Field" ]
             , viewAddQuestionsList (allInputField ++ extraOptions)
             ]
         , div
