@@ -1283,7 +1283,10 @@ renderFormField maybeAnimate model index maybeFormField =
                         ]
                         [ div [ class "tff-drag-handle" ] [ dragHandleIcon ]
                         , viewFormFieldPreview
-                            { customAttrs = [ disabled True ]
+                            { customAttrs =
+                                [ disabled False -- playwright tests
+                                , readonly True
+                                ]
                             , formValues = model.formValues
                             , shortTextTypeDict = model.shortTextTypeDict
                             }

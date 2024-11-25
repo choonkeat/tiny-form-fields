@@ -7783,6 +7783,7 @@ var $author$project$Main$dragOverDecoder = F2(
 						_Utils_Tuple2(index, maybeFormField))),
 				true));
 	});
+var $elm$html$Html$Attributes$readonly = $elm$html$Html$Attributes$boolProperty('readOnly');
 var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
 	return {$: 1, a: a};
 };
@@ -8462,7 +8463,8 @@ var $author$project$Main$renderFormField = F4(
 										{
 											aQ: _List_fromArray(
 												[
-													$elm$html$Html$Attributes$disabled(true)
+													$elm$html$Html$Attributes$disabled(false),
+													$elm$html$Html$Attributes$readonly(true)
 												]),
 											M: model.M,
 											Z: model.Z
@@ -8747,7 +8749,6 @@ var $elm$core$List$head = function (list) {
 	}
 };
 var $elm$html$Html$Attributes$min = $elm$html$Html$Attributes$stringProperty('min');
-var $elm$html$Html$Attributes$readonly = $elm$html$Html$Attributes$boolProperty('readOnly');
 var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 	function (shortTextTypeList, index, formField) {
 		var idSuffix = $elm$core$String$fromInt(index);
