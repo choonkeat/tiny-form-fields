@@ -26,7 +26,7 @@ ping-run:
 	wget --tries=90 --retry-connrefused -SO - http://localhost:8000
 
 test-playwright:
-	npx playwright test
+	npx playwright test --reporter=line
 	echo playwright pass
 
 test-playwright-ui:
