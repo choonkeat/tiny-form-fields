@@ -444,12 +444,9 @@ update msg model =
 
         AddFormField fieldType ->
             let
-                currLength =
-                    Array.length model.formFields
-
                 newFormField : FormField
                 newFormField =
-                    { label = "Question " ++ String.fromInt (currLength + 1)
+                    { label = stringFromInputField fieldType ++ " question"
                     , name = Nothing
                     , presence = when (mustBeOptional fieldType) { true = Optional, false = Required }
                     , description = AttributeNotNeeded Nothing
@@ -1133,7 +1130,7 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } field
                     -- want to disable the `<option>`s so user can see the options but cannot choose
                     -- but if the `<select>` is required, then now we are in a bind
                     -- so we cannot have `required` on the `<select>` if we're disabling it
-                    , if List.member (disabled True) customAttrs then
+                    , if List.member (attribute "disabled" "disabled") customAttrs then
                         class "tff-select-disabled"
 
                       else
@@ -1244,6 +1241,7 @@ renderFormField maybeAnimate model index maybeFormField =
         Just formField ->
             div
                 [ class "tff-field-container"
+                , attribute "data-input-field" (stringFromInputField formField.type_)
                 , preventDefaultOn "dragover" (dragOverDecoder index (Just formField))
                 ]
                 [ div
@@ -1284,8 +1282,7 @@ renderFormField maybeAnimate model index maybeFormField =
                         [ div [ class "tff-drag-handle" ] [ dragHandleIcon ]
                         , viewFormFieldPreview
                             { customAttrs =
-                                [ disabled False -- playwright tests
-                                , readonly True
+                                [ attribute "disabled" "disabled"
                                 ]
                             , formValues = model.formValues
                             , shortTextTypeDict = model.shortTextTypeDict
@@ -1619,7 +1616,7 @@ viewAddQuestionsList inputFields =
                     , on "dragstart"
                         (Json.Decode.succeed
                             (DragStartNew
-                                { label = stringFromInputField inputField
+                                { label = stringFromInputField inputField ++ " question"
                                 , name = Nothing
                                 , presence = when (mustBeOptional inputField) { true = Optional, false = Required }
                                 , description = AttributeNotNeeded Nothing
