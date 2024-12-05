@@ -32,7 +32,7 @@ test("test", async ({ page }) => {
     await page.getByRole("button", { name: input.link, exact: true }).click();
     await page.waitForTimeout(600);
     await expect(page.getByText(`${input.link} question title`)).toHaveCount(0);
-    await page.locator('.tff-field-container').last().click();
+    await page.locator('.tff-field-container .tff-drag-handle-icon').last().click();
     await page.waitForTimeout(600);
     await page.getByText(`${input.link} question title`).click();
     await page.keyboard.press("ControlOrMeta+a");

@@ -32,7 +32,7 @@ test.describe("responsive layout tests", () => {
     expect(finalHeight).toBe(initialHeight);
 
     // Verify right panel appears when clicking a form field
-    await page.locator(".tff-field-container").first().click();
+    await page.locator(".tff-field-container .tff-drag-handle-icon").first().click();
     await expect(page.locator(".tff-panel-visible:has-text('Field Settings')")).toBeVisible();
   });
 
@@ -70,7 +70,7 @@ test.describe("responsive layout tests", () => {
     expect(finalHeight).toBe(initialHeight);
 
     // Click a field to show Field Settings panel
-    await page.locator(".tff-field-container").first().click();
+    await page.locator(".tff-field-container .tff-drag-handle-icon").first().click();
     await expect(page.locator(".tff-panel-visible:has-text('Field Settings')")).toBeVisible();
     await expect(page.locator(".tff-left-panel")).toHaveClass(/tff-panel-hidden/);
     await expect(page.locator(".tff-center-panel")).toHaveClass(/tff-panel-hidden/);
@@ -111,7 +111,7 @@ test.describe("responsive layout tests", () => {
     expect(hasVerticalScrollbar).toBeFalsy();
 
     // Click a field to show Field Settings panel
-    await page.locator(".tff-field-container").first().click();
+    await page.locator(".tff-field-container .tff-drag-handle-icon").first().click();
     await expect(page.locator(".tff-panel-visible:has-text('Field Settings')")).toBeVisible();
     await expect(page.locator(".tff-left-panel")).toHaveClass(/tff-panel-hidden/);
     await expect(page.locator(".tff-center-panel")).toHaveClass(/tff-panel-hidden/);
