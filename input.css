@@ -478,8 +478,76 @@
     @apply translate-x-0;
 }
 
+.tff-container {
+    container-type: inline-size;
+}
+
+.tff-container *:disabled {
+    cursor: not-allowed;
+}
+
 /* Desktop view */
-@media (min-width: 768px) {
+@container (min-width: 640px) and (max-width: 1024px) {
+    .tff-editor-layout {
+        @apply flex-row;
+        @apply h-screen;
+        @apply overflow-hidden;
+        @apply relative;
+    }
+
+    .tff-left-panel {
+        @apply w-64;
+        @apply border-t-0;
+        @apply border-r;
+        @apply order-none;
+        @apply overflow-y-auto;
+        @apply relative;
+        @apply flex-shrink-0;
+        @apply transition-transform;
+        @apply duration-300;
+        @apply bg-gray-50;
+    }
+
+    .tff-center-panel {
+        @apply flex-1;
+        @apply order-none;
+        @apply overflow-y-auto;
+        @apply relative;
+        @apply min-w-0;
+    }
+
+    .tff-right-panel {
+        @apply w-64;
+        @apply absolute;
+        @apply top-0;
+        @apply left-0;
+        @apply h-full;
+        @apply transform-none;
+        @apply order-none;
+        @apply overflow-y-auto;
+        @apply border-r;
+        @apply flex-shrink-0;
+        @apply transition-transform;
+        @apply duration-300;
+        @apply -translate-x-full;
+        @apply z-50;
+        @apply bg-gray-50;
+    }
+
+    /* Show right panel by sliding over left panel */
+    .tff-right-panel.tff-panel-visible {
+        @apply translate-x-0;
+    }
+
+    /* Hide left panel when right panel is visible */
+    .tff-right-panel.tff-panel-visible~.tff-left-panel {
+        @apply opacity-0;
+        @apply pointer-events-none;
+    }
+}
+
+/* Large Desktop view */
+@container (min-width: 1024px) {
     .tff-editor-layout {
         @apply flex-row;
         @apply h-screen;

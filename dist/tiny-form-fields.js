@@ -6918,6 +6918,21 @@ var $elm$core$Array$push = F2(
 			array);
 	});
 var $elm$core$Process$sleep = _Process_sleep;
+var $author$project$Main$stringFromInputField = function (inputField) {
+	switch (inputField.$) {
+		case 0:
+			var inputType = inputField.a.x;
+			return inputType;
+		case 1:
+			return 'Multi-line description';
+		case 2:
+			return 'Dropdown';
+		case 3:
+			return 'Radio buttons';
+		default:
+			return 'Checkboxes';
+	}
+};
 var $elm$core$Array$setHelp = F4(
 	function (shift, index, value, tree) {
 		var pos = $elm$core$Array$bitMask & (index >>> shift);
@@ -7302,10 +7317,9 @@ var $author$project$Main$update = F2(
 					}
 				case 2:
 					var fieldType = msg.a;
-					var currLength = $elm$core$Array$length(model.f);
 					var newFormField = {
 						L: $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing),
-						g: 'Question ' + $elm$core$String$fromInt(currLength + 1),
+						g: $author$project$Main$stringFromInputField(fieldType) + ' question',
 						ay: $elm$core$Maybe$Nothing,
 						s: A2(
 							$author$project$Main$when,
@@ -7710,15 +7724,6 @@ var $elm$virtual_dom$VirtualDom$attribute = F2(
 			_VirtualDom_noJavaScriptOrHtmlUri(value));
 	});
 var $elm$html$Html$Attributes$attribute = $elm$virtual_dom$VirtualDom$attribute;
-var $elm$json$Json$Encode$bool = _Json_wrap;
-var $elm$html$Html$Attributes$boolProperty = F2(
-	function (key, bool) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			$elm$json$Json$Encode$bool(bool));
-	});
-var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty('disabled');
 var $elm$svg$Svg$Attributes$class = _VirtualDom_attribute('class');
 var $elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
 var $elm$svg$Svg$Attributes$height = _VirtualDom_attribute('height');
@@ -7783,7 +7788,6 @@ var $author$project$Main$dragOverDecoder = F2(
 						_Utils_Tuple2(index, maybeFormField))),
 				true));
 	});
-var $elm$html$Html$Attributes$readonly = $elm$html$Html$Attributes$boolProperty('readOnly');
 var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
 	return {$: 1, a: a};
 };
@@ -7835,8 +7839,17 @@ var $author$project$Main$requiredData = function (presence) {
 			return true;
 	}
 };
+var $elm$json$Json$Encode$bool = _Json_wrap;
+var $elm$html$Html$Attributes$boolProperty = F2(
+	function (key, bool) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$bool(bool));
+	});
 var $elm$html$Html$Attributes$checked = $elm$html$Html$Attributes$boolProperty('checked');
 var $elm$html$Html$datalist = _VirtualDom_node('datalist');
+var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty('disabled');
 var $author$project$Main$fieldNameOf = function (formField) {
 	return A2($elm$core$Maybe$withDefault, formField.g, formField.ay);
 };
@@ -8085,7 +8098,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 									$elm$html$Html$Attributes$id(fieldID),
 									A2(
 									$elm$core$List$member,
-									$elm$html$Html$Attributes$disabled(true),
+									A2($elm$html$Html$Attributes$attribute, 'disabled', 'disabled'),
 									customAttrs) ? $elm$html$Html$Attributes$class('tff-select-disabled') : $elm$html$Html$Attributes$required(
 									$author$project$Main$requiredData(formField.s))
 								]),
@@ -8373,6 +8386,10 @@ var $author$project$Main$renderFormField = F4(
 					[
 						$elm$html$Html$Attributes$class('tff-field-container'),
 						A2(
+						$elm$html$Html$Attributes$attribute,
+						'data-input-field',
+						$author$project$Main$stringFromInputField(formField.j)),
+						A2(
 						$elm$html$Html$Events$preventDefaultOn,
 						'dragover',
 						A2(
@@ -8463,8 +8480,7 @@ var $author$project$Main$renderFormField = F4(
 										{
 											aQ: _List_fromArray(
 												[
-													$elm$html$Html$Attributes$disabled(false),
-													$elm$html$Html$Attributes$readonly(true)
+													A2($elm$html$Html$Attributes$attribute, 'disabled', 'disabled')
 												]),
 											M: model.M,
 											Z: model.Z
@@ -8481,21 +8497,6 @@ var $author$project$Main$AddFormField = function (a) {
 };
 var $author$project$Main$DragStartNew = function (a) {
 	return {$: 10, a: a};
-};
-var $author$project$Main$stringFromInputField = function (inputField) {
-	switch (inputField.$) {
-		case 0:
-			var inputType = inputField.a.x;
-			return inputType;
-		case 1:
-			return 'Multi-line description';
-		case 2:
-			return 'Dropdown';
-		case 3:
-			return 'Radio buttons';
-		default:
-			return 'Checkboxes';
-	}
 };
 var $author$project$Main$viewAddQuestionsList = function (inputFields) {
 	return A2(
@@ -8523,7 +8524,7 @@ var $author$project$Main$viewAddQuestionsList = function (inputFields) {
 								$author$project$Main$DragStartNew(
 									{
 										L: $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing),
-										g: $author$project$Main$stringFromInputField(inputField),
+										g: $author$project$Main$stringFromInputField(inputField) + ' question',
 										ay: $elm$core$Maybe$Nothing,
 										s: A2(
 											$author$project$Main$when,
@@ -8749,6 +8750,7 @@ var $elm$core$List$head = function (list) {
 	}
 };
 var $elm$html$Html$Attributes$min = $elm$html$Html$Attributes$stringProperty('min');
+var $elm$html$Html$Attributes$readonly = $elm$html$Html$Attributes$boolProperty('readOnly');
 var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 	function (shortTextTypeList, index, formField) {
 		var idSuffix = $elm$core$String$fromInt(index);
@@ -9278,7 +9280,7 @@ var $author$project$Main$viewFormBuilder = F2(
 									]),
 								_List_fromArray(
 									[
-										$elm$html$Html$text('Form Fields')
+										$elm$html$Html$text('Add Form Field')
 									])),
 								$author$project$Main$viewAddQuestionsList(
 								_Utils_ap($author$project$Main$allInputField, extraOptions))
@@ -9333,7 +9335,7 @@ var $author$project$Main$viewMain = function (model) {
 		_List_fromArray(
 			[
 				$elm$html$Html$Attributes$class(
-				'tff tff-mode-' + $author$project$Main$stringFromViewMode(model.R))
+				'tff tff-container tff-mode-' + $author$project$Main$stringFromViewMode(model.R))
 			]),
 		function () {
 			var _v0 = model.R;

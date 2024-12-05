@@ -11,6 +11,8 @@ function randomFew(items) {
 const sports = ["Basketball", "Football", "Soccer", "Tennis", "Golf", "Cricket", "Rugby", "Hockey", "Baseball", "Volleyball", "Table Tennis", "Badminton", "Swimming", "Cycling", "Running", "Boxing", "MMA", "Wrestling", "Karate", "Judo", "Taekwondo", "Fencing", "Archery", "Shooting", "Skiing", "Snowboarding", "Skating", "Surfing", "Sailing", "Rowing", "Canoeing", "Kayaking", "Diving", "Gymnastics", "Weightlifting", "Powerlifting", "Bodybuilding", "Crossfit", "Yoga", "Pilates", "Dance", "Ballet", "Tap Dance", "Jazz Dance", "Hip Hop Dance", "Break Dance", "Ballroom Dance", "Latin Dance", "Salsa", "Bachata", "Merengue", "Tango", "Flamenco", "Belly Dance", "Swing Dance", "Country Dance", "Line Dance", "Square Dance", "Folk Dance", "Irish Dance", "Scottish Dance"]
 
 test("test", async ({ page }) => {
+  // Set a desktop viewport
+  await page.setViewportSize({ width: 2048, height: 800 });
   await page.goto("http://localhost:8000/");
 
   const inputs = [
@@ -30,7 +32,7 @@ test("test", async ({ page }) => {
     await page.getByRole("button", { name: input.link, exact: true }).click();
     await page.waitForTimeout(600);
     await expect(page.getByText(`${input.link} question title`)).toHaveCount(0);
-    await page.locator('.tff-field-container').last().click();
+    await page.locator('.tff-field-container .tff-drag-handle-icon').last().click();
     await page.waitForTimeout(600);
     await page.getByText(`${input.link} question title`).click();
     await page.keyboard.press("ControlOrMeta+a");
@@ -52,6 +54,7 @@ test("test", async ({ page }) => {
       await page.keyboard.press("ControlOrMeta+a");
       await page.keyboard.type(input.choices.join("\n"));
     }
+    await page.locator(".tff-close-button").click();
   }
 
   await page.locator('.tff-close-button').click();
