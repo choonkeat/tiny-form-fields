@@ -11,10 +11,11 @@ dist/tiny-form-fields.min.css: input.css tailwind.config.js index.html src/Main.
 	npx tailwindcss --input input.css --output dist/tiny-form-fields.min.css --minify
 	touch dist/tiny-form-fields.min.css
 
+ELM_MAKE_FLAGS=--debug
 run:
 	npx elm-live src/Main.elm \
 		--start-page index.html \
-		-- --output=dist/tiny-form-fields.js --debug
+		-- --output=dist/tiny-form-fields.js $(ELM_MAKE_FLAGS)
 
 run-ignore-error:
 	make run || echo shutdown test server
