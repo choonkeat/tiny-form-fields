@@ -2,6 +2,8 @@
 
 A lightweight, customizable form builder and renderer written in Elm. Create dynamic forms with various field types, drag-and-drop reordering, and validation support.
 
+👉 [Try the live demo](https://tiny-form-fields.netlify.app/)
+
 ## Features
 
 - Rich form field types including:
