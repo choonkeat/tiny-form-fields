@@ -1,6 +1,6 @@
 # Refactor to 3 Panel Layout with Drag and Drop
 
-Created: 2024-12-08T14:58:54+08:00 (completion date)
+Created: 2023-11-18T15:09:11+08:00 (completion date)
 
 ## Description
 
@@ -10,7 +10,7 @@ Implemented a new three-panel layout with drag and drop functionality to improve
 
 - [x] Redesigned UI with 3 distinct panels
 - [x] Implemented drag and drop functionality for form fields
-- [x] Improved user experience for form building
+- [x] Form field settings panel that reveals itself only after clicking on a form field
 - [x] Enhanced visual feedback during drag operations
 
-See [3-panel-layout-with-drag-and-drop.mp4](./3-panel-layout-with-drag-and-drop.mp4) for demonstration.
+See [Pull Request #16](https://github.com/choonkeat/tiny-form-fields/pull/16) for demonstration video.
