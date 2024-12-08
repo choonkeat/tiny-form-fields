@@ -116,6 +116,10 @@ A lightweight, customizable form builder and renderer written in Elm. Create dyn
 </script>
 ```
 
+## Custom Elements
+
+tiny-form-fields supports custom form field elements through web components. If you need to create your own custom form field types, please refer to our [Custom Elements Guide](CUSTOM_ELEMENT.md) for detailed instructions.
+
 ## Contributing
 
 1. Fork the repository

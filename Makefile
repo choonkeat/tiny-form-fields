@@ -4,6 +4,7 @@ export PATH := node_modules/.bin:$(PATH)
 dist/tiny-form-fields.esm.js: css src/Main.elm Makefile elm-review test
 	elm         make src/Main.elm --optimize --output dist/tiny-form-fields.js
 	npx elm-esm make src/Main.elm --optimize --output=dist/tiny-form-fields.esm.js
+	cp src/base-custom-field.js dist/
 
 css: dist/tiny-form-fields.min.css
 

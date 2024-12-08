@@ -1,19 +1,37 @@
 {
   "name": "tiny-form-fields",
   "version": "1.0.0",
-  "description": "",
-  "main": "tailwind.config.js",
+  "description": "A lightweight, customizable form builder and renderer written in Elm with web component support",
+  "main": "dist/tiny-form-fields.esm.js",
+  "module": "dist/tiny-form-fields.esm.js",
+  "files": [
+    "dist"
+  ],
   "directories": {
     "test": "tests"
   },
-  "scripts": {},
+  "scripts": {
+    "build": "make dist/tiny-form-fields.esm.js",
+    "start": "make run",
+    "test": "make test",
+    "test:e2e": "make test-playwright",
+    "test:e2e:ui": "make test-playwright-ui",
+    "lint": "make elm-review",
+    "css": "make css"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/choonkeat/tiny-form-fields.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "elm",
+    "form-builder",
+    "web-components",
+    "custom-elements",
+    "drag-and-drop"
+  ],
+  "author": "choonkeat",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/choonkeat/tiny-form-fields/issues"
   },
@@ -24,6 +42,7 @@
     "elm": "^0.19.1-6",
     "elm-live": "^4.0.2",
     "elm-review": "^2.12.0",
-    "elm-test": "^0.19.1-revision12"
+    "elm-test": "^0.19.1-revision12",
+    "tailwindcss": "^3.0.0"
   }
 }
