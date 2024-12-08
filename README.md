@@ -16,6 +16,7 @@ A lightweight, customizable form builder and renderer written in Elm. Create dyn
   - Phone numbers
   - URLs
   - Custom elements with validation
+  - Rich text editor (via custom field integration)
 - Drag-and-drop field reordering
 - Field validation
 - Responsive design
@@ -46,6 +47,7 @@ A lightweight, customizable form builder and renderer written in Elm. Create dyn
      });
    </script>
    ```
+   See [FLAGS.md](FLAGS.md) for detailed documentation of all available configuration options.
 
 ## Development
 
@@ -118,9 +120,169 @@ A lightweight, customizable form builder and renderer written in Elm. Create dyn
 </script>
 ```
 
+## Rich Text Editor Integration
+
+You can integrate a rich text editor as a custom field type. Here's how:
+
+1. Choose a Rich Text Editor library (e.g., TinyMCE, CKEditor, Quill)
+
+2. Create a custom field type:
+   ```javascript
+   var app = Elm.Main.init({
+     node: document.getElementById('editor'),
+     flags: {
+       viewMode: "Editor",
+       formFields: [],
+       formValues: {},
+       shortTextTypeList: [{
+         type: "richtext",
+         label: "Rich Text Editor"
+       }]
+     }
+   });
+   ```
+
+3. Subscribe to field render events:
+   ```javascript
+   app.ports.renderCustomField.subscribe(function(data) {
+     if (data.type === "richtext") {
+       // Initialize your rich text editor
+       const editor = new RichTextEditor({
+         element: document.getElementById(data.id),
+         value: data.value || ''
+       });
+       
+       // Send value back to Elm
+       editor.onChange((newValue) => {
+         app.ports.onCustomFieldChange.send({
+           id: data.id,
+           value: newValue
+         });
+       });
+     }
+   });
+   ```
+
+4. Add necessary CSS to style your editor:
+   ```html
+   <link href="rich-text-editor.css" rel="stylesheet">
+   ```
+
+### Example with TinyMCE
+
+```javascript
+// Initialize TinyMCE
+app.ports.renderCustomField.subscribe(function(data) {
+  if (data.type === "richtext") {
+    tinymce.init({
+      selector: '#' + data.id,
+      height: 300,
+      menubar: false,
+      plugins: [
+        'advlist', 'autolink', 'lists', 'link', 'image', 'charmap',
+        'preview', 'anchor', 'searchreplace', 'visualblocks', 'code',
+        'insertdatetime', 'media', 'table', 'help', 'wordcount'
+      ],
+      toolbar: 'undo redo | formatselect | bold italic | ' +
+        'alignleft aligncenter alignright alignjustify | ' +
+        'bullist numlist outdent indent | help',
+      setup: function(editor) {
+        editor.on('change', function() {
+          app.ports.onCustomFieldChange.send({
+            id: data.id,
+            value: editor.getContent()
+          });
+        });
+      }
+    });
+  }
+});
+```
+
+Note: Rich text editors can be heavy dependencies. Consider lazy-loading the editor library only when needed to optimize initial page load.
+
 ## Custom Elements
 
 tiny-form-fields supports custom form field elements through web components. If you need to create your own custom form field types, please refer to our [Custom Elements Guide](CUSTOM_ELEMENT.md) for detailed instructions.
+
+## Configuring Form Fields and Custom Types
+
+The library accepts two main configuration objects: `formFields` for defining form fields, and `shortTextTypeList` for defining custom input types.
+
+#### Form Fields Format
+
+Form fields should be defined with this structure:
+
+```javascript
+formFields: [
+    {
+        "label": "Field Label",
+        "type": {
+            "type": "ShortText",      // Field type (ShortText, LongText, ChooseOne, ChooseMultiple)
+            "inputType": "text"       // HTML input type or custom type
+        },
+        "required": true,             // or false
+        "description": "Help text",   // or null
+        "name": null                  // Optional field name
+    }
+]
+```
+
+#### Custom Field Types (shortTextTypeList)
+
+The `shortTextTypeList` parameter allows you to define custom input types:
+
+```javascript
+shortTextTypeList: [
+    {
+        "Field Type Name": {           // Display name in the form builder
+            "type": "text",            // Base HTML input type
+            "maxlength": "10",         // Optional: Additional HTML attributes
+            "multiple": "true"         // Optional: Support multiple values
+        }
+    }
+]
+```
+
+Example configurations:
+
+```javascript
+// Basic text input
+{
+    "Text": {
+        "type": "text"
+    }
+}
+
+// Email input with multiple values
+{
+    "Emails": {
+        "type": "email",
+        "multiple": "true"
+    }
+}
+
+// Custom validated input
+{
+    "NRIC": {
+        "type": "text",
+        "pattern": "^[STGM][0-9]{7}[ABCDEFGHIZJ]$"
+    }
+}
+
+// Rich text editor
+{
+    "Rich Text": {
+        "type": "text",
+        "class": "richtext"
+    }
+}
+```
+
+For custom elements using Web Components:
+1. Define your custom element class extending `BaseCustomField`
+2. Register it using `customElements.define`
+3. Include it in `shortTextTypeList` with the appropriate configuration
 
 ## Contributing
 
