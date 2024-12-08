@@ -27,5 +27,11 @@ A clear description of the task/feature
 
 ## Current Tasks
 
-- [0001](./0001-checkbox-min-max-settings.md) - Add min/max settings for Checkboxes
-- [0002](./0002-others-option.md) - Add "Others" option with free text input
+### Completed
+- [0001](./0001-custom-element-support.md) - Support custom element
+- [0002](./0002-three-panel-layout.md) - Refactor to 3 panel layout with drag and drop
+
+### In Progress
+- [0003](./0003-hide-show-logic.md) - Support hide and show logic
+- [0004](./0004-checkbox-min-max-settings.md) - Add min/max settings for Checkboxes
+- [0005](./0005-others-option.md) - Add "Others" option with free text input
