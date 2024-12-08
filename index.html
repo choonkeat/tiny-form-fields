@@ -2,223 +2,43 @@
 <html>
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Embed</title>
-    <script src="./dist/tiny-form-fields.js"></script>
-    <link rel="stylesheet" href="./dist/tiny-form-fields.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Embed</title>
+  <link rel="stylesheet" href="./dist/tiny-form-fields.min.css">
 </head>
 
 <body class="bg-gray-200">
-<!-- Include this script in your HTML -->
-<script>
-class BaseValidatedInput extends HTMLElement {
-  constructor() {
-    super();
+  <!-- (Optional) Introduce a `validated-input` custom field -->
+  <script type="module">
+    import { BaseCustomField } from './dist/base-custom-field.js';
 
-    // Create the internal input element
-    this.input = document.createElement('input');
-
-    // Initialize the forwarded event handlers map
-    this._forwardedEventHandlers = {};
-  }
-
-  connectedCallback() {
-    // Append the input to the custom element (Light DOM) if not already appended
-    if (!this.contains(this.input)) {
-      this.appendChild(this.input);
-    }
-
-    // Transfer attributes from the custom element to the internal input
-    this._transferAttributes();
-
-    // Add event listeners
-    this._addEventListeners();
-
-    // Initialize the MutationObserver
-    this._observer = new MutationObserver(this._handleMutations);
-    this._observer.observe(this, { attributes: true });
-  }
-
-  disconnectedCallback() {
-    // Disconnect the observer when the element is removed from the DOM
-    if (this._observer) {
-      this._observer.disconnect();
-    }
-
-    // Remove event listeners
-    this._removeEventListeners();
-  }
-
-  // Method to add event listeners
-  _addEventListeners() {
-    // Event handler for 'input' event
-    this._onInput = () => {
-      this.validate();
-    };
-    this.input.addEventListener('input', this._onInput);
-
-    // Forward events from the internal input to the custom element
-    this._forwardEvents(['change', 'input', 'focus', 'blur']);
-  }
-
-  // Method to remove event listeners
-  _removeEventListeners() {
-    if (this.input) {
-      // Remove the 'input' event listener
-      this.input.removeEventListener('input', this._onInput);
-
-      // Remove forwarded event listeners
-      for (const [eventName, handler] of Object.entries(this._forwardedEventHandlers)) {
-        this.input.removeEventListener(eventName, handler);
+    class ValidatedInput extends BaseCustomField {
+      constructor() {
+        super();
       }
-    }
-  }
 
-  // MutationObserver callback
-  _handleMutations = (mutationsList) => {
-    for (const mutation of mutationsList) {
-      if (mutation.type === 'attributes') {
-        const attrName = mutation.attributeName;
-        const newValue = this.getAttribute(attrName);
+      validate() {
+        // First, clear any previous custom validity message
+        super.validate();
 
-        // Update the internal input's attribute
-        if (newValue !== null) {
-          this.input.setAttribute(attrName, newValue);
-        } else {
-          this.input.removeAttribute(attrName);
+        const value = this.input.value;
+        let validityMessage = '';
+
+        // Custom validation logic
+        if (value.length !== 9 && value !== '') {
+          validityMessage = 'Input must be exactly 9 characters long.';
         }
 
-        // Remove the attribute from the custom element
-        if (!this._attributesToKeep.includes(attrName)) {
-          // Temporarily disconnect to prevent infinite loops
-          this._observer.disconnect();
-          this.removeAttribute(attrName);
-          this._observer.observe(this, { attributes: true });
-        }
+        // Set custom validity on the internal input
+        this.input.setCustomValidity(validityMessage);
       }
     }
-  };
 
-  // ... rest of the class ...
+    customElements.define('validated-input', ValidatedInput);
+  </script>
 
-  // List of attributes to keep on the custom element
-  _attributesToKeep = []; // Adjust as needed
-
-  // Transfer attributes from the custom element to the internal input
-  _transferAttributes() {
-    for (let attr of Array.from(this.attributes)) {
-      const attrName = attr.name;
-      const attrValue = attr.value;
-
-      // Transfer the attribute to the internal input
-      this.input.setAttribute(attrName, attrValue);
-
-      // Remove the attribute from the custom element
-      if (!this._attributesToKeep.includes(attrName)) {
-        this.removeAttribute(attrName);
-      }
-    }
-  }
-
-  // Method to forward events from the internal input to the custom element
-  _forwardEvents(events) {
-    events.forEach((eventName) => {
-      const handler = (event) => {
-        // Re-dispatch the event from the custom element
-        const newEvent = new event.constructor(event.type, event);
-        this.dispatchEvent(newEvent);
-      };
-      // Store the handler so we can remove it later
-      this._forwardedEventHandlers[eventName] = handler;
-      this.input.addEventListener(eventName, handler);
-    });
-  }
-
-  // Default validate method
-  validate() {
-    // Clear any custom validity messages
-    this.input.setCustomValidity('');
-  }
-
-  // Expose the 'value' property
-  get value() {
-    return this.input.value;
-  }
-
-  set value(val) {
-    this.input.value = val;
-    this.validate();
-  }
-
-  // Expose the 'name' property
-  get name() {
-    return this.input.getAttribute('name');
-  }
-
-  set name(value) {
-    this.input.setAttribute('name', value);
-  }
-
-  // Expose validation methods and properties
-  checkValidity() {
-    return this.input.checkValidity();
-  }
-
-  reportValidity() {
-    return this.input.reportValidity();
-  }
-
-  get validity() {
-    return this.input.validity;
-  }
-
-  get validationMessage() {
-    return this.input.validationMessage;
-  }
-
-  get willValidate() {
-    return this.input.willValidate;
-  }
-
-  // Define properties for attributes that may be set as properties
-  get required() {
-    return this.input.required;
-  }
-
-  set required(isRequired) {
-    this.input.required = isRequired;
-  }
-
-  // Similarly, define other properties as needed (e.g., 'disabled', 'maxlength', 'pattern')
-}
-
-class ValidatedInput extends BaseValidatedInput {
-  constructor() {
-    super();
-  }
-
-  validate() {
-    // First, clear any previous custom validity message
-    super.validate();
-
-    const value = this.input.value;
-    let validityMessage = '';
-
-    // Custom validation logic
-    if (value.length !== 9 && value !== '') {
-      validityMessage = 'Input must be exactly 9 characters long.';
-    }
-
-    // Set custom validity on the internal input
-    this.input.setCustomValidity(validityMessage);
-  }
-}
-
-customElements.define('validated-input', ValidatedInput);
-</script>
-
-    <!--
+  <!--
         Bring your own <form> to submit to the server; tiny-form-fields don't deal with it for you.
         In "Editor" or "Preview" mode, form submit will carry a `tiny-form-fields` form field
         containing the JSON representation of the form fields. Save that JSON on your server.
@@ -226,145 +46,148 @@ customElements.define('validated-input', ValidatedInput);
         In "CollectData" mode, pass the json through flags.formFields and the form fields will be rendered.
         When the form is submitted, all the form field values will be included in the form post.
     -->
-    <form class="min-h-screen" method="post" action="https://httpbin.org/post">
-        <div class="p-1 md:p-4 md:w-3/5 my-8 ml-auto mr-auto bg-white min-h-full shadow">
-            <!-- tiny-form-fields render here -->
-            <div id="tiny-form-fields"></div>
-            <!-- end render -->
-        </div>
-        <div class="p-1 md:pl-5 my-8 md:w-3/5 ml-auto mr-auto">
-            <button type="submit" tabindex="0"
-                class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 mr-2 mb-2 rounded text-sm leading-4">
-                Test Submit
-            </button>
-            <a tabindex="0" id="view-sample-collect-data" href="#" target="_blank"
-                class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 mr-2 mb-2 rounded h-10 text-sm leading-4 hidden">
-                View sample Collect Data page
-            </a>
-            <a tabindex="0" id="reset-form" href="?"
-                class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 mr-2 mb-2 rounded h-10 text-sm leading-4 hidden">
-                Reset
-            </a>
-            <p>
-                <a class="text-xs gray-500 float-right" target="_blank" href="https://github.com/choonkeat/tiny-form-fields">github.com/choonkeat/tiny-form-fields</a>
-            </p>
-        </div>
-    </form>
-    <script>
-        let hash = (window.location.hash.substring(1) || "").split("&").reduce((acc, item) => {
-            let [key, value] = item.split("=")
-            acc[key] = value
-            return acc
-        }, {})
-        hash['viewMode'] = hash['viewMode'] || "Editor" // "Editor" for form admins, "CollectData" for form users
-        const flags = {
-            viewMode: hash['viewMode'],
-            formFields: hash['formFields'] ? JSON.parse(decodeURIComponent(hash['formFields'])) : null, // JSON representation of form fields
-            formValues: { "Email": "email@example.com", "ChooseOne": "No", "ChooseMany": [ "Durian", "Banana" ]}, // pre-fill form fields
-            shortTextTypeList: [
-                // {
-                //     "Short text": { "type": "text" } // default name is 'Single-line free text'; change it here
-                // },
-                {
-                    "Custom Element": {
-                        "inputTag": "validated-input",
-                        "attributes": {
-                            "type": "url"
-                        }
-                    }
-                },
-                {
-                    "Email": {
-                        "type": "email"
-                    }
-                },
-                {
-                    "Emails": {
-                        "type": "email",
-                        "multiple":"true"
-                    }
-                },
-                {
-                    "Telephone": {
-                        "type": "tel"
-                    }
-                },
-                {
-                    "URL": {
-                        "type": "url"
-                    }
-                },
-                {
-                    "Color": {
-                        "type": "color"
-                    }
-                },
-                {
-                    "Date": {
-                        "type": "date"
-                    }
-                },
-                {
-                    "Time": {
-                        "type": "time"
-                    }
-                },
-                {
-                    "Date & Time": {
-                        "type": "datetime-local"
-                    }
-                }
-            ],
+  <form class="min-h-screen" method="post" action="https://httpbin.org/post">
+    <div class="p-1 md:p-4 md:w-3/5 my-8 ml-auto mr-auto bg-white min-h-full shadow">
+      <!-- tiny-form-fields render here -->
+      <div id="tiny-form-fields"></div>
+      <!-- end render -->
+    </div>
+    <div class="p-1 md:pl-5 my-8 md:w-3/5 ml-auto mr-auto">
+      <button type="submit" tabindex="0"
+        class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 mr-2 mb-2 rounded text-sm leading-4">
+        Test Submit
+      </button>
+      <a tabindex="0" id="view-sample-collect-data" href="#" target="_blank"
+        class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 mr-2 mb-2 rounded h-10 text-sm leading-4 hidden">
+        View sample Collect Data page
+      </a>
+      <a tabindex="0" id="reset-form" href="?"
+        class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 mr-2 mb-2 rounded h-10 text-sm leading-4 hidden">
+        Reset
+      </a>
+      <p>
+        <a class="text-xs gray-500 float-right" target="_blank"
+          href="https://github.com/choonkeat/tiny-form-fields">github.com/choonkeat/tiny-form-fields</a>
+      </p>
+    </div>
+  </form>
+
+  <!-- Include this script after your <form> -->
+  <script type="module">
+    import { Elm } from './dist/tiny-form-fields.esm.js';
+
+    let hash = (window.location.hash.substring(1) || "").split("&").reduce((acc, item) => {
+      let [key, value] = item.split("=")
+      acc[key] = value
+      return acc
+    }, {})
+    hash['viewMode'] = hash['viewMode'] || "Editor" // "Editor" for form admins, "CollectData" for form users
+    const flags = {
+      viewMode: hash['viewMode'],
+      formFields: hash['formFields'] ? JSON.parse(decodeURIComponent(hash['formFields'])) : null, // JSON representation of form fields
+      formValues: { "Email": "email@example.com", "ChooseOne": "No", "ChooseMany": ["Durian", "Banana"] }, // pre-fill form fields
+      shortTextTypeList: [
+        {
+          // optional: you can add custom fields using webcomponents
+          "Custom Element": {
+            "inputTag": "validated-input",
+            "attributes": {
+              "type": "url"
+            }
+          }
+        },
+        {
+          "Email": {
+            "type": "email"
+          }
+        },
+        {
+          "Emails": {
+            "type": "email",
+            "multiple": "true"
+          }
+        },
+        {
+          "Telephone": {
+            "type": "tel"
+          }
+        },
+        {
+          "URL": {
+            "type": "url"
+          }
+        },
+        {
+          "Color": {
+            "type": "color"
+          }
+        },
+        {
+          "Date": {
+            "type": "date"
+          }
+        },
+        {
+          "Time": {
+            "type": "time"
+          }
+        },
+        {
+          "Date & Time": {
+            "type": "datetime-local"
+          }
         }
+      ],
+    }
 
-        // code to setup tiny-form-fields
-        let app = Elm.Main.init(
-            {
-                node: document.getElementById('tiny-form-fields'),
-                flags: flags,
-            }
-        )
-        app.ports.outgoing.subscribe((event) => {
-            try {
-                // do what you need with the JSON here
-                // e.g. we update one of our a[href]
-                switch (event.type) {
-                    case 'formFields':
-                        let formFields = event.formFields;
-                        console.log('formFields', JSON.stringify(formFields, null, 2));
-                        const newHash = `viewMode=${hash['viewMode']}&formFields=${encodeURIComponent(JSON.stringify(formFields))}`
-                        setTimeout(function() { window.location.hash = newHash; }, 0);
-                        if (hash['viewMode'] === "CollectData") return
+    // code to setup tiny-form-fields
+    let app = Elm.Main.init(
+      {
+        node: document.getElementById('tiny-form-fields'),
+        flags: flags,
+      }
+    )
+    app.ports.outgoing.subscribe((event) => {
+      try {
+        // do what you need with the JSON here
+        // e.g. we update one of our a[href]
+        switch (event.type) {
+          case 'formFields':
+            let formFields = event.formFields;
+            console.log('formFields', JSON.stringify(formFields, null, 2));
+            const newHash = `viewMode=${hash['viewMode']}&formFields=${encodeURIComponent(JSON.stringify(formFields))}`
+            setTimeout(function () { window.location.hash = newHash; }, 0);
+            if (hash['viewMode'] === "CollectData") return
 
-                        let ele = document.getElementById('view-sample-collect-data');
-                        ele.href = `?#viewMode=CollectData&formFields=${encodeURIComponent(JSON.stringify(formFields))}`;
-                        if (formFields && formFields.length > 0) {
-                            ele.classList.remove('hidden');
-                            document.getElementById('reset-form').classList.remove('hidden');
-                        } else {
-                            ele.classList.add('hidden');
-                        }
-                        break;
-                    case 'viewMode':
-                        hash['viewMode'] = event.viewMode;
-                        console.log('viewMode is now', hash['viewMode']);
-                        break;
-                    case 'setupCloseDropdown':
-                        typeof app.ports.incoming.send; // must exist upfront
-                        document.body.addEventListener('click', function(_clickEvent) {
-                            if (hash['viewMode'] === 'Editor') {
-                                app.ports.incoming.send(event.value);
-                            }
-                        });
-                        break;
-                    default:
-                        console.log('unknown outgoing port', event);
-                }
-            } catch (e) {
-                console.error('error', e);
+            let ele = document.getElementById('view-sample-collect-data');
+            ele.href = `?#viewMode=CollectData&formFields=${encodeURIComponent(JSON.stringify(formFields))}`;
+            if (formFields && formFields.length > 0) {
+              ele.classList.remove('hidden');
+              document.getElementById('reset-form').classList.remove('hidden');
+            } else {
+              ele.classList.add('hidden');
             }
-        })
-    </script>
+            break;
+          case 'viewMode':
+            hash['viewMode'] = event.viewMode;
+            console.log('viewMode is now', hash['viewMode']);
+            break;
+          case 'setupCloseDropdown':
+            typeof app.ports.incoming.send; // must exist upfront
+            document.body.addEventListener('click', function (_clickEvent) {
+              if (hash['viewMode'] === 'Editor') {
+                app.ports.incoming.send(event.value);
+              }
+            });
+            break;
+          default:
+            console.log('unknown outgoing port', event);
+        }
+      } catch (e) {
+        console.error('error', e);
+      }
+    })
+  </script>
 </body>
 
 </html>

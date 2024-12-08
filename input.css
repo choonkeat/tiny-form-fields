@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Error message styles */
 .tff-error h3 {
     @apply font-bold;
     @apply text-lg;
@@ -12,43 +13,12 @@
     @apply whitespace-pre-wrap;
 }
 
-.tff-tabs {
-    @apply flex;
-    @apply flex-wrap;
-    @apply text-sm;
-    @apply font-medium;
-    @apply text-center;
-    @apply text-gray-500;
-    @apply border-b;
-    @apply border-gray-200;
-    @apply mb-4;
+/* Base styles for text content */
+.tff-text-content {
+    @apply whitespace-pre-wrap;
 }
 
-.tff-tabs li {
-    @apply me-2;
-}
-
-.tff-tabs li button {
-    @apply inline-block;
-    @apply p-4;
-    @apply text-blue-600;
-    @apply rounded-t-lg;
-}
-
-.tff-tabs li .tff-tabs-active {
-    @apply bg-gray-200;
-    @apply border-b;
-    @apply border-gray-200;
-    @apply -mb-1;
-}
-
-.tff-tabs-preview {
-    @apply grid;
-    @apply grid-rows-[auto_auto_1fr_auto];
-    @apply gap-2;
-    @apply mb-4;
-}
-
+/* Settings panel styles */
 .tff-settings-content .tff-field-group,
 .tff-settings-content .tff-toggle-group {
     @apply mb-4;
@@ -59,7 +29,12 @@
     @apply mb-4;
 }
 
+.tff-settings-content .tff-field-group:last-child,
+.tff-settings-content .tff-toggle-group:last-child {
+    @apply mb-4;
+}
 
+/* Field group styles */
 .tff-field-group {
     @apply relative;
     @apply mb-12;
@@ -236,43 +211,22 @@
     @apply hidden;
 }
 
-.tff-dropdown-svg {
-    @apply w-2.5;
-    @apply h-2.5;
-    @apply ms-3;
-}
-
-.tff-dropdown-options-wrapper {
-    @apply z-10;
-    @apply mt-2;
-    @apply bg-white;
-    @apply divide-y;
-    @apply divide-gray-100;
-    @apply rounded-lg;
-    @apply shadow;
-    @apply w-44;
-}
-
-.tff-dropdown-list {
-    @apply py-2;
-    @apply text-sm;
-    @apply text-gray-700;
-}
-
-.tff-dropdown-option {
-    @apply block;
-    @apply px-4;
-    @apply py-2;
-    @apply hover:bg-gray-100;
-}
-
+/* Animation keyframes */
 @keyframes fadeOut {
     0% {
         @apply opacity-100;
     }
-
     100% {
         @apply opacity-0;
+    }
+}
+
+@keyframes fadeIn {
+    0% {
+        @apply opacity-0;
+    }
+    100% {
+        @apply opacity-100;
     }
 }
 
@@ -294,6 +248,7 @@
     animation: yellowFade 0.5s ease-in-out;
 }
 
+/* Field preview states and interactions */
 .tff-field-preview {
     @apply relative;
     @apply bg-white;
@@ -307,61 +262,9 @@
     @apply border-white;
 }
 
-.tff-field-preview:not(.tff-field-ghost):hover {
+.tff-field-preview:hover {
     @apply border-gray-200;
     @apply shadow-md;
-}
-
-.tff-field-preview.tff-field-ghost {
-    @apply h-16;
-    @apply opacity-0;
-}
-
-.tff-field-preview.tff-field-ghost-target {
-    @apply opacity-100;
-    @apply border-2;
-    @apply border-dashed;
-    @apply border-blue-200;
-    @apply rounded-lg;
-    @apply bg-blue-50;
-}
-
-.tff-field-preview.tff-field-ghost .tff-field-placeholder,
-.tff-field-preview.tff-field-ghost-target .tff-field-placeholder {
-    display: none;
-}
-
-.tff-field-placeholder {
-    @apply h-32;
-    @apply border-2;
-    @apply border-dashed;
-    @apply border-blue-200;
-    @apply rounded-lg;
-    @apply bg-blue-50;
-}
-
-.tff-field-placeholder-above {
-    @apply -translate-y-full;
-}
-
-.tff-field-placeholder-below {
-    @apply translate-y-full;
-}
-
-.tff-field-wrapper {
-    @apply flex;
-    @apply flex-col;
-    @apply gap-0;
-    @apply cursor-move;
-}
-
-.tff-field-preview {
-    @apply cursor-pointer;
-}
-
-.tff-field-container {
-    @apply relative;
-    @apply min-h-[40px];
 }
 
 .tff-field-preview[data-selected="true"] {
@@ -376,10 +279,6 @@
 
 .tff-field-preview[data-selected="true"]:hover {
     @apply border-blue-500;
-}
-
-.tff-field-preview>div:last-child {
-    @apply flex-grow;
 }
 
 .tff-field-preview[data-dragging="true"] {
@@ -416,15 +315,8 @@
     @apply flex-grow;
 }
 
-.tff-field-preview.tff-field-ghost .tff-field-placeholder {
-    @apply h-full;
-    @apply border-0;
-    @apply bg-transparent;
-    @apply m-0;
-}
-
-.tff-field-preview.tff-field-ghost-target .tff-field-placeholder {
-    @apply opacity-100;
+.tff-field-placeholder {
+    @apply h-32;
     @apply border-2;
     @apply border-dashed;
     @apply border-blue-200;
@@ -432,7 +324,37 @@
     @apply bg-blue-50;
 }
 
+.tff-field-placeholder-above {
+    @apply -translate-y-full;
+}
+
+.tff-field-placeholder-below {
+    @apply translate-y-full;
+}
+
+/* Field wrapper and container layout */
+.tff-field-wrapper {
+    @apply flex;
+    @apply flex-col;
+    @apply gap-0;
+    @apply cursor-move;
+}
+
+/* Field preview and interaction styles */
+.tff-field-preview {
+    @apply cursor-pointer;
+}
+
 /* Base layout - Mobile first */
+.tff-field-container {
+    @apply relative;
+    @apply min-h-[40px];
+}
+
+.tff-field-preview>div:last-child {
+    @apply flex-grow;
+}
+
 .tff-editor-layout {
     @apply flex;
     @apply flex-col;
@@ -441,7 +363,6 @@
     @apply relative;
 }
 
-/* Mobile view panels */
 .tff-center-panel {
     @apply flex-grow;
     @apply bg-white;
@@ -486,7 +407,6 @@
     cursor: not-allowed;
 }
 
-/* Desktop view */
 @container (min-width: 640px) and (max-width: 1024px) {
     .tff-editor-layout {
         @apply flex-row;
@@ -534,19 +454,16 @@
         @apply bg-gray-50;
     }
 
-    /* Show right panel by sliding over left panel */
     .tff-right-panel.tff-panel-visible {
         @apply translate-x-0;
     }
 
-    /* Hide left panel when right panel is visible */
     .tff-right-panel.tff-panel-visible~.tff-left-panel {
         @apply opacity-0;
         @apply pointer-events-none;
     }
 }
 
-/* Large Desktop view */
 @container (min-width: 1024px) {
     .tff-editor-layout {
         @apply flex-row;
@@ -584,7 +501,6 @@
         @apply transition-[width];
     }
 
-    /* Handle right panel visibility in desktop */
     .tff-right-panel:not(.tff-panel-visible) {
         @apply w-0;
         @apply border-l-0;
@@ -592,7 +508,6 @@
         @apply overflow-hidden;
     }
 
-    /* Remove mobile-specific panel hiding */
     .tff-panel-hidden {
         @apply block;
     }
@@ -664,12 +579,6 @@
     @apply border-gray-200;
 }
 
-/* Field preview and settings layout */
 .tff-fields-container {
     @apply min-h-[200px];
-}
-
-.tff-field-container {
-    @apply relative;
-    @apply min-h-[40px];
 }
