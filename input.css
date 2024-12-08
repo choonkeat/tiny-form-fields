@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Error message styles */
 .tff-error h3 {
     @apply font-bold;
     @apply text-lg;
@@ -12,6 +13,12 @@
     @apply whitespace-pre-wrap;
 }
 
+/* Base styles for text content */
+.tff-text-content {
+    @apply whitespace-pre-wrap;
+}
+
+/* Settings panel styles */
 .tff-settings-content .tff-field-group,
 .tff-settings-content .tff-toggle-group {
     @apply mb-4;
@@ -22,6 +29,12 @@
     @apply mb-4;
 }
 
+.tff-settings-content .tff-field-group:last-child,
+.tff-settings-content .tff-toggle-group:last-child {
+    @apply mb-4;
+}
+
+/* Field group styles */
 .tff-field-group {
     @apply relative;
     @apply mb-12;
@@ -198,13 +211,22 @@
     @apply hidden;
 }
 
+/* Animation keyframes */
 @keyframes fadeOut {
     0% {
         @apply opacity-100;
     }
-
     100% {
         @apply opacity-0;
+    }
+}
+
+@keyframes fadeIn {
+    0% {
+        @apply opacity-0;
+    }
+    100% {
+        @apply opacity-100;
     }
 }
 
@@ -226,6 +248,7 @@
     animation: yellowFade 0.5s ease-in-out;
 }
 
+/* Field preview states and interactions */
 .tff-field-preview {
     @apply relative;
     @apply bg-white;
@@ -309,6 +332,7 @@
     @apply translate-y-full;
 }
 
+/* Field wrapper and container layout */
 .tff-field-wrapper {
     @apply flex;
     @apply flex-col;
@@ -316,10 +340,12 @@
     @apply cursor-move;
 }
 
+/* Field preview and interaction styles */
 .tff-field-preview {
     @apply cursor-pointer;
 }
 
+/* Base layout - Mobile first */
 .tff-field-container {
     @apply relative;
     @apply min-h-[40px];
