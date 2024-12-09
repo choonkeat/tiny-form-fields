@@ -5,7 +5,10 @@ This directory contains task descriptions for features and improvements to tiny-
 ## File Format
 
 Each task is documented in a markdown file with the following naming convention:
-`NNNN-brief-description.md` where NNNN is a 4-digit sequential number.
+`NNNN-STATUS-brief-description.md` where:
+- `NNNN` is a 4-digit sequential number
+- `STATUS` is one of: `TODO`, `WIP`, `DONE`, or `HOLD`
+- `brief-description` is a short, hyphen-separated description of the task
 
 ### Task File Structure
 

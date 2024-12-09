@@ -23,6 +23,10 @@ A lightweight, customizable form builder and renderer written in Elm. Create dyn
 - Two modes: Editor (for building forms) and CollectData (for end users)
 - JSON import/export of form definitions
 
+## Tasks
+
+See the [tasks](tasks/) directory for planned features and improvements. Each task is documented with requirements and implementation details.
+
 ## Installation
 
 1. Add the compiled assets to your project:
