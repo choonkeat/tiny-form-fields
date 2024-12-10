@@ -1,9 +1,18 @@
 SHELL = /bin/bash -u -e -o pipefail
 export PATH := node_modules/.bin:$(PATH)
 
-dist/tiny-form-fields.esm.js: css src/Main.elm Makefile elm-review test
+build: css compile elm-review test
+
+compile: dist/tiny-form-fields.js dist/tiny-form-fields.esm.js dist/base-custom-field.js
+
+dist/tiny-form-fields.js: src/Main.elm Makefile
 	elm         make src/Main.elm --optimize --output dist/tiny-form-fields.js
+
+dist/tiny-form-fields.esm.js: src/Main.elm Makefile
 	npx elm-esm make src/Main.elm --optimize --output=dist/tiny-form-fields.esm.js
+	cp src/base-custom-field.js dist/
+
+dist/base-custom-field.js: src/base-custom-field.js
 	cp src/base-custom-field.js dist/
 
 css: dist/tiny-form-fields.min.css
