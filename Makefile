@@ -22,10 +22,12 @@ dist/tiny-form-fields.min.css: input.css tailwind.config.js index.html src/Main.
 	touch dist/tiny-form-fields.min.css
 
 ELM_MAKE_FLAGS=--debug
+ELM_LIVE_FLAGS=
 run:
 	npx elm-live src/Main.elm \
 		--start-page index.html \
-		-- --output=dist/tiny-form-fields.js $(ELM_MAKE_FLAGS)
+		$(ELM_LIVE_FLAGS) \
+		-- --output=dist/tiny-form-fields.esm.js $(ELM_MAKE_FLAGS)
 
 run-ignore-error:
 	make run || echo shutdown test server

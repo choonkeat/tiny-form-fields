@@ -149,6 +149,7 @@ type alias FormField =
     , presence : Presence
     , description : AttributeOptional String
     , type_ : InputField
+    , allowOthers : Bool
     }
 
 
@@ -344,7 +345,7 @@ type FormFieldMsg
     | OnMaxLengthInput
     | OnDatalistToggle Bool
     | OnDatalistInput
-
+    | OnAllowOthersToggle Bool
 
 
 -- INIT
@@ -451,6 +452,7 @@ update msg model =
                     , presence = when (mustBeOptional fieldType) { true = Optional, false = Required }
                     , description = AttributeNotNeeded Nothing
                     , type_ = fieldType
+                    , allowOthers = False
                     }
 
                 newFormFields =
@@ -762,6 +764,9 @@ updateFormField msg string formField =
 
                 ChooseMultiple _ ->
                     formField
+
+        OnAllowOthersToggle bool ->
+            { formField | allowOthers = bool }
 
 
 onDropped : Maybe Int -> { a | dragged : Maybe Dragged, formFields : Array FormField } -> { a | dragged : Maybe Dragged, formFields : Array FormField }
@@ -1164,10 +1169,10 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } field
             in
             -- radio buttons
             div [ class "tff-chooseone-group" ]
-                [ div [ class "tff-chooseone-radiobuttons" ]
+                [ div [ class "tff-chooseone-radios" ]
                     (List.map
                         (\choice ->
-                            div [ class "tff-radiobuttons-group" ]
+                            div [ class "tff-radio-group" ]
                                 [ label [ class "tff-field-label" ]
                                     [ input
                                         ([ type_ "radio"
@@ -1357,7 +1362,9 @@ viewFormBuilder maybeAnimate model =
     let
         extraOptions =
             List.map
-                (\customElement -> ShortText customElement)
+                (\customElement ->
+                    ShortText customElement
+                )
                 model.shortTextTypeList
 
         maybeFieldsList =
@@ -1402,8 +1409,7 @@ selectArrowDown =
         ]
         [ path
             [ SvgAttr.fillRule "evenodd"
-            , SvgAttr.d "M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
-            , SvgAttr.clipRule "evenodd"
+            , SvgAttr.d "M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"
             ]
             []
         ]
@@ -1486,6 +1492,20 @@ viewFormFieldBuilder shortTextTypeList index totalLength formField =
             , attrs = [ class "tff-text-field" ]
             }
             formField.description
+         , inputAttributeOptional
+            { onCheck = \b -> OnFormField (OnAllowOthersToggle b) index ""
+            , onInput = OnFormField OnDescriptionInput index
+            , label = "Allow others"
+            , toString = identity
+            , htmlNode = Html.input
+            , attrs = [ class "tff-text-field", type_ "checkbox" ]
+            }
+            (if formField.allowOthers then
+                AttributeGiven ""
+
+             else
+                AttributeNotNeeded Nothing
+            )
          ]
             ++ viewFormFieldOptionsBuilder shortTextTypeList index formField
             ++ [ div [ class "tff-build-field-buttons" ]
@@ -1621,6 +1641,7 @@ viewAddQuestionsList inputFields =
                                 , presence = when (mustBeOptional inputField) { true = Optional, false = Required }
                                 , description = AttributeNotNeeded Nothing
                                 , type_ = inputField
+                                , allowOthers = False
                                 }
                             )
                         )
@@ -1718,17 +1739,43 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
             ]
 
         Dropdown choices ->
-            [ choicesTextarea choices
-            ]
+            [ choicesTextarea choices ]
 
         ChooseOne choices ->
             [ choicesTextarea choices
+            , inputAttributeOptional
+                { onCheck = \b -> OnFormField (OnAllowOthersToggle b) index ""
+                , onInput = \_ -> NoOp
+                , label = "Allow others option"
+                , toString = \_ -> ""
+                , htmlNode = Html.input
+                , attrs = [ class "tff-checkbox", type_ "checkbox", checked formField.allowOthers ]
+                }
+                (if formField.allowOthers then
+                    AttributeGiven ""
+
+                 else
+                    AttributeNotNeeded Nothing
+                )
             ]
 
         ChooseMultiple choices ->
             [ choicesTextarea choices
-            ]
+            , inputAttributeOptional
+                { onCheck = \b -> OnFormField (OnAllowOthersToggle b) index ""
+                , onInput = \_ -> NoOp
+                , label = "Allow others option"
+                , toString = \_ -> ""
+                , htmlNode = Html.input
+                , attrs = [ class "tff-checkbox", type_ "checkbox", checked formField.allowOthers ]
+                }
+                (if formField.allowOthers then
+                    AttributeGiven ""
 
+                 else
+                    AttributeNotNeeded Nothing
+                )
+            ]
 
 
 -- PORT
@@ -1995,6 +2042,7 @@ encodeFormFields formFields =
                      , ( "presence", encodePresence formField.presence )
                      , ( "description", encodeAttributeOptional Json.Encode.string formField.description )
                      , ( "type", encodeInputField formField.type_ )
+                     , ( "allowOthers", Json.Encode.bool formField.allowOthers )
                      ]
                         -- smaller output json than if we encoded `null` all the time
                         |> List.filter (\( _, v ) -> v /= Json.Encode.null)
@@ -2017,6 +2065,7 @@ decodeFormField =
         |> andMap (Json.Decode.oneOf [ Json.Decode.field "presence" decodePresence, decodeRequired ])
         |> andMap decodeFormFieldDescription
         |> andMap (Json.Decode.field "type" decodeInputField)
+        |> andMap (Json.Decode.field "allowOthers" Json.Decode.bool)
 
 
 decodeRequired : Json.Decode.Decoder Presence
@@ -2327,7 +2376,6 @@ updateDragged maybeDroppable dragged =
 
                         Nothing ->
                             DragNew { details | dropIndex = maybeDroppable }
-
 
 dragOverDecoder : Int -> Maybe FormField -> Json.Decode.Decoder ( Msg, Bool )
 dragOverDecoder index maybeFormField =

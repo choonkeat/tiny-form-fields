@@ -8,7 +8,7 @@ Add option for Checkboxes and Radio buttons to allow an "Others" option that cap
 
 ## Requirements
 
-- [ ] Add "Allow Others option" toggle in field settings for both Checkboxes and Radio buttons
+- [x] Add "Allow Others option" toggle in field settings for both Checkboxes and Radio buttons
 - [ ] When enabled, append an "Others" option with a text input field
 - [ ] Store both the selection and the free text input in form values
 - [ ] Ensure the text input is only enabled when "Others" is selected
