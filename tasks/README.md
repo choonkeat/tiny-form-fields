@@ -31,10 +31,10 @@ A clear description of the task/feature
 ## Current Tasks
 
 ### Completed
-- [0001](./0001-custom-element-support.md) - Support custom element
-- [0002](./0002-three-panel-layout.md) - Refactor to 3 panel layout with drag and drop
+- [0001](./0001-DONE-custom-element-support.md) - Support custom element
+- [0002](./0002-DONE-three-panel-layout.md) - Refactor to 3 panel layout with drag and drop
 
 ### In Progress
-- [0003](./0003-hide-show-logic.md) - Support hide and show logic
-- [0004](./0004-checkbox-min-max-settings.md) - Add min/max settings for Checkboxes
-- [0005](./0005-others-option.md) - Add "Others" option with free text input
+- [0003](./0003-TODO-hide-show-logic.md) - Support hide and show logic
+- [0004](./0004-TODO-checkbox-min-max-settings.md) - Add min/max settings for Checkboxes
+- [0005](./0005-TODO-others-option.md) - Add "Others" option with free text input
