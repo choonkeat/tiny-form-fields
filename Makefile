@@ -3,6 +3,9 @@ export PATH := node_modules/.bin:$(PATH)
 
 build: css compile elm-review test test-playwright
 
+diff:
+	git diff -- ':!dist'
+
 compile: dist/tiny-form-fields.js dist/tiny-form-fields.esm.js dist/base-custom-field.js
 
 dist/tiny-form-fields.js: src/Main.elm Makefile
