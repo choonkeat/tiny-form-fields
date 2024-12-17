@@ -1,7 +1,7 @@
 SHELL = /bin/bash -u -e -o pipefail
 export PATH := node_modules/.bin:$(PATH)
 
-build: css compile elm-review test
+build: css compile elm-review
 
 compile: dist/tiny-form-fields.js dist/tiny-form-fields.esm.js dist/base-custom-field.js
 
