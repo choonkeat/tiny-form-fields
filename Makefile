@@ -47,4 +47,4 @@ stop-run:
 	killall node
 
 elm-review:
-	npx elm-review --fix-all
+	yes | npx elm-review -- --fix-all
