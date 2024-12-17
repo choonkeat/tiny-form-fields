@@ -1,3 +1,9 @@
-Always refer to README.md for guidance on code and documentation.
+Always refer to README.md for guidance on code, file organisation, and tasks.
 
-After we implement a feature, update README.md and the files in tasks/ where necessary.
+## Tasks
+
+- All code changes should correspond to a checkbox in tasks/
+- When a change is completed
+    - run `make build` to confirm it doesn't break anything
+    - update the checkbox in tasks/
+- If all checkboxes are checked, update tasks/README.md and rename the task file from TODO to DONE.
