@@ -13,7 +13,8 @@ Always refer to README.md for guidance on code, file organisation, and tasks.
     - if a feature requires a new complex field, add a simple boolean field first
     - leave it to the next iteration to change it into the more complex field
     - prefer to get to a working state first
-2. Run `make build test test-playwright` to confirm it didn't break anything
+    - adding a field, referencing the field for logic, and introducing ui to manipulate the field are 3 separate "smallest possible change"; don't do them together
+2. Run `make build` to confirm it didn't break anything
     - if something broke, it means the change was incomplete; make the remaining changes instead of only fixing the error
 3. Only if that's successful, then ask for permission to make the next smallest change (repeat step 1 and 2)
 
