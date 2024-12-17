@@ -10,6 +10,10 @@ Add support for conditional visibility where each field can specify when it shou
 
 ### Configuration
 - [ ] Add "Visibility Rules" section in field settings
+    - [ ] Add `visibilityRules` data structure to field settings (default: always visible)
+    - [ ] Add basic UI section header in field settings
+    - [ ] Add visibility rules editor UI component
+    - [ ] Add proper styling for visibility rules section
 - [ ] Allow selecting which other fields' values control this field's visibility
 - [ ] Support common operators (equals, not equals, contains, etc.)
 - [ ] Support multiple conditions with AND/OR logic
