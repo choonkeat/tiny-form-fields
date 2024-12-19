@@ -8,6 +8,7 @@ port module Main exposing
     , Presence(..)
     , RawCustomElement
     , ViewMode(..)
+    , VisibilityRule(..)
     , allInputField
     , decodeChoice
     , decodeCustomElement
@@ -19,6 +20,7 @@ port module Main exposing
     , encodeFormFields
     , encodeInputField
     , encodePairsFromCustomElement
+    , encodeVisibilityRule
     , fieldsWithPlaceholder
     , fromRawCustomElement
     , main
@@ -143,12 +145,17 @@ requiredData presence =
             True
 
 
+type VisibilityRule
+    = AlwaysVisible
+
+
 type alias FormField =
     { label : String
     , name : Maybe String
     , presence : Presence
     , description : AttributeOptional String
     , type_ : InputField
+    , visibilityRule : VisibilityRule
     }
 
 
@@ -451,6 +458,7 @@ update msg model =
                     , presence = when (mustBeOptional fieldType) { true = Optional, false = Required }
                     , description = AttributeNotNeeded Nothing
                     , type_ = fieldType
+                    , visibilityRule = AlwaysVisible
                     }
 
                 newFormFields =
@@ -1621,6 +1629,7 @@ viewAddQuestionsList inputFields =
                                 , presence = when (mustBeOptional inputField) { true = Optional, false = Required }
                                 , description = AttributeNotNeeded Nothing
                                 , type_ = inputField
+                                , visibilityRule = AlwaysVisible
                                 }
                             )
                         )
@@ -1995,12 +2004,20 @@ encodeFormFields formFields =
                      , ( "presence", encodePresence formField.presence )
                      , ( "description", encodeAttributeOptional Json.Encode.string formField.description )
                      , ( "type", encodeInputField formField.type_ )
+                     , ( "visibilityRule", encodeVisibilityRule formField.visibilityRule )
                      ]
                         -- smaller output json than if we encoded `null` all the time
                         |> List.filter (\( _, v ) -> v /= Json.Encode.null)
                     )
             )
         |> Json.Encode.list identity
+
+
+encodeVisibilityRule : VisibilityRule -> Json.Encode.Value
+encodeVisibilityRule visibilityRule =
+    case visibilityRule of
+        AlwaysVisible ->
+            Json.Encode.string "AlwaysVisible"
 
 
 decodeFormFields : Json.Decode.Decoder (Array FormField)
@@ -2017,6 +2034,7 @@ decodeFormField =
         |> andMap (Json.Decode.oneOf [ Json.Decode.field "presence" decodePresence, decodeRequired ])
         |> andMap decodeFormFieldDescription
         |> andMap (Json.Decode.field "type" decodeInputField)
+        |> andMap (Json.Decode.field "visibilityRule" decodeVisibilityRule)
 
 
 decodeRequired : Json.Decode.Decoder Presence
@@ -2052,6 +2070,20 @@ decodeFormFieldDescription =
         , Json.Decode.field "description" (decodeAttributeOptional (Just "") Json.Decode.string)
         , Json.Decode.succeed (AttributeNotNeeded Nothing)
         ]
+
+
+decodeVisibilityRule : Json.Decode.Decoder VisibilityRule
+decodeVisibilityRule =
+    Json.Decode.string
+        |> Json.Decode.andThen
+            (\str ->
+                case str of
+                    "AlwaysVisible" ->
+                        Json.Decode.succeed AlwaysVisible
+
+                    _ ->
+                        Json.Decode.fail ("Unknown visibility rule: " ++ str)
+            )
 
 
 decodeCustomElement : Json.Decode.Decoder CustomElement

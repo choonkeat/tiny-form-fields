@@ -784,11 +784,11 @@ function _Debug_crash_UNUSED(identifier, fact1, fact2, fact3, fact4)
 
 function _Debug_regionToString(region)
 {
-	if (region.a_.ax === region.be.ax)
+	if (region.a$.ax === region.bf.ax)
 	{
-		return 'on line ' + region.a_.ax;
+		return 'on line ' + region.a$.ax;
 	}
-	return 'on lines ' + region.a_.ax + ' through ' + region.be.ax;
+	return 'on lines ' + region.a$.ax + ' through ' + region.bf.ax;
 }
 
 
@@ -1857,9 +1857,9 @@ var _Platform_worker = F4(function(impl, flagDecoder, debugMetadata, args)
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.cq,
-		impl.cR,
-		impl.cN,
+		impl.cr,
+		impl.cS,
+		impl.cO,
 		function() { return function() {} }
 	);
 });
@@ -2720,8 +2720,8 @@ var _VirtualDom_mapEventRecord = F2(function(func, record)
 {
 	return {
 		X: func(record.X),
-		a$: record.a$,
-		aY: record.aY
+		a0: record.a0,
+		aZ: record.aZ
 	}
 });
 
@@ -2990,10 +2990,10 @@ function _VirtualDom_makeCallback(eventNode, initialHandler)
 
 		var value = result.a;
 		var message = !tag ? value : tag < 3 ? value.a : value.X;
-		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.a$;
+		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.a0;
 		var currentEventNode = (
 			stopPropagation && event.stopPropagation(),
-			(tag == 2 ? value.b : tag == 3 && value.aY) && event.preventDefault(),
+			(tag == 2 ? value.b : tag == 3 && value.aZ) && event.preventDefault(),
 			eventNode
 		);
 		var tagger;
@@ -3943,11 +3943,11 @@ var _Browser_element = _Debugger_element || F4(function(impl, flagDecoder, debug
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.cq,
-		impl.cR,
-		impl.cN,
+		impl.cr,
+		impl.cS,
+		impl.cO,
 		function(sendToApp, initialModel) {
-			var view = impl.cS;
+			var view = impl.cT;
 			/**/
 			var domNode = args['node'];
 			//*/
@@ -3979,12 +3979,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.cq,
-		impl.cR,
-		impl.cN,
+		impl.cr,
+		impl.cS,
+		impl.cO,
 		function(sendToApp, initialModel) {
-			var divertHrefToApp = impl.aZ && impl.aZ(sendToApp)
-			var view = impl.cS;
+			var divertHrefToApp = impl.a_ && impl.a_(sendToApp)
+			var view = impl.cT;
 			var title = _VirtualDom_doc.title;
 			var bodyNode = _VirtualDom_doc.body;
 			var currNode = _VirtualDom_virtualize(bodyNode);
@@ -3992,12 +3992,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 			{
 				_VirtualDom_divertHrefToApp = divertHrefToApp;
 				var doc = view(model);
-				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.b8);
+				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.b9);
 				var patches = _VirtualDom_diff(currNode, nextNode);
 				bodyNode = _VirtualDom_applyPatches(bodyNode, currNode, patches, sendToApp);
 				currNode = nextNode;
 				_VirtualDom_divertHrefToApp = 0;
-				(title !== doc.cQ) && (_VirtualDom_doc.title = title = doc.cQ);
+				(title !== doc.cR) && (_VirtualDom_doc.title = title = doc.cR);
 			});
 		}
 	);
@@ -4053,12 +4053,12 @@ function _Browser_makeAnimator(model, draw)
 
 function _Browser_application(impl)
 {
-	var onUrlChange = impl.cE;
-	var onUrlRequest = impl.cF;
+	var onUrlChange = impl.cF;
+	var onUrlRequest = impl.cG;
 	var key = function() { key.a(onUrlChange(_Browser_getUrl())); };
 
 	return _Browser_document({
-		aZ: function(sendToApp)
+		a_: function(sendToApp)
 		{
 			key.a = sendToApp;
 			_Browser_window.addEventListener('popstate', key);
@@ -4074,9 +4074,9 @@ function _Browser_application(impl)
 					var next = $elm$url$Url$fromString(href).a;
 					sendToApp(onUrlRequest(
 						(next
-							&& curr.bJ === next.bJ
-							&& curr.bp === next.bp
-							&& curr.bF.a === next.bF.a
+							&& curr.bK === next.bK
+							&& curr.bq === next.bq
+							&& curr.bG.a === next.bG.a
 						)
 							? $elm$browser$Browser$Internal(next)
 							: $elm$browser$Browser$External(href)
@@ -4084,13 +4084,13 @@ function _Browser_application(impl)
 				}
 			});
 		},
-		cq: function(flags)
+		cr: function(flags)
 		{
-			return A3(impl.cq, flags, _Browser_getUrl(), key);
+			return A3(impl.cr, flags, _Browser_getUrl(), key);
 		},
+		cT: impl.cT,
 		cS: impl.cS,
-		cR: impl.cR,
-		cN: impl.cN
+		cO: impl.cO
 	});
 }
 
@@ -4156,17 +4156,17 @@ var _Browser_decodeEvent = F2(function(decoder, event)
 function _Browser_visibilityInfo()
 {
 	return (typeof _VirtualDom_doc.hidden !== 'undefined')
-		? { cn: 'hidden', cb: 'visibilitychange' }
+		? { co: 'hidden', cc: 'visibilitychange' }
 		:
 	(typeof _VirtualDom_doc.mozHidden !== 'undefined')
-		? { cn: 'mozHidden', cb: 'mozvisibilitychange' }
+		? { co: 'mozHidden', cc: 'mozvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.msHidden !== 'undefined')
-		? { cn: 'msHidden', cb: 'msvisibilitychange' }
+		? { co: 'msHidden', cc: 'msvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.webkitHidden !== 'undefined')
-		? { cn: 'webkitHidden', cb: 'webkitvisibilitychange' }
-		: { cn: 'hidden', cb: 'visibilitychange' };
+		? { co: 'webkitHidden', cc: 'webkitvisibilitychange' }
+		: { co: 'hidden', cc: 'visibilitychange' };
 }
 
 
@@ -4247,12 +4247,12 @@ var _Browser_call = F2(function(functionName, id)
 function _Browser_getViewport()
 {
 	return {
-		bQ: _Browser_getScene(),
-		b_: {
-			b1: _Browser_window.pageXOffset,
-			b2: _Browser_window.pageYOffset,
-			b0: _Browser_doc.documentElement.clientWidth,
-			bn: _Browser_doc.documentElement.clientHeight
+		bR: _Browser_getScene(),
+		b$: {
+			b2: _Browser_window.pageXOffset,
+			b3: _Browser_window.pageYOffset,
+			b1: _Browser_doc.documentElement.clientWidth,
+			bo: _Browser_doc.documentElement.clientHeight
 		}
 	};
 }
@@ -4262,8 +4262,8 @@ function _Browser_getScene()
 	var body = _Browser_doc.body;
 	var elem = _Browser_doc.documentElement;
 	return {
-		b0: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
-		bn: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
+		b1: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
+		bo: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
 	};
 }
 
@@ -4286,15 +4286,15 @@ function _Browser_getViewportOf(id)
 	return _Browser_withNode(id, function(node)
 	{
 		return {
-			bQ: {
-				b0: node.scrollWidth,
-				bn: node.scrollHeight
+			bR: {
+				b1: node.scrollWidth,
+				bo: node.scrollHeight
 			},
-			b_: {
-				b1: node.scrollLeft,
-				b2: node.scrollTop,
-				b0: node.clientWidth,
-				bn: node.clientHeight
+			b$: {
+				b2: node.scrollLeft,
+				b3: node.scrollTop,
+				b1: node.clientWidth,
+				bo: node.clientHeight
 			}
 		};
 	});
@@ -4324,18 +4324,18 @@ function _Browser_getElement(id)
 		var x = _Browser_window.pageXOffset;
 		var y = _Browser_window.pageYOffset;
 		return {
-			bQ: _Browser_getScene(),
-			b_: {
-				b1: x,
-				b2: y,
-				b0: _Browser_doc.documentElement.clientWidth,
-				bn: _Browser_doc.documentElement.clientHeight
+			bR: _Browser_getScene(),
+			b$: {
+				b2: x,
+				b3: y,
+				b1: _Browser_doc.documentElement.clientWidth,
+				bo: _Browser_doc.documentElement.clientHeight
 			},
-			ch: {
-				b1: x + rect.left,
-				b2: y + rect.top,
-				b0: rect.width,
-				bn: rect.height
+			ci: {
+				b2: x + rect.left,
+				b3: y + rect.top,
+				b1: rect.width,
+				bo: rect.height
 			}
 		};
 	});
@@ -4911,7 +4911,7 @@ var $elm$url$Url$Http = 0;
 var $elm$url$Url$Https = 1;
 var $elm$url$Url$Url = F6(
 	function (protocol, host, port_, path, query, fragment) {
-		return {bj: fragment, bp: host, bD: path, bF: port_, bJ: protocol, bK: query};
+		return {bk: fragment, bq: host, bE: path, bG: port_, bK: protocol, bL: query};
 	});
 var $elm$core$String$contains = _String_contains;
 var $elm$core$String$length = _String_length;
@@ -5207,9 +5207,9 @@ var $author$project$Main$Config = F4(
 		return {f: formFields, M: formValues, _: shortTextTypeList, R: viewMode};
 	});
 var $elm_community$json_extra$Json$Decode$Extra$andMap = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
-var $author$project$Main$FormField = F5(
-	function (label, name, presence, description, type_) {
-		return {L: description, g: label, ay: name, s: presence, j: type_};
+var $author$project$Main$FormField = F6(
+	function (label, name, presence, description, type_, visibilityRule) {
+		return {L: description, g: label, ay: name, s: presence, j: type_, aQ: visibilityRule};
 	});
 var $author$project$Main$AttributeNotNeeded = function (a) {
 	return {$: 0, a: a};
@@ -5725,27 +5725,41 @@ var $author$project$Main$decodeRequired = A2(
 		return b ? 0 : 1;
 	},
 	A2($elm$json$Json$Decode$field, 'required', $elm$json$Json$Decode$bool));
+var $author$project$Main$AlwaysVisible = 0;
+var $author$project$Main$decodeVisibilityRule = A2(
+	$elm$json$Json$Decode$andThen,
+	function (str) {
+		if (str === 'AlwaysVisible') {
+			return $elm$json$Json$Decode$succeed(0);
+		} else {
+			return $elm$json$Json$Decode$fail('Unknown visibility rule: ' + str);
+		}
+	},
+	$elm$json$Json$Decode$string);
 var $author$project$Main$decodeFormField = A2(
 	$elm_community$json_extra$Json$Decode$Extra$andMap,
-	A2($elm$json$Json$Decode$field, 'type', $author$project$Main$decodeInputField),
+	A2($elm$json$Json$Decode$field, 'visibilityRule', $author$project$Main$decodeVisibilityRule),
 	A2(
 		$elm_community$json_extra$Json$Decode$Extra$andMap,
-		$author$project$Main$decodeFormFieldDescription,
+		A2($elm$json$Json$Decode$field, 'type', $author$project$Main$decodeInputField),
 		A2(
 			$elm_community$json_extra$Json$Decode$Extra$andMap,
-			$elm$json$Json$Decode$oneOf(
-				_List_fromArray(
-					[
-						A2($elm$json$Json$Decode$field, 'presence', $author$project$Main$decodePresence),
-						$author$project$Main$decodeRequired
-					])),
+			$author$project$Main$decodeFormFieldDescription,
 			A2(
 				$elm_community$json_extra$Json$Decode$Extra$andMap,
-				$author$project$Main$decodeFormFieldMaybeName,
+				$elm$json$Json$Decode$oneOf(
+					_List_fromArray(
+						[
+							A2($elm$json$Json$Decode$field, 'presence', $author$project$Main$decodePresence),
+							$author$project$Main$decodeRequired
+						])),
 				A2(
 					$elm_community$json_extra$Json$Decode$Extra$andMap,
-					A2($elm$json$Json$Decode$field, 'label', $elm$json$Json$Decode$string),
-					$elm$json$Json$Decode$succeed($author$project$Main$FormField))))));
+					$author$project$Main$decodeFormFieldMaybeName,
+					A2(
+						$elm_community$json_extra$Json$Decode$Extra$andMap,
+						A2($elm$json$Json$Decode$field, 'label', $elm$json$Json$Decode$string),
+						$elm$json$Json$Decode$succeed($author$project$Main$FormField)))))));
 var $elm$core$Array$fromListHelp = F3(
 	function (list, nodeList, nodeListSize) {
 		fromListHelp:
@@ -6194,6 +6208,9 @@ var $author$project$Main$encodePresence = function (presence) {
 			return $elm$json$Json$Encode$string('System');
 	}
 };
+var $author$project$Main$encodeVisibilityRule = function (visibilityRule) {
+	return $elm$json$Json$Encode$string('AlwaysVisible');
+};
 var $author$project$Main$encodeFormFields = function (formFields) {
 	return A2(
 		$elm$json$Json$Encode$list,
@@ -6232,7 +6249,10 @@ var $author$project$Main$encodeFormFields = function (formFields) {
 								A2($author$project$Main$encodeAttributeOptional, $elm$json$Json$Encode$string, formField.L)),
 								_Utils_Tuple2(
 								'type',
-								$author$project$Main$encodeInputField(formField.j))
+								$author$project$Main$encodeInputField(formField.j)),
+								_Utils_Tuple2(
+								'visibilityRule',
+								$author$project$Main$encodeVisibilityRule(formField.aQ))
 							])));
 			},
 			$elm$core$Array$toList(formFields)));
@@ -6732,7 +6752,7 @@ var $author$project$Main$onDropped = F2(
 		var _v0 = model.l;
 		if (!_v0.$) {
 			if (!_v0.a.$) {
-				var dragIndex = _v0.a.a.aS;
+				var dragIndex = _v0.a.a.aT;
 				var dropIndex = _v0.a.a.B;
 				if (targetIndex.$ === 1) {
 					return _Utils_update(
@@ -6792,7 +6812,7 @@ var $author$project$Main$onDropped = F2(
 					}
 				}
 			} else {
-				var field = _v0.a.a.bh;
+				var field = _v0.a.a.bi;
 				var dropIndex = _v0.a.a.B;
 				if (targetIndex.$ === 1) {
 					return _Utils_update(
@@ -7325,7 +7345,8 @@ var $author$project$Main$update = F2(
 							$author$project$Main$when,
 							$author$project$Main$mustBeOptional(fieldType),
 							{aH: 0, aO: 1}),
-						j: fieldType
+						j: fieldType,
+						aQ: 0
 					};
 					var newFormFields = A2($elm$core$Array$push, newFormField, model.f);
 					var newIndex = $elm$core$Array$length(newFormFields) - 1;
@@ -7461,7 +7482,7 @@ var $author$project$Main$update = F2(
 							{
 								l: $elm$core$Maybe$Just(
 									$author$project$Main$DragExisting(
-										{aS: index, B: $elm$core$Maybe$Nothing})),
+										{aT: index, B: $elm$core$Maybe$Nothing})),
 								A: $elm$core$Maybe$Nothing
 							}),
 						$elm$core$Platform$Cmd$none);
@@ -7476,7 +7497,7 @@ var $author$project$Main$update = F2(
 										{
 											B: $elm$core$Maybe$Just(
 												_Utils_Tuple2(0, $elm$core$Maybe$Nothing)),
-											bh: field
+											bi: field
 										}))
 							}),
 						$elm$core$Platform$Cmd$none);
@@ -7632,7 +7653,7 @@ var $author$project$Main$fieldsWithPlaceholder = F2(
 			return A2($elm$core$List$map, $elm$core$Maybe$Just, fields);
 		} else {
 			if (!dragged.a.$) {
-				var dragIndex = dragged.a.a.aS;
+				var dragIndex = dragged.a.a.aT;
 				var dropIndex = dragged.a.a.B;
 				if (dropIndex.$ === 1) {
 					return A2($elm$core$List$map, $elm$core$Maybe$Just, fields);
@@ -7927,7 +7948,7 @@ var $elm$html$Html$textarea = _VirtualDom_node('textarea');
 var $author$project$Main$viewFormFieldOptionsPreview = F3(
 	function (_v0, fieldID, formField) {
 		var formValues = _v0.M;
-		var customAttrs = _v0.aQ;
+		var customAttrs = _v0.aR;
 		var shortTextTypeDict = _v0.Z;
 		var fieldName = $author$project$Main$fieldNameOf(formField);
 		var chosenForYou = function (choices) {
@@ -8478,7 +8499,7 @@ var $author$project$Main$renderFormField = F4(
 										A3(
 										$author$project$Main$viewFormFieldPreview,
 										{
-											aQ: _List_fromArray(
+											aR: _List_fromArray(
 												[
 													A2($elm$html$Html$Attributes$attribute, 'disabled', 'disabled')
 												]),
@@ -8530,7 +8551,8 @@ var $author$project$Main$viewAddQuestionsList = function (inputFields) {
 											$author$project$Main$when,
 											$author$project$Main$mustBeOptional(inputField),
 											{aH: 0, aO: 1}),
-										j: inputField
+										j: inputField,
+										aQ: 0
 									}))),
 							A2(
 							$elm$html$Html$Events$on,
@@ -9322,7 +9344,7 @@ var $author$project$Main$viewFormPreview = F2(
 		var formFields = _v0.f;
 		var formValues = _v0.M;
 		var shortTextTypeDict = _v0.Z;
-		var config = {aQ: customAttrs, M: formValues, Z: shortTextTypeDict};
+		var config = {aR: customAttrs, M: formValues, Z: shortTextTypeDict};
 		return $elm$core$Array$toList(
 			A2(
 				$elm$core$Array$indexedMap,
@@ -9394,5 +9416,5 @@ var $author$project$Main$view = function (model) {
 	}
 };
 var $author$project$Main$main = $elm$browser$Browser$element(
-	{cq: $author$project$Main$init, cN: $author$project$Main$subscriptions, cR: $author$project$Main$update, cS: $author$project$Main$view});
+	{cr: $author$project$Main$init, cO: $author$project$Main$subscriptions, cS: $author$project$Main$update, cT: $author$project$Main$view});
 _Platform_export({'Main':{'init':$author$project$Main$main($elm$json$Json$Decode$value)(0)}});}(this));
