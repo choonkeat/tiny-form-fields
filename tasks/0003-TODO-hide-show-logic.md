@@ -10,15 +10,15 @@ Add support for conditional visibility where each field can specify when it shou
 
 ### Configuration
 - [ ] Add "Visibility Rules" section in field settings
-    - [ ] Iteration 1: Just the model
+    - [x] Iteration 1: Just the model
         - Add `VisibilityRule` type with `AlwaysVisible` constructor
         - Add `visibilityRule` field of type `VisibilityRule` to field model
         - Update decoder/encoder
-    - [ ] Iteration 2: Just the settings section presence
+    - [x] Iteration 2: Just the settings section presence
         - Add container div for "Visibility Rules" section
         - Add section header text
         - No content yet
-    - [ ] Iteration 3: Just display current rule
+    - [x] Iteration 3: Just display current rule
         - Add text to show current rule ("Always visible")
         - No editing capability yet
     - [ ] Iteration 4: Just the styling
