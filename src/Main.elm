@@ -1456,6 +1456,18 @@ viewFormFieldBuilder shortTextTypeList index totalLength formField =
                     )
                 ]
                 [ text "⨯ Delete" ]
+
+        visibilityRulesSection =
+            div [ class "tff-field-group" ]
+                [ label [ class "tff-field-label" ] [ text "Visibility Rules" ]
+                , div [ class "tff-text-field" ]
+                    [ text
+                        (case formField.visibilityRule of
+                            AlwaysVisible ->
+                                "Always visible"
+                        )
+                    ]
+                ]
     in
     div [ class buildFieldClass ]
         ([ div [ class "tff-field-group" ]
@@ -1472,9 +1484,8 @@ viewFormFieldBuilder shortTextTypeList index totalLength formField =
                 ]
                 []
             ]
-         , if mustBeOptional formField.type_ then
+        , if mustBeOptional formField.type_ then
             text ""
-
            else
             case formField.presence of
                 Required ->
@@ -1485,7 +1496,7 @@ viewFormFieldBuilder shortTextTypeList index totalLength formField =
 
                 System ->
                     text ""
-         , inputAttributeOptional
+        , inputAttributeOptional
             { onCheck = \b -> OnFormField (OnDescriptionToggle b) index ""
             , onInput = OnFormField OnDescriptionInput index
             , label = "Question description"
@@ -1494,44 +1505,45 @@ viewFormFieldBuilder shortTextTypeList index totalLength formField =
             , attrs = [ class "tff-text-field" ]
             }
             formField.description
-         ]
-            ++ viewFormFieldOptionsBuilder shortTextTypeList index formField
-            ++ [ div [ class "tff-build-field-buttons" ]
-                    [ div [ class "tff-move" ]
-                        [ if index == 0 then
-                            text ""
+        , visibilityRulesSection
+        ]
+        ++ viewFormFieldOptionsBuilder shortTextTypeList index formField
+        ++ [ div [ class "tff-build-field-buttons" ]
+                [ div [ class "tff-move" ]
+                    [ if index == 0 then
+                        text ""
 
-                          else
-                            button
-                                [ type_ "button"
-                                , tabindex 0
-                                , title "Move field up"
-                                , onClick (MoveFormFieldUp index)
-                                ]
-                                [ text "↑" ]
-                        , if index == totalLength - 1 then
-                            text ""
+                      else
+                        button
+                            [ type_ "button"
+                            , tabindex 0
+                            , title "Move field up"
+                            , onClick (MoveFormFieldUp index)
+                            ]
+                            [ text "↑" ]
+                    , if index == totalLength - 1 then
+                        text ""
 
-                          else
-                            button
-                                [ type_ "button"
-                                , tabindex 0
-                                , title "Move field down"
-                                , onClick (MoveFormFieldDown index)
-                                ]
-                                [ text "↓" ]
-                        ]
-                    , case formField.presence of
-                        Required ->
-                            deleteFieldButton
-
-                        Optional ->
-                            deleteFieldButton
-
-                        System ->
-                            text ""
+                      else
+                        button
+                            [ type_ "button"
+                            , tabindex 0
+                            , title "Move field down"
+                            , onClick (MoveFormFieldDown index)
+                            ]
+                            [ text "↓" ]
                     ]
-               ]
+                , case formField.presence of
+                    Required ->
+                        deleteFieldButton
+
+                    Optional ->
+                        deleteFieldButton
+
+                    System ->
+                        text ""
+                ]
+           ]
         )
 
 
@@ -1573,10 +1585,6 @@ viewRightPanel modelData =
                     text "Select a field to edit its settings"
             ]
         ]
-
-
-type DropdownState
-    = DropdownClosed
 
 
 dragHandleIcon : Html msg
@@ -2360,10 +2368,12 @@ updateDragged maybeDroppable dragged =
                         Nothing ->
                             DragNew { details | dropIndex = maybeDroppable }
 
-
 dragOverDecoder : Int -> Maybe FormField -> Json.Decode.Decoder ( Msg, Bool )
 dragOverDecoder index maybeFormField =
     Json.Decode.succeed
         ( DragOver (Just ( index, maybeFormField ))
         , True
         )
+
+type DropdownState
+    = DropdownClosed

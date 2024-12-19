@@ -5217,7 +5217,7 @@ var $author$project$Main$Config = F4(
 var $elm_community$json_extra$Json$Decode$Extra$andMap = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
 var $author$project$Main$FormField = F6(
 	function (label, name, presence, description, type_, visibilityRule) {
-		return {L: description, g: label, ay: name, s: presence, j: type_, aQ: visibilityRule};
+		return {L: description, g: label, ay: name, s: presence, j: type_, aF: visibilityRule};
 	});
 var $author$project$Main$AttributeNotNeeded = function (a) {
 	return {$: 0, a: a};
@@ -6260,7 +6260,7 @@ var $author$project$Main$encodeFormFields = function (formFields) {
 								$author$project$Main$encodeInputField(formField.j)),
 								_Utils_Tuple2(
 								'visibilityRule',
-								$author$project$Main$encodeVisibilityRule(formField.aQ))
+								$author$project$Main$encodeVisibilityRule(formField.aF))
 							])));
 			},
 			$elm$core$Array$toList(formFields)));
@@ -6386,10 +6386,10 @@ var $author$project$Main$init = function (flags) {
 		return _Utils_Tuple2(
 			{
 				l: $elm$core$Maybe$Nothing,
-				aF: 0,
+				aG: 0,
 				f: config.f,
 				M: config.M,
-				aI: $elm$core$Maybe$Nothing,
+				aJ: $elm$core$Maybe$Nothing,
 				A: $elm$core$Maybe$Nothing,
 				Z: $elm$core$Dict$fromList(
 					A2(
@@ -6416,10 +6416,10 @@ var $author$project$Main$init = function (flags) {
 		return _Utils_Tuple2(
 			{
 				l: $elm$core$Maybe$Nothing,
-				aF: 0,
+				aG: 0,
 				f: $elm$core$Array$empty,
 				M: $elm$json$Json$Encode$null,
-				aI: $elm$core$Maybe$Just(
+				aJ: $elm$core$Maybe$Just(
 					$elm$json$Json$Decode$errorToString(err)),
 				A: $elm$core$Maybe$Nothing,
 				Z: $elm$core$Dict$empty,
@@ -7312,7 +7312,7 @@ var $author$project$Main$updateFormField = F3(
 	});
 var $author$project$Main$when = F2(
 	function (bool, condition) {
-		return bool ? condition.aO : condition.aH;
+		return bool ? condition.aP : condition.aI;
 	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
@@ -7337,7 +7337,7 @@ var $author$project$Main$update = F2(
 							return _Utils_Tuple2(
 								_Utils_update(
 									model,
-									{aF: 0}),
+									{aG: 0}),
 								$elm$core$Platform$Cmd$none);
 						}
 					} else {
@@ -7352,9 +7352,9 @@ var $author$project$Main$update = F2(
 						s: A2(
 							$author$project$Main$when,
 							$author$project$Main$mustBeOptional(fieldType),
-							{aH: 0, aO: 1}),
+							{aI: 0, aP: 1}),
 						j: fieldType,
-						aQ: 0
+						aF: 0
 					};
 					var newFormFields = A2($elm$core$Array$push, newFormField, model.f);
 					var newIndex = $elm$core$Array$length(newFormFields) - 1;
@@ -7769,6 +7769,7 @@ var $author$project$Main$dragHandleIcon = A2(
 		[
 			$elm$svg$Svg$Attributes$viewBox('0 0 16 16'),
 			$elm$svg$Svg$Attributes$fill('currentColor'),
+			A2($elm$html$Html$Attributes$attribute, 'aria-hidden', 'true'),
 			$elm$svg$Svg$Attributes$class('tff-drag-handle-icon')
 		]),
 	_List_fromArray(
@@ -7926,7 +7927,7 @@ var $author$project$Main$selectArrowDown = A2(
 		[
 			$elm$svg$Svg$Attributes$viewBox('0 0 16 16'),
 			$elm$svg$Svg$Attributes$fill('currentColor'),
-			$elm$svg$Svg$Attributes$class('tff-select-arrow')
+			A2($elm$html$Html$Attributes$attribute, 'aria-hidden', 'true')
 		]),
 	_List_fromArray(
 		[
@@ -8320,7 +8321,7 @@ var $author$project$Main$viewFormFieldPreview = F3(
 							'tff-field-group' + A2(
 								$author$project$Main$when,
 								$author$project$Main$requiredData(formField.s),
-								{aH: '', aO: ' tff-required'}))
+								{aI: '', aP: ' tff-required'}))
 						]),
 					_List_fromArray(
 						[
@@ -8557,9 +8558,9 @@ var $author$project$Main$viewAddQuestionsList = function (inputFields) {
 										s: A2(
 											$author$project$Main$when,
 											$author$project$Main$mustBeOptional(inputField),
-											{aH: 0, aO: 1}),
+											{aI: 0, aP: 1}),
 										j: inputField,
-										aQ: 0
+										aF: 0
 									}))),
 							A2(
 							$elm$html$Html$Events$on,
@@ -8972,6 +8973,39 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 	});
 var $author$project$Main$viewFormFieldBuilder = F4(
 	function (shortTextTypeList, index, totalLength, formField) {
+		var visibilityRulesSection = A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('tff-field-group')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$label,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('tff-field-label')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Visibility Rules')
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('tff-text-field')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text(
+							function () {
+								var _v2 = formField.aF;
+								return 'Always visible';
+							}())
+						]))
+				]));
 		var idSuffix = $elm$core$String$fromInt(index);
 		var deleteFieldButton = A2(
 			$elm$html$Html$button,
@@ -9117,7 +9151,8 @@ var $author$project$Main$viewFormFieldBuilder = F4(
 							ap: A2($author$project$Main$OnFormField, $author$project$Main$OnDescriptionInput, index),
 							aC: $elm$core$Basics$identity
 						},
-						formField.L)
+						formField.L),
+						visibilityRulesSection
 					]),
 				_Utils_ap(
 					A3($author$project$Main$viewFormFieldOptionsBuilder, shortTextTypeList, index, formField),
@@ -9392,7 +9427,7 @@ var $author$project$Main$viewMain = function (model) {
 		}());
 };
 var $author$project$Main$view = function (model) {
-	var _v0 = model.aI;
+	var _v0 = model.aJ;
 	if (!_v0.$) {
 		var errString = _v0.a;
 		return A2(
