@@ -9,24 +9,43 @@ Always refer to README.md for guidance on code, file organisation, and tasks.
 
 ## Writing code
 
-### Make only the smallest possible change
+### The smallest possible change
 
-For example, if a task introduces a new checkbox for user to toggle "Show/Hide", it would've involved
+For example, if a task requires "Add checkbox to toggle Show/Hide", many would implement it as:
 
-    - Adding a new field to the model
-    - Making logic changes based on the new field's value
-    - Making style changes
-    - Introducing ux changes to manipulate the value of the new field
+    1. Add a new field to the model
+    2. Add checkbox UI and wire up events
+    3. Implement the show/hide logic
+    4. Add styling/animations
 
-The breakdown above shows that there are actually 4 separate "smallest possible change". Thus, we should do them in 4 iterations. Never do them in one iteration.
+But that's actually too many changes at once! Instead, we should do it as:
 
-### For each iteration
+#### Iteration 1: Just the model
+    - Add boolean field to model
+    - Update decoder/encoder
+    - Nothing else
+
+#### Iteration 2: Just the UI presence
+    - Add checkbox element
+    - Wire up event handler
+    - Nothing else
+
+#### Iteration 3: Just the logic
+    - Implement show/hide logic
+    - Nothing else
+
+#### Iteration 4: Just the UX
+    - Add styling/animations
+    - Nothing else
+
+Each iteration above is "the smallest possible change". Never combine them into one iteration.
+
+### One iteration at a time
 
 1. Make only the smallest possible change at every iteration
 2. Run `make build` to confirm it didn't break anything
-    - if something broke, it's most likely there were unnecessary changes
-    - always prefer the code to be in a working state
-3. Only when (2) passes, then the iteration is complete, and you can ask permission to make the next smallest change (repeat step 1 and 2)
+    - if something broke, it means the change was incomplete; make the remaining changes instead of only fixing the error
+3. Only if that's successful, then ask for permission to make the next smallest change (repeat step 1 and 2)
 
 ## Tasks
 
