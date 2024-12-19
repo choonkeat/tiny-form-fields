@@ -9,29 +9,24 @@ Always refer to README.md for guidance on code, file organisation, and tasks.
 
 ## Writing code
 
-### The smallest possible change
+### Make only the smallest possible change
 
-For example, we a task requires a new field to be added to our state.
+For example, if a task introduces a new checkbox for user to toggle "Show/Hide", it would've involved
 
-    - Adding a new field
+    - Adding a new field to the model
     - Making logic changes based on the new field's value
     - Making style changes
     - Introducing ux changes to manipulate the value of the new field
 
-The above are actually 4 separate "smallest possible change" to be done in 4 separate iterations. Don't do them in the same iteration!
+The breakdown above shows that there are actually 4 separate "smallest possible change". Thus, we should do them in 4 iterations. Never do them in one iteration.
 
-The smallest possible change is also the smallest possible diff. Do not move code around unnecessarily.
-
-### One iteration at a time
+### For each iteration
 
 1. Make only the smallest possible change at every iteration
 2. Run `make build` to confirm it didn't break anything
-    - if something broke, it means the change was incomplete; make the remaining changes instead of only fixing the error
-3. Only if that's successful, then ask for permission to make the next smallest change (repeat step 1 and 2)
-
-
-    - prefer to get to a working state first
-    - for example: 
+    - if something broke, it's most likely there were unnecessary changes
+    - always prefer the code to be in a working state
+3. Only when (2) passes, then the iteration is complete, and you can ask permission to make the next smallest change (repeat step 1 and 2)
 
 ## Tasks
 
