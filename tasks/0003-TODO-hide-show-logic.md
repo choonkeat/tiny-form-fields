@@ -22,6 +22,37 @@ Add support for conditional visibility where each field can specify when it shou
         - Add text to show current rule ("Always visible")
         - No editing capability yet
 - [ ] Allow selecting which other fields' values control this field's visibility
+    - [ ] Iteration 1: Just the model
+        - Add `Operator` type for simple string comparisons:
+          ```elm
+          type Operator
+              = Equals String
+              | Contains String
+          ```
+        - Add `FieldDependency` type:
+          ```elm
+          type alias FieldDependency =
+              { fieldIndex : Int
+              , operator : Operator
+              }
+          ```
+        - Add `dependencies` field to `VisibilityRule` type
+        - Update decoder/encoder
+        - Nothing else
+    - [ ] Iteration 2: Just the UI presence
+        - Add "Add Dependency" button below current rule text
+        - Add placeholder dropdown for field selection (disabled)
+        - No event handlers yet
+        - Nothing else
+    - [ ] Iteration 3: Just the field selection
+        - Populate field dropdown with previous fields only
+        - Wire up field selection event
+        - Update model when field is selected
+        - Nothing else
+    - [ ] Iteration 4: Just the validation
+        - Prevent selecting fields that come after current field
+        - Show error message for invalid selections
+        - Nothing else
 - [ ] Support common operators (equals, not equals, contains, etc.)
 - [ ] Support multiple conditions with AND/OR logic
 - [ ] Show indicator when a field has other fields depending on its value
