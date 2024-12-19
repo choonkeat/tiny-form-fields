@@ -73,6 +73,44 @@ Each iteration above is "the smallest possible change". Never combine them into 
 2. Keep parentheses balanced and properly indented
 3. Maintain consistent spacing around operators
 
+### Making Changes to Existing Files
+
+1. Always use view_file before editing to understand the full context
+2. Never edit a file by copying its entire content
+3. When adding new code:
+   - Add new code at the appropriate section (types with types, decoders with decoders)
+   - Keep existing code structure intact
+   - Use `{{ ... }}` to represent unchanged code
+   Example:
+   ```elm
+   {{ ... }}
+   type NewType
+       = NewConstructor
+   
+   {{ ... }}
+   decodeNewType =
+       Json.Decode.succeed NewConstructor
+   {{ ... }}
+   ```
+4. When modifying types:
+   - Add new constructors at the end of the type definition
+   - Keep all related functions (encoders, decoders, toString) together
+   - Update all pattern matches in the same edit
+   Example:
+   ```elm
+   {{ ... }}
+   type ExistingType
+       = ExistingConstructor1
+       | ExistingConstructor2
+       | NewConstructor  -- Add new constructors at the end
+   {{ ... }}
+   ```
+
+5. Before submitting changes:
+   - Run `make build` to catch missing functions
+   - If build fails, check the error for accidentally removed code
+   - Restore any accidentally removed code before proceeding
+
 ### Temporary UI Elements
 
 1. Skip styling iterations for temporary UI elements that will be replaced
