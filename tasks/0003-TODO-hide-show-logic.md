@@ -10,10 +10,20 @@ Add support for conditional visibility where each field can specify when it shou
 
 ### Configuration
 - [ ] Add "Visibility Rules" section in field settings
-    - [ ] Add `visibilityRules` data structure to field settings (default: always visible)
-    - [ ] Add basic UI section header in field settings
-    - [ ] Add visibility rules editor UI component
-    - [ ] Add proper styling for visibility rules section
+    - [ ] Iteration 1: Just the model
+        - Add `VisibilityRule` type with `AlwaysVisible` constructor
+        - Add `visibilityRule` field of type `VisibilityRule` to field model
+        - Update decoder/encoder
+    - [ ] Iteration 2: Just the settings section presence
+        - Add container div for "Visibility Rules" section
+        - Add section header text
+        - No content yet
+    - [ ] Iteration 3: Just display current rule
+        - Add text to show current rule ("Always visible")
+        - No editing capability yet
+    - [ ] Iteration 4: Just the styling
+        - Style section container and header to match other sections
+        - Style rule display text
 - [ ] Allow selecting which other fields' values control this field's visibility
 - [ ] Support common operators (equals, not equals, contains, etc.)
 - [ ] Support multiple conditions with AND/OR logic
