@@ -73,6 +73,19 @@ Each iteration above is "the smallest possible change". Never combine them into 
 2. Keep parentheses balanced and properly indented
 3. Maintain consistent spacing around operators
 
+### Temporary UI Elements
+
+1. Skip styling iterations for temporary UI elements that will be replaced
+2. Document temporary UI elements with a comment in the code
+3. Focus on functionality first, only add styling when the UI is final
+4. Keep temporary UI minimal but functional
+
+Example:
+If a task requires "Add dropdown for visibility rules":
+- ❌ Don't: Implement full styling for a temporary text display
+- ✅ Do: Use minimal HTML to show the current state
+- ✅ Do: Skip styling iteration if the UI will be replaced
+
 ## Tasks
 
 - All code changes should correspond to a checkbox in tasks/
