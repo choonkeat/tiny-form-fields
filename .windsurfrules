@@ -47,6 +47,32 @@ Each iteration above is "the smallest possible change". Never combine them into 
     - if something broke, it means the change was incomplete; make the remaining changes instead of only fixing the error
 3. Only if that's successful, then ask for permission to make the next smallest change (repeat step 1 and 2)
 
+### Preserving Existing Code
+1. Never remove or modify existing code that isn't directly related to your task
+2. If you accidentally remove code, restore it immediately before proceeding
+3. If unsure whether code is related to your task, assume it isn't and leave it unchanged
+
+### Keeping Git Diff Clean
+1. Avoid unnecessary whitespace changes
+2. Don't reformat code unless it's part of your task
+3. Keep changes focused on the task at hand
+4. Run `make diff` to check for unnecessary changes
+
+### Elm Code Style
+1. Follow Elm's list formatting conventions:
+   - One item per line
+   - Each line starts with indentation
+   - Use comma-first style for lists
+   Example:
+   ```elm
+   [ firstItem
+   , secondItem
+   , thirdItem
+   ]
+   ```
+2. Keep parentheses balanced and properly indented
+3. Maintain consistent spacing around operators
+
 ## Tasks
 
 - All code changes should correspond to a checkbox in tasks/
