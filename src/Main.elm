@@ -329,7 +329,6 @@ mustBeOptional inputField =
 type Msg
     = NoOp
     | OnPortIncoming Json.Encode.Value
-    | OnPortOutgoing Json.Encode.Value
     | AddFormField InputField
     | DeleteFormField Int
     | MoveFormFieldUp Int
