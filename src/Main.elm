@@ -5,6 +5,7 @@ port module Main exposing
     , FormField
     , InputField(..)
     , Msg(..)
+    , Operator(..)
     , Presence(..)
     , RawCustomElement
     , ViewMode(..)
@@ -145,8 +146,14 @@ requiredData presence =
             True
 
 
+type Operator
+    = Equals String
+    | Contains String
+
+
 type VisibilityRule
     = AlwaysVisible
+    | WhenFieldIs String Operator
 
 
 type alias FormField =
@@ -1465,6 +1472,15 @@ viewFormFieldBuilder shortTextTypeList index totalLength formField =
                         (case formField.visibilityRule of
                             AlwaysVisible ->
                                 "Always visible"
+
+                            WhenFieldIs fieldName operator ->
+                                "When " ++ fieldName ++ " is " ++ (case operator of
+                                    Equals value ->
+                                        "equals " ++ value
+
+                                    Contains value ->
+                                        "contains " ++ value
+                                )
                         )
                     ]
                 ]
@@ -2027,6 +2043,29 @@ encodeVisibilityRule visibilityRule =
         AlwaysVisible ->
             Json.Encode.string "AlwaysVisible"
 
+        WhenFieldIs fieldName operator ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "WhenFieldIs" )
+                , ( "fieldName", Json.Encode.string fieldName )
+                , ( "operator", encodeOperator operator )
+                ]
+
+
+encodeOperator : Operator -> Json.Encode.Value
+encodeOperator operator =
+    case operator of
+        Equals value ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "Equals" )
+                , ( "value", Json.Encode.string value )
+                ]
+
+        Contains value ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "Contains" )
+                , ( "value", Json.Encode.string value )
+                ]
+
 
 decodeFormFields : Json.Decode.Decoder (Array FormField)
 decodeFormFields =
@@ -2089,8 +2128,32 @@ decodeVisibilityRule =
                     "AlwaysVisible" ->
                         Json.Decode.succeed AlwaysVisible
 
+                    "WhenFieldIs" ->
+                        Json.Decode.succeed WhenFieldIs
+                            |> andMap (Json.Decode.field "fieldName" Json.Decode.string)
+                            |> andMap (Json.Decode.field "operator" decodeOperator)
+
                     _ ->
                         Json.Decode.fail ("Unknown visibility rule: " ++ str)
+            )
+
+
+decodeOperator : Json.Decode.Decoder Operator
+decodeOperator =
+    Json.Decode.string
+        |> Json.Decode.andThen
+            (\str ->
+                case str of
+                    "Equals" ->
+                        Json.Decode.succeed Equals
+                            |> andMap (Json.Decode.field "value" Json.Decode.string)
+
+                    "Contains" ->
+                        Json.Decode.succeed Contains
+                            |> andMap (Json.Decode.field "value" Json.Decode.string)
+
+                    _ ->
+                        Json.Decode.fail ("Unknown operator: " ++ str)
             )
 
 
