@@ -22,7 +22,7 @@ Add support for conditional visibility where each field can specify when it shou
         - Add text to show current rule ("Always visible")
         - No editing capability yet
 - [ ] Allow selecting which other fields' values control this field's visibility
-    - [ ] Iteration 1: Just the model
+    - [x] Iteration 1: Just the model
         - Add `Operator` type for simple string comparisons:
           ```elm
           type Operator
