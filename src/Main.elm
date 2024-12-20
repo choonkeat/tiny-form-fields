@@ -1419,7 +1419,6 @@ selectArrowDown =
         [ SvgAttr.viewBox "0 0 16 16"
         , SvgAttr.fill "currentColor"
         , attribute "aria-hidden" "true"
-        , SvgAttr.class "tff-drag-handle-icon"
         ]
         [ path
             [ SvgAttr.fillRule "evenodd"
