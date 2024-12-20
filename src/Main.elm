@@ -329,6 +329,7 @@ mustBeOptional inputField =
 type Msg
     = NoOp
     | OnPortIncoming Json.Encode.Value
+    | OnPortOutgoing Json.Encode.Value
     | AddFormField InputField
     | DeleteFormField Int
     | MoveFormFieldUp Int
@@ -342,6 +343,7 @@ type Msg
     | DragOver (Maybe Droppable)
     | Drop (Maybe Int)
     | DoSleepDo Float (List Msg)
+    | AddDependencyButtonClicked Int
 
 
 type alias Droppable =
@@ -624,6 +626,9 @@ update msg model =
                     |> Task.perform (always (DoSleepDo duration nextMsgs))
                 ]
             )
+
+        AddDependencyButtonClicked index ->
+            ( model, Cmd.none )
 
 
 updateFormField : FormFieldMsg -> String -> FormField -> FormField
@@ -1414,6 +1419,7 @@ selectArrowDown =
         [ SvgAttr.viewBox "0 0 16 16"
         , SvgAttr.fill "currentColor"
         , attribute "aria-hidden" "true"
+        , SvgAttr.class "tff-drag-handle-icon"
         ]
         [ path
             [ SvgAttr.fillRule "evenodd"
@@ -1464,6 +1470,16 @@ viewFormFieldBuilder shortTextTypeList index totalLength formField =
                 ]
                 [ text "⨯ Delete" ]
 
+        addDependencyButton =
+            button
+                [ class "tff-add-dependency"
+                , type_ "button"
+                , tabindex 0
+                , title "Add dependency"
+                , onClick (AddDependencyButtonClicked index)
+                ]
+                [ text "Add dependency" ]
+
         visibilityRulesSection =
             div [ class "tff-field-group" ]
                 [ label [ class "tff-field-label" ] [ text "Visibility Rules" ]
@@ -1482,6 +1498,15 @@ viewFormFieldBuilder shortTextTypeList index totalLength formField =
                                         "contains " ++ value
                                 )
                         )
+                    ]
+                , div [ class "tff-dependency-controls" ]
+                    [ select
+                        [ class "tff-field-select"
+                        , disabled True
+                        ]
+                        [ option [ value "" ] [ text "Select a field" ]
+                        ]
+                    , addDependencyButton
                     ]
                 ]
     in
@@ -1558,6 +1583,7 @@ viewFormFieldBuilder shortTextTypeList index totalLength formField =
 
                     System ->
                         text ""
+                , addDependencyButton
                 ]
            ]
         )
