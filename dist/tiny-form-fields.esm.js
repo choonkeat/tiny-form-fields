@@ -5733,14 +5733,52 @@ var $author$project$Main$decodeRequired = A2(
 		return b ? 0 : 1;
 	},
 	A2($elm$json$Json$Decode$field, 'required', $elm$json$Json$Decode$bool));
-var $author$project$Main$AlwaysVisible = 0;
+var $author$project$Main$AlwaysVisible = {$: 0};
+var $author$project$Main$WhenFieldIs = F2(
+	function (a, b) {
+		return {$: 1, a: a, b: b};
+	});
+var $author$project$Main$Contains = function (a) {
+	return {$: 1, a: a};
+};
+var $author$project$Main$Equals = function (a) {
+	return {$: 0, a: a};
+};
+var $author$project$Main$decodeOperator = A2(
+	$elm$json$Json$Decode$andThen,
+	function (str) {
+		switch (str) {
+			case 'Equals':
+				return A2(
+					$elm_community$json_extra$Json$Decode$Extra$andMap,
+					A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$string),
+					$elm$json$Json$Decode$succeed($author$project$Main$Equals));
+			case 'Contains':
+				return A2(
+					$elm_community$json_extra$Json$Decode$Extra$andMap,
+					A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$string),
+					$elm$json$Json$Decode$succeed($author$project$Main$Contains));
+			default:
+				return $elm$json$Json$Decode$fail('Unknown operator: ' + str);
+		}
+	},
+	$elm$json$Json$Decode$string);
 var $author$project$Main$decodeVisibilityRule = A2(
 	$elm$json$Json$Decode$andThen,
 	function (str) {
-		if (str === 'AlwaysVisible') {
-			return $elm$json$Json$Decode$succeed(0);
-		} else {
-			return $elm$json$Json$Decode$fail('Unknown visibility rule: ' + str);
+		switch (str) {
+			case 'AlwaysVisible':
+				return $elm$json$Json$Decode$succeed($author$project$Main$AlwaysVisible);
+			case 'WhenFieldIs':
+				return A2(
+					$elm_community$json_extra$Json$Decode$Extra$andMap,
+					A2($elm$json$Json$Decode$field, 'operator', $author$project$Main$decodeOperator),
+					A2(
+						$elm_community$json_extra$Json$Decode$Extra$andMap,
+						A2($elm$json$Json$Decode$field, 'fieldName', $elm$json$Json$Decode$string),
+						$elm$json$Json$Decode$succeed($author$project$Main$WhenFieldIs)));
+			default:
+				return $elm$json$Json$Decode$fail('Unknown visibility rule: ' + str);
 		}
 	},
 	$elm$json$Json$Decode$string);
@@ -6216,8 +6254,53 @@ var $author$project$Main$encodePresence = function (presence) {
 			return $elm$json$Json$Encode$string('System');
 	}
 };
+var $author$project$Main$encodeOperator = function (operator) {
+	if (!operator.$) {
+		var value = operator.a;
+		return $elm$json$Json$Encode$object(
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					'type',
+					$elm$json$Json$Encode$string('Equals')),
+					_Utils_Tuple2(
+					'value',
+					$elm$json$Json$Encode$string(value))
+				]));
+	} else {
+		var value = operator.a;
+		return $elm$json$Json$Encode$object(
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					'type',
+					$elm$json$Json$Encode$string('Contains')),
+					_Utils_Tuple2(
+					'value',
+					$elm$json$Json$Encode$string(value))
+				]));
+	}
+};
 var $author$project$Main$encodeVisibilityRule = function (visibilityRule) {
-	return $elm$json$Json$Encode$string('AlwaysVisible');
+	if (!visibilityRule.$) {
+		return $elm$json$Json$Encode$string('AlwaysVisible');
+	} else {
+		var fieldName = visibilityRule.a;
+		var operator = visibilityRule.b;
+		return $elm$json$Json$Encode$object(
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					'type',
+					$elm$json$Json$Encode$string('WhenFieldIs')),
+					_Utils_Tuple2(
+					'fieldName',
+					$elm$json$Json$Encode$string(fieldName)),
+					_Utils_Tuple2(
+					'operator',
+					$author$project$Main$encodeOperator(operator))
+				]));
+	}
 };
 var $author$project$Main$encodeFormFields = function (formFields) {
 	return A2(
@@ -7354,7 +7437,7 @@ var $author$project$Main$update = F2(
 							$author$project$Main$mustBeOptional(fieldType),
 							{aI: 0, aP: 1}),
 						j: fieldType,
-						aF: 0
+						aF: $author$project$Main$AlwaysVisible
 					};
 					var newFormFields = A2($elm$core$Array$push, newFormField, model.f);
 					var newIndex = $elm$core$Array$length(newFormFields) - 1;
@@ -7753,6 +7836,7 @@ var $elm$virtual_dom$VirtualDom$attribute = F2(
 			_VirtualDom_noJavaScriptOrHtmlUri(value));
 	});
 var $elm$html$Html$Attributes$attribute = $elm$virtual_dom$VirtualDom$attribute;
+var $elm$svg$Svg$Attributes$class = _VirtualDom_attribute('class');
 var $elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
 var $elm$svg$Svg$Attributes$height = _VirtualDom_attribute('height');
 var $elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
@@ -7768,7 +7852,8 @@ var $author$project$Main$dragHandleIcon = A2(
 		[
 			$elm$svg$Svg$Attributes$viewBox('0 0 16 16'),
 			$elm$svg$Svg$Attributes$fill('currentColor'),
-			A2($elm$html$Html$Attributes$attribute, 'aria-hidden', 'true')
+			A2($elm$html$Html$Attributes$attribute, 'aria-hidden', 'true'),
+			$elm$svg$Svg$Attributes$class('tff-drag-handle-icon')
 		]),
 	_List_fromArray(
 		[
@@ -8558,7 +8643,7 @@ var $author$project$Main$viewAddQuestionsList = function (inputFields) {
 											$author$project$Main$mustBeOptional(inputField),
 											{aI: 0, aP: 1}),
 										j: inputField,
-										aF: 0
+										aF: $author$project$Main$AlwaysVisible
 									}))),
 							A2(
 							$elm$html$Html$Events$on,
@@ -9000,7 +9085,21 @@ var $author$project$Main$viewFormFieldBuilder = F4(
 							$elm$html$Html$text(
 							function () {
 								var _v2 = formField.aF;
-								return 'Always visible';
+								if (!_v2.$) {
+									return 'Always visible';
+								} else {
+									var fieldName = _v2.a;
+									var operator = _v2.b;
+									return 'When ' + (fieldName + (' is ' + function () {
+										if (!operator.$) {
+											var value = operator.a;
+											return 'equals ' + value;
+										} else {
+											var value = operator.a;
+											return 'contains ' + value;
+										}
+									}()));
+								}
 							}())
 						]))
 				]));
