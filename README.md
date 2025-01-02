@@ -8,6 +8,7 @@ A lightweight, customizable form builder and renderer written in Elm. Create dyn
 
 - Rich form field types including:
   - Single-line text
+    - Optional multiple value support
   - Multi-line text
   - Dropdown menus
   - Radio buttons
