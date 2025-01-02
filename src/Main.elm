@@ -293,11 +293,30 @@ stringFromInputField inputField =
             "Checkboxes"
 
 
+allowsTogglingMultiple : InputField -> Bool
+allowsTogglingMultiple inputField =
+    case inputField of
+        ShortText { attributes } ->
+            List.member (Dict.get "multiple" attributes) [ Just "true", Just "false" ]
+
+        LongText _ ->
+            False
+
+        Dropdown _ ->
+            False
+
+        ChooseOne _ ->
+            False
+
+        ChooseMultiple _ ->
+            False
+
+
 mustBeOptional : InputField -> Bool
 mustBeOptional inputField =
     case inputField of
         ShortText { attributes } ->
-            Dict.get "multiple" attributes == Just "true"
+            List.member (Dict.get "multiple" attributes) [ Just "true", Just "false" ]
 
         LongText _ ->
             False
@@ -340,6 +359,7 @@ type FormFieldMsg
     | OnDescriptionToggle Bool
     | OnRequiredInput Bool
     | OnChoicesInput
+    | OnMultipleToggle Bool
     | OnMaxLengthToggle Bool
     | OnMaxLengthInput
     | OnDatalistToggle Bool
@@ -650,6 +670,27 @@ updateFormField msg string formField =
 
                 ChooseMultiple _ ->
                     { formField | type_ = ChooseMultiple (List.map choiceFromString (String.lines string)) }
+
+        OnMultipleToggle bool ->
+            case formField.type_ of
+                ShortText customElement ->
+                    let
+                        newCustomElement =
+                            { customElement | multiple = AttributeGiven bool }
+                    in
+                    { formField | type_ = ShortText newCustomElement }
+
+                LongText _ ->
+                    formField
+
+                Dropdown _ ->
+                    formField
+
+                ChooseOne _ ->
+                    formField
+
+                ChooseMultiple _ ->
+                    formField
 
         OnMaxLengthToggle bool ->
             case formField.type_ of
@@ -994,6 +1035,33 @@ viewFormFieldPreview config index formField =
         ]
 
 
+maybeMultipleOf : FormField -> Maybe Bool
+maybeMultipleOf formField =
+    case formField.type_ of
+        ShortText { multiple } ->
+            case multiple of
+                AttributeGiven i ->
+                    Just i
+
+                AttributeInvalid _ ->
+                    Nothing
+
+                AttributeNotNeeded _ ->
+                    Nothing
+
+        LongText _ ->
+            Nothing
+
+        Dropdown _ ->
+            Nothing
+
+        ChooseOne _ ->
+            Nothing
+
+        ChooseMultiple _ ->
+            Nothing
+
+
 maybeMaxLengthOf : FormField -> Maybe Int
 maybeMaxLengthOf formField =
     case formField.type_ of
@@ -1019,7 +1087,13 @@ maybeMaxLengthOf formField =
                 AttributeNotNeeded _ ->
                     Nothing
 
-        _ ->
+        Dropdown _ ->
+            Nothing
+
+        ChooseOne _ ->
+            Nothing
+
+        ChooseMultiple _ ->
             Nothing
 
 
@@ -1064,7 +1138,10 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } field
                                 )
                             )
 
-                        _ ->
+                        AttributeNotNeeded _ ->
+                            ( [], text "" )
+
+                        AttributeInvalid _ ->
                             ( [], text "" )
 
                 shortTextAttrs =
@@ -1418,6 +1495,22 @@ viewFormFieldBuilder shortTextTypeList index totalLength formField =
         idSuffix =
             String.fromInt index
 
+        configureMultipleCheckbox =
+            div [ class "tff-field-group" ]
+                [ label [ class "tff-field-label", for ("multiple-" ++ idSuffix) ]
+                    [ input
+                        [ id ("multiple-" ++ idSuffix)
+                        , type_ "checkbox"
+                        , tabindex 0
+                        , checked (maybeMultipleOf formField == Just True)
+                        , onCheck (\b -> OnFormField (OnMultipleToggle b) index "")
+                        ]
+                        []
+                    , text " "
+                    , text "Allow multiple"
+                    ]
+                ]
+
         configureRequiredCheckbox =
             div [ class "tff-field-group" ]
                 [ label [ class "tff-field-label", for ("required-" ++ idSuffix) ]
@@ -1477,6 +1570,11 @@ viewFormFieldBuilder shortTextTypeList index totalLength formField =
 
                 System ->
                     text ""
+         , if allowsTogglingMultiple formField.type_ then
+            configureMultipleCheckbox
+
+           else
+            text ""
          , inputAttributeOptional
             { onCheck = \b -> OnFormField (OnDescriptionToggle b) index ""
             , onInput = OnFormField OnDescriptionInput index
@@ -2212,6 +2310,7 @@ type alias CustomElement =
     { inputType : String
     , inputTag : String
     , attributes : Dict String String
+    , multiple : AttributeOptional Bool
     , maxlength : AttributeOptional Int
     , datalist : AttributeOptional (List Choice)
     }
@@ -2225,6 +2324,22 @@ fromRawCustomElement ele =
         ele.attributes
             -- list="some-id" is not a `datalist : AttributeOptional (List Choice)`, we keep it in `.attributes`
             |> Dict.filter (\k v -> not (k == "list" && String.contains "\n" v))
+    , multiple =
+        case Dict.get "multiple" ele.attributes of
+            Just "" ->
+                AttributeNotNeeded Nothing
+
+            Just "true" ->
+                AttributeGiven True
+
+            Just "false" ->
+                AttributeGiven False
+
+            Just value ->
+                AttributeInvalid value
+
+            Nothing ->
+                AttributeNotNeeded Nothing
     , maxlength =
         case Dict.get "maxlength" ele.attributes of
             Just "" ->
@@ -2238,7 +2353,7 @@ fromRawCustomElement ele =
                     Nothing ->
                         AttributeInvalid value
 
-            _ ->
+            Nothing ->
                 AttributeNotNeeded Nothing
     , datalist =
         case Dict.get "list" ele.attributes of
@@ -2261,6 +2376,17 @@ fromRawCustomElement ele =
 toRawCustomElement : CustomElement -> RawCustomElement
 toRawCustomElement ele =
     let
+        addMultipleIfGiven dict =
+            case ele.multiple of
+                AttributeGiven True ->
+                    Dict.insert "multiple" "true" dict
+
+                AttributeGiven False ->
+                    Dict.insert "multiple" "false" dict
+
+                _ ->
+                    Dict.filter (\k _ -> k /= "multiple") dict
+
         addMaxLengthIfGiven dict =
             case ele.maxlength of
                 AttributeGiven int ->
@@ -2287,6 +2413,7 @@ toRawCustomElement ele =
     , attributes =
         ele.attributes
             |> addMaxLengthIfGiven
+            |> addMultipleIfGiven
             |> addDatalistIfGiven
     }
 
