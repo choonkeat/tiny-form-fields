@@ -425,6 +425,179 @@ func TestInvalidFormValues(t *testing.T) {
 			formValues:  url.Values{"short_text": {"Line1\nLine2"}},
 			expectError: ErrLineBreakNotAllowed,
 		},
+		{
+			name: "Valid Multiple Emails",
+			formFields: `[
+			  {
+				"label": "Emails",
+				"name": "emails",
+				"presence": "Required",
+				"type": {
+				  "type": "ShortText",
+				  "attributes": {
+					"type": "email",
+					"multiple": "true"
+				  }
+				}
+			  }
+			]`,
+			formValues:  url.Values{"emails": {"test1@example.com, test2@example.com"}},
+			expectError: nil,
+		},
+		{
+			name: "Invalid Multiple Emails",
+			formFields: `[
+			  {
+				"label": "Emails",
+				"name": "emails",
+				"presence": "Required",
+				"type": {
+				  "type": "ShortText",
+				  "attributes": {
+					"type": "email",
+					"multiple": "true"
+				  }
+				}
+			  }
+			]`,
+			formValues:  url.Values{"emails": {"test1@example.com, invalid-email"}},
+			expectError: ErrInvalidEmail,
+		},
+		{
+			name: "Empty Multiple Emails When Required",
+			formFields: `[
+			  {
+				"label": "Emails",
+				"name": "emails",
+				"presence": "Required",
+				"type": {
+				  "type": "ShortText",
+				  "attributes": {
+					"type": "email",
+					"multiple": "true"
+				  }
+				}
+			  }
+			]`,
+			formValues:  url.Values{"emails": {""}},
+			expectError: ErrRequiredFieldMissing,
+		},
+		{
+			name: "Empty Multiple Emails When Optional",
+			formFields: `[
+			  {
+				"label": "Emails",
+				"name": "emails",
+				"presence": "Optional",
+				"type": {
+				  "type": "ShortText",
+				  "attributes": {
+					"type": "email",
+					"multiple": "true"
+				  }
+				}
+			  }
+			]`,
+			formValues:  url.Values{"emails": {""}},
+			expectError: nil,
+		},
+		{
+			name: "Multiple Emails With Comma",
+			formFields: `[
+			  {
+				"label": "Emails",
+				"name": "emails",
+				"presence": "Required",
+				"type": {
+				  "type": "ShortText",
+				  "attributes": {
+					"type": "email",
+					"multiple": "true"
+				  }
+				}
+			  }
+			]`,
+			formValues:  url.Values{"emails": {","}},
+			expectError: ErrInvalidEmail,
+		},
+		{
+			name: "Multiple Emails With Only Spaces",
+			formFields: `[
+			  {
+				"label": "Emails",
+				"name": "emails",
+				"presence": "Required",
+				"type": {
+				  "type": "ShortText",
+				  "attributes": {
+					"type": "email",
+					"multiple": "true"
+				  }
+				}
+			  }
+			]`,
+			formValues:  url.Values{"emails": {"    "}},
+			expectError: nil,
+		},
+		{
+			name: "Multiple Emails With Extra Spaces",
+			formFields: `[
+			  {
+				"label": "Emails",
+				"name": "emails",
+				"presence": "Required",
+				"type": {
+				  "type": "ShortText",
+				  "attributes": {
+					"type": "email",
+					"multiple": "true"
+				  }
+				}
+			  }
+			]`,
+			formValues:  url.Values{"emails": {"  test1@example.com  ,  test2@example.com  "}},
+			expectError: nil,
+		},
+		{
+			name: "Multiple Emails With Pattern",
+			formFields: `[
+			  {
+				"label": "Emails",
+				"name": "emails",
+				"presence": "Required",
+				"type": {
+				  "type": "ShortText",
+				  "attributes": {
+					"type": "email",
+					"multiple": "true",
+					"pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+				  }
+				}
+			  }
+			]`,
+			formValues:  url.Values{"emails": {"test1@example.com, test2@example.com"}},
+			expectError: nil,
+		},
+		{
+			name: "Multiple Emails With Pattern - One Invalid",
+			formFields: `[
+			  {
+				"label": "Emails",
+				"name": "emails",
+				"presence": "Required",
+				"type": {
+				  "type": "ShortText",
+				  "attributes": {
+					"type": "email",
+					"multiple": "true",
+					"pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+				  }
+				}
+			  }
+			]`,
+			formValues:  url.Values{"emails": {"test1@example.com, invalid-email"}},
+			expectError: ErrInvalidPattern,
+		},
 	}
 
 	for _, scenario := range scenarios {
