@@ -1102,6 +1102,19 @@ fieldNameOf formField =
     Maybe.withDefault formField.label formField.name
 
 
+attributesFromTuple : ( String, String ) -> Maybe (Html.Attribute msg)
+attributesFromTuple ( k, v ) =
+    case ( k, v ) of
+        ( "multiple", "true" ) ->
+            Just (Html.Attributes.multiple True)
+
+        ( "multiple", "false" ) ->
+            Nothing
+
+        _ ->
+            Just (attribute k v)
+
+
 viewFormFieldOptionsPreview : { formValues : Json.Encode.Value, customAttrs : List (Html.Attribute Msg), shortTextTypeDict : Dict String CustomElement } -> String -> FormField -> Html Msg
 viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } fieldID formField =
     let
@@ -1144,16 +1157,20 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } field
                         AttributeInvalid _ ->
                             ( [], text "" )
 
+                extraAttrKeys =
+                    Dict.keys customElement.attributes
+
                 shortTextAttrs =
                     Dict.get customElement.inputType shortTextTypeDict
                         |> Maybe.map .attributes
                         |> Maybe.withDefault Dict.empty
                         |> Dict.toList
-                        |> List.map (\( k, v ) -> attribute k v)
+                        |> List.filter (\( k, _ ) -> not (List.member k extraAttrKeys))
+                        |> List.filterMap attributesFromTuple
 
                 extraAttrs =
                     Maybe.map (\s -> value s) (maybeDecode fieldName Json.Decode.string formValues)
-                        :: List.map (\( k, v ) -> Just (attribute k v)) (Dict.toList customElement.attributes)
+                        :: List.map attributesFromTuple (Dict.toList customElement.attributes)
                         |> List.filterMap identity
             in
             div []

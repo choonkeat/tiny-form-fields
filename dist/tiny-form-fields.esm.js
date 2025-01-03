@@ -4821,7 +4821,7 @@ var $elm$core$Array$treeFromBuilder = F2(
 	});
 var $elm$core$Array$builderToArray = F2(
 	function (reverseNodeList, builder) {
-		if (!builder.n) {
+		if (!builder.o) {
 			return A4(
 				$elm$core$Array$Array_elm_builtin,
 				$elm$core$Elm$JsArray$length(builder.r),
@@ -4829,11 +4829,11 @@ var $elm$core$Array$builderToArray = F2(
 				$elm$core$Elm$JsArray$empty,
 				builder.r);
 		} else {
-			var treeLen = builder.n * $elm$core$Array$branchFactor;
+			var treeLen = builder.o * $elm$core$Array$branchFactor;
 			var depth = $elm$core$Basics$floor(
 				A2($elm$core$Basics$logBase, $elm$core$Array$branchFactor, treeLen - 1));
 			var correctNodeList = reverseNodeList ? $elm$core$List$reverse(builder.s) : builder.s;
-			var tree = A2($elm$core$Array$treeFromBuilder, correctNodeList, builder.n);
+			var tree = A2($elm$core$Array$treeFromBuilder, correctNodeList, builder.o);
 			return A4(
 				$elm$core$Array$Array_elm_builtin,
 				$elm$core$Elm$JsArray$length(builder.r) + treeLen,
@@ -4852,7 +4852,7 @@ var $elm$core$Array$initializeHelp = F5(
 				return A2(
 					$elm$core$Array$builderToArray,
 					false,
-					{s: nodeList, n: (len / $elm$core$Array$branchFactor) | 0, r: tail});
+					{s: nodeList, o: (len / $elm$core$Array$branchFactor) | 0, r: tail});
 			} else {
 				var leaf = $elm$core$Array$Leaf(
 					A3($elm$core$Elm$JsArray$initialize, $elm$core$Array$branchFactor, fromIndex, fn));
@@ -5333,7 +5333,7 @@ var $author$project$Main$choiceFromString = function (s) {
 var $author$project$Main$decodeChoice = A2($elm$json$Json$Decode$map, $author$project$Main$choiceFromString, $elm$json$Json$Decode$string);
 var $author$project$Main$RawCustomElement = F3(
 	function (inputType, inputTag, attributes) {
-		return {p: attributes, I: inputTag, x: inputType};
+		return {m: attributes, I: inputTag, x: inputType};
 	});
 var $author$project$Main$defaultInputTag = 'input';
 var $elm$core$Dict$RBEmpty_elm_builtin = {$: -2};
@@ -5533,15 +5533,15 @@ var $elm$core$Basics$not = _Basics_not;
 var $elm$core$String$trim = _String_trim;
 var $author$project$Main$fromRawCustomElement = function (ele) {
 	return {
-		p: A2(
+		m: A2(
 			$elm$core$Dict$filter,
 			F2(
 				function (k, v) {
 					return !((k === 'list') && A2($elm$core$String$contains, '\n', v));
 				}),
-			ele.p),
+			ele.m),
 		U: function () {
-			var _v0 = A2($elm$core$Dict$get, 'list', ele.p);
+			var _v0 = A2($elm$core$Dict$get, 'list', ele.m);
 			if (!_v0.$) {
 				var s = _v0.a;
 				var _v1 = A2(
@@ -5566,7 +5566,7 @@ var $author$project$Main$fromRawCustomElement = function (ele) {
 		I: ele.I,
 		x: ele.x,
 		W: function () {
-			var _v2 = A2($elm$core$Dict$get, 'maxlength', ele.p);
+			var _v2 = A2($elm$core$Dict$get, 'maxlength', ele.m);
 			if (!_v2.$) {
 				if (_v2.a === '') {
 					return $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing);
@@ -5585,7 +5585,7 @@ var $author$project$Main$fromRawCustomElement = function (ele) {
 			}
 		}(),
 		ay: function () {
-			var _v4 = A2($elm$core$Dict$get, 'multiple', ele.p);
+			var _v4 = A2($elm$core$Dict$get, 'multiple', ele.m);
 			if (!_v4.$) {
 				switch (_v4.a) {
 					case '':
@@ -5785,7 +5785,7 @@ var $elm$core$Array$fromListHelp = F3(
 				return A2(
 					$elm$core$Array$builderToArray,
 					true,
-					{s: nodeList, n: nodeListSize, r: jsArray});
+					{s: nodeList, o: nodeListSize, r: jsArray});
 			} else {
 				var $temp$list = remainingItems,
 					$temp$nodeList = A2(
@@ -5869,7 +5869,7 @@ var $author$project$Main$decodeShortTextTypeList = function () {
 				var inputTag = _v1.a;
 				var attributes = _v1.b;
 				return $author$project$Main$fromRawCustomElement(
-					{p: attributes, I: inputTag, x: inputType});
+					{m: attributes, I: inputTag, x: inputType});
 			},
 			$elm$core$Dict$toList(dict));
 	};
@@ -5945,7 +5945,7 @@ var $author$project$Main$decodeConfig = A2(
 				[
 					$author$project$Main$fromRawCustomElement(
 					{
-						p: $elm$core$Dict$fromList(
+						m: $elm$core$Dict$fromList(
 							_List_fromArray(
 								[
 									_Utils_Tuple2('type', 'text')
@@ -6030,7 +6030,7 @@ var $author$project$Main$encodePairsFromRawCustomElements = function (customElem
 		var _v0 = A2(
 			$elm$core$List$map,
 			$elm$core$Tuple$mapSecond($elm$json$Json$Encode$string),
-			$elm$core$Dict$toList(customElement.p));
+			$elm$core$Dict$toList(customElement.m));
 		if (!_v0.b) {
 			return _List_Nil;
 		} else {
@@ -6109,9 +6109,9 @@ var $author$project$Main$toRawCustomElement = function (ele) {
 		}
 	};
 	return {
-		p: addDatalistIfGiven(
+		m: addDatalistIfGiven(
 			addMultipleIfGiven(
-				addMaxLengthIfGiven(ele.p))),
+				addMaxLengthIfGiven(ele.m))),
 		I: ele.I,
 		x: ele.x
 	};
@@ -6377,7 +6377,7 @@ var $author$project$Main$init = function (flags) {
 		[
 			$author$project$Main$fromRawCustomElement(
 			{
-				p: $elm$core$Dict$fromList(
+				m: $elm$core$Dict$fromList(
 					_List_fromArray(
 						[
 							_Utils_Tuple2('type', 'text')
@@ -6518,7 +6518,7 @@ var $elm$core$Array$indexedMap = F2(
 		var tail = _v0.d;
 		var initialBuilder = {
 			s: _List_Nil,
-			n: 0,
+			o: 0,
 			r: A3(
 				$elm$core$Elm$JsArray$indexedMap,
 				func,
@@ -6532,12 +6532,12 @@ var $elm$core$Array$indexedMap = F2(
 					return A3($elm$core$Elm$JsArray$foldl, helper, builder, subTree);
 				} else {
 					var leaf = node.a;
-					var offset = builder.n * $elm$core$Array$branchFactor;
+					var offset = builder.o * $elm$core$Array$branchFactor;
 					var mappedLeaf = $elm$core$Array$Leaf(
 						A3($elm$core$Elm$JsArray$indexedMap, func, offset, leaf));
 					return {
 						s: A2($elm$core$List$cons, mappedLeaf, builder.s),
-						n: builder.n + 1,
+						o: builder.o + 1,
 						r: builder.r
 					};
 				}
@@ -6564,7 +6564,7 @@ var $elm$core$Maybe$map = F2(
 var $author$project$Main$mustBeOptional = function (inputField) {
 	switch (inputField.$) {
 		case 0:
-			var attributes = inputField.a.p;
+			var attributes = inputField.a.m;
 			return A2(
 				$elm$core$List$member,
 				A2($elm$core$Dict$get, 'multiple', attributes),
@@ -7926,6 +7926,30 @@ var $elm$html$Html$Attributes$boolProperty = F2(
 			key,
 			$elm$json$Json$Encode$bool(bool));
 	});
+var $elm$html$Html$Attributes$multiple = $elm$html$Html$Attributes$boolProperty('multiple');
+var $author$project$Main$attributesFromTuple = function (_v0) {
+	var k = _v0.a;
+	var v = _v0.b;
+	var _v1 = _Utils_Tuple2(k, v);
+	_v1$2:
+	while (true) {
+		if (_v1.a === 'multiple') {
+			switch (_v1.b) {
+				case 'true':
+					return $elm$core$Maybe$Just(
+						$elm$html$Html$Attributes$multiple(true));
+				case 'false':
+					return $elm$core$Maybe$Nothing;
+				default:
+					break _v1$2;
+			}
+		} else {
+			break _v1$2;
+		}
+	}
+	return $elm$core$Maybe$Just(
+		A2($elm$html$Html$Attributes$attribute, k, v));
+};
 var $elm$html$Html$Attributes$checked = $elm$html$Html$Attributes$boolProperty('checked');
 var $elm$html$Html$datalist = _VirtualDom_node('datalist');
 var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty('disabled');
@@ -8010,8 +8034,8 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 		var shortTextTypeDict = _v0.Z;
 		var fieldName = $author$project$Main$fieldNameOf(formField);
 		var chosenForYou = function (choices) {
-			var _v6 = formField.t;
-			switch (_v6) {
+			var _v5 = formField.t;
+			switch (_v5) {
 				case 1:
 					return false;
 				case 0:
@@ -8024,23 +8048,6 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 		switch (_v1.$) {
 			case 0:
 				var customElement = _v1.a;
-				var shortTextAttrs = A2(
-					$elm$core$List$map,
-					function (_v5) {
-						var k = _v5.a;
-						var v = _v5.b;
-						return A2($elm$html$Html$Attributes$attribute, k, v);
-					},
-					$elm$core$Dict$toList(
-						A2(
-							$elm$core$Maybe$withDefault,
-							$elm$core$Dict$empty,
-							A2(
-								$elm$core$Maybe$map,
-								function ($) {
-									return $.p;
-								},
-								A2($elm$core$Dict$get, customElement.x, shortTextTypeDict)))));
 				var extraAttrs = A2(
 					$elm$core$List$filterMap,
 					$elm$core$Basics$identity,
@@ -8054,13 +8061,28 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 							A3($author$project$Main$maybeDecode, fieldName, $elm$json$Json$Decode$string, formValues)),
 						A2(
 							$elm$core$List$map,
-							function (_v4) {
-								var k = _v4.a;
-								var v = _v4.b;
-								return $elm$core$Maybe$Just(
-									A2($elm$html$Html$Attributes$attribute, k, v));
-							},
-							$elm$core$Dict$toList(customElement.p))));
+							$author$project$Main$attributesFromTuple,
+							$elm$core$Dict$toList(customElement.m))));
+				var extraAttrKeys = $elm$core$Dict$keys(customElement.m);
+				var shortTextAttrs = A2(
+					$elm$core$List$filterMap,
+					$author$project$Main$attributesFromTuple,
+					A2(
+						$elm$core$List$filter,
+						function (_v4) {
+							var k = _v4.a;
+							return !A2($elm$core$List$member, k, extraAttrKeys);
+						},
+						$elm$core$Dict$toList(
+							A2(
+								$elm$core$Maybe$withDefault,
+								$elm$core$Dict$empty,
+								A2(
+									$elm$core$Maybe$map,
+									function ($) {
+										return $.m;
+									},
+									A2($elm$core$Dict$get, customElement.x, shortTextTypeDict))))));
 				var _v2 = function () {
 					var _v3 = customElement.U;
 					switch (_v3.$) {
@@ -8658,7 +8680,7 @@ var $author$project$Main$OnRequiredInput = function (a) {
 var $author$project$Main$allowsTogglingMultiple = function (inputField) {
 	switch (inputField.$) {
 		case 0:
-			var attributes = inputField.a.p;
+			var attributes = inputField.a.m;
 			return A2(
 				$elm$core$List$member,
 				A2($elm$core$Dict$get, 'multiple', attributes),
@@ -8952,7 +8974,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 						A2(
 							$elm$core$Maybe$map,
 							function ($) {
-								return $.p;
+								return $.m;
 							},
 							$elm$core$List$head(
 								A2(
