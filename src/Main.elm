@@ -315,8 +315,8 @@ allowsTogglingMultiple inputField =
 mustBeOptional : InputField -> Bool
 mustBeOptional inputField =
     case inputField of
-        ShortText { attributes } ->
-            List.member (Dict.get "multiple" attributes) [ Just "true", Just "false" ]
+        ShortText _ ->
+            False
 
         LongText _ ->
             False
@@ -1524,7 +1524,7 @@ viewFormFieldBuilder shortTextTypeList index totalLength formField =
                         ]
                         []
                     , text " "
-                    , text "Allow multiple"
+                    , text ("Accept multiple " ++ String.toLower (stringFromInputField formField.type_))
                     ]
                 ]
 

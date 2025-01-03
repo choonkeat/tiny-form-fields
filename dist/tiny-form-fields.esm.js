@@ -4821,7 +4821,7 @@ var $elm$core$Array$treeFromBuilder = F2(
 	});
 var $elm$core$Array$builderToArray = F2(
 	function (reverseNodeList, builder) {
-		if (!builder.o) {
+		if (!builder.n) {
 			return A4(
 				$elm$core$Array$Array_elm_builtin,
 				$elm$core$Elm$JsArray$length(builder.r),
@@ -4829,11 +4829,11 @@ var $elm$core$Array$builderToArray = F2(
 				$elm$core$Elm$JsArray$empty,
 				builder.r);
 		} else {
-			var treeLen = builder.o * $elm$core$Array$branchFactor;
+			var treeLen = builder.n * $elm$core$Array$branchFactor;
 			var depth = $elm$core$Basics$floor(
 				A2($elm$core$Basics$logBase, $elm$core$Array$branchFactor, treeLen - 1));
 			var correctNodeList = reverseNodeList ? $elm$core$List$reverse(builder.s) : builder.s;
-			var tree = A2($elm$core$Array$treeFromBuilder, correctNodeList, builder.o);
+			var tree = A2($elm$core$Array$treeFromBuilder, correctNodeList, builder.n);
 			return A4(
 				$elm$core$Array$Array_elm_builtin,
 				$elm$core$Elm$JsArray$length(builder.r) + treeLen,
@@ -4852,7 +4852,7 @@ var $elm$core$Array$initializeHelp = F5(
 				return A2(
 					$elm$core$Array$builderToArray,
 					false,
-					{s: nodeList, o: (len / $elm$core$Array$branchFactor) | 0, r: tail});
+					{s: nodeList, n: (len / $elm$core$Array$branchFactor) | 0, r: tail});
 			} else {
 				var leaf = $elm$core$Array$Leaf(
 					A3($elm$core$Elm$JsArray$initialize, $elm$core$Array$branchFactor, fromIndex, fn));
@@ -5333,7 +5333,7 @@ var $author$project$Main$choiceFromString = function (s) {
 var $author$project$Main$decodeChoice = A2($elm$json$Json$Decode$map, $author$project$Main$choiceFromString, $elm$json$Json$Decode$string);
 var $author$project$Main$RawCustomElement = F3(
 	function (inputType, inputTag, attributes) {
-		return {m: attributes, I: inputTag, x: inputType};
+		return {p: attributes, I: inputTag, x: inputType};
 	});
 var $author$project$Main$defaultInputTag = 'input';
 var $elm$core$Dict$RBEmpty_elm_builtin = {$: -2};
@@ -5533,15 +5533,15 @@ var $elm$core$Basics$not = _Basics_not;
 var $elm$core$String$trim = _String_trim;
 var $author$project$Main$fromRawCustomElement = function (ele) {
 	return {
-		m: A2(
+		p: A2(
 			$elm$core$Dict$filter,
 			F2(
 				function (k, v) {
 					return !((k === 'list') && A2($elm$core$String$contains, '\n', v));
 				}),
-			ele.m),
+			ele.p),
 		U: function () {
-			var _v0 = A2($elm$core$Dict$get, 'list', ele.m);
+			var _v0 = A2($elm$core$Dict$get, 'list', ele.p);
 			if (!_v0.$) {
 				var s = _v0.a;
 				var _v1 = A2(
@@ -5566,7 +5566,7 @@ var $author$project$Main$fromRawCustomElement = function (ele) {
 		I: ele.I,
 		x: ele.x,
 		W: function () {
-			var _v2 = A2($elm$core$Dict$get, 'maxlength', ele.m);
+			var _v2 = A2($elm$core$Dict$get, 'maxlength', ele.p);
 			if (!_v2.$) {
 				if (_v2.a === '') {
 					return $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing);
@@ -5585,7 +5585,7 @@ var $author$project$Main$fromRawCustomElement = function (ele) {
 			}
 		}(),
 		ay: function () {
-			var _v4 = A2($elm$core$Dict$get, 'multiple', ele.m);
+			var _v4 = A2($elm$core$Dict$get, 'multiple', ele.p);
 			if (!_v4.$) {
 				switch (_v4.a) {
 					case '':
@@ -5785,7 +5785,7 @@ var $elm$core$Array$fromListHelp = F3(
 				return A2(
 					$elm$core$Array$builderToArray,
 					true,
-					{s: nodeList, o: nodeListSize, r: jsArray});
+					{s: nodeList, n: nodeListSize, r: jsArray});
 			} else {
 				var $temp$list = remainingItems,
 					$temp$nodeList = A2(
@@ -5869,7 +5869,7 @@ var $author$project$Main$decodeShortTextTypeList = function () {
 				var inputTag = _v1.a;
 				var attributes = _v1.b;
 				return $author$project$Main$fromRawCustomElement(
-					{m: attributes, I: inputTag, x: inputType});
+					{p: attributes, I: inputTag, x: inputType});
 			},
 			$elm$core$Dict$toList(dict));
 	};
@@ -5945,7 +5945,7 @@ var $author$project$Main$decodeConfig = A2(
 				[
 					$author$project$Main$fromRawCustomElement(
 					{
-						m: $elm$core$Dict$fromList(
+						p: $elm$core$Dict$fromList(
 							_List_fromArray(
 								[
 									_Utils_Tuple2('type', 'text')
@@ -6030,7 +6030,7 @@ var $author$project$Main$encodePairsFromRawCustomElements = function (customElem
 		var _v0 = A2(
 			$elm$core$List$map,
 			$elm$core$Tuple$mapSecond($elm$json$Json$Encode$string),
-			$elm$core$Dict$toList(customElement.m));
+			$elm$core$Dict$toList(customElement.p));
 		if (!_v0.b) {
 			return _List_Nil;
 		} else {
@@ -6109,9 +6109,9 @@ var $author$project$Main$toRawCustomElement = function (ele) {
 		}
 	};
 	return {
-		m: addDatalistIfGiven(
+		p: addDatalistIfGiven(
 			addMultipleIfGiven(
-				addMaxLengthIfGiven(ele.m))),
+				addMaxLengthIfGiven(ele.p))),
 		I: ele.I,
 		x: ele.x
 	};
@@ -6377,7 +6377,7 @@ var $author$project$Main$init = function (flags) {
 		[
 			$author$project$Main$fromRawCustomElement(
 			{
-				m: $elm$core$Dict$fromList(
+				p: $elm$core$Dict$fromList(
 					_List_fromArray(
 						[
 							_Utils_Tuple2('type', 'text')
@@ -6518,7 +6518,7 @@ var $elm$core$Array$indexedMap = F2(
 		var tail = _v0.d;
 		var initialBuilder = {
 			s: _List_Nil,
-			o: 0,
+			n: 0,
 			r: A3(
 				$elm$core$Elm$JsArray$indexedMap,
 				func,
@@ -6532,12 +6532,12 @@ var $elm$core$Array$indexedMap = F2(
 					return A3($elm$core$Elm$JsArray$foldl, helper, builder, subTree);
 				} else {
 					var leaf = node.a;
-					var offset = builder.o * $elm$core$Array$branchFactor;
+					var offset = builder.n * $elm$core$Array$branchFactor;
 					var mappedLeaf = $elm$core$Array$Leaf(
 						A3($elm$core$Elm$JsArray$indexedMap, func, offset, leaf));
 					return {
 						s: A2($elm$core$List$cons, mappedLeaf, builder.s),
-						o: builder.o + 1,
+						n: builder.n + 1,
 						r: builder.r
 					};
 				}
@@ -6564,15 +6564,7 @@ var $elm$core$Maybe$map = F2(
 var $author$project$Main$mustBeOptional = function (inputField) {
 	switch (inputField.$) {
 		case 0:
-			var attributes = inputField.a.m;
-			return A2(
-				$elm$core$List$member,
-				A2($elm$core$Dict$get, 'multiple', attributes),
-				_List_fromArray(
-					[
-						$elm$core$Maybe$Just('true'),
-						$elm$core$Maybe$Just('false')
-					]));
+			return false;
 		case 1:
 			return false;
 		case 2:
@@ -8062,8 +8054,8 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 						A2(
 							$elm$core$List$map,
 							$author$project$Main$attributesFromTuple,
-							$elm$core$Dict$toList(customElement.m))));
-				var extraAttrKeys = $elm$core$Dict$keys(customElement.m);
+							$elm$core$Dict$toList(customElement.p))));
+				var extraAttrKeys = $elm$core$Dict$keys(customElement.p);
 				var shortTextAttrs = A2(
 					$elm$core$List$filterMap,
 					$author$project$Main$attributesFromTuple,
@@ -8080,7 +8072,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 								A2(
 									$elm$core$Maybe$map,
 									function ($) {
-										return $.m;
+										return $.p;
 									},
 									A2($elm$core$Dict$get, customElement.x, shortTextTypeDict))))));
 				var _v2 = function () {
@@ -8680,7 +8672,7 @@ var $author$project$Main$OnRequiredInput = function (a) {
 var $author$project$Main$allowsTogglingMultiple = function (inputField) {
 	switch (inputField.$) {
 		case 0:
-			var attributes = inputField.a.m;
+			var attributes = inputField.a.p;
 			return A2(
 				$elm$core$List$member,
 				A2($elm$core$Dict$get, 'multiple', attributes),
@@ -8881,6 +8873,7 @@ var $elm$html$Html$Attributes$minlength = function (n) {
 		$elm$core$String$fromInt(n));
 };
 var $elm$html$Html$Attributes$title = $elm$html$Html$Attributes$stringProperty('title');
+var $elm$core$String$toLower = _String_toLower;
 var $author$project$Main$OnChoicesInput = {$: 4};
 var $author$project$Main$OnDatalistInput = {$: 9};
 var $author$project$Main$OnDatalistToggle = function (a) {
@@ -8974,7 +8967,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 						A2(
 							$elm$core$Maybe$map,
 							function ($) {
-								return $.m;
+								return $.p;
 							},
 							$elm$core$List$head(
 								A2(
@@ -9202,7 +9195,9 @@ var $author$project$Main$viewFormFieldBuilder = F4(
 								]),
 							_List_Nil),
 							$elm$html$Html$text(' '),
-							$elm$html$Html$text('Allow multiple')
+							$elm$html$Html$text(
+							'Accept multiple ' + $elm$core$String$toLower(
+								$author$project$Main$stringFromInputField(formField.g)))
 						]))
 				]));
 		var buildFieldClass = 'tff-build-field';
