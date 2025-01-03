@@ -323,7 +323,7 @@ suite =
                 """
                 [
                     { "Text": { "type": "text" } },
-                    { "Text": { "type": "text", "maxlength": "10", "multiple": "true" } },
+                    { "Text": { "type": "text", "maxlength": "10", "multiple": "false" } },
                     { "Text": { "type": "text", "list": "someid" } },
                     { "Text": { "type": "text", "list": "one | uno !\\ntwo | dos\\nthree | tres\\nfour" } },
                     { "Email": { "type": "email" } },
@@ -344,6 +344,7 @@ suite =
                                     Dict.fromList
                                         [ ( "type", "text" )
                                         ]
+                              , multiple = Main.AttributeNotNeeded Nothing
                               , maxlength = Main.AttributeNotNeeded Nothing
                               , datalist = Main.AttributeNotNeeded Nothing
                               }
@@ -353,8 +354,9 @@ suite =
                                     Dict.fromList
                                         [ ( "type", "text" )
                                         , ( "maxlength", "10" )
-                                        , ( "multiple", "true" )
+                                        , ( "multiple", "false" )
                                         ]
+                              , multiple = Main.AttributeGiven False
                               , maxlength = Main.AttributeGiven 10
                               , datalist = Main.AttributeNotNeeded Nothing
                               }
@@ -365,6 +367,7 @@ suite =
                                         [ ( "type", "text" )
                                         , ( "list", "someid" )
                                         ]
+                              , multiple = Main.AttributeNotNeeded Nothing
                               , maxlength = Main.AttributeNotNeeded Nothing
                               , datalist = Main.AttributeNotNeeded Nothing
                               }
@@ -374,6 +377,7 @@ suite =
                                     Dict.fromList
                                         [ ( "type", "text" )
                                         ]
+                              , multiple = Main.AttributeNotNeeded Nothing
                               , maxlength = Main.AttributeNotNeeded Nothing
                               , datalist =
                                     Main.AttributeGiven
@@ -389,6 +393,7 @@ suite =
                                     Dict.fromList
                                         [ ( "type", "email" )
                                         ]
+                              , multiple = Main.AttributeNotNeeded Nothing
                               , maxlength = Main.AttributeNotNeeded Nothing
                               , datalist = Main.AttributeNotNeeded Nothing
                               }
@@ -399,6 +404,7 @@ suite =
                                         [ ( "type", "email" )
                                         , ( "multiple", "true" )
                                         ]
+                              , multiple = Main.AttributeGiven True
                               , maxlength = Main.AttributeNotNeeded Nothing
                               , datalist = Main.AttributeNotNeeded Nothing
                               }
@@ -409,6 +415,7 @@ suite =
                                         [ ( "pattern", "^[0-9]+$" )
                                         , ( "type", "text" )
                                         ]
+                              , multiple = Main.AttributeNotNeeded Nothing
                               , maxlength = Main.AttributeNotNeeded Nothing
                               , datalist = Main.AttributeNotNeeded Nothing
                               }
@@ -419,6 +426,7 @@ suite =
                                         [ ( "pattern", "^[STGM][0-9]{7}[ABCDEFGHIZJ]$" )
                                         , ( "type", "text" )
                                         ]
+                              , multiple = Main.AttributeNotNeeded Nothing
                               , maxlength = Main.AttributeNotNeeded Nothing
                               , datalist = Main.AttributeNotNeeded Nothing
                               }
@@ -429,6 +437,7 @@ suite =
                                         [ ( "pattern", "^[STGM][0-9]{7}[ABCDEFGHIZJ]$" )
                                         , ( "type", "text" )
                                         ]
+                              , multiple = Main.AttributeNotNeeded Nothing
                               , maxlength = Main.AttributeNotNeeded Nothing
                               , datalist = Main.AttributeNotNeeded Nothing
                               }
@@ -531,6 +540,7 @@ oldjson =
                                             , datalist = Main.AttributeNotNeeded Nothing
                                             , inputTag = "input"
                                             , inputType = "text"
+                                            , multiple = Main.AttributeNotNeeded Nothing
                                             , maxlength = Main.AttributeNotNeeded Nothing
                                             }
                                   }
@@ -544,6 +554,7 @@ oldjson =
                                             , datalist = Main.AttributeNotNeeded Nothing
                                             , inputTag = "input"
                                             , inputType = "email"
+                                            , multiple = Main.AttributeNotNeeded Nothing
                                             , maxlength = Main.AttributeNotNeeded Nothing
                                             }
                                   }
@@ -727,6 +738,7 @@ oldjson =
                                             , datalist = Main.AttributeNotNeeded Nothing
                                             , inputTag = "input"
                                             , inputType = "Single-line free text"
+                                            , multiple = Main.AttributeNotNeeded Nothing
                                             , maxlength = Main.AttributeNotNeeded Nothing
                                             }
                                   }
@@ -740,6 +752,7 @@ oldjson =
                                             , datalist = Main.AttributeNotNeeded Nothing
                                             , inputTag = "input"
                                             , inputType = "NRIC"
+                                            , multiple = Main.AttributeNotNeeded Nothing
                                             , maxlength = Main.AttributeNotNeeded Nothing
                                             }
                                   }
@@ -779,7 +792,10 @@ moreTestInputFields =
         { inputType = "Email"
         , inputTag = "input"
         , attributes =
-            Dict.fromList [ ( "type", "email" ) ]
+            Dict.fromList
+                [ ( "type", "email" )
+                ]
+        , multiple = Main.AttributeNotNeeded Nothing
         , maxlength = Main.AttributeNotNeeded Nothing
         , datalist = Main.AttributeNotNeeded Nothing
         }
@@ -787,7 +803,11 @@ moreTestInputFields =
         { inputType = "Emails"
         , inputTag = "input"
         , attributes =
-            Dict.fromList [ ( "type", "email" ), ( "multiple", "true" ) ]
+            Dict.fromList
+                [ ( "type", "email" )
+                , ( "multiple", "true" )
+                ]
+        , multiple = Main.AttributeGiven True
         , maxlength = Main.AttributeNotNeeded Nothing
         , datalist = Main.AttributeNotNeeded Nothing
         }
@@ -801,6 +821,7 @@ moreTestInputFields =
                 , ( "maxlength", "20" )
                 , ( "data-extra-thing", "[1,2,3]" )
                 ]
+        , multiple = Main.AttributeGiven True
         , maxlength = Main.AttributeGiven 20
         , datalist = Main.AttributeNotNeeded Nothing
         }
