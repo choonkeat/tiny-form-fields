@@ -97,9 +97,9 @@ suite =
                     Main.fieldsWithPlaceholder [ field1, field2, field3 ] (Just dragged)
                         |> Expect.equal
                             [ Just field1
-                        , Just field3
-                        , Nothing
-                        ]
+                            , Just field3
+                            , Nothing
+                            ]
             , test "replaces dragged new field with Nothing" <|
                 \_ ->
                     let
@@ -326,7 +326,7 @@ suite =
                 """
                 [
                     { "Text": { "type": "text" } },
-                    { "Text": { "type": "text", "maxlength": "10", "multiple": "true" } },
+                    { "Text": { "type": "text", "maxlength": "10", "multiple": "false" } },
                     { "Text": { "type": "text", "list": "someid" } },
                     { "Text": { "type": "text", "list": "one | uno !\\ntwo | dos\\nthree | tres\\nfour" } },
                     { "Email": { "type": "email" } },
@@ -347,6 +347,7 @@ suite =
                                     Dict.fromList
                                         [ ( "type", "text" )
                                         ]
+                              , multiple = Main.AttributeNotNeeded Nothing
                               , maxlength = Main.AttributeNotNeeded Nothing
                               , datalist = Main.AttributeNotNeeded Nothing
                               }
@@ -356,8 +357,9 @@ suite =
                                     Dict.fromList
                                         [ ( "type", "text" )
                                         , ( "maxlength", "10" )
-                                        , ( "multiple", "true" )
+                                        , ( "multiple", "false" )
                                         ]
+                              , multiple = Main.AttributeGiven False
                               , maxlength = Main.AttributeGiven 10
                               , datalist = Main.AttributeNotNeeded Nothing
                               }
@@ -368,6 +370,7 @@ suite =
                                         [ ( "type", "text" )
                                         , ( "list", "someid" )
                                         ]
+                              , multiple = Main.AttributeNotNeeded Nothing
                               , maxlength = Main.AttributeNotNeeded Nothing
                               , datalist = Main.AttributeNotNeeded Nothing
                               }
@@ -377,6 +380,7 @@ suite =
                                     Dict.fromList
                                         [ ( "type", "text" )
                                         ]
+                              , multiple = Main.AttributeNotNeeded Nothing
                               , maxlength = Main.AttributeNotNeeded Nothing
                               , datalist =
                                     Main.AttributeGiven
@@ -392,6 +396,7 @@ suite =
                                     Dict.fromList
                                         [ ( "type", "email" )
                                         ]
+                              , multiple = Main.AttributeNotNeeded Nothing
                               , maxlength = Main.AttributeNotNeeded Nothing
                               , datalist = Main.AttributeNotNeeded Nothing
                               }
@@ -402,6 +407,7 @@ suite =
                                         [ ( "type", "email" )
                                         , ( "multiple", "true" )
                                         ]
+                              , multiple = Main.AttributeGiven True
                               , maxlength = Main.AttributeNotNeeded Nothing
                               , datalist = Main.AttributeNotNeeded Nothing
                               }
@@ -412,6 +418,7 @@ suite =
                                         [ ( "pattern", "^[0-9]+$" )
                                         , ( "type", "text" )
                                         ]
+                              , multiple = Main.AttributeNotNeeded Nothing
                               , maxlength = Main.AttributeNotNeeded Nothing
                               , datalist = Main.AttributeNotNeeded Nothing
                               }
@@ -422,6 +429,7 @@ suite =
                                         [ ( "pattern", "^[STGM][0-9]{7}[ABCDEFGHIZJ]$" )
                                         , ( "type", "text" )
                                         ]
+                              , multiple = Main.AttributeNotNeeded Nothing
                               , maxlength = Main.AttributeNotNeeded Nothing
                               , datalist = Main.AttributeNotNeeded Nothing
                               }
@@ -432,6 +440,7 @@ suite =
                                         [ ( "pattern", "^[STGM][0-9]{7}[ABCDEFGHIZJ]$" )
                                         , ( "type", "text" )
                                         ]
+                              , multiple = Main.AttributeNotNeeded Nothing
                               , maxlength = Main.AttributeNotNeeded Nothing
                               , datalist = Main.AttributeNotNeeded Nothing
                               }
@@ -458,6 +467,149 @@ oldjson : Test
 oldjson =
     describe "Old JSON"
         [ test "initial a7fd507" <|
+            \_ ->
+                """
+                [
+                    {
+                        "label": "Short text 1",
+                        "required": true,
+                        "description": "description 1",
+                        "type": {
+                        "type": "ShortText",
+                        "inputType": "text",
+                        "maxLength": 12
+                        }
+                    },
+                    {
+                        "label": "Email 2",
+                        "required": true,
+                        "description": "your personal email",
+                        "type": {
+                        "type": "ShortText",
+                        "inputType": "email",
+                        "maxLength": 23
+                        }
+                    },
+                    {
+                        "label": "Long text 3",
+                        "required": true,
+                        "description": "any comments",
+                        "type": {
+                        "type": "LongText",
+                        "maxLength": 280
+                        }
+                    },
+                    {
+                        "label": "Dropdown 4",
+                        "required": true,
+                        "description": "Binary choice",
+                        "type": {
+                        "type": "ChooseOne",
+                        "choices": [
+                            "Yes",
+                            "No"
+                        ]
+                        }
+                    },
+                    {
+                        "label": "Checkboxes 5",
+                        "required": true,
+                        "description": "Choose many or none",
+                        "type": {
+                        "type": "ChooseMultiple",
+                        "choices": [
+                            "Apple",
+                            "Banana",
+                            "Cantaloupe",
+                            "Durian"
+                        ]
+                        }
+                    }
+                ]
+                """
+                    |> Json.Decode.decodeString Main.decodeFormFields
+                    |> Result.map Main.encodeFormFields
+                    |> Result.andThen (Json.Decode.decodeValue Main.decodeFormFields)
+                    |> Expect.equal
+                        (Ok
+                            (Array.fromList
+                                [ { description = Main.AttributeGiven "description 1"
+                                  , label = "Short text 1"
+                                  , name = Nothing
+                                  , presence = Main.Required
+                                  , type_ =
+                                        Main.ShortText
+                                            { attributes = Dict.empty
+                                            , datalist = Main.AttributeNotNeeded Nothing
+                                            , inputTag = "input"
+                                            , inputType = "text"
+                                            , multiple = Main.AttributeNotNeeded Nothing
+                                            , maxlength = Main.AttributeNotNeeded Nothing
+                                            }
+                                  , visibilityRule = Main.AlwaysVisible
+                                  }
+                                , { description = Main.AttributeGiven "your personal email"
+                                  , label = "Email 2"
+                                  , name = Nothing
+                                  , presence = Main.Required
+                                  , type_ =
+                                        Main.ShortText
+                                            { attributes = Dict.empty
+                                            , datalist = Main.AttributeNotNeeded Nothing
+                                            , inputTag = "input"
+                                            , inputType = "email"
+                                            , multiple = Main.AttributeNotNeeded Nothing
+                                            , maxlength = Main.AttributeNotNeeded Nothing
+                                            }
+                                  , visibilityRule = Main.AlwaysVisible
+                                  }
+                                , { description = Main.AttributeGiven "any comments"
+                                  , label = "Long text 3"
+                                  , name = Nothing
+                                  , presence = Main.Required
+                                  , type_ = Main.LongText (Main.AttributeGiven 280)
+                                  , visibilityRule = Main.AlwaysVisible
+                                  }
+                                , { description = Main.AttributeGiven "Binary choice"
+                                  , label = "Dropdown 4"
+                                  , name = Nothing
+                                  , presence = Main.Required
+                                  , type_ =
+                                        Main.ChooseOne
+                                            [ { label = "Yes"
+                                              , value = "Yes"
+                                              }
+                                            , { label = "No"
+                                              , value = "No"
+                                              }
+                                            ]
+                                  , visibilityRule = Main.AlwaysVisible
+                                  }
+                                , { description = Main.AttributeGiven "Choose many or none"
+                                  , label = "Checkboxes 5"
+                                  , name = Nothing
+                                  , presence = Main.Required
+                                  , type_ =
+                                        Main.ChooseMultiple
+                                            [ { label = "Apple"
+                                              , value = "Apple"
+                                              }
+                                            , { label = "Banana"
+                                              , value = "Banana"
+                                              }
+                                            , { label = "Cantaloupe"
+                                              , value = "Cantaloupe"
+                                              }
+                                            , { label = "Durian"
+                                              , value = "Durian"
+                                              }
+                                            ]
+                                  , visibilityRule = Main.AlwaysVisible
+                                  }
+                                ]
+                            )
+                        )
+        , test "initial aee8a74" <|
             \_ ->
                 """
                 [
@@ -604,6 +756,7 @@ oldjson =
                                             , datalist = Main.AttributeNotNeeded Nothing
                                             , inputTag = "input"
                                             , inputType = "Single-line free text"
+                                            , multiple = Main.AttributeNotNeeded Nothing
                                             , maxlength = Main.AttributeNotNeeded Nothing
                                             }
                                   , visibilityRule = Main.AlwaysVisible
@@ -618,154 +771,9 @@ oldjson =
                                             , datalist = Main.AttributeNotNeeded Nothing
                                             , inputTag = "input"
                                             , inputType = "NRIC"
+                                            , multiple = Main.AttributeNotNeeded Nothing
                                             , maxlength = Main.AttributeNotNeeded Nothing
                                             }
-                                  , visibilityRule = Main.AlwaysVisible
-                                  }
-                                ]
-                            )
-                        )
-        , test "initial aee8a74" <|
-            \_ ->
-                """
-                [
-                    {
-                        "label": "Short text 1",
-                        "required": true,
-                        "description": "description 1",
-                        "type": {
-                        "type": "ShortText",
-                        "inputType": "text",
-                        "maxLength": 12
-                        },
-                        "visibilityRule": "AlwaysVisible"
-                    },
-                    {
-                        "label": "Email 2",
-                        "required": true,
-                        "description": "your personal email",
-                        "type": {
-                        "type": "ShortText",
-                        "inputType": "email",
-                        "maxLength": 23
-                        },
-                        "visibilityRule": "AlwaysVisible"
-                    },
-                    {
-                        "label": "Long text 3",
-                        "required": true,
-                        "description": "any comments",
-                        "type": {
-                        "type": "LongText",
-                        "maxLength": 280
-                        },
-                        "visibilityRule": "AlwaysVisible"
-                    },
-                    {
-                        "label": "Dropdown 4",
-                        "required": true,
-                        "description": "Binary choice",
-                        "type": {
-                        "type": "ChooseOne",
-                        "choices": [
-                            "Yes",
-                            "No"
-                        ]
-                        },
-                        "visibilityRule": "AlwaysVisible"
-                    },
-                    {
-                        "label": "Checkboxes 5",
-                        "required": true,
-                        "description": "Choose many or none",
-                        "type": {
-                        "type": "ChooseMultiple",
-                        "choices": [
-                            "Apple",
-                            "Banana",
-                            "Cantaloupe",
-                            "Durian"
-                        ]
-                        },
-                        "visibilityRule": "AlwaysVisible"
-                    }
-                ]
-                """
-                    |> Json.Decode.decodeString Main.decodeFormFields
-                    |> Result.map Main.encodeFormFields
-                    |> Result.andThen (Json.Decode.decodeValue Main.decodeFormFields)
-                    |> Expect.equal
-                        (Ok
-                            (Array.fromList
-                                [ { description = Main.AttributeGiven "description 1"
-                                  , label = "Short text 1"
-                                  , name = Nothing
-                                  , presence = Main.Required
-                                  , type_ =
-                                        Main.ShortText
-                                            { attributes = Dict.empty
-                                            , datalist = Main.AttributeNotNeeded Nothing
-                                            , inputTag = "input"
-                                            , inputType = "text"
-                                            , maxlength = Main.AttributeNotNeeded Nothing
-                                            }
-                                  , visibilityRule = Main.AlwaysVisible
-                                  }
-                                , { description = Main.AttributeGiven "your personal email"
-                                  , label = "Email 2"
-                                  , name = Nothing
-                                  , presence = Main.Required
-                                  , type_ =
-                                        Main.ShortText
-                                            { attributes = Dict.empty
-                                            , datalist = Main.AttributeNotNeeded Nothing
-                                            , inputTag = "input"
-                                            , inputType = "email"
-                                            , maxlength = Main.AttributeNotNeeded Nothing
-                                            }
-                                  , visibilityRule = Main.AlwaysVisible
-                                  }
-                                , { description = Main.AttributeGiven "any comments"
-                                  , label = "Long text 3"
-                                  , name = Nothing
-                                  , presence = Main.Required
-                                  , type_ = Main.LongText (Main.AttributeGiven 280)
-                                  , visibilityRule = Main.AlwaysVisible
-                                  }
-                                , { description = Main.AttributeGiven "Binary choice"
-                                  , label = "Dropdown 4"
-                                  , name = Nothing
-                                  , presence = Main.Required
-                                  , type_ =
-                                        Main.ChooseOne
-                                            [ { label = "Yes"
-                                              , value = "Yes"
-                                              }
-                                            , { label = "No"
-                                              , value = "No"
-                                              }
-                                            ]
-                                  , visibilityRule = Main.AlwaysVisible
-                                  }
-                                , { description = Main.AttributeGiven "Choose many or none"
-                                  , label = "Checkboxes 5"
-                                  , name = Nothing
-                                  , presence = Main.Required
-                                  , type_ =
-                                        Main.ChooseMultiple
-                                            [ { label = "Apple"
-                                              , value = "Apple"
-                                              }
-                                            , { label = "Banana"
-                                              , value = "Banana"
-                                              }
-                                            , { label = "Cantaloupe"
-                                              , value = "Cantaloupe"
-                                              }
-                                            , { label = "Durian"
-                                              , value = "Durian"
-                                              }
-                                            ]
                                   , visibilityRule = Main.AlwaysVisible
                                   }
                                 ]
@@ -804,7 +812,10 @@ moreTestInputFields =
         { inputType = "Email"
         , inputTag = "input"
         , attributes =
-            Dict.fromList [ ( "type", "email" ) ]
+            Dict.fromList
+                [ ( "type", "email" )
+                ]
+        , multiple = Main.AttributeNotNeeded Nothing
         , maxlength = Main.AttributeNotNeeded Nothing
         , datalist = Main.AttributeNotNeeded Nothing
         }
@@ -812,7 +823,11 @@ moreTestInputFields =
         { inputType = "Emails"
         , inputTag = "input"
         , attributes =
-            Dict.fromList [ ( "type", "email" ), ( "multiple", "true" ) ]
+            Dict.fromList
+                [ ( "type", "email" )
+                , ( "multiple", "true" )
+                ]
+        , multiple = Main.AttributeGiven True
         , maxlength = Main.AttributeNotNeeded Nothing
         , datalist = Main.AttributeNotNeeded Nothing
         }
@@ -826,6 +841,7 @@ moreTestInputFields =
                 , ( "maxlength", "20" )
                 , ( "data-extra-thing", "[1,2,3]" )
                 ]
+        , multiple = Main.AttributeGiven True
         , maxlength = Main.AttributeGiven 20
         , datalist = Main.AttributeNotNeeded Nothing
         }

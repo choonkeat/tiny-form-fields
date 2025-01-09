@@ -361,10 +361,9 @@ func (f *ShortTextField) Validate(value []string, field TinyFormField) error {
 	}
 
 	valuesToValidate := []string{val}
-
 	if multiple {
-		// Split val by commas
-		valuesToValidate = strings.Split(val, ",")
+		// Split val by commas and trim spaces
+		valuesToValidate = parseMultipleValues(strings.TrimSpace(val))
 	}
 
 	// Now, for each value, validate
@@ -450,6 +449,17 @@ func (f *ShortTextField) Validate(value []string, field TinyFormField) error {
 		}
 	}
 	return nil
+}
+
+func parseMultipleValues(input string) []string {
+	if input == "" {
+		return []string{}
+	}
+	values := strings.Split(input, ",")
+	for i := range values {
+		values[i] = strings.TrimSpace(values[i])
+	}
+	return values
 }
 
 // Helper functions
