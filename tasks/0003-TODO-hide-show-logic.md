@@ -11,7 +11,22 @@ Add support for conditional visibility where each field can specify when it shou
 ### Configuration
 - [x] Add "Visibility Rules" section in field settings
     - [x] Iteration 1: Just the model
-        - Add `VisibilityRule` type with `AlwaysShown` constructor
+        - Add `Condition` type for field value comparisons:
+          ```elm
+          type Condition
+              = FieldEquals String String      -- (fieldName, value)
+              | FieldContains String String    -- (fieldName, value)
+              | And (List Condition)           -- explicit AND of conditions
+              | Or (List Condition)            -- explicit OR of conditions
+              | Not Condition                  -- negate a condition
+              | Always                         -- always true condition
+          ```
+        - Add `VisibilityRule` constructors:
+          ```elm
+          type VisibilityRule
+              = ShowWhen Condition    -- show when condition is true
+              | HideWhen Condition    -- hide when condition is true
+          ```
         - Add `visibilityRule` field of type `VisibilityRule` to field model
         - Update decoder/encoder
     - [x] Iteration 2: Just the settings section presence
@@ -23,18 +38,6 @@ Add support for conditional visibility where each field can specify when it shou
         - No editing capability yet
 - [ ] Allow selecting which other fields' values control this field's visibility
     - [x] Iteration 1: Just the model
-        - Add `Operator` type for simple string comparisons:
-          ```elm
-          type Operator
-              = Equals String
-              | Contains String
-          ```
-        - Add `VisibilityRule` constructors:
-          ```elm
-          type VisibilityRule
-              = AlwaysShown
-              | HideWhen String Operator
-          ```
         - Add `FieldDependency` type:
           ```elm
           type alias FieldDependency =

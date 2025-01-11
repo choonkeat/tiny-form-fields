@@ -5,11 +5,12 @@ port module Main exposing
     , FormField
     , InputField(..)
     , Msg(..)
+    , Condition(..)
+    , VisibilityRule(..)
     , Operator(..)
     , Presence(..)
     , RawCustomElement
     , ViewMode(..)
-    , VisibilityRule(..)
     , allInputField
     , decodeChoice
     , decodeCustomElement
@@ -146,14 +147,18 @@ requiredData presence =
             True
 
 
-type Operator
-    = Equals String
-    | Contains String
+type Condition
+    = FieldEquals String String
+    | FieldContains String String
+    | And (List Condition)
+    | Or (List Condition)
+    | Not Condition
+    | Always
 
 
 type VisibilityRule
-    = AlwaysShown
-    | HideWhen String Operator
+    = ShowWhen Condition
+    | HideWhen Condition
 
 
 type alias FormField =
@@ -485,7 +490,7 @@ update msg model =
                     , presence = when (mustBeOptional fieldType) { true = Optional, false = Required }
                     , description = AttributeNotNeeded Nothing
                     , type_ = fieldType
-                    , visibilityRule = AlwaysShown
+                    , visibilityRule = ShowWhen Always
                     }
 
                 newFormFields =
@@ -1580,20 +1585,11 @@ viewFormFieldBuilder shortTextTypeList index totalLength formField =
                 , div [ class "tff-text-field" ]
                     [ text
                         (case formField.visibilityRule of
-                            AlwaysShown ->
-                                "Always visible"
+                            ShowWhen condition ->
+                                "Show when " ++ stringFromCondition condition
 
-                            HideWhen fieldName operator ->
-                                "When "
-                                    ++ fieldName
-                                    ++ " is "
-                                    ++ (case operator of
-                                            Equals value ->
-                                                "equals " ++ value
-
-                                            Contains value ->
-                                                "contains " ++ value
-                                       )
+                            HideWhen condition ->
+                                "Hide when " ++ stringFromCondition condition
                         )
                     ]
                 ]
@@ -1776,7 +1772,7 @@ viewAddQuestionsList inputFields =
                                 , presence = when (mustBeOptional inputField) { true = Optional, false = Required }
                                 , description = AttributeNotNeeded Nothing
                                 , type_ = inputField
-                                , visibilityRule = AlwaysShown
+                                , visibilityRule = ShowWhen Always
                                 }
                             )
                         )
@@ -2593,3 +2589,25 @@ dragOverDecoder index maybeFormField =
         ( DragOver (Just ( index, maybeFormField ))
         , True
         )
+
+
+stringFromCondition : Condition -> String
+stringFromCondition condition =
+    case condition of
+        FieldEquals fieldName value ->
+            fieldName ++ " equals " ++ value
+
+        FieldContains fieldName value ->
+            fieldName ++ " contains " ++ value
+
+        And conditions ->
+            "All of: " ++ String.join ", " (List.map stringFromCondition conditions)
+
+        Or conditions ->
+            "Any of: " ++ String.join ", " (List.map stringFromCondition conditions)
+
+        Not condition ->
+            "Not (" ++ stringFromCondition condition ++ ")"
+
+        Always ->
+            "Always"
