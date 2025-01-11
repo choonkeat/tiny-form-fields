@@ -1,16 +1,15 @@
 port module Main exposing
     ( AttributeOptional(..)
     , Choice
+    , Condition(..)
     , Dragged(..)
     , FormField
     , InputField(..)
     , Msg(..)
-    , Condition(..)
-    , VisibilityRule(..)
-    , Operator(..)
     , Presence(..)
     , RawCustomElement
     , ViewMode(..)
+    , VisibilityRule(..)
     , allInputField
     , decodeChoice
     , decodeCustomElement
@@ -2159,30 +2158,57 @@ encodeFormFields formFields =
 encodeVisibilityRule : VisibilityRule -> Json.Encode.Value
 encodeVisibilityRule visibilityRule =
     case visibilityRule of
-        AlwaysShown ->
-            Json.Encode.string "AlwaysShown"
+        ShowWhen condition ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "ShowWhen" )
+                , ( "condition", encodeCondition condition )
+                ]
 
-        HideWhen fieldName operator ->
+        HideWhen condition ->
             Json.Encode.object
                 [ ( "type", Json.Encode.string "HideWhen" )
+                , ( "condition", encodeCondition condition )
+                ]
+
+
+encodeCondition : Condition -> Json.Encode.Value
+encodeCondition condition =
+    case condition of
+        FieldEquals fieldName value ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "FieldEquals" )
                 , ( "fieldName", Json.Encode.string fieldName )
-                , ( "operator", encodeOperator operator )
-                ]
-
-
-encodeOperator : Operator -> Json.Encode.Value
-encodeOperator operator =
-    case operator of
-        Equals value ->
-            Json.Encode.object
-                [ ( "type", Json.Encode.string "Equals" )
                 , ( "value", Json.Encode.string value )
                 ]
 
-        Contains value ->
+        FieldContains fieldName value ->
             Json.Encode.object
-                [ ( "type", Json.Encode.string "Contains" )
+                [ ( "type", Json.Encode.string "FieldContains" )
+                , ( "fieldName", Json.Encode.string fieldName )
                 , ( "value", Json.Encode.string value )
+                ]
+
+        And conditions ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "And" )
+                , ( "conditions", Json.Encode.list encodeCondition conditions )
+                ]
+
+        Or conditions ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "Or" )
+                , ( "conditions", Json.Encode.list encodeCondition conditions )
+                ]
+
+        Not cond ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "Not" )
+                , ( "condition", encodeCondition cond )
+                ]
+
+        Always ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "Always" )
                 ]
 
 
@@ -2202,7 +2228,7 @@ decodeFormField =
         |> andMap (Json.Decode.field "type" decodeInputField)
         |> andMap
             (Json.Decode.Extra.optionalNullableField "visibilityRule" decodeVisibilityRule
-                |> Json.Decode.map (Maybe.withDefault AlwaysShown)
+                |> Json.Decode.map (Maybe.withDefault (ShowWhen Always))
             )
 
 
@@ -2243,39 +2269,20 @@ decodeFormFieldDescription =
 
 decodeVisibilityRule : Json.Decode.Decoder VisibilityRule
 decodeVisibilityRule =
-    Json.Decode.string
+    Json.Decode.field "type" Json.Decode.string
         |> Json.Decode.andThen
             (\str ->
                 case str of
-                    "AlwaysShown" ->
-                        Json.Decode.succeed AlwaysShown
+                    "ShowWhen" ->
+                        Json.Decode.succeed ShowWhen
+                            |> andMap (Json.Decode.field "condition" decodeCondition)
 
                     "HideWhen" ->
                         Json.Decode.succeed HideWhen
-                            |> andMap (Json.Decode.field "fieldName" Json.Decode.string)
-                            |> andMap (Json.Decode.field "operator" decodeOperator)
+                            |> andMap (Json.Decode.field "condition" decodeCondition)
 
                     _ ->
                         Json.Decode.fail ("Unknown visibility rule: " ++ str)
-            )
-
-
-decodeOperator : Json.Decode.Decoder Operator
-decodeOperator =
-    Json.Decode.string
-        |> Json.Decode.andThen
-            (\str ->
-                case str of
-                    "Equals" ->
-                        Json.Decode.succeed Equals
-                            |> andMap (Json.Decode.field "value" Json.Decode.string)
-
-                    "Contains" ->
-                        Json.Decode.succeed Contains
-                            |> andMap (Json.Decode.field "value" Json.Decode.string)
-
-                    _ ->
-                        Json.Decode.fail ("Unknown operator: " ++ str)
             )
 
 
@@ -2606,8 +2613,44 @@ stringFromCondition condition =
         Or conditions ->
             "Any of: " ++ String.join ", " (List.map stringFromCondition conditions)
 
-        Not condition ->
-            "Not (" ++ stringFromCondition condition ++ ")"
+        Not cond ->
+            "Not (" ++ stringFromCondition cond ++ ")"
 
         Always ->
             "Always"
+
+
+decodeCondition : Json.Decode.Decoder Condition
+decodeCondition =
+    Json.Decode.field "type" Json.Decode.string
+        |> Json.Decode.andThen
+            (\type_ ->
+                case type_ of
+                    "FieldEquals" ->
+                        Json.Decode.succeed FieldEquals
+                            |> andMap (Json.Decode.field "fieldName" Json.Decode.string)
+                            |> andMap (Json.Decode.field "value" Json.Decode.string)
+
+                    "FieldContains" ->
+                        Json.Decode.succeed FieldContains
+                            |> andMap (Json.Decode.field "fieldName" Json.Decode.string)
+                            |> andMap (Json.Decode.field "value" Json.Decode.string)
+
+                    "And" ->
+                        Json.Decode.succeed And
+                            |> andMap (Json.Decode.field "conditions" (Json.Decode.list decodeCondition))
+
+                    "Or" ->
+                        Json.Decode.succeed Or
+                            |> andMap (Json.Decode.field "conditions" (Json.Decode.list decodeCondition))
+
+                    "Not" ->
+                        Json.Decode.succeed Not
+                            |> andMap (Json.Decode.field "condition" decodeCondition)
+
+                    "Always" ->
+                        Json.Decode.succeed Always
+
+                    _ ->
+                        Json.Decode.fail ("Unknown condition type: " ++ type_)
+            )

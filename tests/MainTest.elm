@@ -629,7 +629,12 @@ oldjson =
                             "Violet"
                         ]
                         },
-                        "visibilityRule": "AlwaysShown"
+                        "visibilityRule": {
+                            "type": "ShowWhen",
+                            "condition": {
+                                "type": "Always"
+                            }
+                        }
                     },
                     {
                         "label": "Question 2",
@@ -642,7 +647,12 @@ oldjson =
                             "No"
                         ]
                         },
-                        "visibilityRule": "AlwaysShown"
+                        "visibilityRule": {
+                            "type": "ShowWhen",
+                            "condition": {
+                                "type": "Always"
+                            }
+                        }
                     },
                     {
                         "label": "Question 3",
@@ -657,7 +667,12 @@ oldjson =
                             "Durian"
                         ]
                         },
-                        "visibilityRule": "AlwaysShown"
+                        "visibilityRule": {
+                            "type": "ShowWhen",
+                            "condition": {
+                                "type": "Always"
+                            }
+                        }
                     },
                     {
                         "label": "Question 4",
@@ -667,7 +682,12 @@ oldjson =
                         "type": "LongText",
                         "maxLength": 280
                         },
-                        "visibilityRule": "AlwaysShown"
+                        "visibilityRule": {
+                            "type": "ShowWhen",
+                            "condition": {
+                                "type": "Always"
+                            }
+                        }
                     },
                     {
                         "label": "Question 5",
@@ -678,7 +698,12 @@ oldjson =
                         "inputType": "Single-line free text",
                         "maxLength": 140
                         },
-                        "visibilityRule": "AlwaysShown"
+                        "visibilityRule": {
+                            "type": "ShowWhen",
+                            "condition": {
+                                "type": "Always"
+                            }
+                        }
                     },
                     {
                         "label": "Question 6",
@@ -689,7 +714,12 @@ oldjson =
                         "inputType": "NRIC",
                         "maxLength": null
                         },
-                        "visibilityRule": "AlwaysShown"
+                        "visibilityRule": {
+                            "type": "ShowWhen",
+                            "condition": {
+                                "type": "Always"
+                            }
+                        }
                     }
                 ]
                 """
@@ -865,7 +895,7 @@ fuzzFormField =
         presenceFuzzer
         (attributeOptionalFuzzer string { blank = "" })
         inputFieldFuzzer
-        (Fuzz.constant Main.ShowWhen Main.Always)
+        (Fuzz.constant (Main.ShowWhen Main.Always))
 
 
 attributeOptionalFuzzer : Fuzzer a -> { blank : a } -> Fuzzer (Main.AttributeOptional a)
@@ -931,7 +961,7 @@ oldFormFieldFuzzer =
         oldPresenceFuzzer
         string
         inputFieldFuzzer
-        (Fuzz.constant Main.ShowWhen Main.Always)
+        (Fuzz.constant (Main.ShowWhen Main.Always))
 
 
 newFieldFromOldField : FormField -> Main.FormField
