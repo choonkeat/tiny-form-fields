@@ -11,7 +11,7 @@ Add support for conditional visibility where each field can specify when it shou
 ### Configuration
 - [x] Add "Visibility Rules" section in field settings
     - [x] Iteration 1: Just the model
-        - Add `VisibilityRule` type with `AlwaysVisible` constructor
+        - Add `VisibilityRule` type with `AlwaysShown` constructor
         - Add `visibilityRule` field of type `VisibilityRule` to field model
         - Update decoder/encoder
     - [x] Iteration 2: Just the settings section presence
@@ -19,7 +19,7 @@ Add support for conditional visibility where each field can specify when it shou
         - Add section header text
         - No content yet
     - [x] Iteration 3: Just display current rule
-        - Add text to show current rule ("Always visible")
+        - Add text to show current rule ("Always shown")
         - No editing capability yet
 - [ ] Allow selecting which other fields' values control this field's visibility
     - [x] Iteration 1: Just the model
@@ -28,6 +28,12 @@ Add support for conditional visibility where each field can specify when it shou
           type Operator
               = Equals String
               | Contains String
+          ```
+        - Add `VisibilityRule` constructors:
+          ```elm
+          type VisibilityRule
+              = AlwaysShown
+              | HideWhen String Operator
           ```
         - Add `FieldDependency` type:
           ```elm

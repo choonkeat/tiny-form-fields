@@ -152,8 +152,8 @@ type Operator
 
 
 type VisibilityRule
-    = AlwaysVisible
-    | WhenFieldIs String Operator
+    = AlwaysShown
+    | HideWhen String Operator
 
 
 type alias FormField =
@@ -361,7 +361,6 @@ type Msg
     | DragOver (Maybe Droppable)
     | Drop (Maybe Int)
     | DoSleepDo Float (List Msg)
-    | AddDependencyButtonClicked Int
 
 
 type alias Droppable =
@@ -486,7 +485,7 @@ update msg model =
                     , presence = when (mustBeOptional fieldType) { true = Optional, false = Required }
                     , description = AttributeNotNeeded Nothing
                     , type_ = fieldType
-                    , visibilityRule = AlwaysVisible
+                    , visibilityRule = AlwaysShown
                     }
 
                 newFormFields =
@@ -645,9 +644,6 @@ update msg model =
                     |> Task.perform (always (DoSleepDo duration nextMsgs))
                 ]
             )
-
-        AddDependencyButtonClicked index ->
-            ( model, Cmd.none )
 
 
 updateFormField : FormFieldMsg -> String -> FormField -> FormField
@@ -1578,26 +1574,16 @@ viewFormFieldBuilder shortTextTypeList index totalLength formField =
                 ]
                 [ text "⨯ Delete" ]
 
-        addDependencyButton =
-            button
-                [ class "tff-add-dependency"
-                , type_ "button"
-                , tabindex 0
-                , title "Add dependency"
-                , onClick (AddDependencyButtonClicked index)
-                ]
-                [ text "Add dependency" ]
-
         visibilityRulesSection =
             div [ class "tff-field-group" ]
                 [ label [ class "tff-field-label" ] [ text "Visibility Rules" ]
                 , div [ class "tff-text-field" ]
                     [ text
                         (case formField.visibilityRule of
-                            AlwaysVisible ->
+                            AlwaysShown ->
                                 "Always visible"
 
-                            WhenFieldIs fieldName operator ->
+                            HideWhen fieldName operator ->
                                 "When "
                                     ++ fieldName
                                     ++ " is "
@@ -1617,7 +1603,6 @@ viewFormFieldBuilder shortTextTypeList index totalLength formField =
                         ]
                         [ option [ value "" ] [ text "Select a field" ]
                         ]
-                    , addDependencyButton
                     ]
                 ]
     in
@@ -1700,7 +1685,6 @@ viewFormFieldBuilder shortTextTypeList index totalLength formField =
 
                         System ->
                             text ""
-                    , addDependencyButton
                     ]
                ]
         )
@@ -1744,6 +1728,10 @@ viewRightPanel modelData =
                     text "Select a field to edit its settings"
             ]
         ]
+
+
+type DropdownState
+    = DropdownClosed
 
 
 dragHandleIcon : Html msg
@@ -1796,7 +1784,7 @@ viewAddQuestionsList inputFields =
                                 , presence = when (mustBeOptional inputField) { true = Optional, false = Required }
                                 , description = AttributeNotNeeded Nothing
                                 , type_ = inputField
-                                , visibilityRule = AlwaysVisible
+                                , visibilityRule = AlwaysShown
                                 }
                             )
                         )
@@ -2183,12 +2171,12 @@ encodeFormFields formFields =
 encodeVisibilityRule : VisibilityRule -> Json.Encode.Value
 encodeVisibilityRule visibilityRule =
     case visibilityRule of
-        AlwaysVisible ->
-            Json.Encode.string "AlwaysVisible"
+        AlwaysShown ->
+            Json.Encode.string "AlwaysShown"
 
-        WhenFieldIs fieldName operator ->
+        HideWhen fieldName operator ->
             Json.Encode.object
-                [ ( "type", Json.Encode.string "WhenFieldIs" )
+                [ ( "type", Json.Encode.string "HideWhen" )
                 , ( "fieldName", Json.Encode.string fieldName )
                 , ( "operator", encodeOperator operator )
                 ]
@@ -2226,7 +2214,7 @@ decodeFormField =
         |> andMap (Json.Decode.field "type" decodeInputField)
         |> andMap
             (Json.Decode.Extra.optionalNullableField "visibilityRule" decodeVisibilityRule
-                |> Json.Decode.map (Maybe.withDefault AlwaysVisible)
+                |> Json.Decode.map (Maybe.withDefault AlwaysShown)
             )
 
 
@@ -2271,11 +2259,11 @@ decodeVisibilityRule =
         |> Json.Decode.andThen
             (\str ->
                 case str of
-                    "AlwaysVisible" ->
-                        Json.Decode.succeed AlwaysVisible
+                    "AlwaysShown" ->
+                        Json.Decode.succeed AlwaysShown
 
-                    "WhenFieldIs" ->
-                        Json.Decode.succeed WhenFieldIs
+                    "HideWhen" ->
+                        Json.Decode.succeed HideWhen
                             |> andMap (Json.Decode.field "fieldName" Json.Decode.string)
                             |> andMap (Json.Decode.field "operator" decodeOperator)
 
@@ -2613,7 +2601,3 @@ dragOverDecoder index maybeFormField =
         ( DragOver (Just ( index, maybeFormField ))
         , True
         )
-
-
-type DropdownState
-    = DropdownClosed

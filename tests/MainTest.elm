@@ -25,7 +25,7 @@ field1 =
     , presence = Main.Required
     , description = Main.AttributeNotNeeded Nothing
     , name = Nothing
-    , visibilityRule = Main.AlwaysVisible
+    , visibilityRule = Main.AlwaysShown
     }
 
 
@@ -36,7 +36,7 @@ field2 =
     , presence = Main.Required
     , description = Main.AttributeNotNeeded Nothing
     , name = Nothing
-    , visibilityRule = Main.AlwaysVisible
+    , visibilityRule = Main.AlwaysShown
     }
 
 
@@ -47,7 +47,7 @@ field3 =
     , presence = Main.Required
     , description = Main.AttributeNotNeeded Nothing
     , name = Nothing
-    , visibilityRule = Main.AlwaysVisible
+    , visibilityRule = Main.AlwaysShown
     }
 
 
@@ -546,7 +546,7 @@ oldjson =
                                             , multiple = Main.AttributeNotNeeded Nothing
                                             , maxlength = Main.AttributeNotNeeded Nothing
                                             }
-                                  , visibilityRule = Main.AlwaysVisible
+                                  , visibilityRule = Main.AlwaysShown
                                   }
                                 , { description = Main.AttributeGiven "your personal email"
                                   , label = "Email 2"
@@ -561,14 +561,14 @@ oldjson =
                                             , multiple = Main.AttributeNotNeeded Nothing
                                             , maxlength = Main.AttributeNotNeeded Nothing
                                             }
-                                  , visibilityRule = Main.AlwaysVisible
+                                  , visibilityRule = Main.AlwaysShown
                                   }
                                 , { description = Main.AttributeGiven "any comments"
                                   , label = "Long text 3"
                                   , name = Nothing
                                   , presence = Main.Required
                                   , type_ = Main.LongText (Main.AttributeGiven 280)
-                                  , visibilityRule = Main.AlwaysVisible
+                                  , visibilityRule = Main.AlwaysShown
                                   }
                                 , { description = Main.AttributeGiven "Binary choice"
                                   , label = "Dropdown 4"
@@ -583,7 +583,7 @@ oldjson =
                                               , value = "No"
                                               }
                                             ]
-                                  , visibilityRule = Main.AlwaysVisible
+                                  , visibilityRule = Main.AlwaysShown
                                   }
                                 , { description = Main.AttributeGiven "Choose many or none"
                                   , label = "Checkboxes 5"
@@ -604,7 +604,7 @@ oldjson =
                                               , value = "Durian"
                                               }
                                             ]
-                                  , visibilityRule = Main.AlwaysVisible
+                                  , visibilityRule = Main.AlwaysShown
                                   }
                                 ]
                             )
@@ -629,7 +629,7 @@ oldjson =
                             "Violet"
                         ]
                         },
-                        "visibilityRule": "AlwaysVisible"
+                        "visibilityRule": "AlwaysShown"
                     },
                     {
                         "label": "Question 2",
@@ -642,7 +642,7 @@ oldjson =
                             "No"
                         ]
                         },
-                        "visibilityRule": "AlwaysVisible"
+                        "visibilityRule": "AlwaysShown"
                     },
                     {
                         "label": "Question 3",
@@ -657,7 +657,7 @@ oldjson =
                             "Durian"
                         ]
                         },
-                        "visibilityRule": "AlwaysVisible"
+                        "visibilityRule": "AlwaysShown"
                     },
                     {
                         "label": "Question 4",
@@ -667,7 +667,7 @@ oldjson =
                         "type": "LongText",
                         "maxLength": 280
                         },
-                        "visibilityRule": "AlwaysVisible"
+                        "visibilityRule": "AlwaysShown"
                     },
                     {
                         "label": "Question 5",
@@ -678,7 +678,7 @@ oldjson =
                         "inputType": "Single-line free text",
                         "maxLength": 140
                         },
-                        "visibilityRule": "AlwaysVisible"
+                        "visibilityRule": "AlwaysShown"
                     },
                     {
                         "label": "Question 6",
@@ -689,7 +689,7 @@ oldjson =
                         "inputType": "NRIC",
                         "maxLength": null
                         },
-                        "visibilityRule": "AlwaysVisible"
+                        "visibilityRule": "AlwaysShown"
                     }
                 ]
                 """
@@ -713,7 +713,7 @@ oldjson =
                                             , { label = "Indigo", value = "Indigo" }
                                             , { label = "Violet", value = "Violet" }
                                             ]
-                                  , visibilityRule = Main.AlwaysVisible
+                                  , visibilityRule = Main.AlwaysShown
                                   }
                                 , { description = Main.AttributeGiven "my radio desc"
                                   , label = "Question 2"
@@ -724,7 +724,7 @@ oldjson =
                                             [ { label = "Yes", value = "Yes" }
                                             , { label = "No", value = "No" }
                                             ]
-                                  , visibilityRule = Main.AlwaysVisible
+                                  , visibilityRule = Main.AlwaysShown
                                   }
                                 , { description = Main.AttributeGiven "My checkboxes desc"
                                   , label = "Question 3"
@@ -737,14 +737,14 @@ oldjson =
                                             , { label = "Cantaloupe", value = "Cantaloupe" }
                                             , { label = "Durian", value = "Durian" }
                                             ]
-                                  , visibilityRule = Main.AlwaysVisible
+                                  , visibilityRule = Main.AlwaysShown
                                   }
                                 , { description = Main.AttributeGiven "any comments"
                                   , label = "Question 4"
                                   , name = Nothing
                                   , presence = Main.Required
                                   , type_ = Main.LongText (Main.AttributeGiven 280)
-                                  , visibilityRule = Main.AlwaysVisible
+                                  , visibilityRule = Main.AlwaysShown
                                   }
                                 , { description = Main.AttributeGiven "any text"
                                   , label = "Question 5"
@@ -759,7 +759,7 @@ oldjson =
                                             , multiple = Main.AttributeNotNeeded Nothing
                                             , maxlength = Main.AttributeNotNeeded Nothing
                                             }
-                                  , visibilityRule = Main.AlwaysVisible
+                                  , visibilityRule = Main.AlwaysShown
                                   }
                                 , { description = Main.AttributeGiven "custom nric format"
                                   , label = "Question 6"
@@ -774,7 +774,7 @@ oldjson =
                                             , multiple = Main.AttributeNotNeeded Nothing
                                             , maxlength = Main.AttributeNotNeeded Nothing
                                             }
-                                  , visibilityRule = Main.AlwaysVisible
+                                  , visibilityRule = Main.AlwaysShown
                                   }
                                 ]
                             )
@@ -865,7 +865,7 @@ fuzzFormField =
         presenceFuzzer
         (attributeOptionalFuzzer string { blank = "" })
         inputFieldFuzzer
-        (Fuzz.constant Main.AlwaysVisible)
+        (Fuzz.constant Main.AlwaysShown)
 
 
 attributeOptionalFuzzer : Fuzzer a -> { blank : a } -> Fuzzer (Main.AttributeOptional a)
@@ -931,7 +931,7 @@ oldFormFieldFuzzer =
         oldPresenceFuzzer
         string
         inputFieldFuzzer
-        (Fuzz.constant Main.AlwaysVisible)
+        (Fuzz.constant Main.AlwaysShown)
 
 
 newFieldFromOldField : FormField -> Main.FormField
@@ -1014,7 +1014,7 @@ newFieldFromOldField oldField =
                 Main.AttributeNotNeeded _ ->
                     Main.AttributeGiven oldField.description
     , type_ = oldField.type_
-    , visibilityRule = oldField.visibilityRule
+    , visibilityRule = Main.AlwaysShown
     }
 
 

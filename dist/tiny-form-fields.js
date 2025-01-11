@@ -5744,7 +5744,7 @@ var $author$project$Main$decodeRequired = A2(
 		return b ? 0 : 1;
 	},
 	A2($elm$json$Json$Decode$field, 'required', $elm$json$Json$Decode$bool));
-var $author$project$Main$WhenFieldIs = F2(
+var $author$project$Main$WhenField = F2(
 	function (a, b) {
 		return {$: 1, a: a, b: b};
 	});
@@ -5779,14 +5779,14 @@ var $author$project$Main$decodeVisibilityRule = A2(
 		switch (str) {
 			case 'AlwaysVisible':
 				return $elm$json$Json$Decode$succeed($author$project$Main$AlwaysVisible);
-			case 'WhenFieldIs':
+			case 'WhenField':
 				return A2(
 					$elm_community$json_extra$Json$Decode$Extra$andMap,
 					A2($elm$json$Json$Decode$field, 'operator', $author$project$Main$decodeOperator),
 					A2(
 						$elm_community$json_extra$Json$Decode$Extra$andMap,
 						A2($elm$json$Json$Decode$field, 'fieldName', $elm$json$Json$Decode$string),
-						$elm$json$Json$Decode$succeed($author$project$Main$WhenFieldIs)));
+						$elm$json$Json$Decode$succeed($author$project$Main$WhenField)));
 			default:
 				return $elm$json$Json$Decode$fail('Unknown visibility rule: ' + str);
 		}
@@ -6324,7 +6324,7 @@ var $author$project$Main$encodeVisibilityRule = function (visibilityRule) {
 				[
 					_Utils_Tuple2(
 					'type',
-					$elm$json$Json$Encode$string('WhenFieldIs')),
+					$elm$json$Json$Encode$string('WhenField')),
 					_Utils_Tuple2(
 					'fieldName',
 					$elm$json$Json$Encode$string(fieldName)),
