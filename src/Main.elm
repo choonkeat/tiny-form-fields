@@ -1596,14 +1596,6 @@ viewFormFieldBuilder shortTextTypeList index totalLength formField =
                                        )
                         )
                     ]
-                , div [ class "tff-dependency-controls" ]
-                    [ select
-                        [ class "tff-field-select"
-                        , disabled True
-                        ]
-                        [ option [ value "" ] [ text "Select a field" ]
-                        ]
-                    ]
                 ]
     in
     div [ class buildFieldClass ]

@@ -14073,35 +14073,6 @@ var $author$project$Main$viewFormFieldBuilder = F4(
 									}()));
 								}
 							}())
-						])),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('tff-dependency-controls')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$select,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('tff-field-select'),
-									$elm$html$Html$Attributes$disabled(true)
-								]),
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$option,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$value('')
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text('Select a field')
-										]))
-								]))
 						]))
 				]));
 		var idSuffix = $elm$core$String$fromInt(index);
