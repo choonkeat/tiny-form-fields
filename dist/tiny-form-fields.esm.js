@@ -14958,6 +14958,83 @@ var $author$project$Main$viewFormBuilder = F2(
 					]))
 			]);
 	});
+var $elm$core$Array$filter = F2(
+	function (isGood, array) {
+		return $elm$core$Array$fromList(
+			A3(
+				$elm$core$Array$foldr,
+				F2(
+					function (x, xs) {
+						return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
+					}),
+				_List_Nil,
+				array));
+	});
+var $elm$core$List$all = F2(
+	function (isOkay, list) {
+		return !A2(
+			$elm$core$List$any,
+			A2($elm$core$Basics$composeL, $elm$core$Basics$not, isOkay),
+			list);
+	});
+var $author$project$Main$evaluateCondition = F2(
+	function (formValues, condition) {
+		switch (condition.$) {
+			case 'Always':
+				return true;
+			case 'FieldEquals':
+				var fieldName = condition.a;
+				var value = condition.b;
+				var _v1 = A2(
+					$elm$json$Json$Decode$decodeValue,
+					A2($elm$json$Json$Decode$field, fieldName, $elm$json$Json$Decode$string),
+					formValues);
+				if (_v1.$ === 'Ok') {
+					var fieldValue = _v1.a;
+					return _Utils_eq(fieldValue, value);
+				} else {
+					return false;
+				}
+			case 'FieldContains':
+				var fieldName = condition.a;
+				var value = condition.b;
+				var _v2 = A2(
+					$elm$json$Json$Decode$decodeValue,
+					A2($elm$json$Json$Decode$field, fieldName, $elm$json$Json$Decode$string),
+					formValues);
+				if (_v2.$ === 'Ok') {
+					var fieldValue = _v2.a;
+					return A2($elm$core$String$contains, value, fieldValue);
+				} else {
+					return false;
+				}
+			case 'And':
+				var conditions = condition.a;
+				return A2(
+					$elm$core$List$all,
+					$author$project$Main$evaluateCondition(formValues),
+					conditions);
+			case 'Or':
+				var conditions = condition.a;
+				return A2(
+					$elm$core$List$any,
+					$author$project$Main$evaluateCondition(formValues),
+					conditions);
+			default:
+				var cond = condition.a;
+				return !A2($author$project$Main$evaluateCondition, formValues, cond);
+		}
+	});
+var $author$project$Main$isVisibilityRuleSatisfied = F2(
+	function (formValues, rule) {
+		if (rule.$ === 'ShowWhen') {
+			var condition = rule.a;
+			return A2($author$project$Main$evaluateCondition, formValues, condition);
+		} else {
+			var condition = rule.a;
+			return !A2($author$project$Main$evaluateCondition, formValues, condition);
+		}
+	});
 var $author$project$Main$viewFormPreview = F2(
 	function (customAttrs, _v0) {
 		var formFields = _v0.formFields;
@@ -14968,7 +15045,12 @@ var $author$project$Main$viewFormPreview = F2(
 			A2(
 				$elm$core$Array$indexedMap,
 				$author$project$Main$viewFormFieldPreview(config),
-				formFields));
+				A2(
+					$elm$core$Array$filter,
+					function (formField) {
+						return A2($author$project$Main$isVisibilityRuleSatisfied, formValues, formField.visibilityRule);
+					},
+					formFields)));
 	});
 var $author$project$Main$viewMain = function (model) {
 	return A2(

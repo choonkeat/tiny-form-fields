@@ -1108,6 +1108,7 @@ viewFormPreview customAttrs { formFields, formValues, shortTextTypeDict } =
             }
     in
     formFields
+        |> Array.filter (\formField -> isVisibilityRuleSatisfied formValues formField.visibilityRule)
         |> Array.indexedMap (viewFormFieldPreview config)
         |> Array.toList
 
@@ -2833,3 +2834,45 @@ decodeCondition =
                     _ ->
                         Json.Decode.fail ("Unknown condition type: " ++ type_)
             )
+
+
+evaluateCondition : Json.Encode.Value -> Condition -> Bool
+evaluateCondition formValues condition =
+    case condition of
+        Always ->
+            True
+
+        FieldEquals fieldName value ->
+            case Json.Decode.decodeValue (Json.Decode.field fieldName Json.Decode.string) formValues of
+                Ok fieldValue ->
+                    fieldValue == value
+
+                Err _ ->
+                    False
+
+        FieldContains fieldName value ->
+            case Json.Decode.decodeValue (Json.Decode.field fieldName Json.Decode.string) formValues of
+                Ok fieldValue ->
+                    String.contains value fieldValue
+
+                Err _ ->
+                    False
+
+        And conditions ->
+            List.all (evaluateCondition formValues) conditions
+
+        Or conditions ->
+            List.any (evaluateCondition formValues) conditions
+
+        Not cond ->
+            not (evaluateCondition formValues cond)
+
+
+isVisibilityRuleSatisfied : Json.Encode.Value -> VisibilityRule -> Bool
+isVisibilityRuleSatisfied formValues rule =
+    case rule of
+        ShowWhen condition ->
+            evaluateCondition formValues condition
+
+        HideWhen condition ->
+            not (evaluateCondition formValues condition)
