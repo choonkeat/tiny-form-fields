@@ -629,12 +629,7 @@ oldjson =
                             "Violet"
                         ]
                         },
-                        "visibilityRule": {
-                            "type": "ShowWhen",
-                            "condition": {
-                                "type": "Always"
-                            }
-                        }
+                        "visibilityRule": null
                     },
                     {
                         "label": "Question 2",
@@ -646,12 +641,6 @@ oldjson =
                             "Yes",
                             "No"
                         ]
-                        },
-                        "visibilityRule": {
-                            "type": "ShowWhen",
-                            "condition": {
-                                "type": "Always"
-                            }
                         }
                     },
                     {
