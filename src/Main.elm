@@ -412,6 +412,7 @@ type FormFieldMsg
     | OnMaxLengthInput
     | OnDatalistToggle Bool
     | OnDatalistInput
+    | OnVisibilityRuleTypeInput Bool
 
 
 
@@ -852,6 +853,16 @@ updateFormField msg string formField =
 
                 ChooseMultiple _ ->
                     formField
+
+        OnVisibilityRuleTypeInput isShow ->
+            { formField
+                | visibilityRule =
+                    if isShow then
+                        ShowWhen (visibilityRuleCondition formField.visibilityRule)
+
+                    else
+                        HideWhen (visibilityRuleCondition formField.visibilityRule)
+            }
 
 
 onDropped : Maybe Int -> { a | dragged : Maybe Dragged, formFields : Array FormField } -> { a | dragged : Maybe Dragged, formFields : Array FormField }
@@ -1611,13 +1622,23 @@ viewFormFieldBuilder shortTextTypeList index totalLength formField =
         visibilityRulesSection =
             div [ class "tff-field-group" ]
                 [ label [ class "tff-field-label" ] [ text "Visibility Rules" ]
-                , select [ class "tff-text-field" ]
-                    [ option
-                        [ selected (isShowWhen formField.visibilityRule) ]
-                        [ text "Show" ]
-                    , option
-                        [ selected (isHideWhen formField.visibilityRule) ]
-                        [ text "Hide" ]
+                , div [ class "tff-dropdown-group" ]
+                    [ selectArrowDown
+                    , select
+                        [ class "tff-text-field"
+                        , onInput (\str -> OnFormField (OnVisibilityRuleTypeInput (str == "Show")) index "")
+                        ]
+                        [ option
+                            [ selected (isShowWhen formField.visibilityRule)
+                            , value "Show"
+                            ]
+                            [ text "Show" ]
+                        , option
+                            [ selected (isHideWhen formField.visibilityRule)
+                            , value "Hide"
+                            ]
+                            [ text "Hide" ]
+                        ]
                     ]
                 , div [ class "tff-text-field" ]
                     [ text ("when " ++ stringFromCondition (visibilityRuleCondition formField.visibilityRule)) ]

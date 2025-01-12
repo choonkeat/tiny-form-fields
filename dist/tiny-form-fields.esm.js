@@ -12263,6 +12263,15 @@ var $author$project$Main$toggleAttributeOptional = F2(
 					$elm$core$Maybe$Just(a));
 		}
 	});
+var $author$project$Main$visibilityRuleCondition = function (rule) {
+	if (rule.$ === 'ShowWhen') {
+		var condition = rule.a;
+		return condition;
+	} else {
+		var condition = rule.a;
+		return condition;
+	}
+};
 var $author$project$Main$updateFormField = F3(
 	function (msg, string, formField) {
 		switch (msg.$) {
@@ -12458,7 +12467,7 @@ var $author$project$Main$updateFormField = F3(
 					default:
 						return formField;
 				}
-			default:
+			case 'OnDatalistInput':
 				var _v8 = formField.type_;
 				switch (_v8.$) {
 					case 'ShortText':
@@ -12495,6 +12504,15 @@ var $author$project$Main$updateFormField = F3(
 					default:
 						return formField;
 				}
+			default:
+				var isShow = msg.a;
+				return _Utils_update(
+					formField,
+					{
+						visibilityRule: isShow ? $author$project$Main$ShowWhen(
+							$author$project$Main$visibilityRuleCondition(formField.visibilityRule)) : $author$project$Main$HideWhen(
+							$author$project$Main$visibilityRuleCondition(formField.visibilityRule))
+					});
 		}
 	});
 var $author$project$Main$when = F2(
@@ -13746,6 +13764,9 @@ var $author$project$Main$OnMultipleToggle = function (a) {
 var $author$project$Main$OnRequiredInput = function (a) {
 	return {$: 'OnRequiredInput', a: a};
 };
+var $author$project$Main$OnVisibilityRuleTypeInput = function (a) {
+	return {$: 'OnVisibilityRuleTypeInput', a: a};
+};
 var $author$project$Main$allowsTogglingMultiple = function (inputField) {
 	switch (inputField.$) {
 		case 'ShortText':
@@ -14185,15 +14206,6 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 					]);
 		}
 	});
-var $author$project$Main$visibilityRuleCondition = function (rule) {
-	if (rule.$ === 'ShowWhen') {
-		var condition = rule.a;
-		return condition;
-	} else {
-		var condition = rule.a;
-		return condition;
-	}
-};
 var $author$project$Main$viewFormFieldBuilder = F4(
 	function (shortTextTypeList, index, totalLength, formField) {
 		var visibilityRulesSection = A2(
@@ -14215,34 +14227,54 @@ var $author$project$Main$viewFormFieldBuilder = F4(
 							$elm$html$Html$text('Visibility Rules')
 						])),
 					A2(
-					$elm$html$Html$select,
+					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('tff-text-field')
+							$elm$html$Html$Attributes$class('tff-dropdown-group')
 						]),
 					_List_fromArray(
 						[
+							$author$project$Main$selectArrowDown,
 							A2(
-							$elm$html$Html$option,
+							$elm$html$Html$select,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$selected(
-									$author$project$Main$isShowWhen(formField.visibilityRule))
+									$elm$html$Html$Attributes$class('tff-text-field'),
+									$elm$html$Html$Events$onInput(
+									function (str) {
+										return A3(
+											$author$project$Main$OnFormField,
+											$author$project$Main$OnVisibilityRuleTypeInput(str === 'Show'),
+											index,
+											'');
+									})
 								]),
 							_List_fromArray(
 								[
-									$elm$html$Html$text('Show')
-								])),
-							A2(
-							$elm$html$Html$option,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$selected(
-									$author$project$Main$isHideWhen(formField.visibilityRule))
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text('Hide')
+									A2(
+									$elm$html$Html$option,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$selected(
+											$author$project$Main$isShowWhen(formField.visibilityRule)),
+											$elm$html$Html$Attributes$value('Show')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text('Show')
+										])),
+									A2(
+									$elm$html$Html$option,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$selected(
+											$author$project$Main$isHideWhen(formField.visibilityRule)),
+											$elm$html$Html$Attributes$value('Hide')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text('Hide')
+										]))
 								]))
 						])),
 					A2(
@@ -14757,7 +14789,7 @@ var $author$project$Main$view = function (model) {
 var $author$project$Main$main = $elm$browser$Browser$element(
 	{init: $author$project$Main$init, subscriptions: $author$project$Main$subscriptions, update: $author$project$Main$update, view: $author$project$Main$view});
 /*
-_Platform_export({'Main':{'init':$author$project$Main$main($elm$json$Json$Decode$value)({"versions":{"elm":"0.19.1"},"types":{"message":"Main.Msg","aliases":{"Main.Droppable":{"args":[],"type":"( Basics.Int, Maybe.Maybe Main.FormField )"},"Main.FormField":{"args":[],"type":"{ label : String.String, name : Maybe.Maybe String.String, presence : Main.Presence, description : Main.AttributeOptional String.String, type_ : Main.InputField, visibilityRule : Main.VisibilityRule }"},"Main.Choice":{"args":[],"type":"{ label : String.String, value : String.String }"},"Main.CustomElement":{"args":[],"type":"{ inputType : String.String, inputTag : String.String, attributes : Dict.Dict String.String String.String, multiple : Main.AttributeOptional Basics.Bool, maxlength : Main.AttributeOptional Basics.Int, datalist : Main.AttributeOptional (List.List Main.Choice) }"}},"unions":{"Main.Msg":{"args":[],"tags":{"NoOp":[],"OnPortIncoming":["Json.Encode.Value"],"AddFormField":["Main.InputField"],"DeleteFormField":["Basics.Int"],"MoveFormFieldUp":["Basics.Int"],"MoveFormFieldDown":["Basics.Int"],"OnFormField":["Main.FormFieldMsg","Basics.Int","String.String"],"SetEditorAnimate":["Maybe.Maybe ( Basics.Int, Main.Animate )"],"SelectField":["Maybe.Maybe Basics.Int"],"DragStart":["Basics.Int"],"DragStartNew":["Main.FormField"],"DragEnd":[],"DragOver":["Maybe.Maybe Main.Droppable"],"Drop":["Maybe.Maybe Basics.Int"],"DoSleepDo":["Basics.Float","List.List Main.Msg"]}},"Main.Animate":{"args":[],"tags":{"AnimateYellowFade":[],"AnimateFadeOut":[]}},"Main.AttributeOptional":{"args":["a"],"tags":{"AttributeNotNeeded":["Maybe.Maybe a"],"AttributeInvalid":["String.String"],"AttributeGiven":["a"]}},"Basics.Float":{"args":[],"tags":{"Float":[]}},"Main.FormFieldMsg":{"args":[],"tags":{"OnLabelInput":[],"OnDescriptionInput":[],"OnDescriptionToggle":["Basics.Bool"],"OnRequiredInput":["Basics.Bool"],"OnChoicesInput":[],"OnMultipleToggle":["Basics.Bool"],"OnMaxLengthToggle":["Basics.Bool"],"OnMaxLengthInput":[],"OnDatalistToggle":["Basics.Bool"],"OnDatalistInput":[]}},"Main.InputField":{"args":[],"tags":{"ShortText":["Main.CustomElement"],"LongText":["Main.AttributeOptional Basics.Int"],"Dropdown":["List.List Main.Choice"],"ChooseOne":["List.List Main.Choice"],"ChooseMultiple":["List.List Main.Choice"]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"List.List":{"args":["a"],"tags":{}},"Maybe.Maybe":{"args":["a"],"tags":{"Just":["a"],"Nothing":[]}},"Main.Presence":{"args":[],"tags":{"Required":[],"Optional":[],"System":[]}},"String.String":{"args":[],"tags":{"String":[]}},"Json.Encode.Value":{"args":[],"tags":{"Value":[]}},"Main.VisibilityRule":{"args":[],"tags":{"ShowWhen":["Main.Condition"],"HideWhen":["Main.Condition"]}},"Basics.Bool":{"args":[],"tags":{"True":[],"False":[]}},"Main.Condition":{"args":[],"tags":{"FieldEquals":["String.String","String.String"],"FieldContains":["String.String","String.String"],"And":["List.List Main.Condition"],"Or":["List.List Main.Condition"],"Not":["Main.Condition"],"Always":[]}},"Dict.Dict":{"args":["k","v"],"tags":{"RBNode_elm_builtin":["Dict.NColor","k","v","Dict.Dict k v","Dict.Dict k v"],"RBEmpty_elm_builtin":[]}},"Dict.NColor":{"args":[],"tags":{"Red":[],"Black":[]}}}}})}});}(this));
+_Platform_export({'Main':{'init':$author$project$Main$main($elm$json$Json$Decode$value)({"versions":{"elm":"0.19.1"},"types":{"message":"Main.Msg","aliases":{"Main.Droppable":{"args":[],"type":"( Basics.Int, Maybe.Maybe Main.FormField )"},"Main.FormField":{"args":[],"type":"{ label : String.String, name : Maybe.Maybe String.String, presence : Main.Presence, description : Main.AttributeOptional String.String, type_ : Main.InputField, visibilityRule : Main.VisibilityRule }"},"Main.Choice":{"args":[],"type":"{ label : String.String, value : String.String }"},"Main.CustomElement":{"args":[],"type":"{ inputType : String.String, inputTag : String.String, attributes : Dict.Dict String.String String.String, multiple : Main.AttributeOptional Basics.Bool, maxlength : Main.AttributeOptional Basics.Int, datalist : Main.AttributeOptional (List.List Main.Choice) }"}},"unions":{"Main.Msg":{"args":[],"tags":{"NoOp":[],"OnPortIncoming":["Json.Encode.Value"],"AddFormField":["Main.InputField"],"DeleteFormField":["Basics.Int"],"MoveFormFieldUp":["Basics.Int"],"MoveFormFieldDown":["Basics.Int"],"OnFormField":["Main.FormFieldMsg","Basics.Int","String.String"],"SetEditorAnimate":["Maybe.Maybe ( Basics.Int, Main.Animate )"],"SelectField":["Maybe.Maybe Basics.Int"],"DragStart":["Basics.Int"],"DragStartNew":["Main.FormField"],"DragEnd":[],"DragOver":["Maybe.Maybe Main.Droppable"],"Drop":["Maybe.Maybe Basics.Int"],"DoSleepDo":["Basics.Float","List.List Main.Msg"]}},"Main.Animate":{"args":[],"tags":{"AnimateYellowFade":[],"AnimateFadeOut":[]}},"Main.AttributeOptional":{"args":["a"],"tags":{"AttributeNotNeeded":["Maybe.Maybe a"],"AttributeInvalid":["String.String"],"AttributeGiven":["a"]}},"Basics.Float":{"args":[],"tags":{"Float":[]}},"Main.FormFieldMsg":{"args":[],"tags":{"OnLabelInput":[],"OnDescriptionInput":[],"OnDescriptionToggle":["Basics.Bool"],"OnRequiredInput":["Basics.Bool"],"OnChoicesInput":[],"OnMultipleToggle":["Basics.Bool"],"OnMaxLengthToggle":["Basics.Bool"],"OnMaxLengthInput":[],"OnDatalistToggle":["Basics.Bool"],"OnDatalistInput":[],"OnVisibilityRuleTypeInput":["Basics.Bool"]}},"Main.InputField":{"args":[],"tags":{"ShortText":["Main.CustomElement"],"LongText":["Main.AttributeOptional Basics.Int"],"Dropdown":["List.List Main.Choice"],"ChooseOne":["List.List Main.Choice"],"ChooseMultiple":["List.List Main.Choice"]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"List.List":{"args":["a"],"tags":{}},"Maybe.Maybe":{"args":["a"],"tags":{"Just":["a"],"Nothing":[]}},"Main.Presence":{"args":[],"tags":{"Required":[],"Optional":[],"System":[]}},"String.String":{"args":[],"tags":{"String":[]}},"Json.Encode.Value":{"args":[],"tags":{"Value":[]}},"Main.VisibilityRule":{"args":[],"tags":{"ShowWhen":["Main.Condition"],"HideWhen":["Main.Condition"]}},"Basics.Bool":{"args":[],"tags":{"True":[],"False":[]}},"Main.Condition":{"args":[],"tags":{"FieldEquals":["String.String","String.String"],"FieldContains":["String.String","String.String"],"And":["List.List Main.Condition"],"Or":["List.List Main.Condition"],"Not":["Main.Condition"],"Always":[]}},"Dict.Dict":{"args":["k","v"],"tags":{"RBNode_elm_builtin":["Dict.NColor","k","v","Dict.Dict k v","Dict.Dict k v"],"RBEmpty_elm_builtin":[]}},"Dict.NColor":{"args":[],"tags":{"Red":[],"Black":[]}}}}})}});}(this));
 */
-export const Elm = {'Main':{'init':$author$project$Main$main($elm$json$Json$Decode$value)({"versions":{"elm":"0.19.1"},"types":{"message":"Main.Msg","aliases":{"Main.Droppable":{"args":[],"type":"( Basics.Int, Maybe.Maybe Main.FormField )"},"Main.FormField":{"args":[],"type":"{ label : String.String, name : Maybe.Maybe String.String, presence : Main.Presence, description : Main.AttributeOptional String.String, type_ : Main.InputField, visibilityRule : Main.VisibilityRule }"},"Main.Choice":{"args":[],"type":"{ label : String.String, value : String.String }"},"Main.CustomElement":{"args":[],"type":"{ inputType : String.String, inputTag : String.String, attributes : Dict.Dict String.String String.String, multiple : Main.AttributeOptional Basics.Bool, maxlength : Main.AttributeOptional Basics.Int, datalist : Main.AttributeOptional (List.List Main.Choice) }"}},"unions":{"Main.Msg":{"args":[],"tags":{"NoOp":[],"OnPortIncoming":["Json.Encode.Value"],"AddFormField":["Main.InputField"],"DeleteFormField":["Basics.Int"],"MoveFormFieldUp":["Basics.Int"],"MoveFormFieldDown":["Basics.Int"],"OnFormField":["Main.FormFieldMsg","Basics.Int","String.String"],"SetEditorAnimate":["Maybe.Maybe ( Basics.Int, Main.Animate )"],"SelectField":["Maybe.Maybe Basics.Int"],"DragStart":["Basics.Int"],"DragStartNew":["Main.FormField"],"DragEnd":[],"DragOver":["Maybe.Maybe Main.Droppable"],"Drop":["Maybe.Maybe Basics.Int"],"DoSleepDo":["Basics.Float","List.List Main.Msg"]}},"Main.Animate":{"args":[],"tags":{"AnimateYellowFade":[],"AnimateFadeOut":[]}},"Main.AttributeOptional":{"args":["a"],"tags":{"AttributeNotNeeded":["Maybe.Maybe a"],"AttributeInvalid":["String.String"],"AttributeGiven":["a"]}},"Basics.Float":{"args":[],"tags":{"Float":[]}},"Main.FormFieldMsg":{"args":[],"tags":{"OnLabelInput":[],"OnDescriptionInput":[],"OnDescriptionToggle":["Basics.Bool"],"OnRequiredInput":["Basics.Bool"],"OnChoicesInput":[],"OnMultipleToggle":["Basics.Bool"],"OnMaxLengthToggle":["Basics.Bool"],"OnMaxLengthInput":[],"OnDatalistToggle":["Basics.Bool"],"OnDatalistInput":[]}},"Main.InputField":{"args":[],"tags":{"ShortText":["Main.CustomElement"],"LongText":["Main.AttributeOptional Basics.Int"],"Dropdown":["List.List Main.Choice"],"ChooseOne":["List.List Main.Choice"],"ChooseMultiple":["List.List Main.Choice"]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"List.List":{"args":["a"],"tags":{}},"Maybe.Maybe":{"args":["a"],"tags":{"Just":["a"],"Nothing":[]}},"Main.Presence":{"args":[],"tags":{"Required":[],"Optional":[],"System":[]}},"String.String":{"args":[],"tags":{"String":[]}},"Json.Encode.Value":{"args":[],"tags":{"Value":[]}},"Main.VisibilityRule":{"args":[],"tags":{"ShowWhen":["Main.Condition"],"HideWhen":["Main.Condition"]}},"Basics.Bool":{"args":[],"tags":{"True":[],"False":[]}},"Main.Condition":{"args":[],"tags":{"FieldEquals":["String.String","String.String"],"FieldContains":["String.String","String.String"],"And":["List.List Main.Condition"],"Or":["List.List Main.Condition"],"Not":["Main.Condition"],"Always":[]}},"Dict.Dict":{"args":["k","v"],"tags":{"RBNode_elm_builtin":["Dict.NColor","k","v","Dict.Dict k v","Dict.Dict k v"],"RBEmpty_elm_builtin":[]}},"Dict.NColor":{"args":[],"tags":{"Red":[],"Black":[]}}}}})}};
+export const Elm = {'Main':{'init':$author$project$Main$main($elm$json$Json$Decode$value)({"versions":{"elm":"0.19.1"},"types":{"message":"Main.Msg","aliases":{"Main.Droppable":{"args":[],"type":"( Basics.Int, Maybe.Maybe Main.FormField )"},"Main.FormField":{"args":[],"type":"{ label : String.String, name : Maybe.Maybe String.String, presence : Main.Presence, description : Main.AttributeOptional String.String, type_ : Main.InputField, visibilityRule : Main.VisibilityRule }"},"Main.Choice":{"args":[],"type":"{ label : String.String, value : String.String }"},"Main.CustomElement":{"args":[],"type":"{ inputType : String.String, inputTag : String.String, attributes : Dict.Dict String.String String.String, multiple : Main.AttributeOptional Basics.Bool, maxlength : Main.AttributeOptional Basics.Int, datalist : Main.AttributeOptional (List.List Main.Choice) }"}},"unions":{"Main.Msg":{"args":[],"tags":{"NoOp":[],"OnPortIncoming":["Json.Encode.Value"],"AddFormField":["Main.InputField"],"DeleteFormField":["Basics.Int"],"MoveFormFieldUp":["Basics.Int"],"MoveFormFieldDown":["Basics.Int"],"OnFormField":["Main.FormFieldMsg","Basics.Int","String.String"],"SetEditorAnimate":["Maybe.Maybe ( Basics.Int, Main.Animate )"],"SelectField":["Maybe.Maybe Basics.Int"],"DragStart":["Basics.Int"],"DragStartNew":["Main.FormField"],"DragEnd":[],"DragOver":["Maybe.Maybe Main.Droppable"],"Drop":["Maybe.Maybe Basics.Int"],"DoSleepDo":["Basics.Float","List.List Main.Msg"]}},"Main.Animate":{"args":[],"tags":{"AnimateYellowFade":[],"AnimateFadeOut":[]}},"Main.AttributeOptional":{"args":["a"],"tags":{"AttributeNotNeeded":["Maybe.Maybe a"],"AttributeInvalid":["String.String"],"AttributeGiven":["a"]}},"Basics.Float":{"args":[],"tags":{"Float":[]}},"Main.FormFieldMsg":{"args":[],"tags":{"OnLabelInput":[],"OnDescriptionInput":[],"OnDescriptionToggle":["Basics.Bool"],"OnRequiredInput":["Basics.Bool"],"OnChoicesInput":[],"OnMultipleToggle":["Basics.Bool"],"OnMaxLengthToggle":["Basics.Bool"],"OnMaxLengthInput":[],"OnDatalistToggle":["Basics.Bool"],"OnDatalistInput":[],"OnVisibilityRuleTypeInput":["Basics.Bool"]}},"Main.InputField":{"args":[],"tags":{"ShortText":["Main.CustomElement"],"LongText":["Main.AttributeOptional Basics.Int"],"Dropdown":["List.List Main.Choice"],"ChooseOne":["List.List Main.Choice"],"ChooseMultiple":["List.List Main.Choice"]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"List.List":{"args":["a"],"tags":{}},"Maybe.Maybe":{"args":["a"],"tags":{"Just":["a"],"Nothing":[]}},"Main.Presence":{"args":[],"tags":{"Required":[],"Optional":[],"System":[]}},"String.String":{"args":[],"tags":{"String":[]}},"Json.Encode.Value":{"args":[],"tags":{"Value":[]}},"Main.VisibilityRule":{"args":[],"tags":{"ShowWhen":["Main.Condition"],"HideWhen":["Main.Condition"]}},"Basics.Bool":{"args":[],"tags":{"True":[],"False":[]}},"Main.Condition":{"args":[],"tags":{"FieldEquals":["String.String","String.String"],"FieldContains":["String.String","String.String"],"And":["List.List Main.Condition"],"Or":["List.List Main.Condition"],"Not":["Main.Condition"],"Always":[]}},"Dict.Dict":{"args":["k","v"],"tags":{"RBNode_elm_builtin":["Dict.NColor","k","v","Dict.Dict k v","Dict.Dict k v"],"RBEmpty_elm_builtin":[]}},"Dict.NColor":{"args":[],"tags":{"Red":[],"Black":[]}}}}})}};
   
