@@ -13902,6 +13902,20 @@ var $author$project$Main$inputAttributeOptional = F2(
 						]));
 		}
 	});
+var $author$project$Main$isHideWhen = function (rule) {
+	if (rule.$ === 'ShowWhen') {
+		return false;
+	} else {
+		return true;
+	}
+};
+var $author$project$Main$isShowWhen = function (rule) {
+	if (rule.$ === 'ShowWhen') {
+		return true;
+	} else {
+		return false;
+	}
+};
 var $author$project$Main$maybeMultipleOf = function (formField) {
 	var _v0 = formField.type_;
 	switch (_v0.$) {
@@ -14171,6 +14185,15 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 					]);
 		}
 	});
+var $author$project$Main$visibilityRuleCondition = function (rule) {
+	if (rule.$ === 'ShowWhen') {
+		var condition = rule.a;
+		return condition;
+	} else {
+		var condition = rule.a;
+		return condition;
+	}
+};
 var $author$project$Main$viewFormFieldBuilder = F4(
 	function (shortTextTypeList, index, totalLength, formField) {
 		var visibilityRulesSection = A2(
@@ -14192,6 +14215,37 @@ var $author$project$Main$viewFormFieldBuilder = F4(
 							$elm$html$Html$text('Visibility Rules')
 						])),
 					A2(
+					$elm$html$Html$select,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('tff-text-field')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$option,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$selected(
+									$author$project$Main$isShowWhen(formField.visibilityRule))
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Show')
+								])),
+							A2(
+							$elm$html$Html$option,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$selected(
+									$author$project$Main$isHideWhen(formField.visibilityRule))
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Hide')
+								]))
+						])),
+					A2(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
@@ -14200,16 +14254,8 @@ var $author$project$Main$viewFormFieldBuilder = F4(
 					_List_fromArray(
 						[
 							$elm$html$Html$text(
-							function () {
-								var _v2 = formField.visibilityRule;
-								if (_v2.$ === 'ShowWhen') {
-									var condition = _v2.a;
-									return 'Show when ' + $author$project$Main$stringFromCondition(condition);
-								} else {
-									var condition = _v2.a;
-									return 'Hide when ' + $author$project$Main$stringFromCondition(condition);
-								}
-							}())
+							'when ' + $author$project$Main$stringFromCondition(
+								$author$project$Main$visibilityRuleCondition(formField.visibilityRule)))
 						]))
 				]));
 		var idSuffix = $elm$core$String$fromInt(index);

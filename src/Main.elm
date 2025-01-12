@@ -160,6 +160,36 @@ type VisibilityRule
     | HideWhen Condition
 
 
+isShowWhen : VisibilityRule -> Bool
+isShowWhen rule =
+    case rule of
+        ShowWhen _ ->
+            True
+
+        HideWhen _ ->
+            False
+
+
+isHideWhen : VisibilityRule -> Bool
+isHideWhen rule =
+    case rule of
+        ShowWhen _ ->
+            False
+
+        HideWhen _ ->
+            True
+
+
+visibilityRuleCondition : VisibilityRule -> Condition
+visibilityRuleCondition rule =
+    case rule of
+        ShowWhen condition ->
+            condition
+
+        HideWhen condition ->
+            condition
+
+
 type alias FormField =
     { label : String
     , name : Maybe String
@@ -1581,16 +1611,16 @@ viewFormFieldBuilder shortTextTypeList index totalLength formField =
         visibilityRulesSection =
             div [ class "tff-field-group" ]
                 [ label [ class "tff-field-label" ] [ text "Visibility Rules" ]
-                , div [ class "tff-text-field" ]
-                    [ text
-                        (case formField.visibilityRule of
-                            ShowWhen condition ->
-                                "Show when " ++ stringFromCondition condition
-
-                            HideWhen condition ->
-                                "Hide when " ++ stringFromCondition condition
-                        )
+                , select [ class "tff-text-field" ]
+                    [ option
+                        [ selected (isShowWhen formField.visibilityRule) ]
+                        [ text "Show" ]
+                    , option
+                        [ selected (isHideWhen formField.visibilityRule) ]
+                        [ text "Hide" ]
                     ]
+                , div [ class "tff-text-field" ]
+                    [ text ("when " ++ stringFromCondition (visibilityRuleCondition formField.visibilityRule)) ]
                 ]
     in
     div [ class buildFieldClass ]
