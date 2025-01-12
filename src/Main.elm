@@ -26,6 +26,7 @@ port module Main exposing
     , fromRawCustomElement
     , main
     , onDropped
+    , otherQuestionTitles
     , stringFromViewMode
     , viewModeFromString
     )
@@ -413,6 +414,17 @@ type FormFieldMsg
     | OnDatalistToggle Bool
     | OnDatalistInput
     | OnVisibilityRuleTypeInput Bool
+    | OnVisibilityConditionTypeInput String
+    | OnVisibilityConditionFieldInput String
+    | OnVisibilityConditionValueInput String
+
+
+otherQuestionTitles : Array FormField -> Int -> List String
+otherQuestionTitles formFields currentIndex =
+    Array.toList formFields
+        |> List.indexedMap (\i f -> ( i, f ))
+        |> List.filter (\( i, _ ) -> i /= currentIndex)
+        |> List.map (\( _, f ) -> f.label)
 
 
 
@@ -863,6 +875,66 @@ updateFormField msg string formField =
                     else
                         HideWhen (visibilityRuleCondition formField.visibilityRule)
             }
+
+        OnVisibilityConditionTypeInput str ->
+            case formField.visibilityRule of
+                ShowWhen condition ->
+                    { formField
+                        | visibilityRule =
+                            case str of
+                                "Always" ->
+                                    ShowWhen Always
+
+                                "FieldEquals" ->
+                                    ShowWhen (FieldEquals "" "")
+
+                                _ ->
+                                    ShowWhen condition
+                    }
+
+                HideWhen condition ->
+                    { formField
+                        | visibilityRule =
+                            case str of
+                                "Always" ->
+                                    HideWhen Always
+
+                                "FieldEquals" ->
+                                    HideWhen (FieldEquals "" "")
+
+                                _ ->
+                                    HideWhen condition
+                    }
+
+        OnVisibilityConditionFieldInput str ->
+            case formField.visibilityRule of
+                ShowWhen (FieldEquals fieldName value) ->
+                    { formField
+                        | visibilityRule = ShowWhen (FieldEquals str value)
+                    }
+
+                HideWhen (FieldEquals fieldName value) ->
+                    { formField
+                        | visibilityRule = HideWhen (FieldEquals str value)
+                    }
+
+                _ ->
+                    formField
+
+        OnVisibilityConditionValueInput str ->
+            case formField.visibilityRule of
+                ShowWhen (FieldEquals fieldName value) ->
+                    { formField
+                        | visibilityRule = ShowWhen (FieldEquals fieldName str)
+                    }
+
+                HideWhen (FieldEquals fieldName value) ->
+                    { formField
+                        | visibilityRule = HideWhen (FieldEquals fieldName str)
+                    }
+
+                _ ->
+                    formField
 
 
 onDropped : Maybe Int -> { a | dragged : Maybe Dragged, formFields : Array FormField } -> { a | dragged : Maybe Dragged, formFields : Array FormField }
@@ -1563,8 +1635,8 @@ selectArrowDown =
         ]
 
 
-viewFormFieldBuilder : List CustomElement -> Int -> Int -> FormField -> Html Msg
-viewFormFieldBuilder shortTextTypeList index totalLength formField =
+viewFormFieldBuilder : List CustomElement -> Int -> Int -> Array FormField -> FormField -> Html Msg
+viewFormFieldBuilder shortTextTypeList index totalLength formFields formField =
     let
         buildFieldClass =
             "tff-build-field"
@@ -1640,8 +1712,64 @@ viewFormFieldBuilder shortTextTypeList index totalLength formField =
                             [ text "Hide" ]
                         ]
                     ]
-                , div [ class "tff-text-field" ]
-                    [ text ("when " ++ stringFromCondition (visibilityRuleCondition formField.visibilityRule)) ]
+                , div [ class "tff-dropdown-group" ]
+                    [ selectArrowDown
+                    , select
+                        [ class "tff-text-field"
+                        , onInput (\str -> OnFormField (OnVisibilityConditionTypeInput str) index "")
+                        ]
+                        [ option
+                            [ selected (visibilityRuleCondition formField.visibilityRule == Always)
+                            , value "Always"
+                            ]
+                            [ text "Always" ]
+                        , option
+                            [ selected
+                                (case visibilityRuleCondition formField.visibilityRule of
+                                    FieldEquals _ _ ->
+                                        True
+
+                                    _ ->
+                                        False
+                                )
+                            , value "FieldEquals"
+                            ]
+                            [ text "Field equals" ]
+                        ]
+                    ]
+                , case visibilityRuleCondition formField.visibilityRule of
+                    FieldEquals fieldName fieldValue ->
+                        div [ class "tff-field-group" ]
+                            [ div [ class "tff-dropdown-group" ]
+                                [ selectArrowDown
+                                , select
+                                    [ class "tff-text-field"
+                                    , onInput (\str -> OnFormField (OnVisibilityConditionFieldInput str) index "")
+                                    , value fieldName
+                                    ]
+                                    (List.map
+                                        (\title ->
+                                            option
+                                                [ value title
+                                                , selected (title == fieldName)
+                                                ]
+                                                [ text title ]
+                                        )
+                                        (otherQuestionTitles formFields index)
+                                    )
+                                ]
+                            , div [ class "tff-text-field" ] [ text " equals " ]
+                            , input
+                                [ type_ "text"
+                                , value fieldValue
+                                , onInput (\str -> OnFormField (OnVisibilityConditionValueInput str) index "")
+                                , class "tff-text-field"
+                                ]
+                                []
+                            ]
+
+                    _ ->
+                        text ""
                 ]
     in
     div [ class buildFieldClass ]
@@ -1757,7 +1885,7 @@ viewRightPanel modelData =
                 Just index ->
                     case Array.get index modelData.formFields of
                         Just formField ->
-                            viewFormFieldBuilder modelData.shortTextTypeList index (Array.length modelData.formFields) formField
+                            viewFormFieldBuilder modelData.shortTextTypeList index (Array.length modelData.formFields) modelData.formFields formField
 
                         Nothing ->
                             text "Select a field to edit its settings"
