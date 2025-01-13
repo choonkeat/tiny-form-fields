@@ -86,7 +86,6 @@ type alias Model =
     , formElement : Json.Decode.Value
     , formFields : Array FormField
     , formValues : Json.Encode.Value
-    , currentValues : Dict String String
 
     -- List because order matters
     , shortTextTypeList : List CustomElement
@@ -505,7 +504,6 @@ init flags =
               , formElement = config.formElement
               , formFields = config.formFields
               , formValues = config.formValues
-              , currentValues = Dict.empty
               , shortTextTypeList = effectiveShortTextTypeList
               , shortTextTypeDict =
                     effectiveShortTextTypeList
@@ -531,7 +529,6 @@ init flags =
               , formElement = Json.Encode.null
               , formFields = Array.empty
               , formValues = Json.Encode.null
-              , currentValues = Dict.empty
               , shortTextTypeList = []
               , shortTextTypeDict = Dict.empty
               , dropdownState = DropdownClosed
@@ -742,9 +739,7 @@ update msg model =
             )
 
         OnFormValuesUpdated fieldName value ->
-            ( { model
-                | currentValues = Dict.insert fieldName value model.currentValues
-              }
+            ( model
             , Cmd.none
             )
 
@@ -1338,12 +1333,14 @@ Not an html attribute <https://developer.mozilla.org/en-US/docs/Web/HTML/Element
 -}
 defaultValue : String -> Html.Attribute msg
 defaultValue str =
-    property "defaultValue" (Json.Encode.string str)
+    -- property "defaultValue" (Json.Encode.string str)
+    value str
 
 
 defaultSelected : Bool -> Html.Attribute msg
 defaultSelected bool =
-    property "defaultSelected" (Json.Encode.bool bool)
+    -- property "defaultSelected" (Json.Encode.bool bool)
+    selected bool
 
 
 viewFormFieldOptionsPreview :

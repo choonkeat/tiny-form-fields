@@ -11711,7 +11711,6 @@ var $author$project$Main$init = function (flags) {
 			config.shortTextTypeList);
 		return _Utils_Tuple2(
 			{
-				currentValues: $elm$core$Dict$empty,
 				dragged: $elm$core$Maybe$Nothing,
 				dropdownState: $author$project$Main$DropdownClosed,
 				formElement: config.formElement,
@@ -11743,7 +11742,6 @@ var $author$project$Main$init = function (flags) {
 		var err = _v0.a;
 		return _Utils_Tuple2(
 			{
-				currentValues: $elm$core$Dict$empty,
 				dragged: $elm$core$Maybe$Nothing,
 				dropdownState: $author$project$Main$DropdownClosed,
 				formElement: $elm$json$Json$Encode$null,
@@ -12908,13 +12906,7 @@ var $author$project$Main$update = F2(
 				default:
 					var fieldName = msg.a;
 					var value = msg.b;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								currentValues: A3($elm$core$Dict$insert, fieldName, value, model.currentValues)
-							}),
-						$elm$core$Platform$Cmd$none);
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 			}
 		}
 	});
@@ -13258,25 +13250,12 @@ var $author$project$Main$attributesFromTuple = function (_v0) {
 };
 var $elm$html$Html$Attributes$checked = $elm$html$Html$Attributes$boolProperty('checked');
 var $elm$html$Html$datalist = _VirtualDom_node('datalist');
-var $elm$virtual_dom$VirtualDom$property = F2(
-	function (key, value) {
-		return A2(
-			_VirtualDom_property,
-			_VirtualDom_noInnerHtmlOrFormAction(key),
-			_VirtualDom_noJavaScriptOrHtmlJson(value));
-	});
-var $elm$html$Html$Attributes$property = $elm$virtual_dom$VirtualDom$property;
+var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
 var $author$project$Main$defaultSelected = function (bool) {
-	return A2(
-		$elm$html$Html$Attributes$property,
-		'defaultSelected',
-		$elm$json$Json$Encode$bool(bool));
+	return $elm$html$Html$Attributes$selected(bool);
 };
 var $author$project$Main$defaultValue = function (str) {
-	return A2(
-		$elm$html$Html$Attributes$property,
-		'defaultValue',
-		$elm$json$Json$Encode$string(str));
+	return $elm$html$Html$Attributes$value(str);
 };
 var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty('disabled');
 var $elm$html$Html$Attributes$maxlength = function (n) {
@@ -14252,7 +14231,6 @@ var $author$project$Main$otherQuestionTitles = F2(
 						}),
 					$elm$core$Array$toList(formFields))));
 	});
-var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
 var $elm$core$String$toLower = _String_toLower;
 var $author$project$Main$OnChoicesInput = {$: 'OnChoicesInput'};
 var $author$project$Main$OnDatalistInput = {$: 'OnDatalistInput'};
