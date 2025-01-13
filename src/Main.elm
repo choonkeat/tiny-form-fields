@@ -86,7 +86,6 @@ type alias Model =
     , initError : Maybe String
     , formElement : Json.Decode.Value
     , formFields : Array FormField
-    , formValues : Json.Encode.Value
     , trackedFormValues : Dict String (List String)
 
     -- List because order matters
@@ -529,7 +528,6 @@ init flags =
               , initError = Nothing
               , formElement = config.formElement
               , formFields = config.formFields
-              , formValues = config.formValues
               , trackedFormValues = initialTrackedFormValues
               , shortTextTypeList = effectiveShortTextTypeList
               , shortTextTypeDict =
@@ -542,10 +540,6 @@ init flags =
               }
             , Cmd.batch
                 [ outgoing (encodePortOutgoingValue (PortOutgoingFormFields config.formFields))
-
-                -- js could've just done `document.body.addEventListener` and `app.ports.incoming.send` anyways
-                -- but we're sending out PortOutgoingSetupCloseDropdown to be surer that js would do it
-                -- also, we now dictate what `app.ports.incoming.send` sends back: PortIncomingCloseDropdown
                 , outgoing (encodePortOutgoingValue (PortOutgoingSetupCloseDropdown PortIncomingCloseDropdown))
                 ]
             )
@@ -555,7 +549,6 @@ init flags =
               , initError = Just (Json.Decode.errorToString err)
               , formElement = Json.Encode.null
               , formFields = Array.empty
-              , formValues = Json.Encode.null
               , trackedFormValues = Dict.empty
               , shortTextTypeList = []
               , shortTextTypeDict = Dict.empty
@@ -1213,16 +1206,15 @@ viewMain model =
         )
 
 
-viewFormPreview : List (Html.Attribute Msg) -> { a | formFields : Array FormField, formValues : Json.Encode.Value, shortTextTypeDict : Dict String CustomElement, formElement : Json.Decode.Value, trackedFormValues : Dict String (List String) } -> List (Html Msg)
-viewFormPreview customAttrs { formFields, formValues, shortTextTypeDict, formElement, trackedFormValues } =
+viewFormPreview : List (Html.Attribute Msg) -> { a | formFields : Array FormField, trackedFormValues : Dict String (List String), shortTextTypeDict : Dict String CustomElement, formElement : Json.Decode.Value } -> List (Html Msg)
+viewFormPreview customAttrs { formFields, trackedFormValues, shortTextTypeDict, formElement } =
     let
         config =
             { customAttrs = customAttrs
-            , formValues = formValues
+            , trackedFormValues = trackedFormValues
             , shortTextTypeDict = shortTextTypeDict
             , formFields = formFields
             , targetedFieldNames = collectTargetedFieldNames formFields
-            , trackedFormValues = trackedFormValues
             , formElement = formElement
             }
     in
@@ -1241,7 +1233,7 @@ when bool condition =
         condition.false
 
 
-viewFormFieldPreview : { formValues : Json.Encode.Value, customAttrs : List (Html.Attribute Msg), shortTextTypeDict : Dict String CustomElement, formFields : Array FormField, targetedFieldNames : Set String, trackedFormValues : Dict String (List String), formElement : Json.Decode.Value } -> Int -> FormField -> Html Msg
+viewFormFieldPreview : { trackedFormValues : Dict String (List String), customAttrs : List (Html.Attribute Msg), shortTextTypeDict : Dict String CustomElement, formFields : Array FormField, targetedFieldNames : Set String, formElement : Json.Decode.Value } -> Int -> FormField -> Html Msg
 viewFormFieldPreview config index formField =
     let
         fieldID =
@@ -1403,7 +1395,7 @@ defaultSelected bool =
     selected bool
 
 
-viewFormFieldOptionsPreview : { formValues : Json.Encode.Value, customAttrs : List (Html.Attribute Msg), shortTextTypeDict : Dict String CustomElement, formFields : Array FormField, targetedFieldNames : Set String, trackedFormValues : Dict String (List String), formElement : Json.Decode.Value } -> String -> FormField -> Html Msg
+viewFormFieldOptionsPreview : { trackedFormValues : Dict String (List String), customAttrs : List (Html.Attribute Msg), shortTextTypeDict : Dict String CustomElement, formFields : Array FormField, targetedFieldNames : Set String, formElement : Json.Decode.Value } -> String -> FormField -> Html Msg
 viewFormFieldOptionsPreview config fieldID formField =
     let
         fieldName =
@@ -1457,7 +1449,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                         |> List.filterMap attributesFromTuple
 
                 extraAttrs =
-                    Maybe.map (\s -> defaultValue s) (maybeDecode fieldName Json.Decode.string config.formValues)
+                    Maybe.map (\s -> defaultValue s) (maybeDecode fieldName Json.Decode.string config.formElement)
                         :: List.map attributesFromTuple (Dict.toList customElement.attributes)
                         |> List.filterMap identity
             in
@@ -1481,7 +1473,7 @@ viewFormFieldOptionsPreview config fieldID formField =
             let
                 extraAttrs =
                     [ Maybe.map (\maxLength -> maxlength maxLength) (maybeMaxLengthOf formField)
-                    , Maybe.map (\s -> value s) (maybeDecode fieldName Json.Decode.string config.formValues)
+                    , Maybe.map (\s -> value s) (maybeDecode fieldName Json.Decode.string config.formElement)
                     ]
                         |> List.filterMap identity
             in
@@ -1500,7 +1492,7 @@ viewFormFieldOptionsPreview config fieldID formField =
         Dropdown choices ->
             let
                 valueString =
-                    maybeDecode fieldName Json.Decode.string config.formValues
+                    maybeDecode fieldName Json.Decode.string config.formElement
             in
             div [ class "tff-dropdown-group" ]
                 [ selectArrowDown
@@ -1542,7 +1534,7 @@ viewFormFieldOptionsPreview config fieldID formField =
         ChooseOne choices ->
             let
                 valueString =
-                    maybeDecode fieldName Json.Decode.string config.formValues
+                    maybeDecode fieldName Json.Decode.string config.formElement
             in
             -- radio buttons
             div [ class "tff-chooseone-group" ]
@@ -1579,7 +1571,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                             |> Maybe.withDefault []
 
                     else
-                        maybeDecode fieldName (decodeListOrSingleton Json.Decode.string) config.formValues
+                        maybeDecode fieldName (decodeListOrSingleton Json.Decode.string) config.formElement
                             |> Maybe.withDefault []
             in
             -- checkboxes
@@ -1663,11 +1655,8 @@ renderFormField maybeAnimate model index maybeFormField =
                         ]
                         [ div [ class "tff-drag-handle" ] [ dragHandleIcon ]
                         , viewFormFieldPreview
-                            { customAttrs =
-                                [ attribute "disabled" "disabled"
-                                ]
+                            { customAttrs = [ attribute "disabled" "disabled" ]
                             , formElement = model.formElement
-                            , formValues = model.formValues
                             , shortTextTypeDict = model.shortTextTypeDict
                             , formFields = model.formFields
                             , targetedFieldNames = collectTargetedFieldNames model.formFields

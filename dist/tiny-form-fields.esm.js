@@ -11800,7 +11800,6 @@ var $author$project$Main$init = function (flags) {
 				dropdownState: $author$project$Main$DropdownClosed,
 				formElement: config.formElement,
 				formFields: config.formFields,
-				formValues: config.formValues,
 				initError: $elm$core$Maybe$Nothing,
 				selectedFieldIndex: $elm$core$Maybe$Nothing,
 				shortTextTypeDict: $elm$core$Dict$fromList(
@@ -11832,7 +11831,6 @@ var $author$project$Main$init = function (flags) {
 				dropdownState: $author$project$Main$DropdownClosed,
 				formElement: $elm$json$Json$Encode$null,
 				formFields: $elm$core$Array$empty,
-				formValues: $elm$json$Json$Encode$null,
 				initError: $elm$core$Maybe$Just(
 					$elm$json$Json$Decode$errorToString(err)),
 				selectedFieldIndex: $elm$core$Maybe$Nothing,
@@ -13493,7 +13491,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 							function (s) {
 								return $author$project$Main$defaultValue(s);
 							},
-							A3($author$project$Main$maybeDecode, fieldName, $elm$json$Json$Decode$string, config.formValues)),
+							A3($author$project$Main$maybeDecode, fieldName, $elm$json$Json$Decode$string, config.formElement)),
 						A2(
 							$elm$core$List$map,
 							$author$project$Main$attributesFromTuple,
@@ -13603,7 +13601,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 							function (s) {
 								return $elm$html$Html$Attributes$value(s);
 							},
-							A3($author$project$Main$maybeDecode, fieldName, $elm$json$Json$Decode$string, config.formValues))
+							A3($author$project$Main$maybeDecode, fieldName, $elm$json$Json$Decode$string, config.formElement))
 						]));
 				return A2(
 					$elm$html$Html$textarea,
@@ -13621,7 +13619,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 					_List_Nil);
 			case 'Dropdown':
 				var choices = _v0.a;
-				var valueString = A3($author$project$Main$maybeDecode, fieldName, $elm$json$Json$Decode$string, config.formValues);
+				var valueString = A3($author$project$Main$maybeDecode, fieldName, $elm$json$Json$Decode$string, config.formElement);
 				return A2(
 					$elm$html$Html$div,
 					_List_fromArray(
@@ -13684,7 +13682,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 						]));
 			case 'ChooseOne':
 				var choices = _v0.a;
-				var valueString = A3($author$project$Main$maybeDecode, fieldName, $elm$json$Json$Decode$string, config.formValues);
+				var valueString = A3($author$project$Main$maybeDecode, fieldName, $elm$json$Json$Decode$string, config.formElement);
 				return A2(
 					$elm$html$Html$div,
 					_List_fromArray(
@@ -13755,7 +13753,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 						$author$project$Main$maybeDecode,
 						fieldName,
 						$author$project$Main$decodeListOrSingleton($elm$json$Json$Decode$string),
-						config.formValues));
+						config.formElement));
 				return A2(
 					$elm$html$Html$div,
 					_List_fromArray(
@@ -14060,7 +14058,6 @@ var $author$project$Main$renderFormField = F4(
 												]),
 											formElement: model.formElement,
 											formFields: model.formFields,
-											formValues: model.formValues,
 											shortTextTypeDict: model.shortTextTypeDict,
 											targetedFieldNames: $author$project$Main$collectTargetedFieldNames(model.formFields),
 											trackedFormValues: model.trackedFormValues
@@ -15316,15 +15313,13 @@ var $author$project$Main$isVisibilityRuleSatisfied = F2(
 var $author$project$Main$viewFormPreview = F2(
 	function (customAttrs, _v0) {
 		var formFields = _v0.formFields;
-		var formValues = _v0.formValues;
+		var trackedFormValues = _v0.trackedFormValues;
 		var shortTextTypeDict = _v0.shortTextTypeDict;
 		var formElement = _v0.formElement;
-		var trackedFormValues = _v0.trackedFormValues;
 		var config = {
 			customAttrs: customAttrs,
 			formElement: formElement,
 			formFields: formFields,
-			formValues: formValues,
 			shortTextTypeDict: shortTextTypeDict,
 			targetedFieldNames: $author$project$Main$collectTargetedFieldNames(formFields),
 			trackedFormValues: trackedFormValues
