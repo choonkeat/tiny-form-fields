@@ -72,11 +72,8 @@ type alias Flags =
 
 type alias Config =
     { viewMode : ViewMode
-    , formElement : Json.Decode.Value
     , formFields : Array FormField
     , formValues : Json.Encode.Value
-
-    -- List because order matters
     , shortTextTypeList : List CustomElement
     }
 
@@ -84,14 +81,9 @@ type alias Config =
 type alias Model =
     { viewMode : ViewMode
     , initError : Maybe String
-    , formElement : Json.Decode.Value
     , formFields : Array FormField
     , trackedFormValues : Dict String (List String)
-
-    -- List because order matters
     , shortTextTypeList : List CustomElement
-
-    -- Dict to lookup by `inputType`
     , shortTextTypeDict : Dict String CustomElement
     , dropdownState : DropdownState
     , selectedFieldIndex : Maybe Int
@@ -464,14 +456,6 @@ collectFieldNamesFromVisibilityRule rule =
             collectFieldNamesFromCondition condition
 
 
-collectTargetedFieldNames : Array FormField -> Set String
-collectTargetedFieldNames formFields =
-    formFields
-        |> Array.toList
-        |> List.concatMap (.visibilityRule >> collectFieldNamesFromVisibilityRule)
-        |> Set.fromList
-
-
 
 -- INIT
 
@@ -526,7 +510,6 @@ init flags =
             in
             ( { viewMode = config.viewMode
               , initError = Nothing
-              , formElement = config.formElement
               , formFields = config.formFields
               , trackedFormValues = initialTrackedFormValues
               , shortTextTypeList = effectiveShortTextTypeList
@@ -540,10 +523,6 @@ init flags =
               }
             , Cmd.batch
                 [ outgoing (encodePortOutgoingValue (PortOutgoingFormFields config.formFields))
-
-                -- js could've just done `document.body.addEventListener` and `app.ports.incoming.send` anyways
-                -- but we're sending out PortOutgoingSetupCloseDropdown to be surer that js would do it
-                -- also, we now dictate what `app.ports.incoming.send` sends back: PortIncomingCloseDropdown
                 , outgoing (encodePortOutgoingValue (PortOutgoingSetupCloseDropdown PortIncomingCloseDropdown))
                 ]
             )
@@ -551,7 +530,6 @@ init flags =
         Err err ->
             ( { viewMode = Editor { maybeAnimate = Nothing }
               , initError = Just (Json.Decode.errorToString err)
-              , formElement = Json.Encode.null
               , formFields = Array.empty
               , trackedFormValues = Dict.empty
               , shortTextTypeList = []
@@ -1210,20 +1188,18 @@ viewMain model =
         )
 
 
-viewFormPreview : List (Html.Attribute Msg) -> { a | formFields : Array FormField, trackedFormValues : Dict String (List String), shortTextTypeDict : Dict String CustomElement, formElement : Json.Decode.Value } -> List (Html Msg)
-viewFormPreview customAttrs { formFields, trackedFormValues, shortTextTypeDict, formElement } =
+viewFormPreview : List (Html.Attribute Msg) -> { a | formFields : Array FormField, trackedFormValues : Dict String (List String), shortTextTypeDict : Dict String CustomElement } -> List (Html Msg)
+viewFormPreview customAttrs { formFields, trackedFormValues, shortTextTypeDict } =
     let
         config =
             { customAttrs = customAttrs
-            , trackedFormValues = trackedFormValues
             , shortTextTypeDict = shortTextTypeDict
             , formFields = formFields
-            , targetedFieldNames = collectTargetedFieldNames formFields
-            , formElement = formElement
+            , trackedFormValues = trackedFormValues
             }
     in
     formFields
-        |> Array.filter (\formField -> isVisibilityRuleSatisfied formField.visibilityRule formElement)
+        |> Array.filter (\formField -> isVisibilityRuleSatisfied formField.visibilityRule trackedFormValues)
         |> Array.indexedMap (viewFormFieldPreview config)
         |> Array.toList
 
@@ -1237,7 +1213,7 @@ when bool condition =
         condition.false
 
 
-viewFormFieldPreview : { trackedFormValues : Dict String (List String), customAttrs : List (Html.Attribute Msg), shortTextTypeDict : Dict String CustomElement, formFields : Array FormField, targetedFieldNames : Set String, formElement : Json.Decode.Value } -> Int -> FormField -> Html Msg
+viewFormFieldPreview : { trackedFormValues : Dict String (List String), customAttrs : List (Html.Attribute Msg), shortTextTypeDict : Dict String CustomElement, formFields : Array FormField } -> Int -> FormField -> Html Msg
 viewFormFieldPreview config index formField =
     let
         fieldID =
@@ -1248,20 +1224,16 @@ viewFormFieldPreview config index formField =
             fieldNameOf formField
 
         extraAttrs =
-            if Set.member fieldName config.targetedFieldNames then
-                case formField.type_ of
-                    ChooseMultiple _ ->
-                        []
+            case formField.type_ of
+                ChooseMultiple _ ->
+                    []
 
-                    _ ->
-                        [ on "input"
-                            (Json.Decode.at [ "target", "value" ] Json.Decode.string
-                                |> Json.Decode.map (\value -> OnFormValuesUpdated fieldName value)
-                            )
-                        ]
-
-            else
-                []
+                _ ->
+                    [ on "input"
+                        (Json.Decode.at [ "target", "value" ] Json.Decode.string
+                            |> Json.Decode.map (\value -> OnFormValuesUpdated fieldName value)
+                        )
+                    ]
     in
     div []
         [ div
@@ -1399,7 +1371,7 @@ defaultSelected bool =
     selected bool
 
 
-viewFormFieldOptionsPreview : { trackedFormValues : Dict String (List String), customAttrs : List (Html.Attribute Msg), shortTextTypeDict : Dict String CustomElement, formFields : Array FormField, targetedFieldNames : Set String, formElement : Json.Decode.Value } -> String -> FormField -> Html Msg
+viewFormFieldOptionsPreview : { trackedFormValues : Dict String (List String), customAttrs : List (Html.Attribute Msg), shortTextTypeDict : Dict String CustomElement, formFields : Array FormField } -> String -> FormField -> Html Msg
 viewFormFieldOptionsPreview config fieldID formField =
     let
         fieldName =
@@ -1574,13 +1546,8 @@ viewFormFieldOptionsPreview config fieldID formField =
         ChooseMultiple choices ->
             let
                 values =
-                    if Set.member fieldName config.targetedFieldNames then
-                        Dict.get fieldName config.trackedFormValues
-                            |> Maybe.withDefault []
-
-                    else
-                        Dict.get fieldName config.trackedFormValues
-                            |> Maybe.withDefault []
+                    Dict.get fieldName config.trackedFormValues
+                        |> Maybe.withDefault []
             in
             -- checkboxes
             div [ class "tff-choosemany-group" ]
@@ -1664,10 +1631,8 @@ renderFormField maybeAnimate model index maybeFormField =
                         [ div [ class "tff-drag-handle" ] [ dragHandleIcon ]
                         , viewFormFieldPreview
                             { customAttrs = [ attribute "disabled" "disabled" ]
-                            , formElement = model.formElement
-                            , shortTextTypeDict = model.shortTextTypeDict
                             , formFields = model.formFields
-                            , targetedFieldNames = collectTargetedFieldNames model.formFields
+                            , shortTextTypeDict = model.shortTextTypeDict
                             , trackedFormValues = model.trackedFormValues
                             }
                             index
@@ -2365,7 +2330,6 @@ decodeConfig : Json.Decode.Decoder Config
 decodeConfig =
     Json.Decode.succeed Config
         |> andMap (Json.Decode.Extra.optionalNullableField "viewMode" decodeViewMode |> Json.Decode.map (Maybe.withDefault (Editor { maybeAnimate = Nothing })))
-        |> andMap (Json.Decode.Extra.optionalNullableField "formElement" Json.Decode.value |> Json.Decode.map (Maybe.withDefault Json.Encode.null))
         |> andMap (Json.Decode.Extra.optionalNullableField "formFields" decodeFormFields |> Json.Decode.map (Maybe.withDefault Array.empty))
         |> andMap (Json.Decode.Extra.optionalNullableField "formValues" Json.Decode.value |> Json.Decode.map (Maybe.withDefault Json.Encode.null))
         |> andMap
@@ -3008,68 +2972,46 @@ decodeCondition =
             )
 
 
-evaluateCondition : Json.Decode.Value -> Condition -> Bool
-evaluateCondition formElement condition =
+evaluateCondition : Dict String (List String) -> Condition -> Bool
+evaluateCondition trackedFormValues condition =
     case condition of
         Always ->
             True
 
         FieldEquals fieldName value ->
-            case currentFormValue formElement fieldName of
-                [ fieldValue ] ->
+            case Dict.get fieldName trackedFormValues of
+                Just [ fieldValue ] ->
                     fieldValue == value
 
                 _ ->
                     False
 
         FieldContains fieldName value ->
-            case currentFormValue formElement fieldName of
-                [ fieldValue ] ->
+            case Dict.get fieldName trackedFormValues of
+                Just [ fieldValue ] ->
                     String.contains value fieldValue
 
                 _ ->
                     False
 
         And conditions ->
-            List.all (evaluateCondition formElement) conditions
+            List.all (evaluateCondition trackedFormValues) conditions
 
         Or conditions ->
-            List.any (evaluateCondition formElement) conditions
+            List.any (evaluateCondition trackedFormValues) conditions
 
         Not cond ->
-            not (evaluateCondition formElement cond)
+            not (evaluateCondition trackedFormValues cond)
 
 
-isVisibilityRuleSatisfied : VisibilityRule -> Json.Decode.Value -> Bool
-isVisibilityRuleSatisfied rule formElement =
+isVisibilityRuleSatisfied : VisibilityRule -> Dict String (List String) -> Bool
+isVisibilityRuleSatisfied rule trackedFormValues =
     case rule of
         ShowWhen condition ->
-            evaluateCondition formElement condition
+            evaluateCondition trackedFormValues condition
 
         HideWhen condition ->
-            not (evaluateCondition formElement condition)
-
-
-{-| Json Decoder for the HTML element `form` tag.
-
-Given a field name, returns the current value of the form field.
-
--}
-currentFormValue : Json.Decode.Value -> String -> List String
-currentFormValue formElement fieldName =
-    formElement
-        |> Json.Decode.decodeValue (Json.Decode.at [ "elements", fieldName ] decodeFieldValues)
-        |> Result.toMaybe
-        |> Maybe.withDefault []
-
-
-decodeFieldValues : Json.Decode.Decoder (List String)
-decodeFieldValues =
-    Json.Decode.oneOf
-        [ Json.Decode.field "values" (Json.Decode.list Json.Decode.string)
-        , Json.Decode.field "value" Json.Decode.string
-            |> Json.Decode.map List.singleton
-        ]
+            not (evaluateCondition trackedFormValues condition)
 
 
 encodeFormValues : Dict String (List String) -> Json.Encode.Value
