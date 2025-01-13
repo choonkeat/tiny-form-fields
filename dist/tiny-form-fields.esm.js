@@ -10562,6 +10562,7 @@ var $elm$core$Basics$never = function (_v0) {
 	}
 };
 var $elm$browser$Browser$element = _Browser_element;
+var $author$project$Main$Always = {$: 'Always'};
 var $author$project$Main$DropdownClosed = {$: 'DropdownClosed'};
 var $author$project$Main$Editor = function (a) {
 	return {$: 'Editor', a: a};
@@ -10572,6 +10573,9 @@ var $author$project$Main$PortOutgoingFormFields = function (a) {
 };
 var $author$project$Main$PortOutgoingSetupCloseDropdown = function (a) {
 	return {$: 'PortOutgoingSetupCloseDropdown', a: a};
+};
+var $author$project$Main$ShowWhen = function (a) {
+	return {$: 'ShowWhen', a: a};
 };
 var $author$project$Main$Config = F4(
 	function (viewMode, formFields, formValues, shortTextTypeList) {
@@ -10645,10 +10649,6 @@ var $author$project$Main$decodeFormFieldMaybeName = $elm$json$Json$Decode$oneOf(
 			A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string)),
 			$elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing)
 		]));
-var $author$project$Main$Always = {$: 'Always'};
-var $author$project$Main$ShowWhen = function (a) {
-	return {$: 'ShowWhen', a: a};
-};
 var $author$project$Main$HideWhen = function (a) {
 	return {$: 'HideWhen', a: a};
 };
@@ -11680,6 +11680,22 @@ var $author$project$Main$encodePortOutgoingValue = function (value) {
 var $author$project$Main$fieldNameOf = function (formField) {
 	return A2($elm$core$Maybe$withDefault, formField.label, formField.name);
 };
+var $elm$core$Array$filter = F2(
+	function (isGood, array) {
+		return $elm$core$Array$fromList(
+			A3(
+				$elm$core$Array$foldr,
+				F2(
+					function (x, xs) {
+						return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
+					}),
+				_List_Nil,
+				array));
+	});
+var $elm$core$Array$isEmpty = function (_v0) {
+	var len = _v0.a;
+	return !len;
+};
 var $elm$core$Maybe$map = F2(
 	function (f, maybe) {
 		if (maybe.$ === 'Just') {
@@ -11740,6 +11756,22 @@ var $elm$core$List$member = F2(
 			xs);
 	});
 var $author$project$Main$outgoing = _Platform_outgoingPort('outgoing', $elm$core$Basics$identity);
+var $author$project$Main$visibilityRuleOf = function (formField) {
+	var _v0 = formField.visibilityRule;
+	switch (_v0.$) {
+		case 'AttributeNotNeeded':
+			var maybeRule = _v0.a;
+			return A2(
+				$elm$core$Maybe$withDefault,
+				$author$project$Main$ShowWhen($author$project$Main$Always),
+				maybeRule);
+		case 'AttributeInvalid':
+			return $author$project$Main$ShowWhen($author$project$Main$Always);
+		default:
+			var rule = _v0.a;
+			return rule;
+	}
+};
 var $author$project$Main$init = function (flags) {
 	var defaultShortTextTypeList = _List_fromArray(
 		[
@@ -11804,6 +11836,15 @@ var $author$project$Main$init = function (flags) {
 				dropdownState: $author$project$Main$DropdownClosed,
 				formFields: config.formFields,
 				initError: $elm$core$Maybe$Nothing,
+				needsFormLogic: !$elm$core$Array$isEmpty(
+					A2(
+						$elm$core$Array$filter,
+						function (f) {
+							return !_Utils_eq(
+								$author$project$Main$visibilityRuleOf(f),
+								$author$project$Main$ShowWhen($author$project$Main$Always));
+						},
+						config.formFields)),
 				selectedFieldIndex: $elm$core$Maybe$Nothing,
 				shortTextTypeDict: $elm$core$Dict$fromList(
 					A2(
@@ -11835,6 +11876,7 @@ var $author$project$Main$init = function (flags) {
 				formFields: $elm$core$Array$empty,
 				initError: $elm$core$Maybe$Just(
 					$elm$json$Json$Decode$errorToString(err)),
+				needsFormLogic: false,
 				selectedFieldIndex: $elm$core$Maybe$Nothing,
 				shortTextTypeDict: $elm$core$Dict$empty,
 				shortTextTypeList: _List_Nil,
@@ -14603,22 +14645,6 @@ var $author$project$Main$otherQuestionTitles = F2(
 						}),
 					$elm$core$Array$toList(formFields))));
 	});
-var $author$project$Main$visibilityRuleOf = function (formField) {
-	var _v0 = formField.visibilityRule;
-	switch (_v0.$) {
-		case 'AttributeNotNeeded':
-			var maybeRule = _v0.a;
-			return A2(
-				$elm$core$Maybe$withDefault,
-				$author$project$Main$ShowWhen($author$project$Main$Always),
-				maybeRule);
-		case 'AttributeInvalid':
-			return $author$project$Main$ShowWhen($author$project$Main$Always);
-		default:
-			var rule = _v0.a;
-			return rule;
-	}
-};
 var $author$project$Main$visibilityRulesSection = F3(
 	function (index, formFields, formField) {
 		return A2(
@@ -15293,18 +15319,6 @@ var $author$project$Main$OnFormValuesUpdated = F2(
 	function (a, b) {
 		return {$: 'OnFormValuesUpdated', a: a, b: b};
 	});
-var $elm$core$Array$filter = F2(
-	function (isGood, array) {
-		return $elm$core$Array$fromList(
-			A3(
-				$elm$core$Array$foldr,
-				F2(
-					function (x, xs) {
-						return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
-					}),
-				_List_Nil,
-				array));
-	});
 var $elm$core$List$all = F2(
 	function (isOkay, list) {
 		return !A2(
@@ -15369,38 +15383,46 @@ var $author$project$Main$isVisibilityRuleSatisfied = F2(
 var $author$project$Main$viewFormPreview = F2(
 	function (customAttrs, _v0) {
 		var formFields = _v0.formFields;
+		var needsFormLogic = _v0.needsFormLogic;
 		var trackedFormValues = _v0.trackedFormValues;
 		var shortTextTypeDict = _v0.shortTextTypeDict;
+		var onInput = function (fieldName) {
+			return _List_fromArray(
+				[
+					A2(
+					$elm$html$Html$Events$on,
+					'input',
+					A2(
+						$elm$json$Json$Decode$map,
+						function (value) {
+							return A2($author$project$Main$OnFormValuesUpdated, fieldName, value);
+						},
+						A2(
+							$elm$json$Json$Decode$at,
+							_List_fromArray(
+								['target', 'value']),
+							$elm$json$Json$Decode$string)))
+				]);
+		};
+		var onChooseMany = F2(
+			function (fieldName, choice) {
+				return _List_fromArray(
+					[
+						$elm$html$Html$Events$onCheck(
+						function (_v5) {
+							return A2($author$project$Main$OnFormValuesUpdated, fieldName, choice.value);
+						})
+					]);
+			});
 		var config = {
 			customAttrs: customAttrs,
 			formFields: formFields,
-			onChooseMany: F2(
-				function (fieldName, choice) {
-					return _List_fromArray(
-						[
-							$elm$html$Html$Events$onCheck(
-							function (_v2) {
-								return A2($author$project$Main$OnFormValuesUpdated, fieldName, choice.value);
-							})
-						]);
+			onChooseMany: needsFormLogic ? onChooseMany : F2(
+				function (_v2, _v3) {
+					return _List_Nil;
 				}),
-			onInput: function (fieldName) {
-				return _List_fromArray(
-					[
-						A2(
-						$elm$html$Html$Events$on,
-						'input',
-						A2(
-							$elm$json$Json$Decode$map,
-							function (value) {
-								return A2($author$project$Main$OnFormValuesUpdated, fieldName, value);
-							},
-							A2(
-								$elm$json$Json$Decode$at,
-								_List_fromArray(
-									['target', 'value']),
-								$elm$json$Json$Decode$string)))
-					]);
+			onInput: needsFormLogic ? onInput : function (_v4) {
+				return _List_Nil;
 			},
 			shortTextTypeDict: shortTextTypeDict,
 			trackedFormValues: trackedFormValues

@@ -79,6 +79,7 @@ type alias Model =
     { viewMode : ViewMode
     , initError : Maybe String
     , formFields : Array FormField
+    , needsFormLogic : Bool
     , trackedFormValues : Dict String (List String)
     , shortTextTypeList : List CustomElement
     , shortTextTypeDict : Dict String CustomElement
@@ -474,6 +475,11 @@ init flags =
             ( { viewMode = config.viewMode
               , initError = Nothing
               , formFields = config.formFields
+              , needsFormLogic =
+                    config.formFields
+                        |> Array.filter (\f -> visibilityRuleOf f /= ShowWhen Always)
+                        |> Array.isEmpty
+                        |> not
               , trackedFormValues = initialTrackedFormValues
               , shortTextTypeList = effectiveShortTextTypeList
               , shortTextTypeDict =
@@ -494,6 +500,7 @@ init flags =
             ( { viewMode = Editor { maybeAnimate = Nothing }
               , initError = Just (Json.Decode.errorToString err)
               , formFields = Array.empty
+              , needsFormLogic = False
               , trackedFormValues = Dict.empty
               , shortTextTypeList = []
               , shortTextTypeDict = Dict.empty
@@ -1213,24 +1220,36 @@ viewMain model =
         )
 
 
-viewFormPreview : List (Html.Attribute Msg) -> { a | formFields : Array FormField, trackedFormValues : Dict String (List String), shortTextTypeDict : Dict String CustomElement } -> List (Html Msg)
-viewFormPreview customAttrs { formFields, trackedFormValues, shortTextTypeDict } =
+viewFormPreview : List (Html.Attribute Msg) -> { a | formFields : Array FormField, needsFormLogic : Bool, trackedFormValues : Dict String (List String), shortTextTypeDict : Dict String CustomElement } -> List (Html Msg)
+viewFormPreview customAttrs { formFields, needsFormLogic, trackedFormValues, shortTextTypeDict } =
     let
+        onChooseMany fieldName choice =
+            [ onCheck (\_ -> OnFormValuesUpdated fieldName choice.value) ]
+
+        onInput fieldName =
+            [ on "input"
+                (Json.Decode.at [ "target", "value" ] Json.Decode.string
+                    |> Json.Decode.map (\value -> OnFormValuesUpdated fieldName value)
+                )
+            ]
+
         config =
             { customAttrs = customAttrs
             , shortTextTypeDict = shortTextTypeDict
             , formFields = formFields
             , trackedFormValues = trackedFormValues
             , onChooseMany =
-                \fieldName choice ->
-                    [ onCheck (\_ -> OnFormValuesUpdated fieldName choice.value) ]
+                if needsFormLogic then
+                    onChooseMany
+
+                else
+                    \_ _ -> []
             , onInput =
-                \fieldName ->
-                    [ on "input"
-                        (Json.Decode.at [ "target", "value" ] Json.Decode.string
-                            |> Json.Decode.map (\value -> OnFormValuesUpdated fieldName value)
-                        )
-                    ]
+                if needsFormLogic then
+                    onInput
+
+                else
+                    \_ -> []
             }
     in
     formFields
