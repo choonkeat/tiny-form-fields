@@ -11813,6 +11813,18 @@ var $author$project$Main$decodePortIncomingValue = A2(
 		}
 	},
 	A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string));
+var $author$project$Main$fieldNameOf = function (formField) {
+	return A2($elm$core$Maybe$withDefault, formField.label, formField.name);
+};
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
 var $elm$core$Elm$JsArray$indexedMap = _JsArray_indexedMap;
 var $elm$core$Array$indexedMap = F2(
 	function (func, _v0) {
@@ -11850,6 +11862,7 @@ var $elm$core$Array$indexedMap = F2(
 			true,
 			A3($elm$core$Elm$JsArray$foldl, helper, initialBuilder, tree));
 	});
+var $elm$core$Debug$log = _Debug_log;
 var $elm$core$Maybe$map = F2(
 	function (f, maybe) {
 		if (maybe.$ === 'Just') {
@@ -12908,16 +12921,45 @@ var $author$project$Main$update = F2(
 				default:
 					var fieldName = msg.a;
 					var value = msg.b;
+					var formField = $elm$core$List$head(
+						A2(
+							$elm$core$List$filter,
+							function (f) {
+								return _Utils_eq(
+									$author$project$Main$fieldNameOf(f),
+									fieldName);
+							},
+							$elm$core$Array$toList(model.formFields)));
+					var currentValues = A2(
+						$elm$core$Maybe$withDefault,
+						_List_Nil,
+						A2($elm$core$Dict$get, fieldName, model.trackedFormValues));
+					var newValues = function () {
+						if (formField.$ === 'Just') {
+							var field = formField.a;
+							var _v10 = field.type_;
+							if (_v10.$ === 'ChooseMultiple') {
+								return A2($elm$core$List$member, value, currentValues) ? A2(
+									$elm$core$List$filter,
+									$elm$core$Basics$neq(value),
+									currentValues) : A2($elm$core$List$cons, value, currentValues);
+							} else {
+								return _List_fromArray(
+									[value]);
+							}
+						} else {
+							return _List_fromArray(
+								[value]);
+						}
+					}();
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
 							{
-								trackedFormValues: A3(
-									$elm$core$Dict$insert,
-									fieldName,
-									_List_fromArray(
-										[value]),
-									model.trackedFormValues)
+								trackedFormValues: A2(
+									$elm$core$Debug$log,
+									'OnFormValuesUpdated',
+									A3($elm$core$Dict$insert, fieldName, newValues, model.trackedFormValues))
 							}),
 						$elm$core$Platform$Cmd$none);
 			}
@@ -13167,9 +13209,6 @@ var $author$project$Main$OnFormValuesUpdated = F2(
 	function (a, b) {
 		return {$: 'OnFormValuesUpdated', a: a, b: b};
 	});
-var $author$project$Main$fieldNameOf = function (formField) {
-	return A2($elm$core$Maybe$withDefault, formField.label, formField.name);
-};
 var $elm$html$Html$Attributes$for = $elm$html$Html$Attributes$stringProperty('htmlFor');
 var $elm$html$Html$label = _VirtualDom_node('label');
 var $author$project$Main$maybeMaxLengthOf = function (formField) {
@@ -13296,6 +13335,17 @@ var $author$project$Main$maybeDecode = F3(
 					A2($elm_community$json_extra$Json$Decode$Extra$optionalField, key, decoder),
 					jsonValue)));
 	});
+var $elm$html$Html$Events$targetChecked = A2(
+	$elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'checked']),
+	$elm$json$Json$Decode$bool);
+var $elm$html$Html$Events$onCheck = function (tagger) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'change',
+		A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetChecked));
+};
 var $elm$html$Html$option = _VirtualDom_node('option');
 var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
 var $elm$html$Html$Attributes$required = $elm$html$Html$Attributes$boolProperty('required');
@@ -13623,7 +13673,10 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 								A2($elm$json$Json$Decode$map, $elm$core$List$singleton, decoder)
 							]));
 				};
-				var values = A2(
+				var values = A2($elm$core$Set$member, fieldName, config.targetedFieldNames) ? A2(
+					$elm$core$Maybe$withDefault,
+					_List_Nil,
+					A2($elm$core$Dict$get, fieldName, config.trackedFormValues)) : A2(
 					$elm$core$Maybe$withDefault,
 					_List_Nil,
 					A3(
@@ -13674,7 +13727,11 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 																	$elm$html$Html$Attributes$name(fieldName),
 																	$elm$html$Html$Attributes$value(choice.value),
 																	$elm$html$Html$Attributes$checked(
-																	A2($elm$core$List$member, choice.value, values) || chosenForYou(choices))
+																	A2($elm$core$List$member, choice.value, values) || chosenForYou(choices)),
+																	$elm$html$Html$Events$onCheck(
+																	function (isChecked) {
+																		return A2($author$project$Main$OnFormValuesUpdated, fieldName, choice.value);
+																	})
 																]),
 															config.customAttrs),
 														_List_Nil),
@@ -13691,22 +13748,33 @@ var $author$project$Main$viewFormFieldPreview = F3(
 	function (config, index, formField) {
 		var fieldName = $author$project$Main$fieldNameOf(formField);
 		var fieldID = 'tff-field-input-' + $elm$core$String$fromInt(index);
-		var extraAttrs = A2($elm$core$Set$member, fieldName, config.targetedFieldNames) ? _List_fromArray(
-			[
-				A2(
-				$elm$html$Html$Events$on,
-				'input',
-				A2(
-					$elm$json$Json$Decode$map,
-					function (value) {
-						return A2($author$project$Main$OnFormValuesUpdated, fieldName, value);
-					},
-					A2(
-						$elm$json$Json$Decode$at,
-						_List_fromArray(
-							['target', 'value']),
-						$elm$json$Json$Decode$string)))
-			]) : _List_Nil;
+		var extraAttrs = function () {
+			if (A2($elm$core$Set$member, fieldName, config.targetedFieldNames)) {
+				var _v3 = formField.type_;
+				if (_v3.$ === 'ChooseMultiple') {
+					return _List_Nil;
+				} else {
+					return _List_fromArray(
+						[
+							A2(
+							$elm$html$Html$Events$on,
+							'input',
+							A2(
+								$elm$json$Json$Decode$map,
+								function (value) {
+									return A2($author$project$Main$OnFormValuesUpdated, fieldName, value);
+								},
+								A2(
+									$elm$json$Json$Decode$at,
+									_List_fromArray(
+										['target', 'value']),
+									$elm$json$Json$Decode$string)))
+						]);
+				}
+			} else {
+				return _List_Nil;
+			}
+		}();
 		return A2(
 			$elm$html$Html$div,
 			_List_Nil,
@@ -13922,7 +13990,8 @@ var $author$project$Main$renderFormField = F4(
 											formFields: model.formFields,
 											formValues: model.formValues,
 											shortTextTypeDict: model.shortTextTypeDict,
-											targetedFieldNames: $author$project$Main$collectTargetedFieldNames(model.formFields)
+											targetedFieldNames: $author$project$Main$collectTargetedFieldNames(model.formFields),
+											trackedFormValues: model.trackedFormValues
 										},
 										index,
 										formField)
@@ -14043,17 +14112,6 @@ var $author$project$Main$allowsTogglingMultiple = function (inputField) {
 		default:
 			return false;
 	}
-};
-var $elm$html$Html$Events$targetChecked = A2(
-	$elm$json$Json$Decode$at,
-	_List_fromArray(
-		['target', 'checked']),
-	$elm$json$Json$Decode$bool);
-var $elm$html$Html$Events$onCheck = function (tagger) {
-	return A2(
-		$elm$html$Html$Events$on,
-		'change',
-		A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetChecked));
 };
 var $author$project$Main$inputAttributeOptional = F2(
 	function (options, attributeOptional) {
@@ -14253,15 +14311,6 @@ var $author$project$Main$OnDatalistToggle = function (a) {
 var $author$project$Main$OnMaxLengthInput = {$: 'OnMaxLengthInput'};
 var $author$project$Main$OnMaxLengthToggle = function (a) {
 	return {$: 'OnMaxLengthToggle', a: a};
-};
-var $elm$core$List$head = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(x);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
 };
 var $elm$html$Html$Attributes$readonly = $elm$html$Html$Attributes$boolProperty('readOnly');
 var $author$project$Main$viewFormFieldOptionsBuilder = F3(
@@ -15206,13 +15255,15 @@ var $author$project$Main$viewFormPreview = F2(
 		var formValues = _v0.formValues;
 		var shortTextTypeDict = _v0.shortTextTypeDict;
 		var formElement = _v0.formElement;
+		var trackedFormValues = _v0.trackedFormValues;
 		var config = {
 			customAttrs: customAttrs,
 			formElement: formElement,
 			formFields: formFields,
 			formValues: formValues,
 			shortTextTypeDict: shortTextTypeDict,
-			targetedFieldNames: $author$project$Main$collectTargetedFieldNames(formFields)
+			targetedFieldNames: $author$project$Main$collectTargetedFieldNames(formFields),
+			trackedFormValues: trackedFormValues
 		};
 		return $elm$core$Array$toList(
 			A2(

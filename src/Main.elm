@@ -19,6 +19,7 @@ port module Main exposing
     , dragOverDecoder
     , encodeChoice
     , encodeFormFields
+    , encodeFormValues
     , encodeInputField
     , encodePairsFromCustomElement
     , encodeVisibilityRule
@@ -742,7 +743,38 @@ update msg model =
             )
 
         OnFormValuesUpdated fieldName value ->
-            ( { model | trackedFormValues = Dict.insert fieldName [ value ] model.trackedFormValues }
+            let
+                formField =
+                    Array.toList model.formFields
+                        |> List.filter (\f -> fieldNameOf f == fieldName)
+                        |> List.head
+
+                currentValues =
+                    Dict.get fieldName model.trackedFormValues
+                        |> Maybe.withDefault []
+
+                newValues =
+                    case formField of
+                        Just field ->
+                            case field.type_ of
+                                ChooseMultiple _ ->
+                                    if List.member value currentValues then
+                                        List.filter ((/=) value) currentValues
+
+                                    else
+                                        value :: currentValues
+
+                                _ ->
+                                    [ value ]
+
+                        Nothing ->
+                            [ value ]
+            in
+            ( { model
+                | trackedFormValues =
+                    Dict.insert fieldName newValues model.trackedFormValues
+                        |> Debug.log "OnFormValuesUpdated"
+              }
             , Cmd.none
             )
 
@@ -1152,8 +1184,18 @@ viewMain model =
         )
 
 
-viewFormPreview : List (Html.Attribute Msg) -> { a | formFields : Array FormField, formValues : Json.Encode.Value, shortTextTypeDict : Dict String CustomElement, formElement : Json.Decode.Value } -> List (Html Msg)
-viewFormPreview customAttrs { formFields, formValues, shortTextTypeDict, formElement } =
+viewFormPreview :
+    List (Html.Attribute Msg)
+    ->
+        { a
+            | formFields : Array FormField
+            , formValues : Json.Encode.Value
+            , shortTextTypeDict : Dict String CustomElement
+            , formElement : Json.Decode.Value
+            , trackedFormValues : Dict String (List String)
+        }
+    -> List (Html Msg)
+viewFormPreview customAttrs { formFields, formValues, shortTextTypeDict, formElement, trackedFormValues } =
     let
         config =
             { customAttrs = customAttrs
@@ -1161,6 +1203,7 @@ viewFormPreview customAttrs { formFields, formValues, shortTextTypeDict, formEle
             , shortTextTypeDict = shortTextTypeDict
             , formFields = formFields
             , targetedFieldNames = collectTargetedFieldNames formFields
+            , trackedFormValues = trackedFormValues
             , formElement = formElement
             }
     in
@@ -1185,6 +1228,7 @@ viewFormFieldPreview :
     , shortTextTypeDict : Dict String CustomElement
     , formFields : Array FormField
     , targetedFieldNames : Set String
+    , trackedFormValues : Dict String (List String)
     , formElement : Json.Decode.Value
     }
     -> Int
@@ -1201,11 +1245,16 @@ viewFormFieldPreview config index formField =
 
         extraAttrs =
             if Set.member fieldName config.targetedFieldNames then
-                [ on "input"
-                    (Json.Decode.at [ "target", "value" ] Json.Decode.string
-                        |> Json.Decode.map (\value -> OnFormValuesUpdated fieldName value)
-                    )
-                ]
+                case formField.type_ of
+                    ChooseMultiple _ ->
+                        []
+
+                    _ ->
+                        [ on "input"
+                            (Json.Decode.at [ "target", "value" ] Json.Decode.string
+                                |> Json.Decode.map (\value -> OnFormValuesUpdated fieldName value)
+                            )
+                        ]
 
             else
                 []
@@ -1352,6 +1401,7 @@ viewFormFieldOptionsPreview :
     , shortTextTypeDict : Dict String CustomElement
     , formFields : Array FormField
     , targetedFieldNames : Set String
+    , trackedFormValues : Dict String (List String)
     , formElement : Json.Decode.Value
     }
     -> String
@@ -1533,8 +1583,13 @@ viewFormFieldOptionsPreview config fieldID formField =
                         ]
 
                 values =
-                    maybeDecode fieldName (decodeListOrSingleton Json.Decode.string) config.formValues
-                        |> Maybe.withDefault []
+                    if Set.member fieldName config.targetedFieldNames then
+                        Dict.get fieldName config.trackedFormValues
+                            |> Maybe.withDefault []
+
+                    else
+                        maybeDecode fieldName (decodeListOrSingleton Json.Decode.string) config.formValues
+                            |> Maybe.withDefault []
             in
             -- checkboxes
             div [ class "tff-choosemany-group" ]
@@ -1549,6 +1604,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                                          , name fieldName
                                          , value choice.value
                                          , checked (List.member choice.value values || chosenForYou choices)
+                                         , onCheck (\isChecked -> OnFormValuesUpdated fieldName choice.value)
                                          ]
                                             ++ config.customAttrs
                                         )
@@ -1624,6 +1680,7 @@ renderFormField maybeAnimate model index maybeFormField =
                             , shortTextTypeDict = model.shortTextTypeDict
                             , formFields = model.formFields
                             , targetedFieldNames = collectTargetedFieldNames model.formFields
+                            , trackedFormValues = model.trackedFormValues
                             }
                             index
                             formField
@@ -3009,3 +3066,11 @@ decodeFieldValues =
         , Json.Decode.field "value" Json.Decode.string
             |> Json.Decode.map List.singleton
         ]
+
+
+encodeFormValues : Dict String (List String) -> Json.Encode.Value
+encodeFormValues trackedFormValues =
+    Dict.toList trackedFormValues
+        |> List.map (\( key, values ) -> ( key, Json.Encode.list Json.Encode.string values ))
+        |> Dict.fromList
+        |> Json.Encode.dict identity identity
