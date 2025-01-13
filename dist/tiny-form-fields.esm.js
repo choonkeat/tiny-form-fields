@@ -13321,10 +13321,6 @@ var $author$project$Main$dragOverDecoder = F2(
 						_Utils_Tuple2(index, maybeFormField))),
 				true));
 	});
-var $author$project$Main$OnFormValuesUpdated = F2(
-	function (a, b) {
-		return {$: 'OnFormValuesUpdated', a: a, b: b};
-	});
 var $elm$html$Html$Attributes$for = $elm$html$Html$Attributes$stringProperty('htmlFor');
 var $elm$html$Html$label = _VirtualDom_node('label');
 var $author$project$Main$maybeMaxLengthOf = function (formField) {
@@ -13418,17 +13414,6 @@ var $elm$html$Html$Attributes$maxlength = function (n) {
 		'maxlength',
 		$elm$core$String$fromInt(n));
 };
-var $elm$html$Html$Events$targetChecked = A2(
-	$elm$json$Json$Decode$at,
-	_List_fromArray(
-		['target', 'checked']),
-	$elm$json$Json$Decode$bool);
-var $elm$html$Html$Events$onCheck = function (tagger) {
-	return A2(
-		$elm$html$Html$Events$on,
-		'change',
-		A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetChecked));
-};
 var $elm$html$Html$option = _VirtualDom_node('option');
 var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
 var $elm$html$Html$Attributes$required = $elm$html$Html$Attributes$boolProperty('required');
@@ -13468,8 +13453,8 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 	function (config, fieldID, formField) {
 		var fieldName = $author$project$Main$fieldNameOf(formField);
 		var chosenForYou = function (choices) {
-			var _v5 = formField.presence;
-			switch (_v5.$) {
+			var _v4 = formField.presence;
+			switch (_v4.$) {
 				case 'Optional':
 					return false;
 				case 'Required':
@@ -13584,7 +13569,11 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 									dataListAttrs,
 									_Utils_ap(
 										shortTextAttrs,
-										_Utils_ap(extraAttrs, config.customAttrs)))),
+										_Utils_ap(
+											extraAttrs,
+											_Utils_ap(
+												config.customAttrs,
+												config.onInput(fieldName)))))),
 							_List_Nil),
 							dataListElement
 						]));
@@ -13622,7 +13611,11 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 								$author$project$Main$requiredData(formField.presence)),
 								$elm$html$Html$Attributes$placeholder(' ')
 							]),
-						_Utils_ap(extraAttrs, config.customAttrs)),
+						_Utils_ap(
+							extraAttrs,
+							_Utils_ap(
+								config.customAttrs,
+								config.onInput(fieldName)))),
 					_List_Nil);
 			case 'Dropdown':
 				var choices = _v0.a;
@@ -13666,7 +13659,9 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 												(valueString === '') && (!chosenForYou(choices))),
 												A2($elm$html$Html$Attributes$attribute, 'value', '')
 											]),
-										config.customAttrs),
+										_Utils_ap(
+											config.customAttrs,
+											config.onInput(fieldName))),
 									_List_fromArray(
 										[
 											$elm$html$Html$text('-- Select an option --')
@@ -13683,7 +13678,9 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 													$elm$core$List$cons,
 													$author$project$Main$defaultSelected(
 														_Utils_eq(valueString, choice.value) || chosenForYou(choices)),
-													config.customAttrs)),
+													_Utils_ap(
+														config.customAttrs,
+														config.onInput(fieldName)))),
 											_List_fromArray(
 												[
 													$elm$html$Html$text(choice.label)
@@ -13747,7 +13744,9 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 																	$elm$html$Html$Attributes$required(
 																	$author$project$Main$requiredData(formField.presence))
 																]),
-															config.customAttrs),
+															_Utils_ap(
+																config.customAttrs,
+																config.onInput(fieldName))),
 														_List_Nil),
 														$elm$html$Html$text(' '),
 														$elm$html$Html$text(choice.label)
@@ -13805,13 +13804,11 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 																	$elm$html$Html$Attributes$name(fieldName),
 																	$elm$html$Html$Attributes$value(choice.value),
 																	$elm$html$Html$Attributes$checked(
-																	A2($elm$core$List$member, choice.value, values) || chosenForYou(choices)),
-																	$elm$html$Html$Events$onCheck(
-																	function (_v4) {
-																		return A2($author$project$Main$OnFormValuesUpdated, fieldName, choice.value);
-																	})
+																	A2($elm$core$List$member, choice.value, values) || chosenForYou(choices))
 																]),
-															config.customAttrs),
+															_Utils_ap(
+																config.customAttrs,
+																A2(config.onChooseMany, fieldName, choice))),
 														_List_Nil),
 														$elm$html$Html$text(' '),
 														$elm$html$Html$text(choice.label)
@@ -13826,29 +13823,6 @@ var $author$project$Main$viewFormFieldPreview = F3(
 	function (config, index, formField) {
 		var fieldName = $author$project$Main$fieldNameOf(formField);
 		var fieldID = 'tff-field-input-' + $elm$core$String$fromInt(index);
-		var extraAttrs = function () {
-			var _v3 = formField.type_;
-			if (_v3.$ === 'ChooseMultiple') {
-				return _List_Nil;
-			} else {
-				return _List_fromArray(
-					[
-						A2(
-						$elm$html$Html$Events$on,
-						'input',
-						A2(
-							$elm$json$Json$Decode$map,
-							function (value) {
-								return A2($author$project$Main$OnFormValuesUpdated, fieldName, value);
-							},
-							A2(
-								$elm$json$Json$Decode$at,
-								_List_fromArray(
-									['target', 'value']),
-								$elm$json$Json$Decode$string)))
-					]);
-			}
-		}();
 		return A2(
 			$elm$html$Html$div,
 			_List_Nil,
@@ -13888,15 +13862,7 @@ var $author$project$Main$viewFormFieldPreview = F3(
 									}
 								}()
 								])),
-							A3(
-							$author$project$Main$viewFormFieldOptionsPreview,
-							_Utils_update(
-								config,
-								{
-									customAttrs: _Utils_ap(config.customAttrs, extraAttrs)
-								}),
-							fieldID,
-							formField),
+							A3($author$project$Main$viewFormFieldOptionsPreview, config, fieldID, formField),
 							A2(
 							$elm$html$Html$div,
 							_List_fromArray(
@@ -14061,6 +14027,13 @@ var $author$project$Main$renderFormField = F4(
 													A2($elm$html$Html$Attributes$attribute, 'disabled', 'disabled')
 												]),
 											formFields: model.formFields,
+											onChooseMany: F2(
+												function (_v7, _v8) {
+													return _List_Nil;
+												}),
+											onInput: function (_v9) {
+												return _List_Nil;
+											},
 											shortTextTypeDict: model.shortTextTypeDict,
 											trackedFormValues: model.trackedFormValues
 										},
@@ -14171,6 +14144,17 @@ var $author$project$Main$allowsTogglingMultiple = function (inputField) {
 		default:
 			return false;
 	}
+};
+var $elm$html$Html$Events$targetChecked = A2(
+	$elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'checked']),
+	$elm$json$Json$Decode$bool);
+var $elm$html$Html$Events$onCheck = function (tagger) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'change',
+		A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetChecked));
 };
 var $author$project$Main$inputAttributeOptional = F2(
 	function (options, attributeOptional) {
@@ -15305,6 +15289,10 @@ var $author$project$Main$viewFormBuilder = F2(
 					]))
 			]);
 	});
+var $author$project$Main$OnFormValuesUpdated = F2(
+	function (a, b) {
+		return {$: 'OnFormValuesUpdated', a: a, b: b};
+	});
 var $elm$core$Array$filter = F2(
 	function (isGood, array) {
 		return $elm$core$Array$fromList(
@@ -15383,7 +15371,40 @@ var $author$project$Main$viewFormPreview = F2(
 		var formFields = _v0.formFields;
 		var trackedFormValues = _v0.trackedFormValues;
 		var shortTextTypeDict = _v0.shortTextTypeDict;
-		var config = {customAttrs: customAttrs, formFields: formFields, shortTextTypeDict: shortTextTypeDict, trackedFormValues: trackedFormValues};
+		var config = {
+			customAttrs: customAttrs,
+			formFields: formFields,
+			onChooseMany: F2(
+				function (fieldName, choice) {
+					return _List_fromArray(
+						[
+							$elm$html$Html$Events$onCheck(
+							function (_v2) {
+								return A2($author$project$Main$OnFormValuesUpdated, fieldName, choice.value);
+							})
+						]);
+				}),
+			onInput: function (fieldName) {
+				return _List_fromArray(
+					[
+						A2(
+						$elm$html$Html$Events$on,
+						'input',
+						A2(
+							$elm$json$Json$Decode$map,
+							function (value) {
+								return A2($author$project$Main$OnFormValuesUpdated, fieldName, value);
+							},
+							A2(
+								$elm$json$Json$Decode$at,
+								_List_fromArray(
+									['target', 'value']),
+								$elm$json$Json$Decode$string)))
+					]);
+			},
+			shortTextTypeDict: shortTextTypeDict,
+			trackedFormValues: trackedFormValues
+		};
 		return $elm$core$Array$toList(
 			A2(
 				$elm$core$Array$indexedMap,

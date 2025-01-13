@@ -1221,6 +1221,16 @@ viewFormPreview customAttrs { formFields, trackedFormValues, shortTextTypeDict }
             , shortTextTypeDict = shortTextTypeDict
             , formFields = formFields
             , trackedFormValues = trackedFormValues
+            , onChooseMany =
+                \fieldName choice ->
+                    [ onCheck (\_ -> OnFormValuesUpdated fieldName choice.value) ]
+            , onInput =
+                \fieldName ->
+                    [ on "input"
+                        (Json.Decode.at [ "target", "value" ] Json.Decode.string
+                            |> Json.Decode.map (\value -> OnFormValuesUpdated fieldName value)
+                        )
+                    ]
             }
     in
     formFields
@@ -1249,7 +1259,17 @@ when bool condition =
         condition.false
 
 
-viewFormFieldPreview : { trackedFormValues : Dict String (List String), customAttrs : List (Html.Attribute Msg), shortTextTypeDict : Dict String CustomElement, formFields : Array FormField } -> Int -> FormField -> Html Msg
+viewFormFieldPreview :
+    { trackedFormValues : Dict String (List String)
+    , customAttrs : List (Html.Attribute Msg)
+    , onChooseMany : String -> Choice -> List (Html.Attribute Msg)
+    , onInput : String -> List (Html.Attribute Msg)
+    , shortTextTypeDict : Dict String CustomElement
+    , formFields : Array FormField
+    }
+    -> Int
+    -> FormField
+    -> Html Msg
 viewFormFieldPreview config index formField =
     let
         fieldID =
@@ -1258,18 +1278,6 @@ viewFormFieldPreview config index formField =
 
         fieldName =
             fieldNameOf formField
-
-        extraAttrs =
-            case formField.type_ of
-                ChooseMultiple _ ->
-                    []
-
-                _ ->
-                    [ on "input"
-                        (Json.Decode.at [ "target", "value" ] Json.Decode.string
-                            |> Json.Decode.map (\value -> OnFormValuesUpdated fieldName value)
-                        )
-                    ]
     in
     div []
         [ div
@@ -1286,7 +1294,7 @@ viewFormFieldPreview config index formField =
                     System ->
                         text ""
                 ]
-            , viewFormFieldOptionsPreview { config | customAttrs = config.customAttrs ++ extraAttrs } fieldID formField
+            , viewFormFieldOptionsPreview config fieldID formField
             , div [ class "tff-field-description" ]
                 [ text
                     (case formField.description of
@@ -1407,7 +1415,17 @@ defaultSelected bool =
     selected bool
 
 
-viewFormFieldOptionsPreview : { trackedFormValues : Dict String (List String), customAttrs : List (Html.Attribute Msg), shortTextTypeDict : Dict String CustomElement, formFields : Array FormField } -> String -> FormField -> Html Msg
+viewFormFieldOptionsPreview :
+    { trackedFormValues : Dict String (List String)
+    , customAttrs : List (Html.Attribute Msg)
+    , onChooseMany : String -> Choice -> List (Html.Attribute Msg)
+    , onInput : String -> List (Html.Attribute Msg)
+    , shortTextTypeDict : Dict String CustomElement
+    , formFields : Array FormField
+    }
+    -> String
+    -> FormField
+    -> Html Msg
 viewFormFieldOptionsPreview config fieldID formField =
     let
         fieldName =
@@ -1476,6 +1494,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                         ++ shortTextAttrs
                         ++ extraAttrs
                         ++ config.customAttrs
+                        ++ config.onInput fieldName
                     )
                     []
                 , dataListElement
@@ -1498,6 +1517,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                  ]
                     ++ extraAttrs
                     ++ config.customAttrs
+                    ++ config.onInput fieldName
                 )
                 []
 
@@ -1530,6 +1550,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                          , attribute "value" ""
                          ]
                             ++ config.customAttrs
+                            ++ config.onInput fieldName
                         )
                         [ text "-- Select an option --" ]
                         :: List.map
@@ -1538,6 +1559,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                                     (value choice.value
                                         :: defaultSelected (valueString == choice.value || chosenForYou choices)
                                         :: config.customAttrs
+                                        ++ config.onInput fieldName
                                     )
                                     [ text choice.label ]
                             )
@@ -1568,6 +1590,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                                          , required (requiredData formField.presence)
                                          ]
                                             ++ config.customAttrs
+                                            ++ config.onInput fieldName
                                         )
                                         []
                                     , text " "
@@ -1598,9 +1621,9 @@ viewFormFieldOptionsPreview config fieldID formField =
                                          , name fieldName
                                          , value choice.value
                                          , checked (List.member choice.value values || chosenForYou choices)
-                                         , onCheck (\_ -> OnFormValuesUpdated fieldName choice.value)
                                          ]
                                             ++ config.customAttrs
+                                            ++ config.onChooseMany fieldName choice
                                         )
                                         []
                                     , text " "
@@ -1668,6 +1691,8 @@ renderFormField maybeAnimate model index maybeFormField =
                         , viewFormFieldPreview
                             { customAttrs = [ attribute "disabled" "disabled" ]
                             , formFields = model.formFields
+                            , onChooseMany = \_ _ -> []
+                            , onInput = \_ -> []
                             , shortTextTypeDict = model.shortTextTypeDict
                             , trackedFormValues = model.trackedFormValues
                             }
