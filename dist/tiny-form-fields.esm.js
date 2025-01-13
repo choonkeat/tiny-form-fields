@@ -10573,6 +10573,46 @@ var $author$project$Main$PortOutgoingFormFields = function (a) {
 var $author$project$Main$PortOutgoingSetupCloseDropdown = function (a) {
 	return {$: 'PortOutgoingSetupCloseDropdown', a: a};
 };
+var $elm$json$Json$Decode$oneOf = _Json_oneOf;
+var $elm$core$List$singleton = function (value) {
+	return _List_fromArray(
+		[value]);
+};
+var $author$project$Main$decodeFieldValues = $elm$json$Json$Decode$oneOf(
+	_List_fromArray(
+		[
+			A2(
+			$elm$json$Json$Decode$field,
+			'values',
+			$elm$json$Json$Decode$list($elm$json$Json$Decode$string)),
+			A2(
+			$elm$json$Json$Decode$map,
+			$elm$core$List$singleton,
+			A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$string))
+		]));
+var $elm$core$Result$toMaybe = function (result) {
+	if (result.$ === 'Ok') {
+		var v = result.a;
+		return $elm$core$Maybe$Just(v);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $author$project$Main$currentFormValue = F2(
+	function (formElement, fieldName) {
+		return A2(
+			$elm$core$Maybe$withDefault,
+			_List_Nil,
+			$elm$core$Result$toMaybe(
+				A2(
+					$elm$json$Json$Decode$decodeValue,
+					A2(
+						$elm$json$Json$Decode$at,
+						_List_fromArray(
+							['elements', fieldName]),
+						$author$project$Main$decodeFieldValues),
+					formElement)));
+	});
 var $author$project$Main$Config = F5(
 	function (viewMode, formElement, formFields, formValues, shortTextTypeList) {
 		return {formElement: formElement, formFields: formFields, formValues: formValues, shortTextTypeList: shortTextTypeList, viewMode: viewMode};
@@ -10593,7 +10633,6 @@ var $author$project$Main$AttributeGiven = function (a) {
 	return {$: 'AttributeGiven', a: a};
 };
 var $elm$json$Json$Decode$null = _Json_decodeNull;
-var $elm$json$Json$Decode$oneOf = _Json_oneOf;
 var $author$project$Main$decodeAttributeOptional = F2(
 	function (maybeNotNeeded, decodeValue) {
 		return $elm$json$Json$Decode$oneOf(
@@ -11169,7 +11208,7 @@ var $author$project$Main$decodeConfig = A2(
 									_Utils_Tuple2('type', 'text')
 								])),
 						inputTag: $author$project$Main$defaultInputTag,
-						inputType: 'Text'
+						inputType: 'Single-line free text'
 					})
 				])),
 		A2($elm_community$json_extra$Json$Decode$Extra$optionalNullableField, 'shortTextTypeList', $author$project$Main$decodeShortTextTypeList)),
@@ -11624,31 +11663,45 @@ var $author$project$Main$encodePortIncomingValue = function (value) {
 	}
 };
 var $author$project$Main$encodePortOutgoingValue = function (value) {
-	if (value.$ === 'PortOutgoingFormFields') {
-		var formFields = value.a;
-		return $elm$json$Json$Encode$object(
-			_List_fromArray(
-				[
-					_Utils_Tuple2(
-					'type',
-					$elm$json$Json$Encode$string('formFields')),
-					_Utils_Tuple2(
-					'formFields',
-					$author$project$Main$encodeFormFields(formFields))
-				]));
-	} else {
-		var incomingValue = value.a;
-		return $elm$json$Json$Encode$object(
-			_List_fromArray(
-				[
-					_Utils_Tuple2(
-					'type',
-					$elm$json$Json$Encode$string('setupCloseDropdown')),
-					_Utils_Tuple2(
-					'value',
-					$author$project$Main$encodePortIncomingValue(incomingValue))
-				]));
+	switch (value.$) {
+		case 'PortOutgoingFormFields':
+			var formFields = value.a;
+			return $elm$json$Json$Encode$object(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'type',
+						$elm$json$Json$Encode$string('formFields')),
+						_Utils_Tuple2(
+						'formFields',
+						$author$project$Main$encodeFormFields(formFields))
+					]));
+		case 'PortOutgoingSetupCloseDropdown':
+			var incomingValue = value.a;
+			return $elm$json$Json$Encode$object(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'type',
+						$elm$json$Json$Encode$string('setupCloseDropdown')),
+						_Utils_Tuple2(
+						'value',
+						$author$project$Main$encodePortIncomingValue(incomingValue))
+					]));
+		default:
+			var formValues = value.a;
+			return $elm$json$Json$Encode$object(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'type',
+						$elm$json$Json$Encode$string('formValues')),
+						_Utils_Tuple2('value', formValues)
+					]));
 	}
+};
+var $author$project$Main$fieldNameOf = function (formField) {
+	return A2($elm$core$Maybe$withDefault, formField.label, formField.name);
 };
 var $elm$core$List$any = F2(
 	function (isOkay, list) {
@@ -11706,6 +11759,18 @@ var $author$project$Main$init = function (flags) {
 	var _v0 = A2($elm$json$Json$Decode$decodeValue, $author$project$Main$decodeConfig, flags);
 	if (_v0.$ === 'Ok') {
 		var config = _v0.a;
+		var initialTrackedFormValues = $elm$core$Dict$fromList(
+			A2(
+				$elm$core$List$map,
+				function (field) {
+					return _Utils_Tuple2(
+						$author$project$Main$fieldNameOf(field),
+						A2(
+							$author$project$Main$currentFormValue,
+							config.formElement,
+							$author$project$Main$fieldNameOf(field)));
+				},
+				$elm$core$Array$toList(config.formFields)));
 		var effectiveShortTextTypeList = _Utils_ap(
 			defaultShortTextTypeListWithout(config.shortTextTypeList),
 			config.shortTextTypeList);
@@ -11726,7 +11791,7 @@ var $author$project$Main$init = function (flags) {
 						},
 						effectiveShortTextTypeList)),
 				shortTextTypeList: effectiveShortTextTypeList,
-				trackedFormValues: $elm$core$Dict$empty,
+				trackedFormValues: initialTrackedFormValues,
 				viewMode: config.viewMode
 			},
 			$elm$core$Platform$Cmd$batch(
@@ -11781,6 +11846,9 @@ var $author$project$Main$DragNew = function (a) {
 var $author$project$Main$Drop = function (a) {
 	return {$: 'Drop', a: a};
 };
+var $author$project$Main$PortOutgoingFormValues = function (a) {
+	return {$: 'PortOutgoingFormValues', a: a};
+};
 var $author$project$Main$SetEditorAnimate = function (a) {
 	return {$: 'SetEditorAnimate', a: a};
 };
@@ -11813,9 +11881,22 @@ var $author$project$Main$decodePortIncomingValue = A2(
 		}
 	},
 	A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string));
-var $author$project$Main$fieldNameOf = function (formField) {
-	return A2($elm$core$Maybe$withDefault, formField.label, formField.name);
-};
+var $elm$json$Json$Encode$dict = F3(
+	function (toKey, toValue, dictionary) {
+		return _Json_wrap(
+			A3(
+				$elm$core$Dict$foldl,
+				F3(
+					function (key, value, obj) {
+						return A3(
+							_Json_addField,
+							toKey(key),
+							toValue(value),
+							obj);
+					}),
+				_Json_emptyObject(_Utils_Tuple0),
+				dictionary));
+	});
 var $elm$core$List$head = function (list) {
 	if (list.b) {
 		var x = list.a;
@@ -11862,7 +11943,6 @@ var $elm$core$Array$indexedMap = F2(
 			true,
 			A3($elm$core$Elm$JsArray$foldl, helper, initialBuilder, tree));
 	});
-var $elm$core$Debug$log = _Debug_log;
 var $elm$core$Maybe$map = F2(
 	function (f, maybe) {
 		if (maybe.$ === 'Just') {
@@ -12937,8 +13017,8 @@ var $author$project$Main$update = F2(
 					var newValues = function () {
 						if (formField.$ === 'Just') {
 							var field = formField.a;
-							var _v10 = field.type_;
-							if (_v10.$ === 'ChooseMultiple') {
+							var _v11 = field.type_;
+							if (_v11.$ === 'ChooseMultiple') {
 								return A2($elm$core$List$member, value, currentValues) ? A2(
 									$elm$core$List$filter,
 									$elm$core$Basics$neq(value),
@@ -12952,16 +13032,29 @@ var $author$project$Main$update = F2(
 								[value]);
 						}
 					}();
+					var newTrackedFormValues = A3($elm$core$Dict$insert, fieldName, newValues, model.trackedFormValues);
+					var formValues = A3(
+						$elm$json$Json$Encode$dict,
+						$elm$core$Basics$identity,
+						$elm$core$Basics$identity,
+						$elm$core$Dict$fromList(
+							A2(
+								$elm$core$List$map,
+								function (_v9) {
+									var key = _v9.a;
+									var values = _v9.b;
+									return _Utils_Tuple2(
+										key,
+										A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, values));
+								},
+								$elm$core$Dict$toList(newTrackedFormValues))));
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
-							{
-								trackedFormValues: A2(
-									$elm$core$Debug$log,
-									'OnFormValuesUpdated',
-									A3($elm$core$Dict$insert, fieldName, newValues, model.trackedFormValues))
-							}),
-						$elm$core$Platform$Cmd$none);
+							{trackedFormValues: newTrackedFormValues}),
+						$author$project$Main$outgoing(
+							$author$project$Main$encodePortOutgoingValue(
+								$author$project$Main$PortOutgoingFormValues(formValues))));
 			}
 		}
 	});
@@ -13316,14 +13409,6 @@ var $elm$html$Html$Attributes$maxlength = function (n) {
 		'maxlength',
 		$elm$core$String$fromInt(n));
 };
-var $elm$core$Result$toMaybe = function (result) {
-	if (result.$ === 'Ok') {
-		var v = result.a;
-		return $elm$core$Maybe$Just(v);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
 var $author$project$Main$maybeDecode = F3(
 	function (key, decoder, jsonValue) {
 		return A2(
@@ -13374,10 +13459,6 @@ var $author$project$Main$selectArrowDown = A2(
 				]),
 			_List_Nil)
 		]));
-var $elm$core$List$singleton = function (value) {
-	return _List_fromArray(
-		[value]);
-};
 var $elm$html$Html$Attributes$tabindex = function (n) {
 	return A2(
 		_VirtualDom_attribute,
@@ -15161,41 +15242,6 @@ var $elm$core$List$all = F2(
 			$elm$core$List$any,
 			A2($elm$core$Basics$composeL, $elm$core$Basics$not, isOkay),
 			list);
-	});
-var $author$project$Main$decodeFieldValues = $elm$json$Json$Decode$oneOf(
-	_List_fromArray(
-		[
-			A2(
-			$elm$json$Json$Decode$field,
-			'values',
-			$elm$json$Json$Decode$list($elm$json$Json$Decode$string)),
-			A2(
-			$elm$json$Json$Decode$map,
-			$elm$core$List$singleton,
-			A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$string))
-		]));
-var $elm$core$Result$withDefault = F2(
-	function (def, result) {
-		if (result.$ === 'Ok') {
-			var a = result.a;
-			return a;
-		} else {
-			return def;
-		}
-	});
-var $author$project$Main$currentFormValue = F2(
-	function (formElement, fieldName) {
-		return A2(
-			$elm$core$Result$withDefault,
-			_List_Nil,
-			A2(
-				$elm$json$Json$Decode$decodeValue,
-				A2(
-					$elm$json$Json$Decode$at,
-					_List_fromArray(
-						['elements', fieldName]),
-					$author$project$Main$decodeFieldValues),
-				formElement));
 	});
 var $author$project$Main$evaluateCondition = F2(
 	function (formElement, condition) {

@@ -500,13 +500,23 @@ init flags =
                 effectiveShortTextTypeList =
                     defaultShortTextTypeListWithout config.shortTextTypeList
                         ++ config.shortTextTypeList
+
+                initialTrackedFormValues =
+                    Array.toList config.formFields
+                        |> List.map
+                            (\field ->
+                                ( fieldNameOf field
+                                , currentFormValue config.formElement (fieldNameOf field)
+                                )
+                            )
+                        |> Dict.fromList
             in
             ( { viewMode = config.viewMode
               , initError = Nothing
               , formElement = config.formElement
               , formFields = config.formFields
               , formValues = config.formValues
-              , trackedFormValues = Dict.empty
+              , trackedFormValues = initialTrackedFormValues
               , shortTextTypeList = effectiveShortTextTypeList
               , shortTextTypeDict =
                     effectiveShortTextTypeList
@@ -769,13 +779,18 @@ update msg model =
 
                         Nothing ->
                             [ value ]
-            in
-            ( { model
-                | trackedFormValues =
+
+                newTrackedFormValues =
                     Dict.insert fieldName newValues model.trackedFormValues
-                        |> Debug.log "OnFormValuesUpdated"
-              }
-            , Cmd.none
+
+                formValues =
+                    Dict.toList newTrackedFormValues
+                        |> List.map (\( key, values ) -> ( key, Json.Encode.list Json.Encode.string values ))
+                        |> Dict.fromList
+                        |> Json.Encode.dict identity identity
+            in
+            ( { model | trackedFormValues = newTrackedFormValues }
+            , outgoing (encodePortOutgoingValue (PortOutgoingFormValues formValues))
             )
 
 
@@ -1184,17 +1199,7 @@ viewMain model =
         )
 
 
-viewFormPreview :
-    List (Html.Attribute Msg)
-    ->
-        { a
-            | formFields : Array FormField
-            , formValues : Json.Encode.Value
-            , shortTextTypeDict : Dict String CustomElement
-            , formElement : Json.Decode.Value
-            , trackedFormValues : Dict String (List String)
-        }
-    -> List (Html Msg)
+viewFormPreview : List (Html.Attribute Msg) -> { a | formFields : Array FormField, formValues : Json.Encode.Value, shortTextTypeDict : Dict String CustomElement, formElement : Json.Decode.Value, trackedFormValues : Dict String (List String) } -> List (Html Msg)
 viewFormPreview customAttrs { formFields, formValues, shortTextTypeDict, formElement, trackedFormValues } =
     let
         config =
@@ -1222,18 +1227,7 @@ when bool condition =
         condition.false
 
 
-viewFormFieldPreview :
-    { formValues : Json.Encode.Value
-    , customAttrs : List (Html.Attribute Msg)
-    , shortTextTypeDict : Dict String CustomElement
-    , formFields : Array FormField
-    , targetedFieldNames : Set String
-    , trackedFormValues : Dict String (List String)
-    , formElement : Json.Decode.Value
-    }
-    -> Int
-    -> FormField
-    -> Html Msg
+viewFormFieldPreview : { formValues : Json.Encode.Value, customAttrs : List (Html.Attribute Msg), shortTextTypeDict : Dict String CustomElement, formFields : Array FormField, targetedFieldNames : Set String, trackedFormValues : Dict String (List String), formElement : Json.Decode.Value } -> Int -> FormField -> Html Msg
 viewFormFieldPreview config index formField =
     let
         fieldID =
@@ -1395,18 +1389,7 @@ defaultSelected bool =
     selected bool
 
 
-viewFormFieldOptionsPreview :
-    { formValues : Json.Encode.Value
-    , customAttrs : List (Html.Attribute Msg)
-    , shortTextTypeDict : Dict String CustomElement
-    , formFields : Array FormField
-    , targetedFieldNames : Set String
-    , trackedFormValues : Dict String (List String)
-    , formElement : Json.Decode.Value
-    }
-    -> String
-    -> FormField
-    -> Html Msg
+viewFormFieldOptionsPreview : { formValues : Json.Encode.Value, customAttrs : List (Html.Attribute Msg), shortTextTypeDict : Dict String CustomElement, formFields : Array FormField, targetedFieldNames : Set String, trackedFormValues : Dict String (List String), formElement : Json.Decode.Value } -> String -> FormField -> Html Msg
 viewFormFieldOptionsPreview config fieldID formField =
     let
         fieldName =
@@ -2236,6 +2219,7 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
 type PortOutgoingValue
     = PortOutgoingFormFields (Array FormField)
     | PortOutgoingSetupCloseDropdown PortIncomingValue
+    | PortOutgoingFormValues Json.Encode.Value
 
 
 encodePortOutgoingValue : PortOutgoingValue -> Json.Encode.Value
@@ -2251,6 +2235,12 @@ encodePortOutgoingValue value =
             Json.Encode.object
                 [ ( "type", Json.Encode.string "setupCloseDropdown" )
                 , ( "value", encodePortIncomingValue incomingValue )
+                ]
+
+        PortOutgoingFormValues formValues ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "formValues" )
+                , ( "value", formValues )
                 ]
 
 
@@ -2370,7 +2360,7 @@ decodeConfig =
                 |> Json.Decode.map
                     (Maybe.withDefault
                         [ fromRawCustomElement
-                            { inputType = "Text"
+                            { inputType = "Single-line free text"
                             , inputTag = defaultInputTag
                             , attributes = Dict.fromList [ ( "type", "text" ) ]
                             }
@@ -3056,7 +3046,8 @@ currentFormValue : Json.Decode.Value -> String -> List String
 currentFormValue formElement fieldName =
     formElement
         |> Json.Decode.decodeValue (Json.Decode.at [ "elements", fieldName ] decodeFieldValues)
-        |> Result.withDefault []
+        |> Result.toMaybe
+        |> Maybe.withDefault []
 
 
 decodeFieldValues : Json.Decode.Decoder (List String)
