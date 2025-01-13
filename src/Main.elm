@@ -35,7 +35,7 @@ import Array exposing (Array)
 import Browser
 import Dict exposing (Dict)
 import Html exposing (Html, button, div, h2, h3, input, label, option, pre, select, text, textarea)
-import Html.Attributes exposing (attribute, checked, class, classList, disabled, for, id, maxlength, minlength, name, placeholder, readonly, required, selected, tabindex, title, type_, value)
+import Html.Attributes exposing (attribute, checked, class, classList, disabled, for, id, maxlength, minlength, name, placeholder, property, readonly, required, selected, tabindex, title, type_, value)
 import Html.Events exposing (on, onCheck, onClick, onInput, preventDefaultOn, stopPropagationOn)
 import Json.Decode
 import Json.Decode.Extra exposing (andMap)
@@ -43,6 +43,7 @@ import Json.Encode
 import List.Extra
 import Platform.Cmd as Cmd
 import Process
+import Set exposing (Set)
 import Svg exposing (path, rect, svg)
 import Svg.Attributes as SvgAttr
 import Task
@@ -396,6 +397,7 @@ type Msg
     | DragOver (Maybe Droppable)
     | Drop (Maybe Int)
     | DoSleepDo Float (List Msg)
+    | OnFormValuesUpdated String String
 
 
 type alias Droppable =
@@ -425,6 +427,46 @@ otherQuestionTitles formFields currentIndex =
         |> List.indexedMap (\i f -> ( i, f ))
         |> List.filter (\( i, _ ) -> i /= currentIndex)
         |> List.map (\( _, f ) -> f.label)
+
+
+collectFieldNamesFromCondition : Condition -> List String
+collectFieldNamesFromCondition condition =
+    case condition of
+        Always ->
+            []
+
+        FieldEquals fieldName _ ->
+            [ fieldName ]
+
+        FieldContains fieldName _ ->
+            [ fieldName ]
+
+        And conditions ->
+            List.concatMap collectFieldNamesFromCondition conditions
+
+        Or conditions ->
+            List.concatMap collectFieldNamesFromCondition conditions
+
+        Not cond ->
+            collectFieldNamesFromCondition cond
+
+
+collectFieldNamesFromVisibilityRule : VisibilityRule -> List String
+collectFieldNamesFromVisibilityRule rule =
+    case rule of
+        ShowWhen condition ->
+            collectFieldNamesFromCondition condition
+
+        HideWhen condition ->
+            collectFieldNamesFromCondition condition
+
+
+collectTargetedFieldNames : Array FormField -> Set String
+collectTargetedFieldNames formFields =
+    formFields
+        |> Array.toList
+        |> List.concatMap (.visibilityRule >> collectFieldNamesFromVisibilityRule)
+        |> Set.fromList
 
 
 
@@ -690,6 +732,25 @@ update msg model =
                 , Process.sleep duration
                     |> Task.perform (always (DoSleepDo duration nextMsgs))
                 ]
+            )
+
+        OnFormValuesUpdated fieldName value ->
+            let
+                decodedValues =
+                    Json.Decode.decodeValue (Json.Decode.dict Json.Decode.string) model.formValues
+            in
+            ( { model
+                | formValues =
+                    case decodedValues of
+                        Ok values ->
+                            Dict.insert fieldName value values
+                                |> Json.Encode.dict identity Json.Encode.string
+
+                        Err _ ->
+                            Dict.singleton fieldName value
+                                |> Json.Encode.dict identity Json.Encode.string
+              }
+            , Cmd.none
             )
 
 
@@ -1105,6 +1166,8 @@ viewFormPreview customAttrs { formFields, formValues, shortTextTypeDict } =
             { customAttrs = customAttrs
             , formValues = formValues
             , shortTextTypeDict = shortTextTypeDict
+            , formFields = formFields
+            , targetedFieldNames = collectTargetedFieldNames formFields
             }
     in
     formFields
@@ -1122,12 +1185,31 @@ when bool condition =
         condition.false
 
 
-viewFormFieldPreview : { formValues : Json.Encode.Value, customAttrs : List (Html.Attribute Msg), shortTextTypeDict : Dict String CustomElement } -> Int -> FormField -> Html Msg
+viewFormFieldPreview :
+    { formValues : Json.Encode.Value
+    , customAttrs : List (Html.Attribute Msg)
+    , shortTextTypeDict : Dict String CustomElement
+    , formFields : Array FormField
+    , targetedFieldNames : Set String
+    }
+    -> Int
+    -> FormField
+    -> Html Msg
 viewFormFieldPreview config index formField =
     let
         fieldID =
             -- so clicking on label will focus on field
             "tff-field-input-" ++ String.fromInt index
+
+        fieldName =
+            fieldNameOf formField
+
+        extraAttrs =
+            if Set.member fieldName config.targetedFieldNames then
+                [ onInput (\value -> OnFormValuesUpdated fieldName value) ]
+
+            else
+                []
     in
     div []
         [ div
@@ -1144,18 +1226,18 @@ viewFormFieldPreview config index formField =
                     System ->
                         text ""
                 ]
-            , viewFormFieldOptionsPreview config fieldID formField
+            , viewFormFieldOptionsPreview { config | customAttrs = config.customAttrs ++ extraAttrs } fieldID formField
             , div [ class "tff-field-description" ]
                 [ text
                     (case formField.description of
                         AttributeNotNeeded _ ->
                             ""
 
-                        AttributeInvalid s ->
-                            s
+                        AttributeGiven str ->
+                            str
 
-                        AttributeGiven s ->
-                            s
+                        AttributeInvalid str ->
+                            str
                     )
                 , case maybeMaxLengthOf formField of
                     Just maxLength ->
@@ -1248,8 +1330,27 @@ attributesFromTuple ( k, v ) =
             Just (attribute k v)
 
 
-viewFormFieldOptionsPreview : { formValues : Json.Encode.Value, customAttrs : List (Html.Attribute Msg), shortTextTypeDict : Dict String CustomElement } -> String -> FormField -> Html Msg
-viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } fieldID formField =
+{-| This is a property <https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement>
+
+Not an html attribute <https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input>
+
+-}
+defaultValue : String -> Html.Attribute msg
+defaultValue str =
+    property "defaultValue" (Json.Encode.string str)
+
+
+viewFormFieldOptionsPreview :
+    { formValues : Json.Encode.Value
+    , customAttrs : List (Html.Attribute Msg)
+    , shortTextTypeDict : Dict String CustomElement
+    , formFields : Array FormField
+    , targetedFieldNames : Set String
+    }
+    -> String
+    -> FormField
+    -> Html Msg
+viewFormFieldOptionsPreview config fieldID formField =
     let
         fieldName =
             fieldNameOf formField
@@ -1294,7 +1395,7 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } field
                     Dict.keys customElement.attributes
 
                 shortTextAttrs =
-                    Dict.get customElement.inputType shortTextTypeDict
+                    Dict.get customElement.inputType config.shortTextTypeDict
                         |> Maybe.map .attributes
                         |> Maybe.withDefault Dict.empty
                         |> Dict.toList
@@ -1302,7 +1403,7 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } field
                         |> List.filterMap attributesFromTuple
 
                 extraAttrs =
-                    Maybe.map (\s -> value s) (maybeDecode fieldName Json.Decode.string formValues)
+                    Maybe.map (\s -> defaultValue s) (maybeDecode fieldName Json.Decode.string config.formValues)
                         :: List.map attributesFromTuple (Dict.toList customElement.attributes)
                         |> List.filterMap identity
             in
@@ -1316,7 +1417,7 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } field
                         ++ dataListAttrs
                         ++ shortTextAttrs
                         ++ extraAttrs
-                        ++ customAttrs
+                        ++ config.customAttrs
                     )
                     []
                 , dataListElement
@@ -1326,7 +1427,7 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } field
             let
                 extraAttrs =
                     [ Maybe.map (\maxLength -> maxlength maxLength) (maybeMaxLengthOf formField)
-                    , Maybe.map (\s -> value s) (maybeDecode fieldName Json.Decode.string formValues)
+                    , Maybe.map (\s -> value s) (maybeDecode fieldName Json.Decode.string config.formValues)
                     ]
                         |> List.filterMap identity
             in
@@ -1338,14 +1439,14 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } field
                  , placeholder " "
                  ]
                     ++ extraAttrs
-                    ++ customAttrs
+                    ++ config.customAttrs
                 )
                 []
 
         Dropdown choices ->
             let
                 valueString =
-                    maybeDecode fieldName Json.Decode.string formValues
+                    maybeDecode fieldName Json.Decode.string config.formValues
             in
             div [ class "tff-dropdown-group" ]
                 [ selectArrowDown
@@ -1357,7 +1458,7 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } field
                     -- want to disable the `<option>`s so user can see the options but cannot choose
                     -- but if the `<select>` is required, then now we are in a bind
                     -- so we cannot have `required` on the `<select>` if we're disabling it
-                    , if List.member (attribute "disabled" "disabled") customAttrs then
+                    , if List.member (attribute "disabled" "disabled") config.customAttrs then
                         class "tff-select-disabled"
 
                       else
@@ -1368,7 +1469,7 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } field
                          , selected (valueString == Nothing && not (chosenForYou choices))
                          , attribute "value" ""
                          ]
-                            ++ customAttrs
+                            ++ config.customAttrs
                         )
                         [ text "-- Select an option --" ]
                         :: List.map
@@ -1376,7 +1477,7 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } field
                                 option
                                     (value choice.value
                                         :: selected (valueString == Just choice.value || chosenForYou choices)
-                                        :: customAttrs
+                                        :: config.customAttrs
                                     )
                                     [ text choice.label ]
                             )
@@ -1387,7 +1488,7 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } field
         ChooseOne choices ->
             let
                 valueString =
-                    maybeDecode fieldName Json.Decode.string formValues
+                    maybeDecode fieldName Json.Decode.string config.formValues
             in
             -- radio buttons
             div [ class "tff-chooseone-group" ]
@@ -1404,7 +1505,7 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } field
                                          , checked (valueString == Just choice.value || chosenForYou choices)
                                          , required (requiredData formField.presence)
                                          ]
-                                            ++ customAttrs
+                                            ++ config.customAttrs
                                         )
                                         []
                                     , text " "
@@ -1425,7 +1526,7 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } field
                         ]
 
                 values =
-                    maybeDecode fieldName (decodeListOrSingleton Json.Decode.string) formValues
+                    maybeDecode fieldName (decodeListOrSingleton Json.Decode.string) config.formValues
                         |> Maybe.withDefault []
             in
             -- checkboxes
@@ -1442,7 +1543,7 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } field
                                          , value choice.value
                                          , checked (List.member choice.value values || chosenForYou choices)
                                          ]
-                                            ++ customAttrs
+                                            ++ config.customAttrs
                                         )
                                         []
                                     , text " "
@@ -1513,6 +1614,8 @@ renderFormField maybeAnimate model index maybeFormField =
                                 ]
                             , formValues = model.formValues
                             , shortTextTypeDict = model.shortTextTypeDict
+                            , formFields = model.formFields
+                            , targetedFieldNames = collectTargetedFieldNames model.formFields
                             }
                             index
                             formField
