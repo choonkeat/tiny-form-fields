@@ -505,9 +505,23 @@ init flags =
                     Array.toList config.formFields
                         |> List.map
                             (\field ->
-                                ( fieldNameOf field
-                                , currentFormValue config.formElement (fieldNameOf field)
-                                )
+                                let
+                                    fieldName =
+                                        fieldNameOf field
+                                in
+                                case field.type_ of
+                                    ChooseMultiple _ ->
+                                        ( fieldName
+                                        , maybeDecode fieldName (decodeListOrSingleton Json.Decode.string) config.formValues
+                                            |> Maybe.withDefault []
+                                        )
+
+                                    _ ->
+                                        ( fieldName
+                                        , maybeDecode fieldName Json.Decode.string config.formValues
+                                            |> Maybe.map List.singleton
+                                            |> Maybe.withDefault []
+                                        )
                             )
                         |> Dict.fromList
             in
@@ -1559,12 +1573,6 @@ viewFormFieldOptionsPreview config fieldID formField =
 
         ChooseMultiple choices ->
             let
-                decodeListOrSingleton decoder =
-                    Json.Decode.oneOf
-                        [ Json.Decode.list decoder
-                        , decoder |> Json.Decode.map List.singleton
-                        ]
-
                 values =
                     if Set.member fieldName config.targetedFieldNames then
                         Dict.get fieldName config.trackedFormValues
@@ -2293,6 +2301,14 @@ decodePortIncomingValue =
 
 
 --  ENCODERS DECODERS
+
+
+decodeListOrSingleton : Json.Decode.Decoder a -> Json.Decode.Decoder (List a)
+decodeListOrSingleton decoder =
+    Json.Decode.oneOf
+        [ Json.Decode.list decoder
+        , Json.Decode.map List.singleton decoder
+        ]
 
 
 defaultInputTag : String

@@ -181,6 +181,9 @@
               }
             });
             break;
+          case 'formValues':
+            console.log('formValues', JSON.stringify(event.value, null, 2));
+            break;
           default:
             console.log('unknown outgoing port', event);
         }
