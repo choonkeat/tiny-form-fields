@@ -738,21 +738,8 @@ update msg model =
             )
 
         OnFormValuesUpdated fieldName value ->
-            let
-                decodedValues =
-                    Json.Decode.decodeValue (Json.Decode.dict Json.Decode.string) model.formValues
-            in
             ( { model
-                | formValues =
-                    case decodedValues of
-                        Ok values ->
-                            Dict.insert fieldName value values
-                                |> Json.Encode.dict identity Json.Encode.string
-
-                        Err _ ->
-                            Dict.singleton fieldName value
-                                |> Json.Encode.dict identity Json.Encode.string
-                , currentValues = Dict.insert fieldName value model.currentValues
+                | currentValues = Dict.insert fieldName value model.currentValues
               }
             , Cmd.none
             )
@@ -1348,6 +1335,11 @@ defaultValue str =
     property "defaultValue" (Json.Encode.string str)
 
 
+defaultSelected : Bool -> Html.Attribute msg
+defaultSelected bool =
+    property "defaultSelected" (Json.Encode.bool bool)
+
+
 viewFormFieldOptionsPreview :
     { formValues : Json.Encode.Value
     , customAttrs : List (Html.Attribute Msg)
@@ -1474,7 +1466,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                     ]
                     (option
                         ([ disabled True
-                         , selected (valueString == Nothing && not (chosenForYou choices))
+                         , defaultSelected (valueString == Nothing && not (chosenForYou choices))
                          , attribute "value" ""
                          ]
                             ++ config.customAttrs
@@ -1484,7 +1476,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                             (\choice ->
                                 option
                                     (value choice.value
-                                        :: selected (valueString == Just choice.value || chosenForYou choices)
+                                        :: defaultSelected (valueString == Just choice.value || chosenForYou choices)
                                         :: config.customAttrs
                                     )
                                     [ text choice.label ]

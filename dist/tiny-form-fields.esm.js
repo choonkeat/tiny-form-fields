@@ -11805,22 +11805,6 @@ var $author$project$Main$decodePortIncomingValue = A2(
 		}
 	},
 	A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string));
-var $elm$json$Json$Encode$dict = F3(
-	function (toKey, toValue, dictionary) {
-		return _Json_wrap(
-			A3(
-				$elm$core$Dict$foldl,
-				F3(
-					function (key, value, obj) {
-						return A3(
-							_Json_addField,
-							toKey(key),
-							toValue(value),
-							obj);
-					}),
-				_Json_emptyObject(_Utils_Tuple0),
-				dictionary));
-	});
 var $elm$core$Elm$JsArray$indexedMap = _JsArray_indexedMap;
 var $elm$core$Array$indexedMap = F2(
 	function (func, _v0) {
@@ -12124,10 +12108,6 @@ var $author$project$Main$onDropped = F2(
 				model,
 				{dragged: $elm$core$Maybe$Nothing});
 		}
-	});
-var $elm$core$Dict$singleton = F2(
-	function (key, value) {
-		return A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, key, value, $elm$core$Dict$RBEmpty_elm_builtin, $elm$core$Dict$RBEmpty_elm_builtin);
 	});
 var $elm$core$Process$sleep = _Process_sleep;
 var $author$project$Main$stringFromInputField = function (inputField) {
@@ -12920,31 +12900,11 @@ var $author$project$Main$update = F2(
 				default:
 					var fieldName = msg.a;
 					var value = msg.b;
-					var decodedValues = A2(
-						$elm$json$Json$Decode$decodeValue,
-						$elm$json$Json$Decode$dict($elm$json$Json$Decode$string),
-						model.formValues);
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
 							{
-								currentValues: A3($elm$core$Dict$insert, fieldName, value, model.currentValues),
-								formValues: function () {
-									if (decodedValues.$ === 'Ok') {
-										var values = decodedValues.a;
-										return A3(
-											$elm$json$Json$Encode$dict,
-											$elm$core$Basics$identity,
-											$elm$json$Json$Encode$string,
-											A3($elm$core$Dict$insert, fieldName, value, values));
-									} else {
-										return A3(
-											$elm$json$Json$Encode$dict,
-											$elm$core$Basics$identity,
-											$elm$json$Json$Encode$string,
-											A2($elm$core$Dict$singleton, fieldName, value));
-									}
-								}()
+								currentValues: A3($elm$core$Dict$insert, fieldName, value, model.currentValues)
 							}),
 						$elm$core$Platform$Cmd$none);
 			}
@@ -13298,6 +13258,12 @@ var $elm$virtual_dom$VirtualDom$property = F2(
 			_VirtualDom_noJavaScriptOrHtmlJson(value));
 	});
 var $elm$html$Html$Attributes$property = $elm$virtual_dom$VirtualDom$property;
+var $author$project$Main$defaultSelected = function (bool) {
+	return A2(
+		$elm$html$Html$Attributes$property,
+		'defaultSelected',
+		$elm$json$Json$Encode$bool(bool));
+};
 var $author$project$Main$defaultValue = function (str) {
 	return A2(
 		$elm$html$Html$Attributes$property,
@@ -13358,7 +13324,6 @@ var $author$project$Main$selectArrowDown = A2(
 				]),
 			_List_Nil)
 		]));
-var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
 var $elm$core$List$singleton = function (value) {
 	return _List_fromArray(
 		[value]);
@@ -13556,7 +13521,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 										_List_fromArray(
 											[
 												$elm$html$Html$Attributes$disabled(true),
-												$elm$html$Html$Attributes$selected(
+												$author$project$Main$defaultSelected(
 												_Utils_eq(valueString, $elm$core$Maybe$Nothing) && (!chosenForYou(choices))),
 												A2($elm$html$Html$Attributes$attribute, 'value', '')
 											]),
@@ -13575,7 +13540,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 												$elm$html$Html$Attributes$value(choice.value),
 												A2(
 													$elm$core$List$cons,
-													$elm$html$Html$Attributes$selected(
+													$author$project$Main$defaultSelected(
 														_Utils_eq(
 															valueString,
 															$elm$core$Maybe$Just(choice.value)) || chosenForYou(choices)),
@@ -14278,6 +14243,7 @@ var $author$project$Main$otherQuestionTitles = F2(
 						}),
 					$elm$core$Array$toList(formFields))));
 	});
+var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
 var $elm$core$String$toLower = _String_toLower;
 var $author$project$Main$OnChoicesInput = {$: 'OnChoicesInput'};
 var $author$project$Main$OnDatalistInput = {$: 'OnDatalistInput'};
