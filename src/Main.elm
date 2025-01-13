@@ -237,11 +237,8 @@ toggleAttributeOptional toggle attributeOptional =
 
 inputAttributeOptional :
     { onCheck : Bool -> msg
-    , onInput : String -> msg
-    , toString : a -> String
     , label : String
-    , htmlNode : List (Html.Attribute msg) -> List (Html msg) -> Html msg
-    , attrs : List (Html.Attribute msg)
+    , htmlNode : Result String a -> Html msg
     }
     -> AttributeOptional a
     -> Html msg
@@ -277,7 +274,7 @@ inputAttributeOptional options attributeOptional =
                     , text " "
                     , text options.label
                     ]
-                , options.htmlNode ([ required True, onInput options.onInput, value str ] ++ options.attrs) []
+                , options.htmlNode (Err str)
                 ]
 
         AttributeGiven a ->
@@ -294,7 +291,7 @@ inputAttributeOptional options attributeOptional =
                     , text " "
                     , text options.label
                     ]
-                , options.htmlNode ([ required True, onInput options.onInput, value (options.toString a) ] ++ options.attrs) []
+                , options.htmlNode (Ok a)
                 ]
 
 
@@ -1929,11 +1926,25 @@ viewFormFieldBuilder shortTextTypeList index totalLength formFields formField =
             text ""
          , inputAttributeOptional
             { onCheck = \b -> OnFormField (OnDescriptionToggle b) index ""
-            , onInput = OnFormField OnDescriptionInput index
             , label = "Question description"
-            , toString = identity
-            , htmlNode = Html.input
-            , attrs = [ class "tff-text-field" ]
+            , htmlNode =
+                \result ->
+                    let
+                        valueString =
+                            case result of
+                                Ok a ->
+                                    a
+
+                                Err err ->
+                                    err
+                    in
+                    Html.input
+                        [ required True
+                        , class "tff-text-field"
+                        , value valueString
+                        , onInput (OnFormField OnDescriptionInput index)
+                        ]
+                        []
             }
             formField.description
          , visibilityRulesSection
@@ -2131,11 +2142,26 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
                 Nothing ->
                     inputAttributeOptional
                         { onCheck = \b -> OnFormField (OnMaxLengthToggle b) index ""
-                        , onInput = OnFormField OnMaxLengthInput index
                         , label = "Limit number of characters"
-                        , toString = String.fromInt
-                        , htmlNode = Html.input
-                        , attrs = [ class "tff-text-field", type_ "number", Html.Attributes.min "1" ]
+                        , htmlNode =
+                            \result ->
+                                let
+                                    valueString =
+                                        case result of
+                                            Ok i ->
+                                                String.fromInt i
+
+                                            Err err ->
+                                                err
+                                in
+                                Html.input
+                                    [ class "tff-text-field"
+                                    , type_ "number"
+                                    , Html.Attributes.min "1"
+                                    , value valueString
+                                    , onInput (OnFormField OnMaxLengthInput index)
+                                    ]
+                                    []
                         }
                         customElement.maxlength
 
@@ -2148,11 +2174,29 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
                         []
             , inputAttributeOptional
                 { onCheck = \b -> OnFormField (OnDatalistToggle b) index ""
-                , onInput = OnFormField OnDatalistInput index
                 , label = "Suggested values"
-                , toString = List.map choiceToString >> String.join "\n"
-                , htmlNode = Html.textarea
-                , attrs = [ class "tff-text-field", placeholder "Enter one suggestion per line" ]
+                , htmlNode =
+                    \result ->
+                        case result of
+                            Ok a ->
+                                Html.textarea
+                                    [ required True
+                                    , class "tff-text-field"
+                                    , placeholder "Enter one suggestion per line"
+                                    , value (List.map choiceToString a |> String.join "\n")
+                                    , onInput (OnFormField OnDatalistInput index)
+                                    ]
+                                    []
+
+                            Err err ->
+                                Html.textarea
+                                    [ required True
+                                    , class "tff-text-field"
+                                    , placeholder "Enter one suggestion per line"
+                                    , value err
+                                    , onInput (OnFormField OnDatalistInput index)
+                                    ]
+                                    []
                 }
                 customElement.datalist
             ]
@@ -2160,11 +2204,29 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
         LongText optionalMaxLength ->
             [ inputAttributeOptional
                 { onCheck = \b -> OnFormField (OnMaxLengthToggle b) index ""
-                , onInput = OnFormField OnMaxLengthInput index
                 , label = "Limit number of characters"
-                , toString = String.fromInt
-                , htmlNode = Html.input
-                , attrs = [ class "tff-text-field", type_ "number", Html.Attributes.min "1" ]
+                , htmlNode =
+                    \result ->
+                        case result of
+                            Ok i ->
+                                Html.input
+                                    [ class "tff-text-field"
+                                    , type_ "number"
+                                    , Html.Attributes.min "1"
+                                    , value (String.fromInt i)
+                                    , onInput (OnFormField OnMaxLengthInput index)
+                                    ]
+                                    []
+
+                            Err err ->
+                                Html.input
+                                    [ class "tff-text-field"
+                                    , type_ "number"
+                                    , Html.Attributes.min "1"
+                                    , value err
+                                    , onInput (OnFormField OnMaxLengthInput index)
+                                    ]
+                                    []
                 }
                 optionalMaxLength
             ]

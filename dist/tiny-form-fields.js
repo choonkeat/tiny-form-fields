@@ -784,11 +784,11 @@ function _Debug_crash_UNUSED(identifier, fact1, fact2, fact3, fact4)
 
 function _Debug_regionToString(region)
 {
-	if (region.a1.az === region.bh.az)
+	if (region.a_.ax === region.be.ax)
 	{
-		return 'on line ' + region.a1.az;
+		return 'on line ' + region.a_.ax;
 	}
-	return 'on lines ' + region.a1.az + ' through ' + region.bh.az;
+	return 'on lines ' + region.a_.ax + ' through ' + region.be.ax;
 }
 
 
@@ -1857,9 +1857,9 @@ var _Platform_worker = F4(function(impl, flagDecoder, debugMetadata, args)
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.ct,
-		impl.cU,
-		impl.cQ,
+		impl.cr,
+		impl.cS,
+		impl.cO,
 		function() { return function() {} }
 	);
 });
@@ -2720,8 +2720,8 @@ var _VirtualDom_mapEventRecord = F2(function(func, record)
 {
 	return {
 		Z: func(record.Z),
-		a2: record.a2,
-		a$: record.a$
+		a$: record.a$,
+		aY: record.aY
 	}
 });
 
@@ -2990,10 +2990,10 @@ function _VirtualDom_makeCallback(eventNode, initialHandler)
 
 		var value = result.a;
 		var message = !tag ? value : tag < 3 ? value.a : value.Z;
-		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.a2;
+		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.a$;
 		var currentEventNode = (
 			stopPropagation && event.stopPropagation(),
-			(tag == 2 ? value.b : tag == 3 && value.a$) && event.preventDefault(),
+			(tag == 2 ? value.b : tag == 3 && value.aY) && event.preventDefault(),
 			eventNode
 		);
 		var tagger;
@@ -3943,11 +3943,11 @@ var _Browser_element = _Debugger_element || F4(function(impl, flagDecoder, debug
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.ct,
-		impl.cU,
-		impl.cQ,
+		impl.cr,
+		impl.cS,
+		impl.cO,
 		function(sendToApp, initialModel) {
-			var view = impl.cV;
+			var view = impl.cT;
 			/**/
 			var domNode = args['node'];
 			//*/
@@ -3979,12 +3979,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.ct,
-		impl.cU,
-		impl.cQ,
+		impl.cr,
+		impl.cS,
+		impl.cO,
 		function(sendToApp, initialModel) {
-			var divertHrefToApp = impl.a0 && impl.a0(sendToApp)
-			var view = impl.cV;
+			var divertHrefToApp = impl.aZ && impl.aZ(sendToApp)
+			var view = impl.cT;
 			var title = _VirtualDom_doc.title;
 			var bodyNode = _VirtualDom_doc.body;
 			var currNode = _VirtualDom_virtualize(bodyNode);
@@ -3992,12 +3992,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 			{
 				_VirtualDom_divertHrefToApp = divertHrefToApp;
 				var doc = view(model);
-				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.cb);
+				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.b9);
 				var patches = _VirtualDom_diff(currNode, nextNode);
 				bodyNode = _VirtualDom_applyPatches(bodyNode, currNode, patches, sendToApp);
 				currNode = nextNode;
 				_VirtualDom_divertHrefToApp = 0;
-				(title !== doc.cT) && (_VirtualDom_doc.title = title = doc.cT);
+				(title !== doc.cR) && (_VirtualDom_doc.title = title = doc.cR);
 			});
 		}
 	);
@@ -4053,12 +4053,12 @@ function _Browser_makeAnimator(model, draw)
 
 function _Browser_application(impl)
 {
-	var onUrlChange = impl.cH;
-	var onUrlRequest = impl.cI;
+	var onUrlChange = impl.cF;
+	var onUrlRequest = impl.cG;
 	var key = function() { key.a(onUrlChange(_Browser_getUrl())); };
 
 	return _Browser_document({
-		a0: function(sendToApp)
+		aZ: function(sendToApp)
 		{
 			key.a = sendToApp;
 			_Browser_window.addEventListener('popstate', key);
@@ -4074,9 +4074,9 @@ function _Browser_application(impl)
 					var next = $elm$url$Url$fromString(href).a;
 					sendToApp(onUrlRequest(
 						(next
-							&& curr.bM === next.bM
-							&& curr.bs === next.bs
-							&& curr.bI.a === next.bI.a
+							&& curr.bJ === next.bJ
+							&& curr.bp === next.bp
+							&& curr.bF.a === next.bF.a
 						)
 							? $elm$browser$Browser$Internal(next)
 							: $elm$browser$Browser$External(href)
@@ -4084,13 +4084,13 @@ function _Browser_application(impl)
 				}
 			});
 		},
-		ct: function(flags)
+		cr: function(flags)
 		{
-			return A3(impl.ct, flags, _Browser_getUrl(), key);
+			return A3(impl.cr, flags, _Browser_getUrl(), key);
 		},
-		cV: impl.cV,
-		cU: impl.cU,
-		cQ: impl.cQ
+		cT: impl.cT,
+		cS: impl.cS,
+		cO: impl.cO
 	});
 }
 
@@ -4156,17 +4156,17 @@ var _Browser_decodeEvent = F2(function(decoder, event)
 function _Browser_visibilityInfo()
 {
 	return (typeof _VirtualDom_doc.hidden !== 'undefined')
-		? { cq: 'hidden', ce: 'visibilitychange' }
+		? { co: 'hidden', cc: 'visibilitychange' }
 		:
 	(typeof _VirtualDom_doc.mozHidden !== 'undefined')
-		? { cq: 'mozHidden', ce: 'mozvisibilitychange' }
+		? { co: 'mozHidden', cc: 'mozvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.msHidden !== 'undefined')
-		? { cq: 'msHidden', ce: 'msvisibilitychange' }
+		? { co: 'msHidden', cc: 'msvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.webkitHidden !== 'undefined')
-		? { cq: 'webkitHidden', ce: 'webkitvisibilitychange' }
-		: { cq: 'hidden', ce: 'visibilitychange' };
+		? { co: 'webkitHidden', cc: 'webkitvisibilitychange' }
+		: { co: 'hidden', cc: 'visibilitychange' };
 }
 
 
@@ -4247,12 +4247,12 @@ var _Browser_call = F2(function(functionName, id)
 function _Browser_getViewport()
 {
 	return {
-		bT: _Browser_getScene(),
-		b1: {
-			b4: _Browser_window.pageXOffset,
-			b5: _Browser_window.pageYOffset,
-			b3: _Browser_doc.documentElement.clientWidth,
-			bq: _Browser_doc.documentElement.clientHeight
+		bQ: _Browser_getScene(),
+		b$: {
+			b2: _Browser_window.pageXOffset,
+			b3: _Browser_window.pageYOffset,
+			b1: _Browser_doc.documentElement.clientWidth,
+			bn: _Browser_doc.documentElement.clientHeight
 		}
 	};
 }
@@ -4262,8 +4262,8 @@ function _Browser_getScene()
 	var body = _Browser_doc.body;
 	var elem = _Browser_doc.documentElement;
 	return {
-		b3: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
-		bq: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
+		b1: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
+		bn: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
 	};
 }
 
@@ -4286,15 +4286,15 @@ function _Browser_getViewportOf(id)
 	return _Browser_withNode(id, function(node)
 	{
 		return {
-			bT: {
-				b3: node.scrollWidth,
-				bq: node.scrollHeight
+			bQ: {
+				b1: node.scrollWidth,
+				bn: node.scrollHeight
 			},
-			b1: {
-				b4: node.scrollLeft,
-				b5: node.scrollTop,
-				b3: node.clientWidth,
-				bq: node.clientHeight
+			b$: {
+				b2: node.scrollLeft,
+				b3: node.scrollTop,
+				b1: node.clientWidth,
+				bn: node.clientHeight
 			}
 		};
 	});
@@ -4324,18 +4324,18 @@ function _Browser_getElement(id)
 		var x = _Browser_window.pageXOffset;
 		var y = _Browser_window.pageYOffset;
 		return {
-			bT: _Browser_getScene(),
-			b1: {
-				b4: x,
-				b5: y,
-				b3: _Browser_doc.documentElement.clientWidth,
-				bq: _Browser_doc.documentElement.clientHeight
+			bQ: _Browser_getScene(),
+			b$: {
+				b2: x,
+				b3: y,
+				b1: _Browser_doc.documentElement.clientWidth,
+				bn: _Browser_doc.documentElement.clientHeight
 			},
-			ck: {
-				b4: x + rect.left,
-				b5: y + rect.top,
-				b3: rect.width,
-				bq: rect.height
+			ci: {
+				b2: x + rect.left,
+				b3: y + rect.top,
+				b1: rect.width,
+				bn: rect.height
 			}
 		};
 	});
@@ -4911,7 +4911,7 @@ var $elm$url$Url$Http = 0;
 var $elm$url$Url$Https = 1;
 var $elm$url$Url$Url = F6(
 	function (protocol, host, port_, path, query, fragment) {
-		return {bm: fragment, bs: host, bG: path, bI: port_, bM: protocol, bN: query};
+		return {bj: fragment, bp: host, bD: path, bF: port_, bJ: protocol, bK: query};
 	});
 var $elm$core$String$contains = _String_contains;
 var $elm$core$String$length = _String_length;
@@ -5204,13 +5204,13 @@ var $author$project$Main$PortOutgoingSetupCloseDropdown = function (a) {
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $author$project$Main$Config = F4(
 	function (viewMode, formFields, formValues, shortTextTypeList) {
-		return {d: formFields, aV: formValues, ab: shortTextTypeList, T: viewMode};
+		return {d: formFields, aS: formValues, ab: shortTextTypeList, T: viewMode};
 	});
 var $elm_community$json_extra$Json$Decode$Extra$andMap = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
 var $author$project$Main$Always = {$: 5};
 var $author$project$Main$FormField = F6(
 	function (label, name, presence, description, type_, visibilityRule) {
-		return {O: description, h: label, aB: name, v: presence, f: type_, l: visibilityRule};
+		return {O: description, h: label, az: name, v: presence, f: type_, l: visibilityRule};
 	});
 var $author$project$Main$ShowWhen = function (a) {
 	return {$: 0, a: a};
@@ -5580,7 +5580,7 @@ var $author$project$Main$fromRawCustomElement = function (ele) {
 				return $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing);
 			}
 		}(),
-		aA: function () {
+		ay: function () {
 			var _v4 = A2($elm$core$Dict$get, 'multiple', ele.q);
 			if (!_v4.$) {
 				switch (_v4.a) {
@@ -6025,7 +6025,7 @@ var $author$project$Main$viewModeFromString = function (str) {
 		case 'Editor':
 			return $elm$core$Maybe$Just(
 				$author$project$Main$Editor(
-					{aq: $elm$core$Maybe$Nothing}));
+					{ap: $elm$core$Maybe$Nothing}));
 		case 'CollectData':
 			return $elm$core$Maybe$Just($author$project$Main$CollectData);
 		default:
@@ -6074,7 +6074,7 @@ var $author$project$Main$decodeConfig = A2(
 					$elm$json$Json$Decode$map,
 					$elm$core$Maybe$withDefault(
 						$author$project$Main$Editor(
-							{aq: $elm$core$Maybe$Nothing})),
+							{ap: $elm$core$Maybe$Nothing})),
 					A2($elm_community$json_extra$Json$Decode$Extra$optionalNullableField, 'viewMode', $author$project$Main$decodeViewMode)),
 				$elm$json$Json$Decode$succeed($author$project$Main$Config)))));
 var $elm$core$List$singleton = function (value) {
@@ -6166,7 +6166,7 @@ var $author$project$Main$encodePairsFromRawCustomElements = function (customElem
 var $elm$core$Basics$neq = _Utils_notEqual;
 var $author$project$Main$toRawCustomElement = function (ele) {
 	var addMultipleIfGiven = function (dict) {
-		var _v3 = ele.aA;
+		var _v3 = ele.ay;
 		if (_v3.$ === 2) {
 			if (_v3.a) {
 				return A3($elm$core$Dict$insert, 'multiple', 'true', dict);
@@ -6481,7 +6481,7 @@ var $author$project$Main$encodeFormFields = function (formFields) {
 								_Utils_Tuple2(
 								'name',
 								function () {
-									var _v0 = formField.aB;
+									var _v0 = formField.az;
 									if (!_v0.$) {
 										var name = _v0.a;
 										return $elm$json$Json$Encode$string(name);
@@ -6575,7 +6575,7 @@ var $author$project$Main$encodePortOutgoingValue = function (value) {
 	}
 };
 var $author$project$Main$fieldNameOf = function (formField) {
-	return A2($elm$core$Maybe$withDefault, formField.h, formField.aB);
+	return A2($elm$core$Maybe$withDefault, formField.h, formField.az);
 };
 var $elm$core$Maybe$map = F2(
 	function (f, maybe) {
@@ -6679,7 +6679,7 @@ var $author$project$Main$init = function (flags) {
 									$author$project$Main$maybeDecode,
 									fieldName,
 									$author$project$Main$decodeListOrSingleton($elm$json$Json$Decode$string),
-									config.aV)));
+									config.aS)));
 					} else {
 						return _Utils_Tuple2(
 							fieldName,
@@ -6689,7 +6689,7 @@ var $author$project$Main$init = function (flags) {
 								A2(
 									$elm$core$Maybe$map,
 									$elm$core$List$singleton,
-									A3($author$project$Main$maybeDecode, fieldName, $elm$json$Json$Decode$string, config.aV))));
+									A3($author$project$Main$maybeDecode, fieldName, $elm$json$Json$Decode$string, config.aS))));
 					}
 				},
 				$elm$core$Array$toList(config.d)));
@@ -6699,9 +6699,9 @@ var $author$project$Main$init = function (flags) {
 		return _Utils_Tuple2(
 			{
 				m: $elm$core$Maybe$Nothing,
-				aI: 0,
+				aF: 0,
 				d: config.d,
-				aL: $elm$core$Maybe$Nothing,
+				aI: $elm$core$Maybe$Nothing,
 				B: $elm$core$Maybe$Nothing,
 				aa: $elm$core$Dict$fromList(
 					A2(
@@ -6729,16 +6729,16 @@ var $author$project$Main$init = function (flags) {
 		return _Utils_Tuple2(
 			{
 				m: $elm$core$Maybe$Nothing,
-				aI: 0,
+				aF: 0,
 				d: $elm$core$Array$empty,
-				aL: $elm$core$Maybe$Just(
+				aI: $elm$core$Maybe$Just(
 					$elm$json$Json$Decode$errorToString(err)),
 				B: $elm$core$Maybe$Nothing,
 				aa: $elm$core$Dict$empty,
 				ab: _List_Nil,
 				C: $elm$core$Dict$empty,
 				T: $author$project$Main$Editor(
-					{aq: $elm$core$Maybe$Nothing})
+					{ap: $elm$core$Maybe$Nothing})
 			},
 			$elm$core$Platform$Cmd$none);
 	}
@@ -7088,7 +7088,7 @@ var $author$project$Main$onDropped = F2(
 		var _v0 = model.m;
 		if (!_v0.$) {
 			if (!_v0.a.$) {
-				var dragIndex = _v0.a.a.aU;
+				var dragIndex = _v0.a.a.aR;
 				var dropIndex = _v0.a.a.D;
 				if (targetIndex.$ === 1) {
 					return _Utils_update(
@@ -7148,7 +7148,7 @@ var $author$project$Main$onDropped = F2(
 					}
 				}
 			} else {
-				var field = _v0.a.a.bk;
+				var field = _v0.a.a.bh;
 				var dropIndex = _v0.a.a.D;
 				if (targetIndex.$ === 1) {
 					return _Utils_update(
@@ -7516,7 +7516,7 @@ var $author$project$Main$updateFormField = F3(
 						var newCustomElement = _Utils_update(
 							customElement,
 							{
-								aA: $author$project$Main$AttributeGiven(bool)
+								ay: $author$project$Main$AttributeGiven(bool)
 							});
 						return _Utils_update(
 							formField,
@@ -7793,7 +7793,7 @@ var $author$project$Main$updateFormField = F3(
 	});
 var $author$project$Main$when = F2(
 	function (bool, condition) {
-		return bool ? condition.aR : condition.aK;
+		return bool ? condition.aO : condition.aH;
 	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
@@ -7818,7 +7818,7 @@ var $author$project$Main$update = F2(
 							return _Utils_Tuple2(
 								_Utils_update(
 									model,
-									{aI: 0}),
+									{aF: 0}),
 								$elm$core$Platform$Cmd$none);
 						}
 					} else {
@@ -7829,11 +7829,11 @@ var $author$project$Main$update = F2(
 					var newFormField = {
 						O: $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing),
 						h: $author$project$Main$stringFromInputField(fieldType) + ' question',
-						aB: $elm$core$Maybe$Nothing,
+						az: $elm$core$Maybe$Nothing,
 						v: A2(
 							$author$project$Main$when,
 							$author$project$Main$mustBeOptional(fieldType),
-							{aK: 0, aR: 1}),
+							{aH: 0, aO: 1}),
 						f: fieldType,
 						l: $author$project$Main$ShowWhen($author$project$Main$Always)
 					};
@@ -7935,7 +7935,7 @@ var $author$project$Main$update = F2(
 							model,
 							{
 								T: $author$project$Main$Editor(
-									{aq: maybeAnimate})
+									{ap: maybeAnimate})
 							}),
 						$elm$core$Platform$Cmd$none);
 				case 8:
@@ -7951,7 +7951,7 @@ var $author$project$Main$update = F2(
 									B: $elm$core$Maybe$Nothing,
 									T: $author$project$Main$Editor(
 										{
-											aq: $elm$core$Maybe$Just(
+											ap: $elm$core$Maybe$Just(
 												_Utils_Tuple2(prevIndex, 0))
 										})
 								}),
@@ -7971,7 +7971,7 @@ var $author$project$Main$update = F2(
 							{
 								m: $elm$core$Maybe$Just(
 									$author$project$Main$DragExisting(
-										{aU: index, D: $elm$core$Maybe$Nothing})),
+										{aR: index, D: $elm$core$Maybe$Nothing})),
 								B: $elm$core$Maybe$Nothing
 							}),
 						$elm$core$Platform$Cmd$none);
@@ -7986,7 +7986,7 @@ var $author$project$Main$update = F2(
 										{
 											D: $elm$core$Maybe$Just(
 												_Utils_Tuple2(0, $elm$core$Maybe$Nothing)),
-											bk: field
+											bh: field
 										}))
 							}),
 						$elm$core$Platform$Cmd$none);
@@ -8199,7 +8199,7 @@ var $author$project$Main$fieldsWithPlaceholder = F2(
 			return A2($elm$core$List$map, $elm$core$Maybe$Just, fields);
 		} else {
 			if (!dragged.a.$) {
-				var dragIndex = dragged.a.a.aU;
+				var dragIndex = dragged.a.a.aR;
 				var dropIndex = dragged.a.a.D;
 				if (dropIndex.$ === 1) {
 					return A2($elm$core$List$map, $elm$core$Maybe$Just, fields);
@@ -8912,7 +8912,7 @@ var $author$project$Main$viewFormFieldPreview = F3(
 							'tff-field-group' + A2(
 								$author$project$Main$when,
 								$author$project$Main$requiredData(formField.v),
-								{aK: '', aR: ' tff-required'}))
+								{aH: '', aO: ' tff-required'}))
 						]),
 					_List_fromArray(
 						[
@@ -9154,11 +9154,11 @@ var $author$project$Main$viewAddQuestionsList = function (inputFields) {
 									{
 										O: $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing),
 										h: $author$project$Main$stringFromInputField(inputField) + ' question',
-										aB: $elm$core$Maybe$Nothing,
+										az: $elm$core$Maybe$Nothing,
 										v: A2(
 											$author$project$Main$when,
 											$author$project$Main$mustBeOptional(inputField),
-											{aK: 0, aR: 1}),
+											{aH: 0, aO: 1}),
 										f: inputField,
 										l: $author$project$Main$ShowWhen($author$project$Main$Always)
 									}))),
@@ -9235,23 +9235,6 @@ var $author$project$Main$allowsTogglingMultiple = function (inputField) {
 			return false;
 	}
 };
-var $elm$html$Html$Events$alwaysStop = function (x) {
-	return _Utils_Tuple2(x, true);
-};
-var $elm$html$Html$Events$targetValue = A2(
-	$elm$json$Json$Decode$at,
-	_List_fromArray(
-		['target', 'value']),
-	$elm$json$Json$Decode$string);
-var $elm$html$Html$Events$onInput = function (tagger) {
-	return A2(
-		$elm$html$Html$Events$stopPropagationOn,
-		'input',
-		A2(
-			$elm$json$Json$Decode$map,
-			$elm$html$Html$Events$alwaysStop,
-			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
-};
 var $author$project$Main$inputAttributeOptional = F2(
 	function (options, attributeOptional) {
 		switch (attributeOptional.$) {
@@ -9317,17 +9300,8 @@ var $author$project$Main$inputAttributeOptional = F2(
 									$elm$html$Html$text(' '),
 									$elm$html$Html$text(options.h)
 								])),
-							A2(
-							options.ap,
-							_Utils_ap(
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$required(true),
-										$elm$html$Html$Events$onInput(options.ar),
-										$elm$html$Html$Attributes$value(str)
-									]),
-								options.am),
-							_List_Nil)
+							options.ao(
+							$elm$core$Result$Err(str))
 						]));
 			default:
 				var a = attributeOptional.a;
@@ -9360,18 +9334,8 @@ var $author$project$Main$inputAttributeOptional = F2(
 									$elm$html$Html$text(' '),
 									$elm$html$Html$text(options.h)
 								])),
-							A2(
-							options.ap,
-							_Utils_ap(
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$required(true),
-										$elm$html$Html$Events$onInput(options.ar),
-										$elm$html$Html$Attributes$value(
-										options.aF(a))
-									]),
-								options.am),
-							_List_Nil)
+							options.ao(
+							$elm$core$Result$Ok(a))
 						]));
 		}
 	});
@@ -9393,7 +9357,7 @@ var $author$project$Main$maybeMultipleOf = function (formField) {
 	var _v0 = formField.f;
 	switch (_v0.$) {
 		case 0:
-			var multiple = _v0.a.aA;
+			var multiple = _v0.a.ay;
 			switch (multiple.$) {
 				case 2:
 					var i = multiple.a;
@@ -9418,6 +9382,23 @@ var $elm$html$Html$Attributes$minlength = function (n) {
 		_VirtualDom_attribute,
 		'minLength',
 		$elm$core$String$fromInt(n));
+};
+var $elm$html$Html$Events$alwaysStop = function (x) {
+	return _Utils_Tuple2(x, true);
+};
+var $elm$html$Html$Events$targetValue = A2(
+	$elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'value']),
+	$elm$json$Json$Decode$string);
+var $elm$html$Html$Events$onInput = function (tagger) {
+	return A2(
+		$elm$html$Html$Events$stopPropagationOn,
+		'input',
+		A2(
+			$elm$json$Json$Decode$map,
+			$elm$html$Html$Events$alwaysStop,
+			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
 };
 var $author$project$Main$otherQuestionTitles = F2(
 	function (formFields, currentIndex) {
@@ -9452,11 +9433,6 @@ var $author$project$Main$OnMaxLengthInput = {$: 7};
 var $author$project$Main$OnMaxLengthToggle = function (a) {
 	return {$: 6, a: a};
 };
-var $elm$core$Basics$composeR = F3(
-	function (f, g, x) {
-		return g(
-			f(x));
-	});
 var $elm$html$Html$Attributes$min = $elm$html$Html$Attributes$stringProperty('min');
 var $elm$html$Html$Attributes$readonly = $elm$html$Html$Attributes$boolProperty('readOnly');
 var $author$project$Main$viewFormFieldOptionsBuilder = F3(
@@ -9495,8 +9471,8 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 								$elm$html$Html$Attributes$required(true),
 								$elm$html$Html$Attributes$readonly(
 								function () {
-									var _v3 = formField.v;
-									switch (_v3) {
+									var _v6 = formField.v;
+									switch (_v6) {
 										case 0:
 											return false;
 										case 1:
@@ -9532,8 +9508,8 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 							$elm$core$List$head(
 								A2(
 									$elm$core$List$filter,
-									function (_v2) {
-										var inputType = _v2.y;
+									function (_v4) {
+										var inputType = _v4.y;
 										return _Utils_eq(inputType, customElement.y);
 									},
 									shortTextTypeList)))));
@@ -9544,13 +9520,29 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 							return A2(
 								$author$project$Main$inputAttributeOptional,
 								{
-									am: _List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('tff-text-field'),
-											$elm$html$Html$Attributes$type_('number'),
-											$elm$html$Html$Attributes$min('1')
-										]),
-									ap: $elm$html$Html$input,
+									ao: function (result) {
+										var valueString = function () {
+											if (!result.$) {
+												var i = result.a;
+												return $elm$core$String$fromInt(i);
+											} else {
+												var err = result.a;
+												return err;
+											}
+										}();
+										return A2(
+											$elm$html$Html$input,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('tff-text-field'),
+													$elm$html$Html$Attributes$type_('number'),
+													$elm$html$Html$Attributes$min('1'),
+													$elm$html$Html$Attributes$value(valueString),
+													$elm$html$Html$Events$onInput(
+													A2($author$project$Main$OnFormField, $author$project$Main$OnMaxLengthInput, index))
+												]),
+											_List_Nil);
+									},
 									h: 'Limit number of characters',
 									ag: function (b) {
 										return A3(
@@ -9558,9 +9550,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 											$author$project$Main$OnMaxLengthToggle(b),
 											index,
 											'');
-									},
-									ar: A2($author$project$Main$OnFormField, $author$project$Main$OnMaxLengthInput, index),
-									aF: $elm$core$String$fromInt
+									}
 								},
 								customElement.Y);
 						} else {
@@ -9580,12 +9570,41 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 						A2(
 						$author$project$Main$inputAttributeOptional,
 						{
-							am: _List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('tff-text-field'),
-									$elm$html$Html$Attributes$placeholder('Enter one suggestion per line')
-								]),
-							ap: $elm$html$Html$textarea,
+							ao: function (result) {
+								if (!result.$) {
+									var a = result.a;
+									return A2(
+										$elm$html$Html$textarea,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$required(true),
+												$elm$html$Html$Attributes$class('tff-text-field'),
+												$elm$html$Html$Attributes$placeholder('Enter one suggestion per line'),
+												$elm$html$Html$Attributes$value(
+												A2(
+													$elm$core$String$join,
+													'\n',
+													A2($elm$core$List$map, $author$project$Main$choiceToString, a))),
+												$elm$html$Html$Events$onInput(
+												A2($author$project$Main$OnFormField, $author$project$Main$OnDatalistInput, index))
+											]),
+										_List_Nil);
+								} else {
+									var err = result.a;
+									return A2(
+										$elm$html$Html$textarea,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$required(true),
+												$elm$html$Html$Attributes$class('tff-text-field'),
+												$elm$html$Html$Attributes$placeholder('Enter one suggestion per line'),
+												$elm$html$Html$Attributes$value(err),
+												$elm$html$Html$Events$onInput(
+												A2($author$project$Main$OnFormField, $author$project$Main$OnDatalistInput, index))
+											]),
+										_List_Nil);
+								}
+							},
 							h: 'Suggested values',
 							ag: function (b) {
 								return A3(
@@ -9593,12 +9612,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 									$author$project$Main$OnDatalistToggle(b),
 									index,
 									'');
-							},
-							ar: A2($author$project$Main$OnFormField, $author$project$Main$OnDatalistInput, index),
-							aF: A2(
-								$elm$core$Basics$composeR,
-								$elm$core$List$map($author$project$Main$choiceToString),
-								$elm$core$String$join('\n'))
+							}
 						},
 						customElement.W)
 					]);
@@ -9609,13 +9623,38 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 						A2(
 						$author$project$Main$inputAttributeOptional,
 						{
-							am: _List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('tff-text-field'),
-									$elm$html$Html$Attributes$type_('number'),
-									$elm$html$Html$Attributes$min('1')
-								]),
-							ap: $elm$html$Html$input,
+							ao: function (result) {
+								if (!result.$) {
+									var i = result.a;
+									return A2(
+										$elm$html$Html$input,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('tff-text-field'),
+												$elm$html$Html$Attributes$type_('number'),
+												$elm$html$Html$Attributes$min('1'),
+												$elm$html$Html$Attributes$value(
+												$elm$core$String$fromInt(i)),
+												$elm$html$Html$Events$onInput(
+												A2($author$project$Main$OnFormField, $author$project$Main$OnMaxLengthInput, index))
+											]),
+										_List_Nil);
+								} else {
+									var err = result.a;
+									return A2(
+										$elm$html$Html$input,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('tff-text-field'),
+												$elm$html$Html$Attributes$type_('number'),
+												$elm$html$Html$Attributes$min('1'),
+												$elm$html$Html$Attributes$value(err),
+												$elm$html$Html$Events$onInput(
+												A2($author$project$Main$OnFormField, $author$project$Main$OnMaxLengthInput, index))
+											]),
+										_List_Nil);
+								}
+							},
 							h: 'Limit number of characters',
 							ag: function (b) {
 								return A3(
@@ -9623,9 +9662,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 									$author$project$Main$OnMaxLengthToggle(b),
 									index,
 									'');
-							},
-							ar: A2($author$project$Main$OnFormField, $author$project$Main$OnMaxLengthInput, index),
-							aF: $elm$core$String$fromInt
+							}
 						},
 						optionalMaxLength)
 					]);
@@ -9765,8 +9802,8 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 										[
 											$elm$html$Html$Attributes$selected(
 											function () {
-												var _v2 = $author$project$Main$visibilityRuleCondition(formField.l);
-												if (!_v2.$) {
+												var _v3 = $author$project$Main$visibilityRuleCondition(formField.l);
+												if (!_v3.$) {
 													return true;
 												} else {
 													return false;
@@ -9781,10 +9818,10 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 								]))
 						])),
 					function () {
-					var _v3 = $author$project$Main$visibilityRuleCondition(formField.l);
-					if (!_v3.$) {
-						var fieldName = _v3.a;
-						var fieldValue = _v3.b;
+					var _v4 = $author$project$Main$visibilityRuleCondition(formField.l);
+					if (!_v4.$) {
+						var fieldName = _v4.a;
+						var fieldValue = _v4.b;
 						return A2(
 							$elm$html$Html$div,
 							_List_fromArray(
@@ -10042,11 +10079,28 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 						A2(
 						$author$project$Main$inputAttributeOptional,
 						{
-							am: _List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('tff-text-field')
-								]),
-							ap: $elm$html$Html$input,
+							ao: function (result) {
+								var valueString = function () {
+									if (!result.$) {
+										var a = result.a;
+										return a;
+									} else {
+										var err = result.a;
+										return err;
+									}
+								}();
+								return A2(
+									$elm$html$Html$input,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$required(true),
+											$elm$html$Html$Attributes$class('tff-text-field'),
+											$elm$html$Html$Attributes$value(valueString),
+											$elm$html$Html$Events$onInput(
+											A2($author$project$Main$OnFormField, $author$project$Main$OnDescriptionInput, index))
+										]),
+									_List_Nil);
+							},
 							h: 'Question description',
 							ag: function (b) {
 								return A3(
@@ -10054,9 +10108,7 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 									$author$project$Main$OnDescriptionToggle(b),
 									index,
 									'');
-							},
-							ar: A2($author$project$Main$OnFormField, $author$project$Main$OnDescriptionInput, index),
-							aF: $elm$core$Basics$identity
+							}
 						},
 						formField.O),
 						visibilityRulesSection
@@ -10111,8 +10163,8 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 												]))
 										])),
 									function () {
-									var _v1 = formField.v;
-									switch (_v1) {
+									var _v2 = formField.v;
+									switch (_v2) {
 										case 0:
 											return deleteFieldButton;
 										case 1:
@@ -10411,14 +10463,14 @@ var $author$project$Main$viewMain = function (model) {
 									$author$project$Main$encodeFormFields(model.d)))
 							]),
 						_List_Nil),
-					A2($author$project$Main$viewFormBuilder, editorAttr.aq, model));
+					A2($author$project$Main$viewFormBuilder, editorAttr.ap, model));
 			} else {
 				return A2($author$project$Main$viewFormPreview, _List_Nil, model);
 			}
 		}());
 };
 var $author$project$Main$view = function (model) {
-	var _v0 = model.aL;
+	var _v0 = model.aI;
 	if (!_v0.$) {
 		var errString = _v0.a;
 		return A2(
@@ -10449,5 +10501,5 @@ var $author$project$Main$view = function (model) {
 	}
 };
 var $author$project$Main$main = $elm$browser$Browser$element(
-	{ct: $author$project$Main$init, cQ: $author$project$Main$subscriptions, cU: $author$project$Main$update, cV: $author$project$Main$view});
+	{cr: $author$project$Main$init, cO: $author$project$Main$subscriptions, cS: $author$project$Main$update, cT: $author$project$Main$view});
 _Platform_export({'Main':{'init':$author$project$Main$main($elm$json$Json$Decode$value)(0)}});}(this));

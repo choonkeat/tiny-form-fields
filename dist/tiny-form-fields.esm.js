@@ -14164,17 +14164,8 @@ var $author$project$Main$inputAttributeOptional = F2(
 									$elm$html$Html$text(' '),
 									$elm$html$Html$text(options.label)
 								])),
-							A2(
-							options.htmlNode,
-							_Utils_ap(
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$required(true),
-										$elm$html$Html$Events$onInput(options.onInput),
-										$elm$html$Html$Attributes$value(str)
-									]),
-								options.attrs),
-							_List_Nil)
+							options.htmlNode(
+							$elm$core$Result$Err(str))
 						]));
 			default:
 				var a = attributeOptional.a;
@@ -14207,18 +14198,8 @@ var $author$project$Main$inputAttributeOptional = F2(
 									$elm$html$Html$text(' '),
 									$elm$html$Html$text(options.label)
 								])),
-							A2(
-							options.htmlNode,
-							_Utils_ap(
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$required(true),
-										$elm$html$Html$Events$onInput(options.onInput),
-										$elm$html$Html$Attributes$value(
-										options.toString(a))
-									]),
-								options.attrs),
-							_List_Nil)
+							options.htmlNode(
+							$elm$core$Result$Ok(a))
 						]));
 		}
 	});
@@ -14335,8 +14316,8 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 								$elm$html$Html$Attributes$required(true),
 								$elm$html$Html$Attributes$readonly(
 								function () {
-									var _v3 = formField.presence;
-									switch (_v3.$) {
+									var _v6 = formField.presence;
+									switch (_v6.$) {
 										case 'Required':
 											return false;
 										case 'Optional':
@@ -14372,8 +14353,8 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 							$elm$core$List$head(
 								A2(
 									$elm$core$List$filter,
-									function (_v2) {
-										var inputType = _v2.inputType;
+									function (_v4) {
+										var inputType = _v4.inputType;
 										return _Utils_eq(inputType, customElement.inputType);
 									},
 									shortTextTypeList)))));
@@ -14384,13 +14365,29 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 							return A2(
 								$author$project$Main$inputAttributeOptional,
 								{
-									attrs: _List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('tff-text-field'),
-											$elm$html$Html$Attributes$type_('number'),
-											$elm$html$Html$Attributes$min('1')
-										]),
-									htmlNode: $elm$html$Html$input,
+									htmlNode: function (result) {
+										var valueString = function () {
+											if (result.$ === 'Ok') {
+												var i = result.a;
+												return $elm$core$String$fromInt(i);
+											} else {
+												var err = result.a;
+												return err;
+											}
+										}();
+										return A2(
+											$elm$html$Html$input,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('tff-text-field'),
+													$elm$html$Html$Attributes$type_('number'),
+													$elm$html$Html$Attributes$min('1'),
+													$elm$html$Html$Attributes$value(valueString),
+													$elm$html$Html$Events$onInput(
+													A2($author$project$Main$OnFormField, $author$project$Main$OnMaxLengthInput, index))
+												]),
+											_List_Nil);
+									},
 									label: 'Limit number of characters',
 									onCheck: function (b) {
 										return A3(
@@ -14398,9 +14395,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 											$author$project$Main$OnMaxLengthToggle(b),
 											index,
 											'');
-									},
-									onInput: A2($author$project$Main$OnFormField, $author$project$Main$OnMaxLengthInput, index),
-									toString: $elm$core$String$fromInt
+									}
 								},
 								customElement.maxlength);
 						} else {
@@ -14420,12 +14415,41 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 						A2(
 						$author$project$Main$inputAttributeOptional,
 						{
-							attrs: _List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('tff-text-field'),
-									$elm$html$Html$Attributes$placeholder('Enter one suggestion per line')
-								]),
-							htmlNode: $elm$html$Html$textarea,
+							htmlNode: function (result) {
+								if (result.$ === 'Ok') {
+									var a = result.a;
+									return A2(
+										$elm$html$Html$textarea,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$required(true),
+												$elm$html$Html$Attributes$class('tff-text-field'),
+												$elm$html$Html$Attributes$placeholder('Enter one suggestion per line'),
+												$elm$html$Html$Attributes$value(
+												A2(
+													$elm$core$String$join,
+													'\n',
+													A2($elm$core$List$map, $author$project$Main$choiceToString, a))),
+												$elm$html$Html$Events$onInput(
+												A2($author$project$Main$OnFormField, $author$project$Main$OnDatalistInput, index))
+											]),
+										_List_Nil);
+								} else {
+									var err = result.a;
+									return A2(
+										$elm$html$Html$textarea,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$required(true),
+												$elm$html$Html$Attributes$class('tff-text-field'),
+												$elm$html$Html$Attributes$placeholder('Enter one suggestion per line'),
+												$elm$html$Html$Attributes$value(err),
+												$elm$html$Html$Events$onInput(
+												A2($author$project$Main$OnFormField, $author$project$Main$OnDatalistInput, index))
+											]),
+										_List_Nil);
+								}
+							},
 							label: 'Suggested values',
 							onCheck: function (b) {
 								return A3(
@@ -14433,12 +14457,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 									$author$project$Main$OnDatalistToggle(b),
 									index,
 									'');
-							},
-							onInput: A2($author$project$Main$OnFormField, $author$project$Main$OnDatalistInput, index),
-							toString: A2(
-								$elm$core$Basics$composeR,
-								$elm$core$List$map($author$project$Main$choiceToString),
-								$elm$core$String$join('\n'))
+							}
 						},
 						customElement.datalist)
 					]);
@@ -14449,13 +14468,38 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 						A2(
 						$author$project$Main$inputAttributeOptional,
 						{
-							attrs: _List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('tff-text-field'),
-									$elm$html$Html$Attributes$type_('number'),
-									$elm$html$Html$Attributes$min('1')
-								]),
-							htmlNode: $elm$html$Html$input,
+							htmlNode: function (result) {
+								if (result.$ === 'Ok') {
+									var i = result.a;
+									return A2(
+										$elm$html$Html$input,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('tff-text-field'),
+												$elm$html$Html$Attributes$type_('number'),
+												$elm$html$Html$Attributes$min('1'),
+												$elm$html$Html$Attributes$value(
+												$elm$core$String$fromInt(i)),
+												$elm$html$Html$Events$onInput(
+												A2($author$project$Main$OnFormField, $author$project$Main$OnMaxLengthInput, index))
+											]),
+										_List_Nil);
+								} else {
+									var err = result.a;
+									return A2(
+										$elm$html$Html$input,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('tff-text-field'),
+												$elm$html$Html$Attributes$type_('number'),
+												$elm$html$Html$Attributes$min('1'),
+												$elm$html$Html$Attributes$value(err),
+												$elm$html$Html$Events$onInput(
+												A2($author$project$Main$OnFormField, $author$project$Main$OnMaxLengthInput, index))
+											]),
+										_List_Nil);
+								}
+							},
 							label: 'Limit number of characters',
 							onCheck: function (b) {
 								return A3(
@@ -14463,9 +14507,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 									$author$project$Main$OnMaxLengthToggle(b),
 									index,
 									'');
-							},
-							onInput: A2($author$project$Main$OnFormField, $author$project$Main$OnMaxLengthInput, index),
-							toString: $elm$core$String$fromInt
+							}
 						},
 						optionalMaxLength)
 					]);
@@ -14605,8 +14647,8 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 										[
 											$elm$html$Html$Attributes$selected(
 											function () {
-												var _v2 = $author$project$Main$visibilityRuleCondition(formField.visibilityRule);
-												if (_v2.$ === 'FieldEquals') {
+												var _v3 = $author$project$Main$visibilityRuleCondition(formField.visibilityRule);
+												if (_v3.$ === 'FieldEquals') {
 													return true;
 												} else {
 													return false;
@@ -14621,10 +14663,10 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 								]))
 						])),
 					function () {
-					var _v3 = $author$project$Main$visibilityRuleCondition(formField.visibilityRule);
-					if (_v3.$ === 'FieldEquals') {
-						var fieldName = _v3.a;
-						var fieldValue = _v3.b;
+					var _v4 = $author$project$Main$visibilityRuleCondition(formField.visibilityRule);
+					if (_v4.$ === 'FieldEquals') {
+						var fieldName = _v4.a;
+						var fieldValue = _v4.b;
 						return A2(
 							$elm$html$Html$div,
 							_List_fromArray(
@@ -14882,11 +14924,28 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 						A2(
 						$author$project$Main$inputAttributeOptional,
 						{
-							attrs: _List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('tff-text-field')
-								]),
-							htmlNode: $elm$html$Html$input,
+							htmlNode: function (result) {
+								var valueString = function () {
+									if (result.$ === 'Ok') {
+										var a = result.a;
+										return a;
+									} else {
+										var err = result.a;
+										return err;
+									}
+								}();
+								return A2(
+									$elm$html$Html$input,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$required(true),
+											$elm$html$Html$Attributes$class('tff-text-field'),
+											$elm$html$Html$Attributes$value(valueString),
+											$elm$html$Html$Events$onInput(
+											A2($author$project$Main$OnFormField, $author$project$Main$OnDescriptionInput, index))
+										]),
+									_List_Nil);
+							},
 							label: 'Question description',
 							onCheck: function (b) {
 								return A3(
@@ -14894,9 +14953,7 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 									$author$project$Main$OnDescriptionToggle(b),
 									index,
 									'');
-							},
-							onInput: A2($author$project$Main$OnFormField, $author$project$Main$OnDescriptionInput, index),
-							toString: $elm$core$Basics$identity
+							}
 						},
 						formField.description),
 						visibilityRulesSection
@@ -14951,8 +15008,8 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 												]))
 										])),
 									function () {
-									var _v1 = formField.presence;
-									switch (_v1.$) {
+									var _v2 = formField.presence;
+									switch (_v2.$) {
 										case 'Required':
 											return deleteFieldButton;
 										case 'Optional':
