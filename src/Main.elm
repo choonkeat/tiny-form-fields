@@ -1154,8 +1154,8 @@ viewMain model =
         )
 
 
-viewFormPreview : List (Html.Attribute Msg) -> { a | formFields : Array FormField, formValues : Json.Encode.Value, shortTextTypeDict : Dict String CustomElement, currentValues : Dict String String } -> List (Html Msg)
-viewFormPreview customAttrs { formFields, formValues, shortTextTypeDict, currentValues } =
+viewFormPreview : List (Html.Attribute Msg) -> { a | formFields : Array FormField, formValues : Json.Encode.Value, shortTextTypeDict : Dict String CustomElement, formElement : Json.Decode.Value } -> List (Html Msg)
+viewFormPreview customAttrs { formFields, formValues, shortTextTypeDict, formElement } =
     let
         config =
             { customAttrs = customAttrs
@@ -1163,10 +1163,11 @@ viewFormPreview customAttrs { formFields, formValues, shortTextTypeDict, current
             , shortTextTypeDict = shortTextTypeDict
             , formFields = formFields
             , targetedFieldNames = collectTargetedFieldNames formFields
+            , formElement = formElement
             }
     in
     formFields
-        |> Array.filter (\formField -> isVisibilityRuleSatisfied currentValues formField.visibilityRule)
+        |> Array.filter (\formField -> isVisibilityRuleSatisfied formField.visibilityRule formElement)
         |> Array.indexedMap (viewFormFieldPreview config)
         |> Array.toList
 
@@ -1186,6 +1187,7 @@ viewFormFieldPreview :
     , shortTextTypeDict : Dict String CustomElement
     , formFields : Array FormField
     , targetedFieldNames : Set String
+    , formElement : Json.Decode.Value
     }
     -> Int
     -> FormField
@@ -1350,6 +1352,7 @@ viewFormFieldOptionsPreview :
     , shortTextTypeDict : Dict String CustomElement
     , formFields : Array FormField
     , targetedFieldNames : Set String
+    , formElement : Json.Decode.Value
     }
     -> String
     -> FormField
@@ -1616,6 +1619,7 @@ renderFormField maybeAnimate model index maybeFormField =
                             { customAttrs =
                                 [ attribute "disabled" "disabled"
                                 ]
+                            , formElement = model.formElement
                             , formValues = model.formValues
                             , shortTextTypeDict = model.shortTextTypeDict
                             , formFields = model.formFields
@@ -2944,46 +2948,46 @@ decodeCondition =
             )
 
 
-evaluateCondition : Dict String String -> Condition -> Bool
-evaluateCondition currentValues condition =
+evaluateCondition : Json.Decode.Value -> Condition -> Bool
+evaluateCondition formElement condition =
     case condition of
         Always ->
             True
 
         FieldEquals fieldName value ->
-            case Dict.get fieldName currentValues of
-                Just fieldValue ->
+            case currentFormValue formElement fieldName of
+                [ fieldValue ] ->
                     fieldValue == value
 
-                Nothing ->
+                _ ->
                     False
 
         FieldContains fieldName value ->
-            case Dict.get fieldName currentValues of
-                Just fieldValue ->
+            case currentFormValue formElement fieldName of
+                [ fieldValue ] ->
                     String.contains value fieldValue
 
-                Nothing ->
+                _ ->
                     False
 
         And conditions ->
-            List.all (evaluateCondition currentValues) conditions
+            List.all (evaluateCondition formElement) conditions
 
         Or conditions ->
-            List.any (evaluateCondition currentValues) conditions
+            List.any (evaluateCondition formElement) conditions
 
         Not cond ->
-            not (evaluateCondition currentValues cond)
+            not (evaluateCondition formElement cond)
 
 
-isVisibilityRuleSatisfied : Dict String String -> VisibilityRule -> Bool
-isVisibilityRuleSatisfied currentValues rule =
+isVisibilityRuleSatisfied : VisibilityRule -> Json.Decode.Value -> Bool
+isVisibilityRuleSatisfied rule formElement =
     case rule of
         ShowWhen condition ->
-            evaluateCondition currentValues condition
+            evaluateCondition formElement condition
 
         HideWhen condition ->
-            not (evaluateCondition currentValues condition)
+            not (evaluateCondition formElement condition)
 
 
 {-| Json Decoder for the HTML element `form` tag.
