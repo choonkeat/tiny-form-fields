@@ -13725,10 +13725,19 @@ var $author$project$Main$viewFormFieldPreview = F3(
 		var fieldID = 'tff-field-input-' + $elm$core$String$fromInt(index);
 		var extraAttrs = A2($elm$core$Set$member, fieldName, config.targetedFieldNames) ? _List_fromArray(
 			[
-				$elm$html$Html$Events$onInput(
-				function (value) {
-					return A2($author$project$Main$OnFormValuesUpdated, fieldName, value);
-				})
+				A2(
+				$elm$html$Html$Events$on,
+				'input',
+				A2(
+					$elm$json$Json$Decode$map,
+					function (value) {
+						return A2($author$project$Main$OnFormValuesUpdated, fieldName, value);
+					},
+					A2(
+						$elm$json$Json$Decode$at,
+						_List_fromArray(
+							['target', 'value']),
+						$elm$json$Json$Decode$string)))
 			]) : _List_Nil;
 		return A2(
 			$elm$html$Html$div,

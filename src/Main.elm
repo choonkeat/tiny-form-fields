@@ -1206,7 +1206,11 @@ viewFormFieldPreview config index formField =
 
         extraAttrs =
             if Set.member fieldName config.targetedFieldNames then
-                [ onInput (\value -> OnFormValuesUpdated fieldName value) ]
+                [ on "input"
+                    (Json.Decode.at [ "target", "value" ] Json.Decode.string
+                        |> Json.Decode.map (\value -> OnFormValuesUpdated fieldName value)
+                    )
+                ]
 
             else
                 []

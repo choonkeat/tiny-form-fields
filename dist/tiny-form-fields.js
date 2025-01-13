@@ -8374,23 +8374,6 @@ var $elm$core$Set$member = F2(
 		var dict = _v0;
 		return A2($elm$core$Dict$member, key, dict);
 	});
-var $elm$html$Html$Events$alwaysStop = function (x) {
-	return _Utils_Tuple2(x, true);
-};
-var $elm$html$Html$Events$targetValue = A2(
-	$elm$json$Json$Decode$at,
-	_List_fromArray(
-		['target', 'value']),
-	$elm$json$Json$Decode$string);
-var $elm$html$Html$Events$onInput = function (tagger) {
-	return A2(
-		$elm$html$Html$Events$stopPropagationOn,
-		'input',
-		A2(
-			$elm$json$Json$Decode$map,
-			$elm$html$Html$Events$alwaysStop,
-			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
-};
 var $author$project$Main$requiredData = function (presence) {
 	switch (presence) {
 		case 0:
@@ -8443,6 +8426,12 @@ var $elm$virtual_dom$VirtualDom$property = F2(
 			_VirtualDom_noJavaScriptOrHtmlJson(value));
 	});
 var $elm$html$Html$Attributes$property = $elm$virtual_dom$VirtualDom$property;
+var $author$project$Main$defaultSelected = function (bool) {
+	return A2(
+		$elm$html$Html$Attributes$property,
+		'defaultSelected',
+		$elm$json$Json$Encode$bool(bool));
+};
 var $author$project$Main$defaultValue = function (str) {
 	return A2(
 		$elm$html$Html$Attributes$property,
@@ -8509,7 +8498,6 @@ var $author$project$Main$selectArrowDown = A2(
 				]),
 			_List_Nil)
 		]));
-var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
 var $elm$core$List$singleton = function (value) {
 	return _List_fromArray(
 		[value]);
@@ -8707,7 +8695,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 										_List_fromArray(
 											[
 												$elm$html$Html$Attributes$disabled(true),
-												$elm$html$Html$Attributes$selected(
+												$author$project$Main$defaultSelected(
 												_Utils_eq(valueString, $elm$core$Maybe$Nothing) && (!chosenForYou(choices))),
 												A2($elm$html$Html$Attributes$attribute, 'value', '')
 											]),
@@ -8726,7 +8714,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 												$elm$html$Html$Attributes$value(choice.v),
 												A2(
 													$elm$core$List$cons,
-													$elm$html$Html$Attributes$selected(
+													$author$project$Main$defaultSelected(
 														_Utils_eq(
 															valueString,
 															$elm$core$Maybe$Just(choice.v)) || chosenForYou(choices)),
@@ -8879,10 +8867,19 @@ var $author$project$Main$viewFormFieldPreview = F3(
 		var fieldID = 'tff-field-input-' + $elm$core$String$fromInt(index);
 		var extraAttrs = A2($elm$core$Set$member, fieldName, config.a3) ? _List_fromArray(
 			[
-				$elm$html$Html$Events$onInput(
-				function (value) {
-					return A2($author$project$Main$OnFormValuesUpdated, fieldName, value);
-				})
+				A2(
+				$elm$html$Html$Events$on,
+				'input',
+				A2(
+					$elm$json$Json$Decode$map,
+					function (value) {
+						return A2($author$project$Main$OnFormValuesUpdated, fieldName, value);
+					},
+					A2(
+						$elm$json$Json$Decode$at,
+						_List_fromArray(
+							['target', 'value']),
+						$elm$json$Json$Decode$string)))
 			]) : _List_Nil;
 		return A2(
 			$elm$html$Html$div,
@@ -9232,6 +9229,23 @@ var $elm$html$Html$Events$onCheck = function (tagger) {
 		'change',
 		A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetChecked));
 };
+var $elm$html$Html$Events$alwaysStop = function (x) {
+	return _Utils_Tuple2(x, true);
+};
+var $elm$html$Html$Events$targetValue = A2(
+	$elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'value']),
+	$elm$json$Json$Decode$string);
+var $elm$html$Html$Events$onInput = function (tagger) {
+	return A2(
+		$elm$html$Html$Events$stopPropagationOn,
+		'input',
+		A2(
+			$elm$json$Json$Decode$map,
+			$elm$html$Html$Events$alwaysStop,
+			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
+};
 var $author$project$Main$inputAttributeOptional = F2(
 	function (options, attributeOptional) {
 		switch (attributeOptional.$) {
@@ -9421,6 +9435,7 @@ var $author$project$Main$otherQuestionTitles = F2(
 						}),
 					$elm$core$Array$toList(formFields))));
 	});
+var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
 var $elm$html$Html$Attributes$title = $elm$html$Html$Attributes$stringProperty('title');
 var $elm$core$String$toLower = _String_toLower;
 var $author$project$Main$OnChoicesInput = {$: 4};
