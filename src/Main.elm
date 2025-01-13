@@ -540,6 +540,10 @@ init flags =
               }
             , Cmd.batch
                 [ outgoing (encodePortOutgoingValue (PortOutgoingFormFields config.formFields))
+
+                -- js could've just done `document.body.addEventListener` and `app.ports.incoming.send` anyways
+                -- but we're sending out PortOutgoingSetupCloseDropdown to be surer that js would do it
+                -- also, we now dictate what `app.ports.incoming.send` sends back: PortIncomingCloseDropdown
                 , outgoing (encodePortOutgoingValue (PortOutgoingSetupCloseDropdown PortIncomingCloseDropdown))
                 ]
             )
@@ -1449,7 +1453,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                         |> List.filterMap attributesFromTuple
 
                 extraAttrs =
-                    Maybe.map (\s -> defaultValue s) (maybeDecode fieldName Json.Decode.string config.formElement)
+                    Maybe.map (\s -> defaultValue s) (Dict.get fieldName config.trackedFormValues |> Maybe.andThen List.head)
                         :: List.map attributesFromTuple (Dict.toList customElement.attributes)
                         |> List.filterMap identity
             in
@@ -1473,7 +1477,7 @@ viewFormFieldOptionsPreview config fieldID formField =
             let
                 extraAttrs =
                     [ Maybe.map (\maxLength -> maxlength maxLength) (maybeMaxLengthOf formField)
-                    , Maybe.map (\s -> value s) (maybeDecode fieldName Json.Decode.string config.formElement)
+                    , Maybe.map (\s -> value s) (Dict.get fieldName config.trackedFormValues |> Maybe.andThen List.head)
                     ]
                         |> List.filterMap identity
             in
@@ -1492,7 +1496,9 @@ viewFormFieldOptionsPreview config fieldID formField =
         Dropdown choices ->
             let
                 valueString =
-                    maybeDecode fieldName Json.Decode.string config.formElement
+                    Dict.get fieldName config.trackedFormValues
+                        |> Maybe.andThen List.head
+                        |> Maybe.withDefault ""
             in
             div [ class "tff-dropdown-group" ]
                 [ selectArrowDown
@@ -1512,7 +1518,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                     ]
                     (option
                         ([ disabled True
-                         , defaultSelected (valueString == Nothing && not (chosenForYou choices))
+                         , defaultSelected (valueString == "" && not (chosenForYou choices))
                          , attribute "value" ""
                          ]
                             ++ config.customAttrs
@@ -1522,7 +1528,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                             (\choice ->
                                 option
                                     (value choice.value
-                                        :: defaultSelected (valueString == Just choice.value || chosenForYou choices)
+                                        :: defaultSelected (valueString == choice.value || chosenForYou choices)
                                         :: config.customAttrs
                                     )
                                     [ text choice.label ]
@@ -1534,7 +1540,9 @@ viewFormFieldOptionsPreview config fieldID formField =
         ChooseOne choices ->
             let
                 valueString =
-                    maybeDecode fieldName Json.Decode.string config.formElement
+                    Dict.get fieldName config.trackedFormValues
+                        |> Maybe.andThen List.head
+                        |> Maybe.withDefault ""
             in
             -- radio buttons
             div [ class "tff-chooseone-group" ]
@@ -1548,7 +1556,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                                          , tabindex 0
                                          , name fieldName
                                          , value choice.value
-                                         , checked (valueString == Just choice.value || chosenForYou choices)
+                                         , checked (valueString == choice.value || chosenForYou choices)
                                          , required (requiredData formField.presence)
                                          ]
                                             ++ config.customAttrs
@@ -1571,7 +1579,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                             |> Maybe.withDefault []
 
                     else
-                        maybeDecode fieldName (decodeListOrSingleton Json.Decode.string) config.formElement
+                        Dict.get fieldName config.trackedFormValues
                             |> Maybe.withDefault []
             in
             -- checkboxes

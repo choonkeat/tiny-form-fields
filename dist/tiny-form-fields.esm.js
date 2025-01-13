@@ -13491,7 +13491,10 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 							function (s) {
 								return $author$project$Main$defaultValue(s);
 							},
-							A3($author$project$Main$maybeDecode, fieldName, $elm$json$Json$Decode$string, config.formElement)),
+							A2(
+								$elm$core$Maybe$andThen,
+								$elm$core$List$head,
+								A2($elm$core$Dict$get, fieldName, config.trackedFormValues))),
 						A2(
 							$elm$core$List$map,
 							$author$project$Main$attributesFromTuple,
@@ -13601,7 +13604,10 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 							function (s) {
 								return $elm$html$Html$Attributes$value(s);
 							},
-							A3($author$project$Main$maybeDecode, fieldName, $elm$json$Json$Decode$string, config.formElement))
+							A2(
+								$elm$core$Maybe$andThen,
+								$elm$core$List$head,
+								A2($elm$core$Dict$get, fieldName, config.trackedFormValues)))
 						]));
 				return A2(
 					$elm$html$Html$textarea,
@@ -13619,7 +13625,13 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 					_List_Nil);
 			case 'Dropdown':
 				var choices = _v0.a;
-				var valueString = A3($author$project$Main$maybeDecode, fieldName, $elm$json$Json$Decode$string, config.formElement);
+				var valueString = A2(
+					$elm$core$Maybe$withDefault,
+					'',
+					A2(
+						$elm$core$Maybe$andThen,
+						$elm$core$List$head,
+						A2($elm$core$Dict$get, fieldName, config.trackedFormValues)));
 				return A2(
 					$elm$html$Html$div,
 					_List_fromArray(
@@ -13650,7 +13662,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 											[
 												$elm$html$Html$Attributes$disabled(true),
 												$author$project$Main$defaultSelected(
-												_Utils_eq(valueString, $elm$core$Maybe$Nothing) && (!chosenForYou(choices))),
+												(valueString === '') && (!chosenForYou(choices))),
 												A2($elm$html$Html$Attributes$attribute, 'value', '')
 											]),
 										config.customAttrs),
@@ -13669,9 +13681,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 												A2(
 													$elm$core$List$cons,
 													$author$project$Main$defaultSelected(
-														_Utils_eq(
-															valueString,
-															$elm$core$Maybe$Just(choice.value)) || chosenForYou(choices)),
+														_Utils_eq(valueString, choice.value) || chosenForYou(choices)),
 													config.customAttrs)),
 											_List_fromArray(
 												[
@@ -13682,7 +13692,13 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 						]));
 			case 'ChooseOne':
 				var choices = _v0.a;
-				var valueString = A3($author$project$Main$maybeDecode, fieldName, $elm$json$Json$Decode$string, config.formElement);
+				var valueString = A2(
+					$elm$core$Maybe$withDefault,
+					'',
+					A2(
+						$elm$core$Maybe$andThen,
+						$elm$core$List$head,
+						A2($elm$core$Dict$get, fieldName, config.trackedFormValues)));
 				return A2(
 					$elm$html$Html$div,
 					_List_fromArray(
@@ -13726,9 +13742,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 																	$elm$html$Html$Attributes$name(fieldName),
 																	$elm$html$Html$Attributes$value(choice.value),
 																	$elm$html$Html$Attributes$checked(
-																	_Utils_eq(
-																		valueString,
-																		$elm$core$Maybe$Just(choice.value)) || chosenForYou(choices)),
+																	_Utils_eq(valueString, choice.value) || chosenForYou(choices)),
 																	$elm$html$Html$Attributes$required(
 																	$author$project$Main$requiredData(formField.presence))
 																]),
@@ -13749,11 +13763,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 					A2($elm$core$Dict$get, fieldName, config.trackedFormValues)) : A2(
 					$elm$core$Maybe$withDefault,
 					_List_Nil,
-					A3(
-						$author$project$Main$maybeDecode,
-						fieldName,
-						$author$project$Main$decodeListOrSingleton($elm$json$Json$Decode$string),
-						config.formElement));
+					A2($elm$core$Dict$get, fieldName, config.trackedFormValues));
 				return A2(
 					$elm$html$Html$div,
 					_List_fromArray(
