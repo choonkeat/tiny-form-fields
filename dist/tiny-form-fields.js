@@ -5203,8 +5203,8 @@ var $author$project$Main$PortOutgoingSetupCloseDropdown = function (a) {
 };
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $author$project$Main$Config = F5(
-	function (viewMode, form, formFields, formValues, shortTextTypeList) {
-		return {aA: form, d: formFields, D: formValues, ab: shortTextTypeList, T: viewMode};
+	function (viewMode, formElement, formFields, formValues, shortTextTypeList) {
+		return {aA: formElement, d: formFields, D: formValues, ab: shortTextTypeList, T: viewMode};
 	});
 var $elm_community$json_extra$Json$Decode$Extra$andMap = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
 var $author$project$Main$Always = {$: 5};
@@ -6073,7 +6073,7 @@ var $author$project$Main$decodeConfig = A2(
 				A2(
 					$elm$json$Json$Decode$map,
 					$elm$core$Maybe$withDefault($elm$json$Json$Encode$null),
-					A2($elm_community$json_extra$Json$Decode$Extra$optionalNullableField, 'form', $elm$json$Json$Decode$value)),
+					A2($elm_community$json_extra$Json$Decode$Extra$optionalNullableField, 'formElement', $elm$json$Json$Decode$value)),
 				A2(
 					$elm_community$json_extra$Json$Decode$Extra$andMap,
 					A2(

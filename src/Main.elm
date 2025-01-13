@@ -71,7 +71,7 @@ type alias Flags =
 
 type alias Config =
     { viewMode : ViewMode
-    , form : Json.Decode.Value
+    , formElement : Json.Decode.Value
     , formFields : Array FormField
     , formValues : Json.Encode.Value
 
@@ -83,7 +83,7 @@ type alias Config =
 type alias Model =
     { viewMode : ViewMode
     , initError : Maybe String
-    , form : Json.Decode.Value
+    , formElement : Json.Decode.Value
     , formFields : Array FormField
     , formValues : Json.Encode.Value
     , currentValues : Dict String String
@@ -502,7 +502,7 @@ init flags =
             in
             ( { viewMode = config.viewMode
               , initError = Nothing
-              , form = config.form
+              , formElement = config.formElement
               , formFields = config.formFields
               , formValues = config.formValues
               , currentValues = Dict.empty
@@ -528,7 +528,7 @@ init flags =
         Err err ->
             ( { viewMode = Editor { maybeAnimate = Nothing }
               , initError = Just (Json.Decode.errorToString err)
-              , form = Json.Encode.null
+              , formElement = Json.Encode.null
               , formFields = Array.empty
               , formValues = Json.Encode.null
               , currentValues = Dict.empty
@@ -2301,7 +2301,7 @@ decodeConfig : Json.Decode.Decoder Config
 decodeConfig =
     Json.Decode.succeed Config
         |> andMap (Json.Decode.Extra.optionalNullableField "viewMode" decodeViewMode |> Json.Decode.map (Maybe.withDefault (Editor { maybeAnimate = Nothing })))
-        |> andMap (Json.Decode.Extra.optionalNullableField "form" Json.Decode.value |> Json.Decode.map (Maybe.withDefault Json.Encode.null))
+        |> andMap (Json.Decode.Extra.optionalNullableField "formElement" Json.Decode.value |> Json.Decode.map (Maybe.withDefault Json.Encode.null))
         |> andMap (Json.Decode.Extra.optionalNullableField "formFields" decodeFormFields |> Json.Decode.map (Maybe.withDefault Array.empty))
         |> andMap (Json.Decode.Extra.optionalNullableField "formValues" Json.Decode.value |> Json.Decode.map (Maybe.withDefault Json.Encode.null))
         |> andMap
@@ -2984,3 +2984,24 @@ isVisibilityRuleSatisfied currentValues rule =
 
         HideWhen condition ->
             not (evaluateCondition currentValues condition)
+
+
+{-| Json Decoder for the HTML element `form` tag.
+
+Given a field name, returns the current value of the form field.
+
+-}
+currentFormValue : Json.Decode.Value -> String -> List String
+currentFormValue formElement fieldName =
+    formElement
+        |> Json.Decode.decodeValue (Json.Decode.at [ "elements", fieldName ] decodeFieldValues)
+        |> Result.withDefault []
+
+
+decodeFieldValues : Json.Decode.Decoder (List String)
+decodeFieldValues =
+    Json.Decode.oneOf
+        [ Json.Decode.field "values" (Json.Decode.list Json.Decode.string)
+        , Json.Decode.field "value" Json.Decode.string
+            |> Json.Decode.map List.singleton
+        ]
