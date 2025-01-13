@@ -193,7 +193,7 @@ type alias FormField =
     , presence : Presence
     , description : AttributeOptional String
     , type_ : InputField
-    , visibilityRule : VisibilityRule
+    , visibilityRule : AttributeOptional VisibilityRule
     }
 
 
@@ -578,7 +578,7 @@ update msg model =
                     , presence = when (mustBeOptional fieldType) { true = Optional, false = Required }
                     , description = AttributeNotNeeded Nothing
                     , type_ = fieldType
-                    , visibilityRule = ShowWhen Always
+                    , visibilityRule = AttributeNotNeeded (Just (ShowWhen Always))
                     }
 
                 newFormFields =
@@ -956,72 +956,116 @@ updateFormField msg string formField =
         OnVisibilityRuleTypeInput isShow ->
             { formField
                 | visibilityRule =
-                    if isShow then
-                        ShowWhen (visibilityRuleCondition formField.visibilityRule)
+                    case formField.visibilityRule of
+                        AttributeNotNeeded _ ->
+                            if isShow then
+                                AttributeNotNeeded (Just (ShowWhen Always))
 
-                    else
-                        HideWhen (visibilityRuleCondition formField.visibilityRule)
+                            else
+                                AttributeNotNeeded (Just (HideWhen Always))
+
+                        AttributeInvalid _ ->
+                            if isShow then
+                                AttributeNotNeeded (Just (ShowWhen Always))
+
+                            else
+                                AttributeNotNeeded (Just (HideWhen Always))
+
+                        AttributeGiven rule ->
+                            if isShow then
+                                AttributeGiven (ShowWhen (visibilityRuleCondition rule))
+
+                            else
+                                AttributeGiven (HideWhen (visibilityRuleCondition rule))
             }
 
         OnVisibilityConditionTypeInput str ->
             case formField.visibilityRule of
-                ShowWhen condition ->
+                AttributeNotNeeded _ ->
                     { formField
                         | visibilityRule =
                             case str of
                                 "Always" ->
-                                    ShowWhen Always
+                                    AttributeNotNeeded (Just (ShowWhen Always))
 
                                 "FieldEquals" ->
-                                    ShowWhen (FieldEquals "" "")
+                                    AttributeNotNeeded (Just (ShowWhen (FieldEquals "" "")))
 
                                 _ ->
-                                    ShowWhen condition
+                                    formField.visibilityRule
                     }
 
-                HideWhen condition ->
+                AttributeInvalid _ ->
                     { formField
                         | visibilityRule =
                             case str of
                                 "Always" ->
-                                    HideWhen Always
+                                    AttributeNotNeeded (Just (ShowWhen Always))
 
                                 "FieldEquals" ->
-                                    HideWhen (FieldEquals "" "")
+                                    AttributeNotNeeded (Just (ShowWhen (FieldEquals "" "")))
 
                                 _ ->
-                                    HideWhen condition
+                                    formField.visibilityRule
                     }
 
-        OnVisibilityConditionFieldInput str ->
+                AttributeGiven rule ->
+                    { formField
+                        | visibilityRule =
+                            case str of
+                                "Always" ->
+                                    AttributeGiven (ShowWhen Always)
+
+                                "FieldEquals" ->
+                                    AttributeGiven (ShowWhen (FieldEquals "" ""))
+
+                                _ ->
+                                    AttributeGiven rule
+                    }
+
+        OnVisibilityConditionFieldInput newFieldName ->
             case formField.visibilityRule of
-                ShowWhen (FieldEquals fieldName value) ->
-                    { formField
-                        | visibilityRule = ShowWhen (FieldEquals str value)
-                    }
-
-                HideWhen (FieldEquals fieldName value) ->
-                    { formField
-                        | visibilityRule = HideWhen (FieldEquals str value)
-                    }
-
-                _ ->
+                AttributeNotNeeded _ ->
                     formField
 
-        OnVisibilityConditionValueInput str ->
-            case formField.visibilityRule of
-                ShowWhen (FieldEquals fieldName value) ->
-                    { formField
-                        | visibilityRule = ShowWhen (FieldEquals fieldName str)
-                    }
-
-                HideWhen (FieldEquals fieldName value) ->
-                    { formField
-                        | visibilityRule = HideWhen (FieldEquals fieldName str)
-                    }
-
-                _ ->
+                AttributeInvalid _ ->
                     formField
+
+                AttributeGiven rule ->
+                    { formField
+                        | visibilityRule =
+                            case rule of
+                                ShowWhen (FieldEquals _ value) ->
+                                    AttributeGiven (ShowWhen (FieldEquals newFieldName value))
+
+                                HideWhen (FieldEquals _ value) ->
+                                    AttributeGiven (HideWhen (FieldEquals newFieldName value))
+
+                                _ ->
+                                    formField.visibilityRule
+                    }
+
+        OnVisibilityConditionValueInput newValue ->
+            case formField.visibilityRule of
+                AttributeNotNeeded _ ->
+                    formField
+
+                AttributeInvalid _ ->
+                    formField
+
+                AttributeGiven rule ->
+                    { formField
+                        | visibilityRule =
+                            case rule of
+                                ShowWhen (FieldEquals fieldName _) ->
+                                    AttributeGiven (ShowWhen (FieldEquals fieldName newValue))
+
+                                HideWhen (FieldEquals fieldName _) ->
+                                    AttributeGiven (HideWhen (FieldEquals fieldName newValue))
+
+                                _ ->
+                                    formField.visibilityRule
+                    }
 
 
 onDropped : Maybe Int -> { a | dragged : Maybe Dragged, formFields : Array FormField } -> { a | dragged : Maybe Dragged, formFields : Array FormField }
@@ -1196,7 +1240,18 @@ viewFormPreview customAttrs { formFields, trackedFormValues, shortTextTypeDict }
             }
     in
     formFields
-        |> Array.filter (\formField -> isVisibilityRuleSatisfied formField.visibilityRule trackedFormValues)
+        |> Array.filter
+            (\formField ->
+                case formField.visibilityRule of
+                    AttributeNotNeeded _ ->
+                        True
+
+                    AttributeInvalid _ ->
+                        False
+
+                    AttributeGiven rule ->
+                        isVisibilityRuleSatisfied rule trackedFormValues
+            )
         |> Array.indexedMap (viewFormFieldPreview config)
         |> Array.toList
 
@@ -1820,12 +1875,12 @@ viewFormFieldBuilder shortTextTypeList index totalLength formFields formField =
                         , onInput (\str -> OnFormField (OnVisibilityRuleTypeInput (str == "Show")) index "")
                         ]
                         [ option
-                            [ selected (isShowWhen formField.visibilityRule)
+                            [ selected (isShowWhen (visibilityRuleOf formField))
                             , value "Show"
                             ]
                             [ text "Show" ]
                         , option
-                            [ selected (isHideWhen formField.visibilityRule)
+                            [ selected (isHideWhen (visibilityRuleOf formField))
                             , value "Hide"
                             ]
                             [ text "Hide" ]
@@ -1838,13 +1893,13 @@ viewFormFieldBuilder shortTextTypeList index totalLength formFields formField =
                         , onInput (\str -> OnFormField (OnVisibilityConditionTypeInput str) index "")
                         ]
                         [ option
-                            [ selected (visibilityRuleCondition formField.visibilityRule == Always)
+                            [ selected (visibilityRuleCondition (visibilityRuleOf formField) == Always)
                             , value "Always"
                             ]
                             [ text "Always" ]
                         , option
                             [ selected
-                                (case visibilityRuleCondition formField.visibilityRule of
+                                (case visibilityRuleCondition (visibilityRuleOf formField) of
                                     FieldEquals _ _ ->
                                         True
 
@@ -1856,7 +1911,7 @@ viewFormFieldBuilder shortTextTypeList index totalLength formFields formField =
                             [ text "Field equals" ]
                         ]
                     ]
-                , case visibilityRuleCondition formField.visibilityRule of
+                , case visibilityRuleCondition (visibilityRuleOf formField) of
                     FieldEquals fieldName fieldValue ->
                         div [ class "tff-field-group" ]
                             [ div [ class "tff-dropdown-group" ]
@@ -1989,6 +2044,19 @@ viewFormFieldBuilder shortTextTypeList index totalLength formFields formField =
         )
 
 
+visibilityRuleOf : FormField -> VisibilityRule
+visibilityRuleOf formField =
+    case formField.visibilityRule of
+        AttributeNotNeeded maybeRule ->
+            Maybe.withDefault (ShowWhen Always) maybeRule
+
+        AttributeInvalid _ ->
+            ShowWhen Always
+
+        AttributeGiven rule ->
+            rule
+
+
 viewRightPanel : Model -> Html Msg
 viewRightPanel modelData =
     let
@@ -2083,7 +2151,7 @@ viewAddQuestionsList inputFields =
                                 , presence = when (mustBeOptional inputField) { true = Optional, false = Required }
                                 , description = AttributeNotNeeded Nothing
                                 , type_ = inputField
-                                , visibilityRule = ShowWhen Always
+                                , visibilityRule = AttributeNotNeeded (Just (ShowWhen Always))
                                 }
                             )
                         )
@@ -2524,7 +2592,7 @@ encodeFormFields formFields =
                      , ( "presence", encodePresence formField.presence )
                      , ( "description", encodeAttributeOptional Json.Encode.string formField.description )
                      , ( "type", encodeInputField formField.type_ )
-                     , ( "visibilityRule", encodeVisibilityRule formField.visibilityRule )
+                     , ( "visibilityRule", encodeAttributeOptional encodeVisibilityRule formField.visibilityRule )
                      ]
                         -- smaller output json than if we encoded `null` all the time
                         |> List.filter (\( _, v ) -> v /= Json.Encode.null)
@@ -2604,10 +2672,15 @@ decodeFormField =
         |> andMap (Json.Decode.oneOf [ Json.Decode.field "presence" decodePresence, decodeRequired ])
         |> andMap decodeFormFieldDescription
         |> andMap (Json.Decode.field "type" decodeInputField)
-        |> andMap
-            (Json.Decode.Extra.optionalNullableField "visibilityRule" decodeVisibilityRule
-                |> Json.Decode.map (Maybe.withDefault (ShowWhen Always))
-            )
+        |> andMap decodeFormFieldVisibilityRule
+
+
+decodeFormFieldVisibilityRule : Json.Decode.Decoder (AttributeOptional VisibilityRule)
+decodeFormFieldVisibilityRule =
+    Json.Decode.oneOf
+        [ Json.Decode.field "visibilityRule" (decodeAttributeOptional Nothing decodeVisibilityRule)
+        , Json.Decode.succeed (AttributeNotNeeded Nothing)
+        ]
 
 
 decodeRequired : Json.Decode.Decoder Presence

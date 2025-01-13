@@ -5207,14 +5207,10 @@ var $author$project$Main$Config = F4(
 		return {d: formFields, aS: formValues, ab: shortTextTypeList, T: viewMode};
 	});
 var $elm_community$json_extra$Json$Decode$Extra$andMap = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
-var $author$project$Main$Always = {$: 5};
 var $author$project$Main$FormField = F6(
 	function (label, name, presence, description, type_, visibilityRule) {
-		return {O: description, h: label, az: name, v: presence, f: type_, l: visibilityRule};
+		return {O: description, h: label, az: name, v: presence, f: type_, m: visibilityRule};
 	});
-var $author$project$Main$ShowWhen = function (a) {
-	return {$: 0, a: a};
-};
 var $author$project$Main$AttributeNotNeeded = function (a) {
 	return {$: 0, a: a};
 };
@@ -5284,6 +5280,121 @@ var $author$project$Main$decodeFormFieldMaybeName = $elm$json$Json$Decode$oneOf(
 			A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string)),
 			$elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing)
 		]));
+var $author$project$Main$HideWhen = function (a) {
+	return {$: 1, a: a};
+};
+var $author$project$Main$ShowWhen = function (a) {
+	return {$: 0, a: a};
+};
+var $elm$json$Json$Decode$andThen = _Json_andThen;
+var $author$project$Main$Always = {$: 5};
+var $author$project$Main$And = function (a) {
+	return {$: 2, a: a};
+};
+var $author$project$Main$FieldContains = F2(
+	function (a, b) {
+		return {$: 1, a: a, b: b};
+	});
+var $author$project$Main$FieldEquals = F2(
+	function (a, b) {
+		return {$: 0, a: a, b: b};
+	});
+var $author$project$Main$Not = function (a) {
+	return {$: 4, a: a};
+};
+var $author$project$Main$Or = function (a) {
+	return {$: 3, a: a};
+};
+var $elm$json$Json$Decode$fail = _Json_fail;
+var $elm$json$Json$Decode$list = _Json_decodeList;
+function $author$project$Main$cyclic$decodeCondition() {
+	return A2(
+		$elm$json$Json$Decode$andThen,
+		function (type_) {
+			switch (type_) {
+				case 'FieldEquals':
+					return A2(
+						$elm_community$json_extra$Json$Decode$Extra$andMap,
+						A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$string),
+						A2(
+							$elm_community$json_extra$Json$Decode$Extra$andMap,
+							A2($elm$json$Json$Decode$field, 'fieldName', $elm$json$Json$Decode$string),
+							$elm$json$Json$Decode$succeed($author$project$Main$FieldEquals)));
+				case 'FieldContains':
+					return A2(
+						$elm_community$json_extra$Json$Decode$Extra$andMap,
+						A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$string),
+						A2(
+							$elm_community$json_extra$Json$Decode$Extra$andMap,
+							A2($elm$json$Json$Decode$field, 'fieldName', $elm$json$Json$Decode$string),
+							$elm$json$Json$Decode$succeed($author$project$Main$FieldContains)));
+				case 'And':
+					return A2(
+						$elm_community$json_extra$Json$Decode$Extra$andMap,
+						A2(
+							$elm$json$Json$Decode$field,
+							'conditions',
+							$elm$json$Json$Decode$list(
+								$author$project$Main$cyclic$decodeCondition())),
+						$elm$json$Json$Decode$succeed($author$project$Main$And));
+				case 'Or':
+					return A2(
+						$elm_community$json_extra$Json$Decode$Extra$andMap,
+						A2(
+							$elm$json$Json$Decode$field,
+							'conditions',
+							$elm$json$Json$Decode$list(
+								$author$project$Main$cyclic$decodeCondition())),
+						$elm$json$Json$Decode$succeed($author$project$Main$Or));
+				case 'Not':
+					return A2(
+						$elm_community$json_extra$Json$Decode$Extra$andMap,
+						A2(
+							$elm$json$Json$Decode$field,
+							'condition',
+							$author$project$Main$cyclic$decodeCondition()),
+						$elm$json$Json$Decode$succeed($author$project$Main$Not));
+				case 'Always':
+					return $elm$json$Json$Decode$succeed($author$project$Main$Always);
+				default:
+					return $elm$json$Json$Decode$fail('Unknown condition type: ' + type_);
+			}
+		},
+		A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string));
+}
+var $author$project$Main$decodeCondition = $author$project$Main$cyclic$decodeCondition();
+$author$project$Main$cyclic$decodeCondition = function () {
+	return $author$project$Main$decodeCondition;
+};
+var $author$project$Main$decodeVisibilityRule = A2(
+	$elm$json$Json$Decode$andThen,
+	function (str) {
+		switch (str) {
+			case 'ShowWhen':
+				return A2(
+					$elm_community$json_extra$Json$Decode$Extra$andMap,
+					A2($elm$json$Json$Decode$field, 'condition', $author$project$Main$decodeCondition),
+					$elm$json$Json$Decode$succeed($author$project$Main$ShowWhen));
+			case 'HideWhen':
+				return A2(
+					$elm_community$json_extra$Json$Decode$Extra$andMap,
+					A2($elm$json$Json$Decode$field, 'condition', $author$project$Main$decodeCondition),
+					$elm$json$Json$Decode$succeed($author$project$Main$HideWhen));
+			default:
+				return $elm$json$Json$Decode$fail('Unknown visibility rule: ' + str);
+		}
+	},
+	A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string));
+var $author$project$Main$decodeFormFieldVisibilityRule = $elm$json$Json$Decode$oneOf(
+	_List_fromArray(
+		[
+			A2(
+			$elm$json$Json$Decode$field,
+			'visibilityRule',
+			A2($author$project$Main$decodeAttributeOptional, $elm$core$Maybe$Nothing, $author$project$Main$decodeVisibilityRule)),
+			$elm$json$Json$Decode$succeed(
+			$author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing))
+		]));
 var $author$project$Main$ChooseMultiple = function (a) {
 	return {$: 4, a: a};
 };
@@ -5299,7 +5410,6 @@ var $author$project$Main$LongText = function (a) {
 var $author$project$Main$ShortText = function (a) {
 	return {$: 0, a: a};
 };
-var $elm$json$Json$Decode$andThen = _Json_andThen;
 var $author$project$Main$choiceDelimiter = ' | ';
 var $author$project$Main$choiceFromString = function (s) {
 	var _v0 = A2($elm$core$String$split, $author$project$Main$choiceDelimiter, s);
@@ -5656,9 +5766,7 @@ var $author$project$Main$decodeCustomElement = A2(
 				$elm_community$json_extra$Json$Decode$Extra$andMap,
 				A2($elm$json$Json$Decode$field, 'inputType', $elm$json$Json$Decode$string),
 				$elm$json$Json$Decode$succeed($author$project$Main$RawCustomElement)))));
-var $elm$json$Json$Decode$fail = _Json_fail;
 var $elm$json$Json$Decode$int = _Json_decodeInt;
-var $elm$json$Json$Decode$list = _Json_decodeList;
 var $author$project$Main$decodeInputField = A2(
 	$elm$json$Json$Decode$andThen,
 	function (type_) {
@@ -5747,138 +5855,9 @@ var $author$project$Main$decodeRequired = A2(
 		return b ? 0 : 1;
 	},
 	A2($elm$json$Json$Decode$field, 'required', $elm$json$Json$Decode$bool));
-var $author$project$Main$HideWhen = function (a) {
-	return {$: 1, a: a};
-};
-var $author$project$Main$And = function (a) {
-	return {$: 2, a: a};
-};
-var $author$project$Main$FieldContains = F2(
-	function (a, b) {
-		return {$: 1, a: a, b: b};
-	});
-var $author$project$Main$FieldEquals = F2(
-	function (a, b) {
-		return {$: 0, a: a, b: b};
-	});
-var $author$project$Main$Not = function (a) {
-	return {$: 4, a: a};
-};
-var $author$project$Main$Or = function (a) {
-	return {$: 3, a: a};
-};
-function $author$project$Main$cyclic$decodeCondition() {
-	return A2(
-		$elm$json$Json$Decode$andThen,
-		function (type_) {
-			switch (type_) {
-				case 'FieldEquals':
-					return A2(
-						$elm_community$json_extra$Json$Decode$Extra$andMap,
-						A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$string),
-						A2(
-							$elm_community$json_extra$Json$Decode$Extra$andMap,
-							A2($elm$json$Json$Decode$field, 'fieldName', $elm$json$Json$Decode$string),
-							$elm$json$Json$Decode$succeed($author$project$Main$FieldEquals)));
-				case 'FieldContains':
-					return A2(
-						$elm_community$json_extra$Json$Decode$Extra$andMap,
-						A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$string),
-						A2(
-							$elm_community$json_extra$Json$Decode$Extra$andMap,
-							A2($elm$json$Json$Decode$field, 'fieldName', $elm$json$Json$Decode$string),
-							$elm$json$Json$Decode$succeed($author$project$Main$FieldContains)));
-				case 'And':
-					return A2(
-						$elm_community$json_extra$Json$Decode$Extra$andMap,
-						A2(
-							$elm$json$Json$Decode$field,
-							'conditions',
-							$elm$json$Json$Decode$list(
-								$author$project$Main$cyclic$decodeCondition())),
-						$elm$json$Json$Decode$succeed($author$project$Main$And));
-				case 'Or':
-					return A2(
-						$elm_community$json_extra$Json$Decode$Extra$andMap,
-						A2(
-							$elm$json$Json$Decode$field,
-							'conditions',
-							$elm$json$Json$Decode$list(
-								$author$project$Main$cyclic$decodeCondition())),
-						$elm$json$Json$Decode$succeed($author$project$Main$Or));
-				case 'Not':
-					return A2(
-						$elm_community$json_extra$Json$Decode$Extra$andMap,
-						A2(
-							$elm$json$Json$Decode$field,
-							'condition',
-							$author$project$Main$cyclic$decodeCondition()),
-						$elm$json$Json$Decode$succeed($author$project$Main$Not));
-				case 'Always':
-					return $elm$json$Json$Decode$succeed($author$project$Main$Always);
-				default:
-					return $elm$json$Json$Decode$fail('Unknown condition type: ' + type_);
-			}
-		},
-		A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string));
-}
-var $author$project$Main$decodeCondition = $author$project$Main$cyclic$decodeCondition();
-$author$project$Main$cyclic$decodeCondition = function () {
-	return $author$project$Main$decodeCondition;
-};
-var $author$project$Main$decodeVisibilityRule = A2(
-	$elm$json$Json$Decode$andThen,
-	function (str) {
-		switch (str) {
-			case 'ShowWhen':
-				return A2(
-					$elm_community$json_extra$Json$Decode$Extra$andMap,
-					A2($elm$json$Json$Decode$field, 'condition', $author$project$Main$decodeCondition),
-					$elm$json$Json$Decode$succeed($author$project$Main$ShowWhen));
-			case 'HideWhen':
-				return A2(
-					$elm_community$json_extra$Json$Decode$Extra$andMap,
-					A2($elm$json$Json$Decode$field, 'condition', $author$project$Main$decodeCondition),
-					$elm$json$Json$Decode$succeed($author$project$Main$HideWhen));
-			default:
-				return $elm$json$Json$Decode$fail('Unknown visibility rule: ' + str);
-		}
-	},
-	A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string));
-var $elm$core$Maybe$andThen = F2(
-	function (callback, maybeValue) {
-		if (!maybeValue.$) {
-			var value = maybeValue.a;
-			return callback(value);
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
-var $elm$json$Json$Decode$nullable = function (decoder) {
-	return $elm$json$Json$Decode$oneOf(
-		_List_fromArray(
-			[
-				$elm$json$Json$Decode$null($elm$core$Maybe$Nothing),
-				A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, decoder)
-			]));
-};
-var $elm_community$json_extra$Json$Decode$Extra$optionalNullableField = F2(
-	function (fieldName, decoder) {
-		return A2(
-			$elm$json$Json$Decode$map,
-			$elm$core$Maybe$andThen($elm$core$Basics$identity),
-			A2(
-				$elm_community$json_extra$Json$Decode$Extra$optionalField,
-				fieldName,
-				$elm$json$Json$Decode$nullable(decoder)));
-	});
 var $author$project$Main$decodeFormField = A2(
 	$elm_community$json_extra$Json$Decode$Extra$andMap,
-	A2(
-		$elm$json$Json$Decode$map,
-		$elm$core$Maybe$withDefault(
-			$author$project$Main$ShowWhen($author$project$Main$Always)),
-		A2($elm_community$json_extra$Json$Decode$Extra$optionalNullableField, 'visibilityRule', $author$project$Main$decodeVisibilityRule)),
+	$author$project$Main$decodeFormFieldVisibilityRule,
 	A2(
 		$elm_community$json_extra$Json$Decode$Extra$andMap,
 		A2($elm$json$Json$Decode$field, 'type', $author$project$Main$decodeInputField),
@@ -6037,6 +6016,33 @@ var $author$project$Main$decodeViewMode = A2(
 	$elm_community$json_extra$Json$Decode$Extra$fromMaybe('Invalid viewMode: Editor | Preview | CollectData'),
 	A2($elm$json$Json$Decode$map, $author$project$Main$viewModeFromString, $elm$json$Json$Decode$string));
 var $elm$json$Json$Encode$null = _Json_encodeNull;
+var $elm$core$Maybe$andThen = F2(
+	function (callback, maybeValue) {
+		if (!maybeValue.$) {
+			var value = maybeValue.a;
+			return callback(value);
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $elm$json$Json$Decode$nullable = function (decoder) {
+	return $elm$json$Json$Decode$oneOf(
+		_List_fromArray(
+			[
+				$elm$json$Json$Decode$null($elm$core$Maybe$Nothing),
+				A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, decoder)
+			]));
+};
+var $elm_community$json_extra$Json$Decode$Extra$optionalNullableField = F2(
+	function (fieldName, decoder) {
+		return A2(
+			$elm$json$Json$Decode$map,
+			$elm$core$Maybe$andThen($elm$core$Basics$identity),
+			A2(
+				$elm_community$json_extra$Json$Decode$Extra$optionalField,
+				fieldName,
+				$elm$json$Json$Decode$nullable(decoder)));
+	});
 var $author$project$Main$decodeConfig = A2(
 	$elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(
@@ -6500,7 +6506,7 @@ var $author$project$Main$encodeFormFields = function (formFields) {
 								$author$project$Main$encodeInputField(formField.f)),
 								_Utils_Tuple2(
 								'visibilityRule',
-								$author$project$Main$encodeVisibilityRule(formField.l))
+								A2($author$project$Main$encodeAttributeOptional, $author$project$Main$encodeVisibilityRule, formField.m))
 							])));
 			},
 			$elm$core$Array$toList(formFields)));
@@ -6698,7 +6704,7 @@ var $author$project$Main$init = function (flags) {
 			config.ab);
 		return _Utils_Tuple2(
 			{
-				m: $elm$core$Maybe$Nothing,
+				l: $elm$core$Maybe$Nothing,
 				aF: 0,
 				d: config.d,
 				aI: $elm$core$Maybe$Nothing,
@@ -6728,7 +6734,7 @@ var $author$project$Main$init = function (flags) {
 		var err = _v0.a;
 		return _Utils_Tuple2(
 			{
-				m: $elm$core$Maybe$Nothing,
+				l: $elm$core$Maybe$Nothing,
 				aF: 0,
 				d: $elm$core$Array$empty,
 				aI: $elm$core$Maybe$Just(
@@ -7085,7 +7091,7 @@ var $elm_community$list_extra$List$Extra$splitAt = F2(
 	});
 var $author$project$Main$onDropped = F2(
 	function (targetIndex, model) {
-		var _v0 = model.m;
+		var _v0 = model.l;
 		if (!_v0.$) {
 			if (!_v0.a.$) {
 				var dragIndex = _v0.a.a.aR;
@@ -7093,7 +7099,7 @@ var $author$project$Main$onDropped = F2(
 				if (targetIndex.$ === 1) {
 					return _Utils_update(
 						model,
-						{m: $elm$core$Maybe$Nothing});
+						{l: $elm$core$Maybe$Nothing});
 				} else {
 					var index = targetIndex.a;
 					if (!dropIndex.$) {
@@ -7102,7 +7108,7 @@ var $author$project$Main$onDropped = F2(
 						if (_Utils_eq(dragIndex, index) || (!_Utils_eq(index, dropTargetIndex))) {
 							return _Utils_update(
 								model,
-								{m: $elm$core$Maybe$Nothing});
+								{l: $elm$core$Maybe$Nothing});
 						} else {
 							var newFormFields = $elm$core$Array$fromList(
 								function (list) {
@@ -7139,12 +7145,12 @@ var $author$project$Main$onDropped = F2(
 												$elm$core$Array$toList(model.d))))));
 							return _Utils_update(
 								model,
-								{m: $elm$core$Maybe$Nothing, d: newFormFields});
+								{l: $elm$core$Maybe$Nothing, d: newFormFields});
 						}
 					} else {
 						return _Utils_update(
 							model,
-							{m: $elm$core$Maybe$Nothing});
+							{l: $elm$core$Maybe$Nothing});
 					}
 				}
 			} else {
@@ -7153,7 +7159,7 @@ var $author$project$Main$onDropped = F2(
 				if (targetIndex.$ === 1) {
 					return _Utils_update(
 						model,
-						{m: $elm$core$Maybe$Nothing});
+						{l: $elm$core$Maybe$Nothing});
 				} else {
 					var index = targetIndex.a;
 					if (!dropIndex.$) {
@@ -7162,7 +7168,7 @@ var $author$project$Main$onDropped = F2(
 						if (!_Utils_eq(index, dropTargetIndex)) {
 							return _Utils_update(
 								model,
-								{m: $elm$core$Maybe$Nothing});
+								{l: $elm$core$Maybe$Nothing});
 						} else {
 							var newFormFields = $elm$core$Array$fromList(
 								function (list) {
@@ -7179,19 +7185,19 @@ var $author$project$Main$onDropped = F2(
 									$elm$core$Array$toList(model.d)));
 							return _Utils_update(
 								model,
-								{m: $elm$core$Maybe$Nothing, d: newFormFields});
+								{l: $elm$core$Maybe$Nothing, d: newFormFields});
 						}
 					} else {
 						return _Utils_update(
 							model,
-							{m: $elm$core$Maybe$Nothing});
+							{l: $elm$core$Maybe$Nothing});
 					}
 				}
 			}
 		} else {
 			return _Utils_update(
 				model,
-				{m: $elm$core$Maybe$Nothing});
+				{l: $elm$core$Maybe$Nothing});
 		}
 	});
 var $elm$core$Elm$JsArray$push = _JsArray_push;
@@ -7675,120 +7681,179 @@ var $author$project$Main$updateFormField = F3(
 				return _Utils_update(
 					formField,
 					{
-						l: isShow ? $author$project$Main$ShowWhen(
-							$author$project$Main$visibilityRuleCondition(formField.l)) : $author$project$Main$HideWhen(
-							$author$project$Main$visibilityRuleCondition(formField.l))
+						m: function () {
+							var _v10 = formField.m;
+							switch (_v10.$) {
+								case 0:
+									return isShow ? $author$project$Main$AttributeNotNeeded(
+										$elm$core$Maybe$Just(
+											$author$project$Main$ShowWhen($author$project$Main$Always))) : $author$project$Main$AttributeNotNeeded(
+										$elm$core$Maybe$Just(
+											$author$project$Main$HideWhen($author$project$Main$Always)));
+								case 1:
+									return isShow ? $author$project$Main$AttributeNotNeeded(
+										$elm$core$Maybe$Just(
+											$author$project$Main$ShowWhen($author$project$Main$Always))) : $author$project$Main$AttributeNotNeeded(
+										$elm$core$Maybe$Just(
+											$author$project$Main$HideWhen($author$project$Main$Always)));
+								default:
+									var rule = _v10.a;
+									return isShow ? $author$project$Main$AttributeGiven(
+										$author$project$Main$ShowWhen(
+											$author$project$Main$visibilityRuleCondition(rule))) : $author$project$Main$AttributeGiven(
+										$author$project$Main$HideWhen(
+											$author$project$Main$visibilityRuleCondition(rule)));
+							}
+						}()
 					});
 			case 11:
 				var str = msg.a;
-				var _v10 = formField.l;
-				if (!_v10.$) {
-					var condition = _v10.a;
-					return _Utils_update(
-						formField,
-						{
-							l: function () {
-								switch (str) {
-									case 'Always':
-										return $author$project$Main$ShowWhen($author$project$Main$Always);
-									case 'FieldEquals':
-										return $author$project$Main$ShowWhen(
-											A2($author$project$Main$FieldEquals, '', ''));
-									default:
-										return $author$project$Main$ShowWhen(condition);
-								}
-							}()
-						});
-				} else {
-					var condition = _v10.a;
-					return _Utils_update(
-						formField,
-						{
-							l: function () {
-								switch (str) {
-									case 'Always':
-										return $author$project$Main$HideWhen($author$project$Main$Always);
-									case 'FieldEquals':
-										return $author$project$Main$HideWhen(
-											A2($author$project$Main$FieldEquals, '', ''));
-									default:
-										return $author$project$Main$HideWhen(condition);
-								}
-							}()
-						});
+				var _v11 = formField.m;
+				switch (_v11.$) {
+					case 0:
+						return _Utils_update(
+							formField,
+							{
+								m: function () {
+									switch (str) {
+										case 'Always':
+											return $author$project$Main$AttributeNotNeeded(
+												$elm$core$Maybe$Just(
+													$author$project$Main$ShowWhen($author$project$Main$Always)));
+										case 'FieldEquals':
+											return $author$project$Main$AttributeNotNeeded(
+												$elm$core$Maybe$Just(
+													$author$project$Main$ShowWhen(
+														A2($author$project$Main$FieldEquals, '', ''))));
+										default:
+											return formField.m;
+									}
+								}()
+							});
+					case 1:
+						return _Utils_update(
+							formField,
+							{
+								m: function () {
+									switch (str) {
+										case 'Always':
+											return $author$project$Main$AttributeNotNeeded(
+												$elm$core$Maybe$Just(
+													$author$project$Main$ShowWhen($author$project$Main$Always)));
+										case 'FieldEquals':
+											return $author$project$Main$AttributeNotNeeded(
+												$elm$core$Maybe$Just(
+													$author$project$Main$ShowWhen(
+														A2($author$project$Main$FieldEquals, '', ''))));
+										default:
+											return formField.m;
+									}
+								}()
+							});
+					default:
+						var rule = _v11.a;
+						return _Utils_update(
+							formField,
+							{
+								m: function () {
+									switch (str) {
+										case 'Always':
+											return $author$project$Main$AttributeGiven(
+												$author$project$Main$ShowWhen($author$project$Main$Always));
+										case 'FieldEquals':
+											return $author$project$Main$AttributeGiven(
+												$author$project$Main$ShowWhen(
+													A2($author$project$Main$FieldEquals, '', '')));
+										default:
+											return $author$project$Main$AttributeGiven(rule);
+									}
+								}()
+							});
 				}
 			case 12:
-				var str = msg.a;
-				var _v13 = formField.l;
-				_v13$2:
-				while (true) {
-					if (!_v13.$) {
-						if (!_v13.a.$) {
-							var _v14 = _v13.a;
-							var fieldName = _v14.a;
-							var value = _v14.b;
-							return _Utils_update(
-								formField,
-								{
-									l: $author$project$Main$ShowWhen(
-										A2($author$project$Main$FieldEquals, str, value))
-								});
-						} else {
-							break _v13$2;
-						}
-					} else {
-						if (!_v13.a.$) {
-							var _v15 = _v13.a;
-							var fieldName = _v15.a;
-							var value = _v15.b;
-							return _Utils_update(
-								formField,
-								{
-									l: $author$project$Main$HideWhen(
-										A2($author$project$Main$FieldEquals, str, value))
-								});
-						} else {
-							break _v13$2;
-						}
-					}
+				var newFieldName = msg.a;
+				var _v15 = formField.m;
+				switch (_v15.$) {
+					case 0:
+						return formField;
+					case 1:
+						return formField;
+					default:
+						var rule = _v15.a;
+						return _Utils_update(
+							formField,
+							{
+								m: function () {
+									_v16$2:
+									while (true) {
+										if (!rule.$) {
+											if (!rule.a.$) {
+												var _v17 = rule.a;
+												var value = _v17.b;
+												return $author$project$Main$AttributeGiven(
+													$author$project$Main$ShowWhen(
+														A2($author$project$Main$FieldEquals, newFieldName, value)));
+											} else {
+												break _v16$2;
+											}
+										} else {
+											if (!rule.a.$) {
+												var _v18 = rule.a;
+												var value = _v18.b;
+												return $author$project$Main$AttributeGiven(
+													$author$project$Main$HideWhen(
+														A2($author$project$Main$FieldEquals, newFieldName, value)));
+											} else {
+												break _v16$2;
+											}
+										}
+									}
+									return formField.m;
+								}()
+							});
 				}
-				return formField;
 			default:
-				var str = msg.a;
-				var _v16 = formField.l;
-				_v16$2:
-				while (true) {
-					if (!_v16.$) {
-						if (!_v16.a.$) {
-							var _v17 = _v16.a;
-							var fieldName = _v17.a;
-							var value = _v17.b;
-							return _Utils_update(
-								formField,
-								{
-									l: $author$project$Main$ShowWhen(
-										A2($author$project$Main$FieldEquals, fieldName, str))
-								});
-						} else {
-							break _v16$2;
-						}
-					} else {
-						if (!_v16.a.$) {
-							var _v18 = _v16.a;
-							var fieldName = _v18.a;
-							var value = _v18.b;
-							return _Utils_update(
-								formField,
-								{
-									l: $author$project$Main$HideWhen(
-										A2($author$project$Main$FieldEquals, fieldName, str))
-								});
-						} else {
-							break _v16$2;
-						}
-					}
+				var newValue = msg.a;
+				var _v19 = formField.m;
+				switch (_v19.$) {
+					case 0:
+						return formField;
+					case 1:
+						return formField;
+					default:
+						var rule = _v19.a;
+						return _Utils_update(
+							formField,
+							{
+								m: function () {
+									_v20$2:
+									while (true) {
+										if (!rule.$) {
+											if (!rule.a.$) {
+												var _v21 = rule.a;
+												var fieldName = _v21.a;
+												return $author$project$Main$AttributeGiven(
+													$author$project$Main$ShowWhen(
+														A2($author$project$Main$FieldEquals, fieldName, newValue)));
+											} else {
+												break _v20$2;
+											}
+										} else {
+											if (!rule.a.$) {
+												var _v22 = rule.a;
+												var fieldName = _v22.a;
+												return $author$project$Main$AttributeGiven(
+													$author$project$Main$HideWhen(
+														A2($author$project$Main$FieldEquals, fieldName, newValue)));
+											} else {
+												break _v20$2;
+											}
+										}
+									}
+									return formField.m;
+								}()
+							});
 				}
-				return formField;
 		}
 	});
 var $author$project$Main$when = F2(
@@ -7835,7 +7900,9 @@ var $author$project$Main$update = F2(
 							$author$project$Main$mustBeOptional(fieldType),
 							{aH: 0, aO: 1}),
 						f: fieldType,
-						l: $author$project$Main$ShowWhen($author$project$Main$Always)
+						m: $author$project$Main$AttributeNotNeeded(
+							$elm$core$Maybe$Just(
+								$author$project$Main$ShowWhen($author$project$Main$Always)))
 					};
 					var newFormFields = A2($elm$core$Array$push, newFormField, model.d);
 					var newIndex = $elm$core$Array$length(newFormFields) - 1;
@@ -7969,7 +8036,7 @@ var $author$project$Main$update = F2(
 						_Utils_update(
 							model,
 							{
-								m: $elm$core$Maybe$Just(
+								l: $elm$core$Maybe$Just(
 									$author$project$Main$DragExisting(
 										{aR: index, D: $elm$core$Maybe$Nothing})),
 								B: $elm$core$Maybe$Nothing
@@ -7981,7 +8048,7 @@ var $author$project$Main$update = F2(
 						_Utils_update(
 							model,
 							{
-								m: $elm$core$Maybe$Just(
+								l: $elm$core$Maybe$Just(
 									$author$project$Main$DragNew(
 										{
 											D: $elm$core$Maybe$Just(
@@ -7991,7 +8058,7 @@ var $author$project$Main$update = F2(
 							}),
 						$elm$core$Platform$Cmd$none);
 				case 11:
-					var _v6 = model.m;
+					var _v6 = model.l;
 					if (!_v6.$) {
 						if (!_v6.a.$) {
 							var dropIndex = _v6.a.a.D;
@@ -8014,7 +8081,7 @@ var $author$project$Main$update = F2(
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
-								{m: $elm$core$Maybe$Nothing}),
+								{l: $elm$core$Maybe$Nothing}),
 							$elm$core$Platform$Cmd$none);
 					}
 				case 12:
@@ -8023,10 +8090,10 @@ var $author$project$Main$update = F2(
 						_Utils_update(
 							model,
 							{
-								m: A2(
+								l: A2(
 									$elm$core$Maybe$map,
 									$author$project$Main$updateDragged(maybeDroppable),
-									model.m)
+									model.l)
 							}),
 						$elm$core$Platform$Cmd$none);
 				case 13:
@@ -9160,7 +9227,9 @@ var $author$project$Main$viewAddQuestionsList = function (inputFields) {
 											$author$project$Main$mustBeOptional(inputField),
 											{aH: 0, aO: 1}),
 										f: inputField,
-										l: $author$project$Main$ShowWhen($author$project$Main$Always)
+										m: $author$project$Main$AttributeNotNeeded(
+											$elm$core$Maybe$Just(
+												$author$project$Main$ShowWhen($author$project$Main$Always)))
 									}))),
 							A2(
 							$elm$html$Html$Events$on,
@@ -9686,6 +9755,22 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 					]);
 		}
 	});
+var $author$project$Main$visibilityRuleOf = function (formField) {
+	var _v0 = formField.m;
+	switch (_v0.$) {
+		case 0:
+			var maybeRule = _v0.a;
+			return A2(
+				$elm$core$Maybe$withDefault,
+				$author$project$Main$ShowWhen($author$project$Main$Always),
+				maybeRule);
+		case 1:
+			return $author$project$Main$ShowWhen($author$project$Main$Always);
+		default:
+			var rule = _v0.a;
+			return rule;
+	}
+};
 var $author$project$Main$viewFormFieldBuilder = F5(
 	function (shortTextTypeList, index, totalLength, formFields, formField) {
 		var visibilityRulesSection = A2(
@@ -9736,7 +9821,8 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 									_List_fromArray(
 										[
 											$elm$html$Html$Attributes$selected(
-											$author$project$Main$isShowWhen(formField.l)),
+											$author$project$Main$isShowWhen(
+												$author$project$Main$visibilityRuleOf(formField))),
 											$elm$html$Html$Attributes$value('Show')
 										]),
 									_List_fromArray(
@@ -9748,7 +9834,8 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 									_List_fromArray(
 										[
 											$elm$html$Html$Attributes$selected(
-											$author$project$Main$isHideWhen(formField.l)),
+											$author$project$Main$isHideWhen(
+												$author$project$Main$visibilityRuleOf(formField))),
 											$elm$html$Html$Attributes$value('Hide')
 										]),
 									_List_fromArray(
@@ -9788,7 +9875,8 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 										[
 											$elm$html$Html$Attributes$selected(
 											_Utils_eq(
-												$author$project$Main$visibilityRuleCondition(formField.l),
+												$author$project$Main$visibilityRuleCondition(
+													$author$project$Main$visibilityRuleOf(formField)),
 												$author$project$Main$Always)),
 											$elm$html$Html$Attributes$value('Always')
 										]),
@@ -9802,7 +9890,8 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 										[
 											$elm$html$Html$Attributes$selected(
 											function () {
-												var _v3 = $author$project$Main$visibilityRuleCondition(formField.l);
+												var _v3 = $author$project$Main$visibilityRuleCondition(
+													$author$project$Main$visibilityRuleOf(formField));
 												if (!_v3.$) {
 													return true;
 												} else {
@@ -9818,7 +9907,8 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 								]))
 						])),
 					function () {
-					var _v4 = $author$project$Main$visibilityRuleCondition(formField.l);
+					var _v4 = $author$project$Main$visibilityRuleCondition(
+						$author$project$Main$visibilityRuleOf(formField));
 					if (!_v4.$) {
 						var fieldName = _v4.a;
 						var fieldValue = _v4.b;
@@ -10259,7 +10349,7 @@ var $author$project$Main$viewFormBuilder = F2(
 		var maybeFieldsList = A2(
 			$author$project$Main$fieldsWithPlaceholder,
 			$elm$core$Array$toList(model.d),
-			model.m);
+			model.l);
 		var extraOptions = A2(
 			$elm$core$List$map,
 			function (customElement) {
@@ -10432,7 +10522,16 @@ var $author$project$Main$viewFormPreview = F2(
 				A2(
 					$elm$core$Array$filter,
 					function (formField) {
-						return A2($author$project$Main$isVisibilityRuleSatisfied, formField.l, trackedFormValues);
+						var _v1 = formField.m;
+						switch (_v1.$) {
+							case 0:
+								return true;
+							case 1:
+								return false;
+							default:
+								var rule = _v1.a;
+								return A2($author$project$Main$isVisibilityRuleSatisfied, rule, trackedFormValues);
+						}
 					},
 					formFields)));
 	});
