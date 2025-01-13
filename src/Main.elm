@@ -19,7 +19,6 @@ port module Main exposing
     , dragOverDecoder
     , encodeChoice
     , encodeFormFields
-    , encodeFormValues
     , encodeInputField
     , encodePairsFromCustomElement
     , encodeVisibilityRule
@@ -27,7 +26,6 @@ port module Main exposing
     , fromRawCustomElement
     , main
     , onDropped
-    , otherQuestionTitles
     , stringFromViewMode
     , viewModeFromString
     )
@@ -36,7 +34,7 @@ import Array exposing (Array)
 import Browser
 import Dict exposing (Dict)
 import Html exposing (Html, button, div, h2, h3, input, label, option, pre, select, text, textarea)
-import Html.Attributes exposing (attribute, checked, class, classList, disabled, for, id, maxlength, minlength, name, placeholder, property, readonly, required, selected, tabindex, title, type_, value)
+import Html.Attributes exposing (attribute, checked, class, classList, disabled, for, id, maxlength, minlength, name, placeholder, readonly, required, selected, tabindex, title, type_, value)
 import Html.Events exposing (on, onCheck, onClick, onInput, preventDefaultOn, stopPropagationOn)
 import Json.Decode
 import Json.Decode.Extra exposing (andMap)
@@ -44,7 +42,6 @@ import Json.Encode
 import List.Extra
 import Platform.Cmd as Cmd
 import Process
-import Set exposing (Set)
 import Svg exposing (path, rect, svg)
 import Svg.Attributes as SvgAttr
 import Task
@@ -422,38 +419,6 @@ otherQuestionTitles formFields currentIndex =
         |> List.map (\( _, f ) -> f.label)
 
 
-collectFieldNamesFromCondition : Condition -> List String
-collectFieldNamesFromCondition condition =
-    case condition of
-        Always ->
-            []
-
-        FieldEquals fieldName _ ->
-            [ fieldName ]
-
-        FieldContains fieldName _ ->
-            [ fieldName ]
-
-        And conditions ->
-            List.concatMap collectFieldNamesFromCondition conditions
-
-        Or conditions ->
-            List.concatMap collectFieldNamesFromCondition conditions
-
-        Not cond ->
-            collectFieldNamesFromCondition cond
-
-
-collectFieldNamesFromVisibilityRule : VisibilityRule -> List String
-collectFieldNamesFromVisibilityRule rule =
-    case rule of
-        ShowWhen condition ->
-            collectFieldNamesFromCondition condition
-
-        HideWhen condition ->
-            collectFieldNamesFromCondition condition
-
-
 
 -- INIT
 
@@ -579,7 +544,7 @@ update msg model =
                     , presence = when (mustBeOptional fieldType) { true = Optional, false = Required }
                     , description = AttributeNotNeeded Nothing
                     , type_ = fieldType
-                    , visibilityRule = AttributeNotNeeded (Just (ShowWhen Always))
+                    , visibilityRule = AttributeNotNeeded Nothing
                     }
 
                 newFormFields =
@@ -960,14 +925,14 @@ updateFormField msg string formField =
                     case formField.visibilityRule of
                         AttributeNotNeeded _ ->
                             if isShow then
-                                AttributeNotNeeded (Just (ShowWhen Always))
+                                AttributeNotNeeded Nothing
 
                             else
                                 AttributeNotNeeded (Just (HideWhen Always))
 
                         AttributeInvalid _ ->
                             if isShow then
-                                AttributeNotNeeded (Just (ShowWhen Always))
+                                AttributeNotNeeded Nothing
 
                             else
                                 AttributeNotNeeded (Just (HideWhen Always))
@@ -987,7 +952,7 @@ updateFormField msg string formField =
                         | visibilityRule =
                             case str of
                                 "Always" ->
-                                    AttributeNotNeeded (Just (ShowWhen Always))
+                                    AttributeNotNeeded Nothing
 
                                 "FieldEquals" ->
                                     AttributeNotNeeded (Just (ShowWhen (FieldEquals "" "")))
@@ -1001,7 +966,7 @@ updateFormField msg string formField =
                         | visibilityRule =
                             case str of
                                 "Always" ->
-                                    AttributeNotNeeded (Just (ShowWhen Always))
+                                    AttributeNotNeeded Nothing
 
                                 "FieldEquals" ->
                                     AttributeNotNeeded (Just (ShowWhen (FieldEquals "" "")))
@@ -1015,7 +980,7 @@ updateFormField msg string formField =
                         | visibilityRule =
                             case str of
                                 "Always" ->
-                                    AttributeGiven (ShowWhen Always)
+                                    AttributeNotNeeded Nothing
 
                                 "FieldEquals" ->
                                     AttributeGiven (ShowWhen (FieldEquals "" ""))
@@ -1074,13 +1039,16 @@ updateFormField msg string formField =
                     if bool then
                         case formField.visibilityRule of
                             AttributeNotNeeded Nothing ->
-                                AttributeNotNeeded Nothing
+                                AttributeGiven (ShowWhen Always)
+
+                            AttributeNotNeeded (Just rule) ->
+                                AttributeGiven rule
 
                             _ ->
-                                formField.visibilityRule
+                                toggleAttributeOptional bool formField.visibilityRule
 
                     else
-                        AttributeNotNeeded Nothing
+                        toggleAttributeOptional bool formField.visibilityRule
             }
 
 
@@ -1630,7 +1598,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                                          , name fieldName
                                          , value choice.value
                                          , checked (List.member choice.value values || chosenForYou choices)
-                                         , onCheck (\isChecked -> OnFormValuesUpdated fieldName choice.value)
+                                         , onCheck (\_ -> OnFormValuesUpdated fieldName choice.value)
                                          ]
                                             ++ config.customAttrs
                                         )
@@ -2180,7 +2148,7 @@ viewAddQuestionsList inputFields =
                                 , presence = when (mustBeOptional inputField) { true = Optional, false = Required }
                                 , description = AttributeNotNeeded Nothing
                                 , type_ = inputField
-                                , visibilityRule = AttributeNotNeeded (Just (ShowWhen Always))
+                                , visibilityRule = AttributeNotNeeded Nothing
                                 }
                             )
                         )
@@ -2707,7 +2675,7 @@ decodeFormField =
 decodeFormFieldVisibilityRule : Json.Decode.Decoder (AttributeOptional VisibilityRule)
 decodeFormFieldVisibilityRule =
     Json.Decode.oneOf
-        [ Json.Decode.field "visibilityRule" (decodeAttributeOptional Nothing decodeVisibilityRule)
+        [ Json.Decode.field "visibilityRule" (decodeAttributeOptional (Just (ShowWhen Always)) decodeVisibilityRule)
         , Json.Decode.succeed (AttributeNotNeeded Nothing)
         ]
 
@@ -3078,28 +3046,6 @@ dragOverDecoder index maybeFormField =
         )
 
 
-stringFromCondition : Condition -> String
-stringFromCondition condition =
-    case condition of
-        FieldEquals fieldName value ->
-            fieldName ++ " equals " ++ value
-
-        FieldContains fieldName value ->
-            fieldName ++ " contains " ++ value
-
-        And conditions ->
-            "All of: " ++ String.join ", " (List.map stringFromCondition conditions)
-
-        Or conditions ->
-            "Any of: " ++ String.join ", " (List.map stringFromCondition conditions)
-
-        Not cond ->
-            "Not (" ++ stringFromCondition cond ++ ")"
-
-        Always ->
-            "Always"
-
-
 decodeCondition : Json.Decode.Decoder Condition
 decodeCondition =
     Json.Decode.field "type" Json.Decode.string
@@ -3176,11 +3122,3 @@ isVisibilityRuleSatisfied rule trackedFormValues =
 
         HideWhen condition ->
             not (evaluateCondition trackedFormValues condition)
-
-
-encodeFormValues : Dict String (List String) -> Json.Encode.Value
-encodeFormValues trackedFormValues =
-    Dict.toList trackedFormValues
-        |> List.map (\( key, values ) -> ( key, Json.Encode.list Json.Encode.string values ))
-        |> Dict.fromList
-        |> Json.Encode.dict identity identity

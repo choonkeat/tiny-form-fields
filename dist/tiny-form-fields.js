@@ -7864,9 +7864,7 @@ var $author$project$Main$updateFormField = F3(
 								var _v23 = formField.k;
 								if ((!_v23.$) && (_v23.a.$ === 1)) {
 									var _v24 = _v23.a;
-									return $author$project$Main$AttributeNotNeeded(
-										$elm$core$Maybe$Just(
-											$author$project$Main$ShowWhen($author$project$Main$Always)));
+									return $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing);
 								} else {
 									return formField.k;
 								}
@@ -8606,8 +8604,8 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 	function (config, fieldID, formField) {
 		var fieldName = $author$project$Main$fieldNameOf(formField);
 		var chosenForYou = function (choices) {
-			var _v4 = formField.v;
-			switch (_v4) {
+			var _v5 = formField.v;
+			switch (_v5) {
 				case 1:
 					return false;
 				case 0:
@@ -8945,7 +8943,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 																	$elm$html$Html$Attributes$checked(
 																	A2($elm$core$List$member, choice.t, values) || chosenForYou(choices)),
 																	$elm$html$Html$Events$onCheck(
-																	function (isChecked) {
+																	function (_v4) {
 																		return A2($author$project$Main$OnFormValuesUpdated, fieldName, choice.t);
 																	})
 																]),

@@ -10645,14 +10645,14 @@ var $author$project$Main$decodeFormFieldMaybeName = $elm$json$Json$Decode$oneOf(
 			A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string)),
 			$elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing)
 		]));
-var $author$project$Main$HideWhen = function (a) {
-	return {$: 'HideWhen', a: a};
-};
+var $author$project$Main$Always = {$: 'Always'};
 var $author$project$Main$ShowWhen = function (a) {
 	return {$: 'ShowWhen', a: a};
 };
+var $author$project$Main$HideWhen = function (a) {
+	return {$: 'HideWhen', a: a};
+};
 var $elm$json$Json$Decode$andThen = _Json_andThen;
-var $author$project$Main$Always = {$: 'Always'};
 var $author$project$Main$And = function (a) {
 	return {$: 'And', a: a};
 };
@@ -10758,7 +10758,11 @@ var $author$project$Main$decodeFormFieldVisibilityRule = $elm$json$Json$Decode$o
 			A2(
 			$elm$json$Json$Decode$field,
 			'visibilityRule',
-			A2($author$project$Main$decodeAttributeOptional, $elm$core$Maybe$Nothing, $author$project$Main$decodeVisibilityRule)),
+			A2(
+				$author$project$Main$decodeAttributeOptional,
+				$elm$core$Maybe$Just(
+					$author$project$Main$ShowWhen($author$project$Main$Always)),
+				$author$project$Main$decodeVisibilityRule)),
 			$elm$json$Json$Decode$succeed(
 			$author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing))
 		]));
@@ -12622,15 +12626,11 @@ var $author$project$Main$updateFormField = F3(
 							var _v10 = formField.visibilityRule;
 							switch (_v10.$) {
 								case 'AttributeNotNeeded':
-									return isShow ? $author$project$Main$AttributeNotNeeded(
-										$elm$core$Maybe$Just(
-											$author$project$Main$ShowWhen($author$project$Main$Always))) : $author$project$Main$AttributeNotNeeded(
+									return isShow ? $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing) : $author$project$Main$AttributeNotNeeded(
 										$elm$core$Maybe$Just(
 											$author$project$Main$HideWhen($author$project$Main$Always)));
 								case 'AttributeInvalid':
-									return isShow ? $author$project$Main$AttributeNotNeeded(
-										$elm$core$Maybe$Just(
-											$author$project$Main$ShowWhen($author$project$Main$Always))) : $author$project$Main$AttributeNotNeeded(
+									return isShow ? $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing) : $author$project$Main$AttributeNotNeeded(
 										$elm$core$Maybe$Just(
 											$author$project$Main$HideWhen($author$project$Main$Always)));
 								default:
@@ -12654,9 +12654,7 @@ var $author$project$Main$updateFormField = F3(
 								visibilityRule: function () {
 									switch (str) {
 										case 'Always':
-											return $author$project$Main$AttributeNotNeeded(
-												$elm$core$Maybe$Just(
-													$author$project$Main$ShowWhen($author$project$Main$Always)));
+											return $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing);
 										case 'FieldEquals':
 											return $author$project$Main$AttributeNotNeeded(
 												$elm$core$Maybe$Just(
@@ -12674,9 +12672,7 @@ var $author$project$Main$updateFormField = F3(
 								visibilityRule: function () {
 									switch (str) {
 										case 'Always':
-											return $author$project$Main$AttributeNotNeeded(
-												$elm$core$Maybe$Just(
-													$author$project$Main$ShowWhen($author$project$Main$Always)));
+											return $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing);
 										case 'FieldEquals':
 											return $author$project$Main$AttributeNotNeeded(
 												$elm$core$Maybe$Just(
@@ -12695,8 +12691,7 @@ var $author$project$Main$updateFormField = F3(
 								visibilityRule: function () {
 									switch (str) {
 										case 'Always':
-											return $author$project$Main$AttributeGiven(
-												$author$project$Main$ShowWhen($author$project$Main$Always));
+											return $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing);
 										case 'FieldEquals':
 											return $author$project$Main$AttributeGiven(
 												$author$project$Main$ShowWhen(
@@ -12799,14 +12794,20 @@ var $author$project$Main$updateFormField = F3(
 						visibilityRule: function () {
 							if (bool) {
 								var _v23 = formField.visibilityRule;
-								if ((_v23.$ === 'AttributeNotNeeded') && (_v23.a.$ === 'Nothing')) {
-									var _v24 = _v23.a;
-									return $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing);
+								if (_v23.$ === 'AttributeNotNeeded') {
+									if (_v23.a.$ === 'Nothing') {
+										var _v24 = _v23.a;
+										return $author$project$Main$AttributeGiven(
+											$author$project$Main$ShowWhen($author$project$Main$Always));
+									} else {
+										var rule = _v23.a.a;
+										return $author$project$Main$AttributeGiven(rule);
+									}
 								} else {
-									return formField.visibilityRule;
+									return A2($author$project$Main$toggleAttributeOptional, bool, formField.visibilityRule);
 								}
 							} else {
-								return $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing);
+								return A2($author$project$Main$toggleAttributeOptional, bool, formField.visibilityRule);
 							}
 						}()
 					});
@@ -12856,9 +12857,7 @@ var $author$project$Main$update = F2(
 							$author$project$Main$mustBeOptional(fieldType),
 							{_false: $author$project$Main$Required, _true: $author$project$Main$Optional}),
 						type_: fieldType,
-						visibilityRule: $author$project$Main$AttributeNotNeeded(
-							$elm$core$Maybe$Just(
-								$author$project$Main$ShowWhen($author$project$Main$Always)))
+						visibilityRule: $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing)
 					};
 					var newFormFields = A2($elm$core$Array$push, newFormField, model.formFields);
 					var newIndex = $elm$core$Array$length(newFormFields) - 1;
@@ -13469,8 +13468,8 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 	function (config, fieldID, formField) {
 		var fieldName = $author$project$Main$fieldNameOf(formField);
 		var chosenForYou = function (choices) {
-			var _v4 = formField.presence;
-			switch (_v4.$) {
+			var _v5 = formField.presence;
+			switch (_v5.$) {
 				case 'Optional':
 					return false;
 				case 'Required':
@@ -13808,7 +13807,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 																	$elm$html$Html$Attributes$checked(
 																	A2($elm$core$List$member, choice.value, values) || chosenForYou(choices)),
 																	$elm$html$Html$Events$onCheck(
-																	function (isChecked) {
+																	function (_v4) {
 																		return A2($author$project$Main$OnFormValuesUpdated, fieldName, choice.value);
 																	})
 																]),
@@ -14111,9 +14110,7 @@ var $author$project$Main$viewAddQuestionsList = function (inputFields) {
 											$author$project$Main$mustBeOptional(inputField),
 											{_false: $author$project$Main$Required, _true: $author$project$Main$Optional}),
 										type_: inputField,
-										visibilityRule: $author$project$Main$AttributeNotNeeded(
-											$elm$core$Maybe$Just(
-												$author$project$Main$ShowWhen($author$project$Main$Always)))
+										visibilityRule: $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing)
 									}))),
 							A2(
 							$elm$html$Html$Events$on,
