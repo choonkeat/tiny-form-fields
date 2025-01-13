@@ -10573,9 +10573,9 @@ var $author$project$Main$PortOutgoingFormFields = function (a) {
 var $author$project$Main$PortOutgoingSetupCloseDropdown = function (a) {
 	return {$: 'PortOutgoingSetupCloseDropdown', a: a};
 };
-var $author$project$Main$Config = F4(
-	function (viewMode, formFields, formValues, shortTextTypeList) {
-		return {formFields: formFields, formValues: formValues, shortTextTypeList: shortTextTypeList, viewMode: viewMode};
+var $author$project$Main$Config = F5(
+	function (viewMode, form, formFields, formValues, shortTextTypeList) {
+		return {form: form, formFields: formFields, formValues: formValues, shortTextTypeList: shortTextTypeList, viewMode: viewMode};
 	});
 var $elm_community$json_extra$Json$Decode$Extra$andMap = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
 var $author$project$Main$Always = {$: 'Always'};
@@ -11189,11 +11189,17 @@ var $author$project$Main$decodeConfig = A2(
 				$elm_community$json_extra$Json$Decode$Extra$andMap,
 				A2(
 					$elm$json$Json$Decode$map,
-					$elm$core$Maybe$withDefault(
-						$author$project$Main$Editor(
-							{maybeAnimate: $elm$core$Maybe$Nothing})),
-					A2($elm_community$json_extra$Json$Decode$Extra$optionalNullableField, 'viewMode', $author$project$Main$decodeViewMode)),
-				$elm$json$Json$Decode$succeed($author$project$Main$Config)))));
+					$elm$core$Maybe$withDefault($elm$json$Json$Encode$null),
+					A2($elm_community$json_extra$Json$Decode$Extra$optionalNullableField, 'form', $elm$json$Json$Decode$value)),
+				A2(
+					$elm_community$json_extra$Json$Decode$Extra$andMap,
+					A2(
+						$elm$json$Json$Decode$map,
+						$elm$core$Maybe$withDefault(
+							$author$project$Main$Editor(
+								{maybeAnimate: $elm$core$Maybe$Nothing})),
+						A2($elm_community$json_extra$Json$Decode$Extra$optionalNullableField, 'viewMode', $author$project$Main$decodeViewMode)),
+					$elm$json$Json$Decode$succeed($author$project$Main$Config))))));
 var $author$project$Main$encodeAttributeOptional = F2(
 	function (encodeValue, attributeOptional) {
 		switch (attributeOptional.$) {
@@ -11708,6 +11714,7 @@ var $author$project$Main$init = function (flags) {
 				currentValues: $elm$core$Dict$empty,
 				dragged: $elm$core$Maybe$Nothing,
 				dropdownState: $author$project$Main$DropdownClosed,
+				form: config.form,
 				formFields: config.formFields,
 				formValues: config.formValues,
 				initError: $elm$core$Maybe$Nothing,
@@ -11739,6 +11746,7 @@ var $author$project$Main$init = function (flags) {
 				currentValues: $elm$core$Dict$empty,
 				dragged: $elm$core$Maybe$Nothing,
 				dropdownState: $author$project$Main$DropdownClosed,
+				form: $elm$json$Json$Encode$null,
 				formFields: $elm$core$Array$empty,
 				formValues: $elm$json$Json$Encode$null,
 				initError: $elm$core$Maybe$Just(

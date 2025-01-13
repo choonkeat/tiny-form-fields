@@ -71,6 +71,7 @@ type alias Flags =
 
 type alias Config =
     { viewMode : ViewMode
+    , form : Json.Decode.Value
     , formFields : Array FormField
     , formValues : Json.Encode.Value
 
@@ -82,6 +83,7 @@ type alias Config =
 type alias Model =
     { viewMode : ViewMode
     , initError : Maybe String
+    , form : Json.Decode.Value
     , formFields : Array FormField
     , formValues : Json.Encode.Value
     , currentValues : Dict String String
@@ -500,6 +502,7 @@ init flags =
             in
             ( { viewMode = config.viewMode
               , initError = Nothing
+              , form = config.form
               , formFields = config.formFields
               , formValues = config.formValues
               , currentValues = Dict.empty
@@ -525,6 +528,7 @@ init flags =
         Err err ->
             ( { viewMode = Editor { maybeAnimate = Nothing }
               , initError = Just (Json.Decode.errorToString err)
+              , form = Json.Encode.null
               , formFields = Array.empty
               , formValues = Json.Encode.null
               , currentValues = Dict.empty
@@ -2297,6 +2301,7 @@ decodeConfig : Json.Decode.Decoder Config
 decodeConfig =
     Json.Decode.succeed Config
         |> andMap (Json.Decode.Extra.optionalNullableField "viewMode" decodeViewMode |> Json.Decode.map (Maybe.withDefault (Editor { maybeAnimate = Nothing })))
+        |> andMap (Json.Decode.Extra.optionalNullableField "form" Json.Decode.value |> Json.Decode.map (Maybe.withDefault Json.Encode.null))
         |> andMap (Json.Decode.Extra.optionalNullableField "formFields" decodeFormFields |> Json.Decode.map (Maybe.withDefault Array.empty))
         |> andMap (Json.Decode.Extra.optionalNullableField "formValues" Json.Decode.value |> Json.Decode.map (Maybe.withDefault Json.Encode.null))
         |> andMap
