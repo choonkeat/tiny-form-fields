@@ -84,6 +84,7 @@ type alias Model =
     , initError : Maybe String
     , formFields : Array FormField
     , formValues : Json.Encode.Value
+    , currentValues : Dict String String
 
     -- List because order matters
     , shortTextTypeList : List CustomElement
@@ -501,6 +502,7 @@ init flags =
               , initError = Nothing
               , formFields = config.formFields
               , formValues = config.formValues
+              , currentValues = Dict.empty
               , shortTextTypeList = effectiveShortTextTypeList
               , shortTextTypeDict =
                     effectiveShortTextTypeList
@@ -525,6 +527,7 @@ init flags =
               , initError = Just (Json.Decode.errorToString err)
               , formFields = Array.empty
               , formValues = Json.Encode.null
+              , currentValues = Dict.empty
               , shortTextTypeList = []
               , shortTextTypeDict = Dict.empty
               , dropdownState = DropdownClosed
@@ -749,6 +752,7 @@ update msg model =
                         Err _ ->
                             Dict.singleton fieldName value
                                 |> Json.Encode.dict identity Json.Encode.string
+                , currentValues = Dict.insert fieldName value model.currentValues
               }
             , Cmd.none
             )
@@ -1159,8 +1163,8 @@ viewMain model =
         )
 
 
-viewFormPreview : List (Html.Attribute Msg) -> { a | formFields : Array FormField, formValues : Json.Encode.Value, shortTextTypeDict : Dict String CustomElement } -> List (Html Msg)
-viewFormPreview customAttrs { formFields, formValues, shortTextTypeDict } =
+viewFormPreview : List (Html.Attribute Msg) -> { a | formFields : Array FormField, formValues : Json.Encode.Value, shortTextTypeDict : Dict String CustomElement, currentValues : Dict String String } -> List (Html Msg)
+viewFormPreview customAttrs { formFields, formValues, shortTextTypeDict, currentValues } =
     let
         config =
             { customAttrs = customAttrs
@@ -1171,7 +1175,7 @@ viewFormPreview customAttrs { formFields, formValues, shortTextTypeDict } =
             }
     in
     formFields
-        |> Array.filter (\formField -> isVisibilityRuleSatisfied formValues formField.visibilityRule)
+        |> Array.filter (\formField -> isVisibilityRuleSatisfied currentValues formField.visibilityRule)
         |> Array.indexedMap (viewFormFieldPreview config)
         |> Array.toList
 
@@ -2943,43 +2947,43 @@ decodeCondition =
             )
 
 
-evaluateCondition : Json.Encode.Value -> Condition -> Bool
-evaluateCondition formValues condition =
+evaluateCondition : Dict String String -> Condition -> Bool
+evaluateCondition currentValues condition =
     case condition of
         Always ->
             True
 
         FieldEquals fieldName value ->
-            case Json.Decode.decodeValue (Json.Decode.field fieldName Json.Decode.string) formValues of
-                Ok fieldValue ->
+            case Dict.get fieldName currentValues of
+                Just fieldValue ->
                     fieldValue == value
 
-                Err _ ->
+                Nothing ->
                     False
 
         FieldContains fieldName value ->
-            case Json.Decode.decodeValue (Json.Decode.field fieldName Json.Decode.string) formValues of
-                Ok fieldValue ->
+            case Dict.get fieldName currentValues of
+                Just fieldValue ->
                     String.contains value fieldValue
 
-                Err _ ->
+                Nothing ->
                     False
 
         And conditions ->
-            List.all (evaluateCondition formValues) conditions
+            List.all (evaluateCondition currentValues) conditions
 
         Or conditions ->
-            List.any (evaluateCondition formValues) conditions
+            List.any (evaluateCondition currentValues) conditions
 
         Not cond ->
-            not (evaluateCondition formValues cond)
+            not (evaluateCondition currentValues cond)
 
 
-isVisibilityRuleSatisfied : Json.Encode.Value -> VisibilityRule -> Bool
-isVisibilityRuleSatisfied formValues rule =
+isVisibilityRuleSatisfied : Dict String String -> VisibilityRule -> Bool
+isVisibilityRuleSatisfied currentValues rule =
     case rule of
         ShowWhen condition ->
-            evaluateCondition formValues condition
+            evaluateCondition currentValues condition
 
         HideWhen condition ->
-            not (evaluateCondition formValues condition)
+            not (evaluateCondition currentValues condition)

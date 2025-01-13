@@ -11705,6 +11705,7 @@ var $author$project$Main$init = function (flags) {
 			config.shortTextTypeList);
 		return _Utils_Tuple2(
 			{
+				currentValues: $elm$core$Dict$empty,
 				dragged: $elm$core$Maybe$Nothing,
 				dropdownState: $author$project$Main$DropdownClosed,
 				formFields: config.formFields,
@@ -11735,6 +11736,7 @@ var $author$project$Main$init = function (flags) {
 		var err = _v0.a;
 		return _Utils_Tuple2(
 			{
+				currentValues: $elm$core$Dict$empty,
 				dragged: $elm$core$Maybe$Nothing,
 				dropdownState: $author$project$Main$DropdownClosed,
 				formFields: $elm$core$Array$empty,
@@ -12926,6 +12928,7 @@ var $author$project$Main$update = F2(
 						_Utils_update(
 							model,
 							{
+								currentValues: A3($elm$core$Dict$insert, fieldName, value, model.currentValues),
 								formValues: function () {
 									if (decodedValues.$ === 'Ok') {
 										var values = decodedValues.a;
@@ -15145,18 +15148,15 @@ var $elm$core$List$all = F2(
 			list);
 	});
 var $author$project$Main$evaluateCondition = F2(
-	function (formValues, condition) {
+	function (currentValues, condition) {
 		switch (condition.$) {
 			case 'Always':
 				return true;
 			case 'FieldEquals':
 				var fieldName = condition.a;
 				var value = condition.b;
-				var _v1 = A2(
-					$elm$json$Json$Decode$decodeValue,
-					A2($elm$json$Json$Decode$field, fieldName, $elm$json$Json$Decode$string),
-					formValues);
-				if (_v1.$ === 'Ok') {
+				var _v1 = A2($elm$core$Dict$get, fieldName, currentValues);
+				if (_v1.$ === 'Just') {
 					var fieldValue = _v1.a;
 					return _Utils_eq(fieldValue, value);
 				} else {
@@ -15165,11 +15165,8 @@ var $author$project$Main$evaluateCondition = F2(
 			case 'FieldContains':
 				var fieldName = condition.a;
 				var value = condition.b;
-				var _v2 = A2(
-					$elm$json$Json$Decode$decodeValue,
-					A2($elm$json$Json$Decode$field, fieldName, $elm$json$Json$Decode$string),
-					formValues);
-				if (_v2.$ === 'Ok') {
+				var _v2 = A2($elm$core$Dict$get, fieldName, currentValues);
+				if (_v2.$ === 'Just') {
 					var fieldValue = _v2.a;
 					return A2($elm$core$String$contains, value, fieldValue);
 				} else {
@@ -15179,27 +15176,27 @@ var $author$project$Main$evaluateCondition = F2(
 				var conditions = condition.a;
 				return A2(
 					$elm$core$List$all,
-					$author$project$Main$evaluateCondition(formValues),
+					$author$project$Main$evaluateCondition(currentValues),
 					conditions);
 			case 'Or':
 				var conditions = condition.a;
 				return A2(
 					$elm$core$List$any,
-					$author$project$Main$evaluateCondition(formValues),
+					$author$project$Main$evaluateCondition(currentValues),
 					conditions);
 			default:
 				var cond = condition.a;
-				return !A2($author$project$Main$evaluateCondition, formValues, cond);
+				return !A2($author$project$Main$evaluateCondition, currentValues, cond);
 		}
 	});
 var $author$project$Main$isVisibilityRuleSatisfied = F2(
-	function (formValues, rule) {
+	function (currentValues, rule) {
 		if (rule.$ === 'ShowWhen') {
 			var condition = rule.a;
-			return A2($author$project$Main$evaluateCondition, formValues, condition);
+			return A2($author$project$Main$evaluateCondition, currentValues, condition);
 		} else {
 			var condition = rule.a;
-			return !A2($author$project$Main$evaluateCondition, formValues, condition);
+			return !A2($author$project$Main$evaluateCondition, currentValues, condition);
 		}
 	});
 var $author$project$Main$viewFormPreview = F2(
@@ -15207,6 +15204,7 @@ var $author$project$Main$viewFormPreview = F2(
 		var formFields = _v0.formFields;
 		var formValues = _v0.formValues;
 		var shortTextTypeDict = _v0.shortTextTypeDict;
+		var currentValues = _v0.currentValues;
 		var config = {
 			customAttrs: customAttrs,
 			formFields: formFields,
@@ -15221,7 +15219,7 @@ var $author$project$Main$viewFormPreview = F2(
 				A2(
 					$elm$core$Array$filter,
 					function (formField) {
-						return A2($author$project$Main$isVisibilityRuleSatisfied, formValues, formField.visibilityRule);
+						return A2($author$project$Main$isVisibilityRuleSatisfied, currentValues, formField.visibilityRule);
 					},
 					formFields)));
 	});
