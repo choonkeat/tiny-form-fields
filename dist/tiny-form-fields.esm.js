@@ -14134,18 +14134,6 @@ var $author$project$Main$OnMultipleToggle = function (a) {
 var $author$project$Main$OnRequiredInput = function (a) {
 	return {$: 'OnRequiredInput', a: a};
 };
-var $author$project$Main$OnVisibilityConditionFieldInput = function (a) {
-	return {$: 'OnVisibilityConditionFieldInput', a: a};
-};
-var $author$project$Main$OnVisibilityConditionTypeInput = function (a) {
-	return {$: 'OnVisibilityConditionTypeInput', a: a};
-};
-var $author$project$Main$OnVisibilityConditionValueInput = function (a) {
-	return {$: 'OnVisibilityConditionValueInput', a: a};
-};
-var $author$project$Main$OnVisibilityRuleTypeInput = function (a) {
-	return {$: 'OnVisibilityRuleTypeInput', a: a};
-};
 var $author$project$Main$allowsTogglingMultiple = function (inputField) {
 	switch (inputField.$) {
 		case 'ShortText':
@@ -14272,20 +14260,6 @@ var $author$project$Main$inputAttributeOptional = F2(
 						]));
 		}
 	});
-var $author$project$Main$isHideWhen = function (rule) {
-	if (rule.$ === 'ShowWhen') {
-		return false;
-	} else {
-		return true;
-	}
-};
-var $author$project$Main$isShowWhen = function (rule) {
-	if (rule.$ === 'ShowWhen') {
-		return true;
-	} else {
-		return false;
-	}
-};
 var $author$project$Main$maybeMultipleOf = function (formField) {
 	var _v0 = formField.type_;
 	switch (_v0.$) {
@@ -14316,28 +14290,6 @@ var $elm$html$Html$Attributes$minlength = function (n) {
 		'minLength',
 		$elm$core$String$fromInt(n));
 };
-var $author$project$Main$otherQuestionTitles = F2(
-	function (formFields, currentIndex) {
-		return A2(
-			$elm$core$List$map,
-			function (_v1) {
-				var f = _v1.b;
-				return f.label;
-			},
-			A2(
-				$elm$core$List$filter,
-				function (_v0) {
-					var i = _v0.a;
-					return !_Utils_eq(i, currentIndex);
-				},
-				A2(
-					$elm$core$List$indexedMap,
-					F2(
-						function (i, f) {
-							return _Utils_Tuple2(i, f);
-						}),
-					$elm$core$Array$toList(formFields))));
-	});
 var $elm$core$String$toLower = _String_toLower;
 var $author$project$Main$OnChoicesInput = {$: 'OnChoicesInput'};
 var $author$project$Main$OnDatalistInput = {$: 'OnDatalistInput'};
@@ -14600,6 +14552,54 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 					]);
 		}
 	});
+var $author$project$Main$OnVisibilityConditionFieldInput = function (a) {
+	return {$: 'OnVisibilityConditionFieldInput', a: a};
+};
+var $author$project$Main$OnVisibilityConditionTypeInput = function (a) {
+	return {$: 'OnVisibilityConditionTypeInput', a: a};
+};
+var $author$project$Main$OnVisibilityConditionValueInput = function (a) {
+	return {$: 'OnVisibilityConditionValueInput', a: a};
+};
+var $author$project$Main$OnVisibilityRuleTypeInput = function (a) {
+	return {$: 'OnVisibilityRuleTypeInput', a: a};
+};
+var $author$project$Main$isHideWhen = function (rule) {
+	if (rule.$ === 'ShowWhen') {
+		return false;
+	} else {
+		return true;
+	}
+};
+var $author$project$Main$isShowWhen = function (rule) {
+	if (rule.$ === 'ShowWhen') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var $author$project$Main$otherQuestionTitles = F2(
+	function (formFields, currentIndex) {
+		return A2(
+			$elm$core$List$map,
+			function (_v1) {
+				var f = _v1.b;
+				return f.label;
+			},
+			A2(
+				$elm$core$List$filter,
+				function (_v0) {
+					var i = _v0.a;
+					return !_Utils_eq(i, currentIndex);
+				},
+				A2(
+					$elm$core$List$indexedMap,
+					F2(
+						function (i, f) {
+							return _Utils_Tuple2(i, f);
+						}),
+					$elm$core$Array$toList(formFields))));
+	});
 var $author$project$Main$visibilityRuleOf = function (formField) {
 	var _v0 = formField.visibilityRule;
 	switch (_v0.$) {
@@ -14616,9 +14616,9 @@ var $author$project$Main$visibilityRuleOf = function (formField) {
 			return rule;
 	}
 };
-var $author$project$Main$viewFormFieldBuilder = F5(
-	function (shortTextTypeList, index, totalLength, formFields, formField) {
-		var visibilityRulesSection = A2(
+var $author$project$Main$visibilityRulesSection = F3(
+	function (index, formFields, formField) {
+		return A2(
 			$elm$html$Html$div,
 			_List_fromArray(
 				[
@@ -14735,9 +14735,9 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 										[
 											$elm$html$Html$Attributes$selected(
 											function () {
-												var _v3 = $author$project$Main$visibilityRuleCondition(
+												var _v0 = $author$project$Main$visibilityRuleCondition(
 													$author$project$Main$visibilityRuleOf(formField));
-												if (_v3.$ === 'FieldEquals') {
+												if (_v0.$ === 'FieldEquals') {
 													return true;
 												} else {
 													return false;
@@ -14752,11 +14752,11 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 								]))
 						])),
 					function () {
-					var _v4 = $author$project$Main$visibilityRuleCondition(
+					var _v1 = $author$project$Main$visibilityRuleCondition(
 						$author$project$Main$visibilityRuleOf(formField));
-					if (_v4.$ === 'FieldEquals') {
-						var fieldName = _v4.a;
-						var fieldValue = _v4.b;
+					if (_v1.$ === 'FieldEquals') {
+						var fieldName = _v1.a;
+						var fieldValue = _v1.b;
 						return A2(
 							$elm$html$Html$div,
 							_List_fromArray(
@@ -14840,6 +14840,9 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 					}
 				}()
 				]));
+	});
+var $author$project$Main$viewFormFieldBuilder = F5(
+	function (shortTextTypeList, index, totalLength, formFields, formField) {
 		var idSuffix = $elm$core$String$fromInt(index);
 		var deleteFieldButton = A2(
 			$elm$html$Html$button,
@@ -15046,7 +15049,7 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 							}
 						},
 						formField.description),
-						visibilityRulesSection
+						A3($author$project$Main$visibilityRulesSection, index, formFields, formField)
 					]),
 				_Utils_ap(
 					A3($author$project$Main$viewFormFieldOptionsBuilder, shortTextTypeList, index, formField),

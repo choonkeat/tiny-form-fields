@@ -1809,6 +1809,89 @@ selectArrowDown =
         ]
 
 
+visibilityRulesSection : Int -> Array FormField -> FormField -> Html Msg
+visibilityRulesSection index formFields formField =
+    div [ class "tff-field-group" ]
+        [ label [ class "tff-field-label" ] [ text "Visibility Rules" ]
+        , div [ class "tff-dropdown-group" ]
+            [ selectArrowDown
+            , select
+                [ class "tff-text-field"
+                , onInput (\str -> OnFormField (OnVisibilityRuleTypeInput (str == "Show")) index "")
+                ]
+                [ option
+                    [ selected (isShowWhen (visibilityRuleOf formField))
+                    , value "Show"
+                    ]
+                    [ text "Show" ]
+                , option
+                    [ selected (isHideWhen (visibilityRuleOf formField))
+                    , value "Hide"
+                    ]
+                    [ text "Hide" ]
+                ]
+            ]
+        , div [ class "tff-dropdown-group" ]
+            [ selectArrowDown
+            , select
+                [ class "tff-text-field"
+                , onInput (\str -> OnFormField (OnVisibilityConditionTypeInput str) index "")
+                ]
+                [ option
+                    [ selected (visibilityRuleCondition (visibilityRuleOf formField) == Always)
+                    , value "Always"
+                    ]
+                    [ text "Always" ]
+                , option
+                    [ selected
+                        (case visibilityRuleCondition (visibilityRuleOf formField) of
+                            FieldEquals _ _ ->
+                                True
+
+                            _ ->
+                                False
+                        )
+                    , value "FieldEquals"
+                    ]
+                    [ text "Field equals" ]
+                ]
+            ]
+        , case visibilityRuleCondition (visibilityRuleOf formField) of
+            FieldEquals fieldName fieldValue ->
+                div [ class "tff-field-group" ]
+                    [ div [ class "tff-dropdown-group" ]
+                        [ selectArrowDown
+                        , select
+                            [ class "tff-text-field"
+                            , onInput (\str -> OnFormField (OnVisibilityConditionFieldInput str) index "")
+                            , value fieldName
+                            ]
+                            (List.map
+                                (\title ->
+                                    option
+                                        [ value title
+                                        , selected (title == fieldName)
+                                        ]
+                                        [ text title ]
+                                )
+                                (otherQuestionTitles formFields index)
+                            )
+                        ]
+                    , div [ class "tff-text-field" ] [ text " equals " ]
+                    , input
+                        [ type_ "text"
+                        , value fieldValue
+                        , onInput (\str -> OnFormField (OnVisibilityConditionValueInput str) index "")
+                        , class "tff-text-field"
+                        ]
+                        []
+                    ]
+
+            _ ->
+                text ""
+        ]
+
+
 viewFormFieldBuilder : List CustomElement -> Int -> Int -> Array FormField -> FormField -> Html Msg
 viewFormFieldBuilder shortTextTypeList index totalLength formFields formField =
     let
@@ -1864,87 +1947,6 @@ viewFormFieldBuilder shortTextTypeList index totalLength formFields formField =
                     )
                 ]
                 [ text "⨯ Delete" ]
-
-        visibilityRulesSection =
-            div [ class "tff-field-group" ]
-                [ label [ class "tff-field-label" ] [ text "Visibility Rules" ]
-                , div [ class "tff-dropdown-group" ]
-                    [ selectArrowDown
-                    , select
-                        [ class "tff-text-field"
-                        , onInput (\str -> OnFormField (OnVisibilityRuleTypeInput (str == "Show")) index "")
-                        ]
-                        [ option
-                            [ selected (isShowWhen (visibilityRuleOf formField))
-                            , value "Show"
-                            ]
-                            [ text "Show" ]
-                        , option
-                            [ selected (isHideWhen (visibilityRuleOf formField))
-                            , value "Hide"
-                            ]
-                            [ text "Hide" ]
-                        ]
-                    ]
-                , div [ class "tff-dropdown-group" ]
-                    [ selectArrowDown
-                    , select
-                        [ class "tff-text-field"
-                        , onInput (\str -> OnFormField (OnVisibilityConditionTypeInput str) index "")
-                        ]
-                        [ option
-                            [ selected (visibilityRuleCondition (visibilityRuleOf formField) == Always)
-                            , value "Always"
-                            ]
-                            [ text "Always" ]
-                        , option
-                            [ selected
-                                (case visibilityRuleCondition (visibilityRuleOf formField) of
-                                    FieldEquals _ _ ->
-                                        True
-
-                                    _ ->
-                                        False
-                                )
-                            , value "FieldEquals"
-                            ]
-                            [ text "Field equals" ]
-                        ]
-                    ]
-                , case visibilityRuleCondition (visibilityRuleOf formField) of
-                    FieldEquals fieldName fieldValue ->
-                        div [ class "tff-field-group" ]
-                            [ div [ class "tff-dropdown-group" ]
-                                [ selectArrowDown
-                                , select
-                                    [ class "tff-text-field"
-                                    , onInput (\str -> OnFormField (OnVisibilityConditionFieldInput str) index "")
-                                    , value fieldName
-                                    ]
-                                    (List.map
-                                        (\title ->
-                                            option
-                                                [ value title
-                                                , selected (title == fieldName)
-                                                ]
-                                                [ text title ]
-                                        )
-                                        (otherQuestionTitles formFields index)
-                                    )
-                                ]
-                            , div [ class "tff-text-field" ] [ text " equals " ]
-                            , input
-                                [ type_ "text"
-                                , value fieldValue
-                                , onInput (\str -> OnFormField (OnVisibilityConditionValueInput str) index "")
-                                , class "tff-text-field"
-                                ]
-                                []
-                            ]
-
-                    _ ->
-                        text ""
-                ]
     in
     div [ class buildFieldClass ]
         ([ div [ class "tff-field-group" ]
@@ -2002,7 +2004,7 @@ viewFormFieldBuilder shortTextTypeList index totalLength formFields formField =
                         []
             }
             formField.description
-         , visibilityRulesSection
+         , visibilityRulesSection index formFields formField
          ]
             ++ viewFormFieldOptionsBuilder shortTextTypeList index formField
             ++ [ div [ class "tff-build-field-buttons" ]
