@@ -11726,6 +11726,7 @@ var $author$project$Main$init = function (flags) {
 						},
 						effectiveShortTextTypeList)),
 				shortTextTypeList: effectiveShortTextTypeList,
+				trackedFormValues: $elm$core$Dict$empty,
 				viewMode: config.viewMode
 			},
 			$elm$core$Platform$Cmd$batch(
@@ -11752,6 +11753,7 @@ var $author$project$Main$init = function (flags) {
 				selectedFieldIndex: $elm$core$Maybe$Nothing,
 				shortTextTypeDict: $elm$core$Dict$empty,
 				shortTextTypeList: _List_Nil,
+				trackedFormValues: $elm$core$Dict$empty,
 				viewMode: $author$project$Main$Editor(
 					{maybeAnimate: $elm$core$Maybe$Nothing})
 			},
@@ -12906,7 +12908,18 @@ var $author$project$Main$update = F2(
 				default:
 					var fieldName = msg.a;
 					var value = msg.b;
-					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								trackedFormValues: A3(
+									$elm$core$Dict$insert,
+									fieldName,
+									_List_fromArray(
+										[value]),
+									model.trackedFormValues)
+							}),
+						$elm$core$Platform$Cmd$none);
 			}
 		}
 	});

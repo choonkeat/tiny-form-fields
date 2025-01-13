@@ -86,6 +86,7 @@ type alias Model =
     , formElement : Json.Decode.Value
     , formFields : Array FormField
     , formValues : Json.Encode.Value
+    , trackedFormValues : Dict String (List String)
 
     -- List because order matters
     , shortTextTypeList : List CustomElement
@@ -504,6 +505,7 @@ init flags =
               , formElement = config.formElement
               , formFields = config.formFields
               , formValues = config.formValues
+              , trackedFormValues = Dict.empty
               , shortTextTypeList = effectiveShortTextTypeList
               , shortTextTypeDict =
                     effectiveShortTextTypeList
@@ -529,6 +531,7 @@ init flags =
               , formElement = Json.Encode.null
               , formFields = Array.empty
               , formValues = Json.Encode.null
+              , trackedFormValues = Dict.empty
               , shortTextTypeList = []
               , shortTextTypeDict = Dict.empty
               , dropdownState = DropdownClosed
@@ -739,7 +742,7 @@ update msg model =
             )
 
         OnFormValuesUpdated fieldName value ->
-            ( model
+            ( { model | trackedFormValues = Dict.insert fieldName [ value ] model.trackedFormValues }
             , Cmd.none
             )
 
