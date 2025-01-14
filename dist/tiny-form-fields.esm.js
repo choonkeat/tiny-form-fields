@@ -12443,6 +12443,18 @@ var $author$project$Main$updateDragged = F2(
 			}
 		}
 	});
+var $author$project$Main$getPreviousFieldLabel = F2(
+	function (index, formFields) {
+		return (index > 0) ? A2(
+			$elm$core$Maybe$withDefault,
+			'',
+			A2(
+				$elm$core$Maybe$map,
+				function ($) {
+					return $.label;
+				},
+				A2($elm$core$Array$get, index - 1, formFields))) : '';
+	});
 var $elm$core$String$lines = _String_lines;
 var $author$project$Main$toggleAttributeOptional = F2(
 	function (toggle, attributeOptional) {
@@ -12472,8 +12484,8 @@ var $author$project$Main$visibilityRuleCondition = function (rule) {
 		return condition;
 	}
 };
-var $author$project$Main$updateFormField = F3(
-	function (msg, string, formField) {
+var $author$project$Main$updateFormField = F5(
+	function (msg, string, index, formFields, formField) {
 		switch (msg.$) {
 			case 'OnLabelInput':
 				return _Utils_update(
@@ -12995,8 +13007,13 @@ var $author$project$Main$updateFormField = F3(
 								if (_v27.$ === 'AttributeNotNeeded') {
 									if (_v27.a.$ === 'Nothing') {
 										var _v28 = _v27.a;
+										var previousLabel = A2($author$project$Main$getPreviousFieldLabel, index, formFields);
 										return $author$project$Main$AttributeGiven(
-											$author$project$Main$ShowWhen($author$project$Main$Always));
+											$author$project$Main$ShowWhen(
+												A2(
+													$author$project$Main$Field,
+													previousLabel,
+													$author$project$Main$Equals(''))));
 									} else {
 										var rule = _v27.a.a;
 										return $author$project$Main$AttributeGiven(rule);
@@ -13138,7 +13155,7 @@ var $author$project$Main$update = F2(
 						$elm$core$Array$indexedMap,
 						F2(
 							function (i, formField) {
-								return _Utils_eq(i, index) ? A3($author$project$Main$updateFormField, fmsg, string, formField) : formField;
+								return _Utils_eq(i, index) ? A5($author$project$Main$updateFormField, fmsg, string, i, model.formFields, formField) : formField;
 							}),
 						model.formFields);
 					return _Utils_Tuple2(
@@ -14887,7 +14904,7 @@ var $author$project$Main$visibilityRulesSection = F3(
 														]),
 													_List_fromArray(
 														[
-															$elm$html$Html$text('Show')
+															$elm$html$Html$text('Show when')
 														])),
 													A2(
 													$elm$html$Html$option,
@@ -14900,100 +14917,7 @@ var $author$project$Main$visibilityRulesSection = F3(
 														]),
 													_List_fromArray(
 														[
-															$elm$html$Html$text('Hide')
-														]))
-												]))
-										])),
-									A2(
-									$elm$html$Html$div,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('tff-dropdown-group')
-										]),
-									_List_fromArray(
-										[
-											$author$project$Main$selectArrowDown,
-											A2(
-											$elm$html$Html$select,
-											_List_fromArray(
-												[
-													$elm$html$Html$Attributes$class('tff-text-field'),
-													$elm$html$Html$Events$onInput(
-													function (str) {
-														return A3(
-															$author$project$Main$OnFormField,
-															$author$project$Main$OnVisibilityConditionTypeInput(str),
-															index,
-															'');
-													})
-												]),
-											_List_fromArray(
-												[
-													A2(
-													$elm$html$Html$option,
-													_List_fromArray(
-														[
-															$elm$html$Html$Attributes$selected(
-															_Utils_eq(
-																$author$project$Main$visibilityRuleCondition(
-																	$author$project$Main$visibilityRuleOf(formField)),
-																$author$project$Main$Always)),
-															$elm$html$Html$Attributes$value('Always')
-														]),
-													_List_fromArray(
-														[
-															$elm$html$Html$text('Always')
-														])),
-													A2(
-													$elm$html$Html$option,
-													_List_fromArray(
-														[
-															$elm$html$Html$Attributes$selected(
-															A2(
-																$author$project$Main$isComparingWith,
-																$author$project$Main$Equals('something'),
-																$author$project$Main$comparisonOf(
-																	$author$project$Main$visibilityRuleCondition(
-																		$author$project$Main$visibilityRuleOf(formField))))),
-															$elm$html$Html$Attributes$value('FieldEquals')
-														]),
-													_List_fromArray(
-														[
-															$elm$html$Html$text('Field equals')
-														])),
-													A2(
-													$elm$html$Html$option,
-													_List_fromArray(
-														[
-															$elm$html$Html$Attributes$selected(
-															A2(
-																$author$project$Main$isComparingWith,
-																$author$project$Main$Contains('something'),
-																$author$project$Main$comparisonOf(
-																	$author$project$Main$visibilityRuleCondition(
-																		$author$project$Main$visibilityRuleOf(formField))))),
-															$elm$html$Html$Attributes$value('FieldContains')
-														]),
-													_List_fromArray(
-														[
-															$elm$html$Html$text('Field contains')
-														])),
-													A2(
-													$elm$html$Html$option,
-													_List_fromArray(
-														[
-															$elm$html$Html$Attributes$selected(
-															A2(
-																$author$project$Main$isComparingWith,
-																$author$project$Main$EndsWith('something'),
-																$author$project$Main$comparisonOf(
-																	$author$project$Main$visibilityRuleCondition(
-																		$author$project$Main$visibilityRuleOf(formField))))),
-															$elm$html$Html$Attributes$value('FieldEndsWith')
-														]),
-													_List_fromArray(
-														[
-															$elm$html$Html$text('Field ends with')
+															$elm$html$Html$text('Hide when')
 														]))
 												]))
 										])),
@@ -15057,21 +14981,79 @@ var $author$project$Main$visibilityRulesSection = F3(
 													$elm$html$Html$div,
 													_List_fromArray(
 														[
-															$elm$html$Html$Attributes$class('tff-text-field')
+															$elm$html$Html$Attributes$class('tff-dropdown-group')
 														]),
 													_List_fromArray(
 														[
-															$elm$html$Html$text(
-															function () {
-																switch (comparison.$) {
-																	case 'Equals':
-																		return ' equals ';
-																	case 'Contains':
-																		return ' contains ';
-																	default:
-																		return ' ends with ';
-																}
-															}())
+															$author$project$Main$selectArrowDown,
+															A2(
+															$elm$html$Html$select,
+															_List_fromArray(
+																[
+																	$elm$html$Html$Attributes$class('tff-text-field'),
+																	$elm$html$Html$Events$onInput(
+																	function (str) {
+																		return A3(
+																			$author$project$Main$OnFormField,
+																			$author$project$Main$OnVisibilityConditionTypeInput(str),
+																			index,
+																			'');
+																	})
+																]),
+															_List_fromArray(
+																[
+																	A2(
+																	$elm$html$Html$option,
+																	_List_fromArray(
+																		[
+																			$elm$html$Html$Attributes$selected(
+																			A2(
+																				$author$project$Main$isComparingWith,
+																				$author$project$Main$Equals('something'),
+																				$author$project$Main$comparisonOf(
+																					$author$project$Main$visibilityRuleCondition(
+																						$author$project$Main$visibilityRuleOf(formField))))),
+																			$elm$html$Html$Attributes$value('FieldEquals')
+																		]),
+																	_List_fromArray(
+																		[
+																			$elm$html$Html$text('equals')
+																		])),
+																	A2(
+																	$elm$html$Html$option,
+																	_List_fromArray(
+																		[
+																			$elm$html$Html$Attributes$selected(
+																			A2(
+																				$author$project$Main$isComparingWith,
+																				$author$project$Main$Contains('something'),
+																				$author$project$Main$comparisonOf(
+																					$author$project$Main$visibilityRuleCondition(
+																						$author$project$Main$visibilityRuleOf(formField))))),
+																			$elm$html$Html$Attributes$value('FieldContains')
+																		]),
+																	_List_fromArray(
+																		[
+																			$elm$html$Html$text('contains')
+																		])),
+																	A2(
+																	$elm$html$Html$option,
+																	_List_fromArray(
+																		[
+																			$elm$html$Html$Attributes$selected(
+																			A2(
+																				$author$project$Main$isComparingWith,
+																				$author$project$Main$EndsWith('something'),
+																				$author$project$Main$comparisonOf(
+																					$author$project$Main$visibilityRuleCondition(
+																						$author$project$Main$visibilityRuleOf(formField))))),
+																			$elm$html$Html$Attributes$value('FieldEndsWith')
+																		]),
+																	_List_fromArray(
+																		[
+																			$elm$html$Html$text('ends with')
+																		]))
+																]))
 														])),
 													A2(
 													$elm$html$Html$input,

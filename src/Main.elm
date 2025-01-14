@@ -25,6 +25,7 @@ port module Main exposing
     , encodeVisibilityRule
     , fieldsWithPlaceholder
     , fromRawCustomElement
+    , getPreviousFieldLabel
     , main
     , onDropped
     , stringFromViewMode
@@ -426,6 +427,17 @@ otherQuestionTitles formFields currentIndex =
         |> List.map (\( _, f ) -> f.label)
 
 
+getPreviousFieldLabel : Int -> Array FormField -> String
+getPreviousFieldLabel index formFields =
+    if index > 0 then
+        Array.get (index - 1) formFields
+            |> Maybe.map .label
+            |> Maybe.withDefault ""
+
+    else
+        ""
+
+
 
 -- INIT
 
@@ -622,7 +634,7 @@ update msg model =
                     Array.indexedMap
                         (\i formField ->
                             if i == index then
-                                updateFormField fmsg string formField
+                                updateFormField fmsg string i model.formFields formField
 
                             else
                                 formField
@@ -759,8 +771,8 @@ update msg model =
             )
 
 
-updateFormField : FormFieldMsg -> String -> FormField -> FormField
-updateFormField msg string formField =
+updateFormField : FormFieldMsg -> String -> Int -> Array FormField -> FormField -> FormField
+updateFormField msg string index formFields formField =
     case msg of
         OnLabelInput ->
             { formField | label = string }
@@ -1082,7 +1094,11 @@ updateFormField msg string formField =
                     if bool then
                         case formField.visibilityRule of
                             AttributeNotNeeded Nothing ->
-                                AttributeGiven (ShowWhen Always)
+                                let
+                                    previousLabel =
+                                        getPreviousFieldLabel index formFields
+                                in
+                                AttributeGiven (ShowWhen (Field previousLabel (Equals "")))
 
                             AttributeNotNeeded (Just rule) ->
                                 AttributeGiven rule
@@ -1893,43 +1909,12 @@ visibilityRulesSection index formFields formField =
                                         [ selected (isShowWhen (visibilityRuleOf formField))
                                         , value "Show"
                                         ]
-                                        [ text "Show" ]
+                                        [ text "Show when" ]
                                     , option
                                         [ selected (isHideWhen (visibilityRuleOf formField))
                                         , value "Hide"
                                         ]
-                                        [ text "Hide" ]
-                                    ]
-                                ]
-                            , div [ class "tff-dropdown-group" ]
-                                [ selectArrowDown
-                                , select
-                                    [ class "tff-text-field"
-                                    , onInput (\str -> OnFormField (OnVisibilityConditionTypeInput str) index "")
-                                    ]
-                                    [ option
-                                        [ selected (visibilityRuleCondition (visibilityRuleOf formField) == Always)
-                                        , value "Always"
-                                        ]
-                                        [ text "Always" ]
-                                    , option
-                                        [ selected
-                                            (isComparingWith (Equals "something") (comparisonOf (visibilityRuleCondition (visibilityRuleOf formField))))
-                                        , value "FieldEquals"
-                                        ]
-                                        [ text "Field equals" ]
-                                    , option
-                                        [ selected
-                                            (isComparingWith (Contains "something") (comparisonOf (visibilityRuleCondition (visibilityRuleOf formField))))
-                                        , value "FieldContains"
-                                        ]
-                                        [ text "Field contains" ]
-                                    , option
-                                        [ selected
-                                            (isComparingWith (EndsWith "something") (comparisonOf (visibilityRuleCondition (visibilityRuleOf formField))))
-                                        , value "FieldEndsWith"
-                                        ]
-                                        [ text "Field ends with" ]
+                                        [ text "Hide when" ]
                                     ]
                                 ]
                             , case visibilityRuleCondition (visibilityRuleOf formField) of
@@ -1953,18 +1938,31 @@ visibilityRulesSection index formFields formField =
                                                     (otherQuestionTitles formFields index)
                                                 )
                                             ]
-                                        , div [ class "tff-text-field" ]
-                                            [ text
-                                                (case comparison of
-                                                    Equals _ ->
-                                                        " equals "
-
-                                                    Contains _ ->
-                                                        " contains "
-
-                                                    EndsWith _ ->
-                                                        " ends with "
-                                                )
+                                        , div [ class "tff-dropdown-group" ]
+                                            [ selectArrowDown
+                                            , select
+                                                [ class "tff-text-field"
+                                                , onInput (\str -> OnFormField (OnVisibilityConditionTypeInput str) index "")
+                                                ]
+                                                [ option
+                                                    [ selected
+                                                        (isComparingWith (Equals "something") (comparisonOf (visibilityRuleCondition (visibilityRuleOf formField))))
+                                                    , value "FieldEquals"
+                                                    ]
+                                                    [ text "equals" ]
+                                                , option
+                                                    [ selected
+                                                        (isComparingWith (Contains "something") (comparisonOf (visibilityRuleCondition (visibilityRuleOf formField))))
+                                                    , value "FieldContains"
+                                                    ]
+                                                    [ text "contains" ]
+                                                , option
+                                                    [ selected
+                                                        (isComparingWith (EndsWith "something") (comparisonOf (visibilityRuleCondition (visibilityRuleOf formField))))
+                                                    , value "FieldEndsWith"
+                                                    ]
+                                                    [ text "ends with" ]
+                                                ]
                                             ]
                                         , input
                                             [ type_ "text"
