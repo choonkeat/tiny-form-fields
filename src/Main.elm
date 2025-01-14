@@ -971,9 +971,66 @@ updateFormField msg string index formFields formField =
             }
 
         OnVisibilityConditionTypeInput str ->
-            { formField
-                | visibilityRule = visibilityRuleFromConditionType str formField.visibilityRule
-            }
+            case formField.visibilityRule of
+                AttributeNotNeeded _ ->
+                    { formField
+                        | visibilityRule =
+                            case str of
+                                "Always" ->
+                                    AttributeNotNeeded Nothing
+
+                                "FieldEquals" ->
+                                    AttributeNotNeeded (Just (ShowWhen (Field "" (Equals ""))))
+
+                                "FieldContains" ->
+                                    AttributeNotNeeded (Just (ShowWhen (Field "" (Contains ""))))
+
+                                "FieldEndsWith" ->
+                                    AttributeNotNeeded (Just (ShowWhen (Field "" (EndsWith ""))))
+
+                                _ ->
+                                    formField.visibilityRule
+                    }
+
+                AttributeInvalid _ ->
+                    { formField
+                        | visibilityRule =
+                            case str of
+                                "Always" ->
+                                    AttributeNotNeeded Nothing
+
+                                "FieldEquals" ->
+                                    AttributeNotNeeded (Just (ShowWhen (Field "" (Equals ""))))
+
+                                "FieldContains" ->
+                                    AttributeNotNeeded (Just (ShowWhen (Field "" (Contains ""))))
+
+                                "FieldEndsWith" ->
+                                    AttributeNotNeeded (Just (ShowWhen (Field "" (EndsWith ""))))
+
+                                _ ->
+                                    formField.visibilityRule
+                    }
+
+                AttributeGiven rule ->
+                    { formField
+                        | visibilityRule =
+                            case str of
+                                "Always" ->
+                                    AttributeNotNeeded Nothing
+
+                                "FieldEquals" ->
+                                    AttributeGiven (ShowWhen (Field "" (Equals "")))
+
+                                "FieldContains" ->
+                                    AttributeGiven (ShowWhen (Field "" (Contains "")))
+
+                                "FieldEndsWith" ->
+                                    AttributeGiven (ShowWhen (Field "" (EndsWith "")))
+
+                                _ ->
+                                    AttributeGiven rule
+                    }
 
         OnVisibilityConditionFieldInput newFieldName ->
             case formField.visibilityRule of
@@ -1052,40 +1109,6 @@ updateFormField msg string index formFields formField =
                     else
                         toggleAttributeOptional bool formField.visibilityRule
             }
-
-
-visibilityRuleFromConditionType : String -> AttributeOptional VisibilityRule -> AttributeOptional VisibilityRule
-visibilityRuleFromConditionType str currentRule =
-    case str of
-        "Always" ->
-            AttributeNotNeeded Nothing
-
-        "FieldEquals" ->
-            case currentRule of
-                AttributeNotNeeded (Just (ShowWhen (Field fieldName _))) ->
-                    AttributeNotNeeded (Just (ShowWhen (Field fieldName (Equals ""))))
-
-                _ ->
-                    AttributeNotNeeded (Just (ShowWhen (Field "" (Equals ""))))
-
-        "FieldContains" ->
-            case currentRule of
-                AttributeNotNeeded (Just (ShowWhen (Field fieldName _))) ->
-                    AttributeNotNeeded (Just (ShowWhen (Field fieldName (Contains ""))))
-
-                _ ->
-                    AttributeNotNeeded (Just (ShowWhen (Field "" (Contains ""))))
-
-        "FieldEndsWith" ->
-            case currentRule of
-                AttributeNotNeeded (Just (ShowWhen (Field fieldName _))) ->
-                    AttributeNotNeeded (Just (ShowWhen (Field fieldName (EndsWith ""))))
-
-                _ ->
-                    AttributeNotNeeded (Just (ShowWhen (Field "" (EndsWith ""))))
-
-        _ ->
-            currentRule
 
 
 onDropped : Maybe Int -> { a | dragged : Maybe Dragged, formFields : Array FormField } -> { a | dragged : Maybe Dragged, formFields : Array FormField }
@@ -1856,7 +1879,6 @@ selectArrowDown =
         [ SvgAttr.viewBox "0 0 16 16"
         , SvgAttr.fill "currentColor"
         , attribute "aria-hidden" "true"
-        , SvgAttr.class "tff-drag-handle-icon"
         ]
         [ path
             [ SvgAttr.fillRule "evenodd"
