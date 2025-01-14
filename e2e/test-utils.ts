@@ -7,7 +7,7 @@ export interface FieldEdit {
     maxlength?: number;
     choices?: string[];
     visibilityRule?: {
-        type: 'show' | 'hide';
+        type: 'Show when' | 'Hide when';
         field: string;
         comparison: {
             type: 'equals' | 'contains' | 'endsWith';

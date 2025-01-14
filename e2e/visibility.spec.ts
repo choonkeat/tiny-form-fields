@@ -1,20 +1,72 @@
 // tests/visibility.spec.ts
 import { test, expect } from '@playwright/test';
-import { addField, FieldEdit } from './test-utils';
+import { addField } from './test-utils';
 
-test('visibility rules in preview mode', async ({ page }) => {
+test('[Dropdown] visibility rules in preview mode', async ({ page }) => {
     await page.goto("http://localhost:8000/");
 
     // Add radio button field first since other fields will reference it
-    await addField(page, 'Radio buttons', [{ label: 'Radio buttons question title', value: 'Do you agree?' }]);
+    await addField(page, 'Dropdown', [{ label: 'Dropdown question title', value: 'Logic question' }]);
 
-    // Add "Why so?" text field that shows when "Yes" is selected
+    // Add "Why Red?" text field that shows when "Red" is selected
     await addField(page, 'Single-line free text', [{
         label: 'Single-line free text question title',
-        value: 'Why so?',
+        value: 'Why Red?',
         visibilityRule: {
             type: 'Show when',
-            field: 'Do you agree?',
+            field: 'Logic question',
+            comparison: {
+                type: 'equals',
+                value: 'Red'
+            }
+        }
+    }]);
+
+    // Add "Why Orange?" text field that shows when "Orange" is selected
+    await addField(page, 'Single-line free text', [{
+        label: 'Single-line free text question title',
+        value: 'Why Orange?',
+        visibilityRule: {
+            type: 'Show when',
+            field: 'Logic question',
+            comparison: {
+                type: 'equals',
+                value: 'Orange'
+            }
+        }
+    }]);
+
+    // Switch to preview mode
+    const page1Promise = page.waitForEvent("popup");
+    await page
+        .getByRole("link", { name: "View sample Collect Data page" })
+        .click();
+    const page1 = await page1Promise;
+
+    // Test Red selection
+    await page1.getByRole('combobox').selectOption('Red');
+    await expect(page1.locator('text="Why Red?"')).toBeVisible();
+    await expect(page1.locator('text="Why Orange?"')).toHaveCount(0);
+
+    // Test Orange selection  
+    await page1.getByRole('combobox').selectOption('Orange');
+    await expect(page1.locator('text="Why Red?"')).toHaveCount(0);
+    await expect(page1.locator('text="Why Orange?"')).toBeVisible();
+});
+
+test('[Radio buttons] visibility rules in preview mode', async ({ page }) => {
+    await page.goto("http://localhost:8000/");
+
+    // Add radio button field first since other fields will reference it
+    await addField(page, 'Radio buttons', [{ label: 'Radio buttons question title', value: 'Logic question' }]);
+
+    // Add "Why Yes?" text field that shows when "Yes" is selected
+    await addField(page, 'Single-line free text', [{
+        label: 'Single-line free text question title',
+        value: 'Why Yes?',
+        visibilityRule: {
+            type: 'Show when',
+            field: 'Logic question',
             comparison: {
                 type: 'equals',
                 value: 'Yes'
@@ -22,13 +74,13 @@ test('visibility rules in preview mode', async ({ page }) => {
         }
     }]);
 
-    // Add "Why not?" text field that shows when "No" is selected
+    // Add "Why No?" text field that shows when "No" is selected
     await addField(page, 'Single-line free text', [{
         label: 'Single-line free text question title',
-        value: 'Why not?',
+        value: 'Why No?',
         visibilityRule: {
             type: 'Show when',
-            field: 'Do you agree?',
+            field: 'Logic question',
             comparison: {
                 type: 'equals',
                 value: 'No'
@@ -45,11 +97,11 @@ test('visibility rules in preview mode', async ({ page }) => {
 
     // Test Yes selection
     await page1.click('input[value="Yes"]');
-    await expect(page1.locator('text="Why so?"')).toBeVisible();
-    await expect(page1.locator('text="Why not?"')).toHaveCount(0);
+    await expect(page1.locator('text="Why Yes?"')).toBeVisible();
+    await expect(page1.locator('text="Why No?"')).toHaveCount(0);
 
     // Test No selection  
     await page1.click('input[value="No"]');
-    await expect(page1.locator('text="Why so?"')).toHaveCount(0);
-    await expect(page1.locator('text="Why not?"')).toBeVisible();
+    await expect(page1.locator('text="Why Yes?"')).toHaveCount(0);
+    await expect(page1.locator('text="Why No?"')).toBeVisible();
 });
