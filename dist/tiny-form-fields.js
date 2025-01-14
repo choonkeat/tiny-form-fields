@@ -9920,6 +9920,44 @@ var $author$project$Main$OnVisibilityRuleTypeInput = function (a) {
 var $author$project$Main$OnVisibilityToggle = function (a) {
 	return {$: 10, a: a};
 };
+var $author$project$Main$comparisonOf = function (condition) {
+	switch (condition.$) {
+		case 0:
+			var comparison = condition.b;
+			return $elm$core$Maybe$Just(comparison);
+		case 1:
+			return $elm$core$Maybe$Nothing;
+		case 2:
+			return $elm$core$Maybe$Nothing;
+		case 3:
+			return $elm$core$Maybe$Nothing;
+		default:
+			return $elm$core$Maybe$Nothing;
+	}
+};
+var $author$project$Main$isComparingWith = F2(
+	function (expected, maybeComparison) {
+		switch (expected.$) {
+			case 0:
+				if ((!maybeComparison.$) && (!maybeComparison.a.$)) {
+					return true;
+				} else {
+					return false;
+				}
+			case 1:
+				if ((!maybeComparison.$) && (maybeComparison.a.$ === 1)) {
+					return true;
+				} else {
+					return false;
+				}
+			default:
+				if ((!maybeComparison.$) && (maybeComparison.a.$ === 2)) {
+					return true;
+				} else {
+					return false;
+				}
+		}
+	});
 var $author$project$Main$isHideWhen = function (rule) {
 	if (!rule.$) {
 		return false;
@@ -10066,15 +10104,12 @@ var $author$project$Main$visibilityRulesSection = F3(
 													_List_fromArray(
 														[
 															$elm$html$Html$Attributes$selected(
-															function () {
-																var _v1 = $author$project$Main$visibilityRuleCondition(
-																	$author$project$Main$visibilityRuleOf(formField));
-																if ((!_v1.$) && (!_v1.b.$)) {
-																	return true;
-																} else {
-																	return false;
-																}
-															}()),
+															A2(
+																$author$project$Main$isComparingWith,
+																$author$project$Main$Equals('something'),
+																$author$project$Main$comparisonOf(
+																	$author$project$Main$visibilityRuleCondition(
+																		$author$project$Main$visibilityRuleOf(formField))))),
 															$elm$html$Html$Attributes$value('FieldEquals')
 														]),
 													_List_fromArray(
@@ -10086,15 +10121,12 @@ var $author$project$Main$visibilityRulesSection = F3(
 													_List_fromArray(
 														[
 															$elm$html$Html$Attributes$selected(
-															function () {
-																var _v2 = $author$project$Main$visibilityRuleCondition(
-																	$author$project$Main$visibilityRuleOf(formField));
-																if ((!_v2.$) && (_v2.b.$ === 1)) {
-																	return true;
-																} else {
-																	return false;
-																}
-															}()),
+															A2(
+																$author$project$Main$isComparingWith,
+																$author$project$Main$Contains('something'),
+																$author$project$Main$comparisonOf(
+																	$author$project$Main$visibilityRuleCondition(
+																		$author$project$Main$visibilityRuleOf(formField))))),
 															$elm$html$Html$Attributes$value('FieldContains')
 														]),
 													_List_fromArray(
@@ -10106,15 +10138,12 @@ var $author$project$Main$visibilityRulesSection = F3(
 													_List_fromArray(
 														[
 															$elm$html$Html$Attributes$selected(
-															function () {
-																var _v3 = $author$project$Main$visibilityRuleCondition(
-																	$author$project$Main$visibilityRuleOf(formField));
-																if ((!_v3.$) && (_v3.b.$ === 2)) {
-																	return true;
-																} else {
-																	return false;
-																}
-															}()),
+															A2(
+																$author$project$Main$isComparingWith,
+																$author$project$Main$EndsWith('something'),
+																$author$project$Main$comparisonOf(
+																	$author$project$Main$visibilityRuleCondition(
+																		$author$project$Main$visibilityRuleOf(formField))))),
 															$elm$html$Html$Attributes$value('FieldEndsWith')
 														]),
 													_List_fromArray(
@@ -10124,254 +10153,112 @@ var $author$project$Main$visibilityRulesSection = F3(
 												]))
 										])),
 									function () {
-									var _v4 = $author$project$Main$visibilityRuleCondition(
+									var _v1 = $author$project$Main$visibilityRuleCondition(
 										$author$project$Main$visibilityRuleOf(formField));
-									if (!_v4.$) {
-										switch (_v4.b.$) {
-											case 0:
-												var fieldName = _v4.a;
-												var fieldValue = _v4.b.a;
-												return A2(
+									if (!_v1.$) {
+										var fieldName = _v1.a;
+										var comparison = _v1.b;
+										return A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('tff-field-group')
+												]),
+											_List_fromArray(
+												[
+													A2(
 													$elm$html$Html$div,
 													_List_fromArray(
 														[
-															$elm$html$Html$Attributes$class('tff-field-group')
+															$elm$html$Html$Attributes$class('tff-dropdown-group')
 														]),
 													_List_fromArray(
 														[
+															$author$project$Main$selectArrowDown,
 															A2(
-															$elm$html$Html$div,
+															$elm$html$Html$select,
 															_List_fromArray(
 																[
-																	$elm$html$Html$Attributes$class('tff-dropdown-group')
-																]),
-															_List_fromArray(
-																[
-																	$author$project$Main$selectArrowDown,
-																	A2(
-																	$elm$html$Html$select,
-																	_List_fromArray(
-																		[
-																			$elm$html$Html$Attributes$class('tff-text-field'),
-																			$elm$html$Html$Events$onInput(
-																			function (str) {
-																				return A3(
-																					$author$project$Main$OnFormField,
-																					$author$project$Main$OnVisibilityConditionFieldInput(str),
-																					index,
-																					'');
-																			}),
-																			$elm$html$Html$Attributes$value(fieldName)
-																		]),
-																	A2(
-																		$elm$core$List$map,
-																		function (title) {
-																			return A2(
-																				$elm$html$Html$option,
-																				_List_fromArray(
-																					[
-																						$elm$html$Html$Attributes$value(title),
-																						$elm$html$Html$Attributes$selected(
-																						_Utils_eq(title, fieldName))
-																					]),
-																				_List_fromArray(
-																					[
-																						$elm$html$Html$text(title)
-																					]));
-																		},
-																		A2($author$project$Main$otherQuestionTitles, formFields, index)))
-																])),
-															A2(
-															$elm$html$Html$div,
-															_List_fromArray(
-																[
-																	$elm$html$Html$Attributes$class('tff-text-field')
-																]),
-															_List_fromArray(
-																[
-																	$elm$html$Html$text(' equals ')
-																])),
-															A2(
-															$elm$html$Html$input,
-															_List_fromArray(
-																[
-																	$elm$html$Html$Attributes$type_('text'),
-																	$elm$html$Html$Attributes$value(fieldValue),
+																	$elm$html$Html$Attributes$class('tff-text-field'),
 																	$elm$html$Html$Events$onInput(
 																	function (str) {
 																		return A3(
 																			$author$project$Main$OnFormField,
-																			$author$project$Main$OnVisibilityConditionValueInput(str),
+																			$author$project$Main$OnVisibilityConditionFieldInput(str),
 																			index,
 																			'');
 																	}),
-																	$elm$html$Html$Attributes$class('tff-text-field')
+																	$elm$html$Html$Attributes$value(fieldName)
 																]),
-															_List_Nil)
-														]));
-											case 1:
-												var fieldName = _v4.a;
-												var fieldValue = _v4.b.a;
-												return A2(
+															A2(
+																$elm$core$List$map,
+																function (title) {
+																	return A2(
+																		$elm$html$Html$option,
+																		_List_fromArray(
+																			[
+																				$elm$html$Html$Attributes$value(title),
+																				$elm$html$Html$Attributes$selected(
+																				_Utils_eq(title, fieldName))
+																			]),
+																		_List_fromArray(
+																			[
+																				$elm$html$Html$text(title)
+																			]));
+																},
+																A2($author$project$Main$otherQuestionTitles, formFields, index)))
+														])),
+													A2(
 													$elm$html$Html$div,
 													_List_fromArray(
 														[
-															$elm$html$Html$Attributes$class('tff-field-group')
+															$elm$html$Html$Attributes$class('tff-text-field')
 														]),
 													_List_fromArray(
 														[
-															A2(
-															$elm$html$Html$div,
-															_List_fromArray(
-																[
-																	$elm$html$Html$Attributes$class('tff-dropdown-group')
-																]),
-															_List_fromArray(
-																[
-																	$author$project$Main$selectArrowDown,
-																	A2(
-																	$elm$html$Html$select,
-																	_List_fromArray(
-																		[
-																			$elm$html$Html$Attributes$class('tff-text-field'),
-																			$elm$html$Html$Events$onInput(
-																			function (str) {
-																				return A3(
-																					$author$project$Main$OnFormField,
-																					$author$project$Main$OnVisibilityConditionFieldInput(str),
-																					index,
-																					'');
-																			}),
-																			$elm$html$Html$Attributes$value(fieldName)
-																		]),
-																	A2(
-																		$elm$core$List$map,
-																		function (title) {
-																			return A2(
-																				$elm$html$Html$option,
-																				_List_fromArray(
-																					[
-																						$elm$html$Html$Attributes$value(title),
-																						$elm$html$Html$Attributes$selected(
-																						_Utils_eq(title, fieldName))
-																					]),
-																				_List_fromArray(
-																					[
-																						$elm$html$Html$text(title)
-																					]));
-																		},
-																		A2($author$project$Main$otherQuestionTitles, formFields, index)))
-																])),
-															A2(
-															$elm$html$Html$div,
-															_List_fromArray(
-																[
-																	$elm$html$Html$Attributes$class('tff-text-field')
-																]),
-															_List_fromArray(
-																[
-																	$elm$html$Html$text(' contains ')
-																])),
-															A2(
-															$elm$html$Html$input,
-															_List_fromArray(
-																[
-																	$elm$html$Html$Attributes$type_('text'),
-																	$elm$html$Html$Attributes$value(fieldValue),
-																	$elm$html$Html$Events$onInput(
-																	function (str) {
-																		return A3(
-																			$author$project$Main$OnFormField,
-																			$author$project$Main$OnVisibilityConditionValueInput(str),
-																			index,
-																			'');
-																	}),
-																	$elm$html$Html$Attributes$class('tff-text-field')
-																]),
-															_List_Nil)
-														]));
-											default:
-												var fieldName = _v4.a;
-												var fieldValue = _v4.b.a;
-												return A2(
-													$elm$html$Html$div,
+															$elm$html$Html$text(
+															function () {
+																switch (comparison.$) {
+																	case 0:
+																		return ' equals ';
+																	case 1:
+																		return ' contains ';
+																	default:
+																		return ' ends with ';
+																}
+															}())
+														])),
+													A2(
+													$elm$html$Html$input,
 													_List_fromArray(
 														[
-															$elm$html$Html$Attributes$class('tff-field-group')
+															$elm$html$Html$Attributes$type_('text'),
+															$elm$html$Html$Attributes$value(
+															function () {
+																switch (comparison.$) {
+																	case 0:
+																		var v = comparison.a;
+																		return v;
+																	case 1:
+																		var v = comparison.a;
+																		return v;
+																	default:
+																		var v = comparison.a;
+																		return v;
+																}
+															}()),
+															$elm$html$Html$Events$onInput(
+															function (str) {
+																return A3(
+																	$author$project$Main$OnFormField,
+																	$author$project$Main$OnVisibilityConditionValueInput(str),
+																	index,
+																	'');
+															}),
+															$elm$html$Html$Attributes$class('tff-text-field')
 														]),
-													_List_fromArray(
-														[
-															A2(
-															$elm$html$Html$div,
-															_List_fromArray(
-																[
-																	$elm$html$Html$Attributes$class('tff-dropdown-group')
-																]),
-															_List_fromArray(
-																[
-																	$author$project$Main$selectArrowDown,
-																	A2(
-																	$elm$html$Html$select,
-																	_List_fromArray(
-																		[
-																			$elm$html$Html$Attributes$class('tff-text-field'),
-																			$elm$html$Html$Events$onInput(
-																			function (str) {
-																				return A3(
-																					$author$project$Main$OnFormField,
-																					$author$project$Main$OnVisibilityConditionFieldInput(str),
-																					index,
-																					'');
-																			}),
-																			$elm$html$Html$Attributes$value(fieldName)
-																		]),
-																	A2(
-																		$elm$core$List$map,
-																		function (title) {
-																			return A2(
-																				$elm$html$Html$option,
-																				_List_fromArray(
-																					[
-																						$elm$html$Html$Attributes$value(title),
-																						$elm$html$Html$Attributes$selected(
-																						_Utils_eq(title, fieldName))
-																					]),
-																				_List_fromArray(
-																					[
-																						$elm$html$Html$text(title)
-																					]));
-																		},
-																		A2($author$project$Main$otherQuestionTitles, formFields, index)))
-																])),
-															A2(
-															$elm$html$Html$div,
-															_List_fromArray(
-																[
-																	$elm$html$Html$Attributes$class('tff-text-field')
-																]),
-															_List_fromArray(
-																[
-																	$elm$html$Html$text(' ends with ')
-																])),
-															A2(
-															$elm$html$Html$input,
-															_List_fromArray(
-																[
-																	$elm$html$Html$Attributes$type_('text'),
-																	$elm$html$Html$Attributes$value(fieldValue),
-																	$elm$html$Html$Events$onInput(
-																	function (str) {
-																		return A3(
-																			$author$project$Main$OnFormField,
-																			$author$project$Main$OnVisibilityConditionValueInput(str),
-																			index,
-																			'');
-																	}),
-																	$elm$html$Html$Attributes$class('tff-text-field')
-																]),
-															_List_Nil)
-														]));
-										}
+													_List_Nil)
+												]));
 									} else {
 										return $elm$html$Html$text('');
 									}

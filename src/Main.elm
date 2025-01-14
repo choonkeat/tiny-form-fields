@@ -1914,44 +1914,26 @@ visibilityRulesSection index formFields formField =
                                         [ text "Always" ]
                                     , option
                                         [ selected
-                                            (case visibilityRuleCondition (visibilityRuleOf formField) of
-                                                Field _ (Equals _) ->
-                                                    True
-
-                                                _ ->
-                                                    False
-                                            )
+                                            (isComparingWith (Equals "something") (comparisonOf (visibilityRuleCondition (visibilityRuleOf formField))))
                                         , value "FieldEquals"
                                         ]
                                         [ text "Field equals" ]
                                     , option
                                         [ selected
-                                            (case visibilityRuleCondition (visibilityRuleOf formField) of
-                                                Field _ (Contains _) ->
-                                                    True
-
-                                                _ ->
-                                                    False
-                                            )
+                                            (isComparingWith (Contains "something") (comparisonOf (visibilityRuleCondition (visibilityRuleOf formField))))
                                         , value "FieldContains"
                                         ]
                                         [ text "Field contains" ]
                                     , option
                                         [ selected
-                                            (case visibilityRuleCondition (visibilityRuleOf formField) of
-                                                Field _ (EndsWith _) ->
-                                                    True
-
-                                                _ ->
-                                                    False
-                                            )
+                                            (isComparingWith (EndsWith "something") (comparisonOf (visibilityRuleCondition (visibilityRuleOf formField))))
                                         , value "FieldEndsWith"
                                         ]
                                         [ text "Field ends with" ]
                                     ]
                                 ]
                             , case visibilityRuleCondition (visibilityRuleOf formField) of
-                                Field fieldName (Equals fieldValue) ->
+                                Field fieldName comparison ->
                                     div [ class "tff-field-group" ]
                                         [ div [ class "tff-dropdown-group" ]
                                             [ selectArrowDown
@@ -1971,70 +1953,32 @@ visibilityRulesSection index formFields formField =
                                                     (otherQuestionTitles formFields index)
                                                 )
                                             ]
-                                        , div [ class "tff-text-field" ] [ text " equals " ]
-                                        , input
-                                            [ type_ "text"
-                                            , value fieldValue
-                                            , onInput (\str -> OnFormField (OnVisibilityConditionValueInput str) index "")
-                                            , class "tff-text-field"
-                                            ]
-                                            []
-                                        ]
+                                        , div [ class "tff-text-field" ]
+                                            [ text
+                                                (case comparison of
+                                                    Equals _ ->
+                                                        " equals "
 
-                                Field fieldName (Contains fieldValue) ->
-                                    div [ class "tff-field-group" ]
-                                        [ div [ class "tff-dropdown-group" ]
-                                            [ selectArrowDown
-                                            , select
-                                                [ class "tff-text-field"
-                                                , onInput (\str -> OnFormField (OnVisibilityConditionFieldInput str) index "")
-                                                , value fieldName
-                                                ]
-                                                (List.map
-                                                    (\title ->
-                                                        option
-                                                            [ value title
-                                                            , selected (title == fieldName)
-                                                            ]
-                                                            [ text title ]
-                                                    )
-                                                    (otherQuestionTitles formFields index)
-                                                )
-                                            ]
-                                        , div [ class "tff-text-field" ] [ text " contains " ]
-                                        , input
-                                            [ type_ "text"
-                                            , value fieldValue
-                                            , onInput (\str -> OnFormField (OnVisibilityConditionValueInput str) index "")
-                                            , class "tff-text-field"
-                                            ]
-                                            []
-                                        ]
+                                                    Contains _ ->
+                                                        " contains "
 
-                                Field fieldName (EndsWith fieldValue) ->
-                                    div [ class "tff-field-group" ]
-                                        [ div [ class "tff-dropdown-group" ]
-                                            [ selectArrowDown
-                                            , select
-                                                [ class "tff-text-field"
-                                                , onInput (\str -> OnFormField (OnVisibilityConditionFieldInput str) index "")
-                                                , value fieldName
-                                                ]
-                                                (List.map
-                                                    (\title ->
-                                                        option
-                                                            [ value title
-                                                            , selected (title == fieldName)
-                                                            ]
-                                                            [ text title ]
-                                                    )
-                                                    (otherQuestionTitles formFields index)
+                                                    EndsWith _ ->
+                                                        " ends with "
                                                 )
                                             ]
-                                        , div [ class "tff-text-field" ] [ text " ends with " ]
                                         , input
                                             [ type_ "text"
-                                            , value fieldValue
+                                            , value
+                                                (case comparison of
+                                                    Equals v ->
+                                                        v
+
+                                                    Contains v ->
+                                                        v
+
+                                                    EndsWith v ->
+                                                        v
+                                                )
                                             , onInput (\str -> OnFormField (OnVisibilityConditionValueInput str) index "")
                                             , class "tff-text-field"
                                             ]
@@ -3319,3 +3263,50 @@ isVisibilityRuleSatisfied rule trackedFormValues =
 
         HideWhen condition ->
             not (evaluateCondition trackedFormValues condition)
+
+
+comparisonOf : Condition -> Maybe Comparison
+comparisonOf condition =
+    case condition of
+        Field _ comparison ->
+            Just comparison
+
+        And _ ->
+            Nothing
+
+        Or _ ->
+            Nothing
+
+        Not _ ->
+            Nothing
+
+        Always ->
+            Nothing
+
+
+isComparingWith : Comparison -> Maybe Comparison -> Bool
+isComparingWith expected maybeComparison =
+    case expected of
+        Equals _ ->
+            case maybeComparison of
+                Just (Equals _) ->
+                    True
+
+                _ ->
+                    False
+
+        Contains _ ->
+            case maybeComparison of
+                Just (Contains _) ->
+                    True
+
+                _ ->
+                    False
+
+        EndsWith _ ->
+            case maybeComparison of
+                Just (EndsWith _) ->
+                    True
+
+                _ ->
+                    False
