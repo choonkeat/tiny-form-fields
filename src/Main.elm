@@ -1,6 +1,7 @@
 port module Main exposing
     ( AttributeOptional(..)
     , Choice
+    , Comparison(..)
     , Condition(..)
     , Dragged(..)
     , FormField
@@ -141,9 +142,14 @@ requiredData presence =
             True
 
 
+type Comparison
+    = Equals String
+    | Contains String
+    | EndsWith String
+
+
 type Condition
-    = FieldEquals String String
-    | FieldContains String String
+    = Field String Comparison
     | And (List Condition)
     | Or (List Condition)
     | Not Condition
@@ -962,7 +968,13 @@ updateFormField msg string formField =
                                     AttributeNotNeeded Nothing
 
                                 "FieldEquals" ->
-                                    AttributeNotNeeded (Just (ShowWhen (FieldEquals "" "")))
+                                    AttributeNotNeeded (Just (ShowWhen (Field "" (Equals ""))))
+
+                                "FieldContains" ->
+                                    AttributeNotNeeded (Just (ShowWhen (Field "" (Contains ""))))
+
+                                "FieldEndsWith" ->
+                                    AttributeNotNeeded (Just (ShowWhen (Field "" (EndsWith ""))))
 
                                 _ ->
                                     formField.visibilityRule
@@ -976,7 +988,13 @@ updateFormField msg string formField =
                                     AttributeNotNeeded Nothing
 
                                 "FieldEquals" ->
-                                    AttributeNotNeeded (Just (ShowWhen (FieldEquals "" "")))
+                                    AttributeNotNeeded (Just (ShowWhen (Field "" (Equals ""))))
+
+                                "FieldContains" ->
+                                    AttributeNotNeeded (Just (ShowWhen (Field "" (Contains ""))))
+
+                                "FieldEndsWith" ->
+                                    AttributeNotNeeded (Just (ShowWhen (Field "" (EndsWith ""))))
 
                                 _ ->
                                     formField.visibilityRule
@@ -990,7 +1008,13 @@ updateFormField msg string formField =
                                     AttributeNotNeeded Nothing
 
                                 "FieldEquals" ->
-                                    AttributeGiven (ShowWhen (FieldEquals "" ""))
+                                    AttributeGiven (ShowWhen (Field "" (Equals "")))
+
+                                "FieldContains" ->
+                                    AttributeGiven (ShowWhen (Field "" (Contains "")))
+
+                                "FieldEndsWith" ->
+                                    AttributeGiven (ShowWhen (Field "" (EndsWith "")))
 
                                 _ ->
                                     AttributeGiven rule
@@ -1008,11 +1032,11 @@ updateFormField msg string formField =
                     { formField
                         | visibilityRule =
                             case rule of
-                                ShowWhen (FieldEquals _ value) ->
-                                    AttributeGiven (ShowWhen (FieldEquals newFieldName value))
+                                ShowWhen (Field fieldName comparison) ->
+                                    AttributeGiven (ShowWhen (Field newFieldName comparison))
 
-                                HideWhen (FieldEquals _ value) ->
-                                    AttributeGiven (HideWhen (FieldEquals newFieldName value))
+                                HideWhen (Field fieldName comparison) ->
+                                    AttributeGiven (HideWhen (Field newFieldName comparison))
 
                                 _ ->
                                     formField.visibilityRule
@@ -1030,11 +1054,23 @@ updateFormField msg string formField =
                     { formField
                         | visibilityRule =
                             case rule of
-                                ShowWhen (FieldEquals fieldName _) ->
-                                    AttributeGiven (ShowWhen (FieldEquals fieldName newValue))
+                                ShowWhen (Field fieldName (Equals value)) ->
+                                    AttributeGiven (ShowWhen (Field fieldName (Equals newValue)))
 
-                                HideWhen (FieldEquals fieldName _) ->
-                                    AttributeGiven (HideWhen (FieldEquals fieldName newValue))
+                                HideWhen (Field fieldName (Equals value)) ->
+                                    AttributeGiven (HideWhen (Field fieldName (Equals newValue)))
+
+                                ShowWhen (Field fieldName (Contains value)) ->
+                                    AttributeGiven (ShowWhen (Field fieldName (Contains newValue)))
+
+                                HideWhen (Field fieldName (Contains value)) ->
+                                    AttributeGiven (HideWhen (Field fieldName (Contains newValue)))
+
+                                ShowWhen (Field fieldName (EndsWith value)) ->
+                                    AttributeGiven (ShowWhen (Field fieldName (EndsWith newValue)))
+
+                                HideWhen (Field fieldName (EndsWith value)) ->
+                                    AttributeGiven (HideWhen (Field fieldName (EndsWith newValue)))
 
                                 _ ->
                                     formField.visibilityRule
@@ -1879,7 +1915,7 @@ visibilityRulesSection index formFields formField =
                                     , option
                                         [ selected
                                             (case visibilityRuleCondition (visibilityRuleOf formField) of
-                                                FieldEquals _ _ ->
+                                                Field _ (Equals _) ->
                                                     True
 
                                                 _ ->
@@ -1888,10 +1924,34 @@ visibilityRulesSection index formFields formField =
                                         , value "FieldEquals"
                                         ]
                                         [ text "Field equals" ]
+                                    , option
+                                        [ selected
+                                            (case visibilityRuleCondition (visibilityRuleOf formField) of
+                                                Field _ (Contains _) ->
+                                                    True
+
+                                                _ ->
+                                                    False
+                                            )
+                                        , value "FieldContains"
+                                        ]
+                                        [ text "Field contains" ]
+                                    , option
+                                        [ selected
+                                            (case visibilityRuleCondition (visibilityRuleOf formField) of
+                                                Field _ (EndsWith _) ->
+                                                    True
+
+                                                _ ->
+                                                    False
+                                            )
+                                        , value "FieldEndsWith"
+                                        ]
+                                        [ text "Field ends with" ]
                                     ]
                                 ]
                             , case visibilityRuleCondition (visibilityRuleOf formField) of
-                                FieldEquals fieldName fieldValue ->
+                                Field fieldName (Equals fieldValue) ->
                                     div [ class "tff-field-group" ]
                                         [ div [ class "tff-dropdown-group" ]
                                             [ selectArrowDown
@@ -1912,6 +1972,66 @@ visibilityRulesSection index formFields formField =
                                                 )
                                             ]
                                         , div [ class "tff-text-field" ] [ text " equals " ]
+                                        , input
+                                            [ type_ "text"
+                                            , value fieldValue
+                                            , onInput (\str -> OnFormField (OnVisibilityConditionValueInput str) index "")
+                                            , class "tff-text-field"
+                                            ]
+                                            []
+                                        ]
+
+                                Field fieldName (Contains fieldValue) ->
+                                    div [ class "tff-field-group" ]
+                                        [ div [ class "tff-dropdown-group" ]
+                                            [ selectArrowDown
+                                            , select
+                                                [ class "tff-text-field"
+                                                , onInput (\str -> OnFormField (OnVisibilityConditionFieldInput str) index "")
+                                                , value fieldName
+                                                ]
+                                                (List.map
+                                                    (\title ->
+                                                        option
+                                                            [ value title
+                                                            , selected (title == fieldName)
+                                                            ]
+                                                            [ text title ]
+                                                    )
+                                                    (otherQuestionTitles formFields index)
+                                                )
+                                            ]
+                                        , div [ class "tff-text-field" ] [ text " contains " ]
+                                        , input
+                                            [ type_ "text"
+                                            , value fieldValue
+                                            , onInput (\str -> OnFormField (OnVisibilityConditionValueInput str) index "")
+                                            , class "tff-text-field"
+                                            ]
+                                            []
+                                        ]
+
+                                Field fieldName (EndsWith fieldValue) ->
+                                    div [ class "tff-field-group" ]
+                                        [ div [ class "tff-dropdown-group" ]
+                                            [ selectArrowDown
+                                            , select
+                                                [ class "tff-text-field"
+                                                , onInput (\str -> OnFormField (OnVisibilityConditionFieldInput str) index "")
+                                                , value fieldName
+                                                ]
+                                                (List.map
+                                                    (\title ->
+                                                        option
+                                                            [ value title
+                                                            , selected (title == fieldName)
+                                                            ]
+                                                            [ text title ]
+                                                    )
+                                                    (otherQuestionTitles formFields index)
+                                                )
+                                            ]
+                                        , div [ class "tff-text-field" ] [ text " ends with " ]
                                         , input
                                             [ type_ "text"
                                             , value fieldValue
@@ -2661,18 +2781,11 @@ encodeVisibilityRule visibilityRule =
 encodeCondition : Condition -> Json.Encode.Value
 encodeCondition condition =
     case condition of
-        FieldEquals fieldName value ->
+        Field fieldName comparison ->
             Json.Encode.object
-                [ ( "type", Json.Encode.string "FieldEquals" )
+                [ ( "type", Json.Encode.string "Field" )
                 , ( "fieldName", Json.Encode.string fieldName )
-                , ( "value", Json.Encode.string value )
-                ]
-
-        FieldContains fieldName value ->
-            Json.Encode.object
-                [ ( "type", Json.Encode.string "FieldContains" )
-                , ( "fieldName", Json.Encode.string fieldName )
-                , ( "value", Json.Encode.string value )
+                , ( "comparison", encodeComparison comparison )
                 ]
 
         And conditions ->
@@ -2696,6 +2809,28 @@ encodeCondition condition =
         Always ->
             Json.Encode.object
                 [ ( "type", Json.Encode.string "Always" )
+                ]
+
+
+encodeComparison : Comparison -> Json.Encode.Value
+encodeComparison comparison =
+    case comparison of
+        Equals value ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "Equals" )
+                , ( "value", Json.Encode.string value )
+                ]
+
+        Contains value ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "Contains" )
+                , ( "value", Json.Encode.string value )
+                ]
+
+        EndsWith value ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "EndsWith" )
+                , ( "value", Json.Encode.string value )
                 ]
 
 
@@ -3096,15 +3231,10 @@ decodeCondition =
         |> Json.Decode.andThen
             (\type_ ->
                 case type_ of
-                    "FieldEquals" ->
-                        Json.Decode.succeed FieldEquals
+                    "Field" ->
+                        Json.Decode.succeed Field
                             |> andMap (Json.Decode.field "fieldName" Json.Decode.string)
-                            |> andMap (Json.Decode.field "value" Json.Decode.string)
-
-                    "FieldContains" ->
-                        Json.Decode.succeed FieldContains
-                            |> andMap (Json.Decode.field "fieldName" Json.Decode.string)
-                            |> andMap (Json.Decode.field "value" Json.Decode.string)
+                            |> andMap (Json.Decode.field "comparison" decodeComparison)
 
                     "And" ->
                         Json.Decode.succeed And
@@ -3126,24 +3256,47 @@ decodeCondition =
             )
 
 
+decodeComparison : Json.Decode.Decoder Comparison
+decodeComparison =
+    Json.Decode.field "type" Json.Decode.string
+        |> Json.Decode.andThen
+            (\type_ ->
+                case type_ of
+                    "Equals" ->
+                        Json.Decode.succeed Equals
+                            |> andMap (Json.Decode.field "value" Json.Decode.string)
+
+                    "Contains" ->
+                        Json.Decode.succeed Contains
+                            |> andMap (Json.Decode.field "value" Json.Decode.string)
+
+                    "EndsWith" ->
+                        Json.Decode.succeed EndsWith
+                            |> andMap (Json.Decode.field "value" Json.Decode.string)
+
+                    _ ->
+                        Json.Decode.fail ("Unknown comparison type: " ++ type_)
+            )
+
+
 evaluateCondition : Dict String (List String) -> Condition -> Bool
 evaluateCondition trackedFormValues condition =
     case condition of
         Always ->
             True
 
-        FieldEquals fieldName value ->
+        Field fieldName comparison ->
             case Dict.get fieldName trackedFormValues of
                 Just [ fieldValue ] ->
-                    fieldValue == value
+                    case comparison of
+                        Equals value ->
+                            fieldValue == value
 
-                _ ->
-                    False
+                        Contains value ->
+                            String.contains value fieldValue
 
-        FieldContains fieldName value ->
-            case Dict.get fieldName trackedFormValues of
-                Just [ fieldValue ] ->
-                    String.contains value fieldValue
+                        EndsWith value ->
+                            String.endsWith value fieldValue
 
                 _ ->
                     False
