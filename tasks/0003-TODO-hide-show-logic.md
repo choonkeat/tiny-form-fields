@@ -74,7 +74,7 @@ Add support for conditional visibility where each field can specify when it shou
 - [ ] Show warning indicator before reordering fields that have dependent rules
 
 ### Runtime Behavior
-- [ ] Implement real-time visibility updates in CollectData mode
+- [x] Implement real-time visibility updates in CollectData mode
 - [ ] Handle dependent fields (fields that depend on hidden fields)
 - [ ] Skip validation for hidden required fields during form submission
 - [ ] Preserve values of hidden fields when they become visible again
@@ -83,6 +83,6 @@ Add support for conditional visibility where each field can specify when it shou
 ### Documentation & Testing
 - [ ] Update documentation with new feature
 - [ ] Document behavior of hidden fields in form submission
-- [ ] Add tests for conditional logic
+- [x] Add tests for conditional logic
 - [ ] Add tests for form validation with hidden fields
 - [ ] Add tests for import/export with visibility rules
