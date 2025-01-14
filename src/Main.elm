@@ -1556,26 +1556,27 @@ viewFormFieldOptionsPreview config fieldID formField =
             div [ class "tff-dropdown-group" ]
                 [ selectArrowDown
                 , select
-                    [ name fieldName
-                    , id fieldID
+                    ([ name fieldName
+                     , id fieldID
 
-                    -- when we're disabling `<select>` we actually only
-                    -- want to disable the `<option>`s so user can see the options but cannot choose
-                    -- but if the `<select>` is required, then now we are in a bind
-                    -- so we cannot have `required` on the `<select>` if we're disabling it
-                    , if List.member (attribute "disabled" "disabled") config.customAttrs then
+                     -- when we're disabling `<select>` we actually only
+                     -- want to disable the `<option>`s so user can see the options but cannot choose
+                     -- but if the `<select>` is required, then now we are in a bind
+                     -- so we cannot have `required` on the `<select>` if we're disabling it
+                     , if List.member (attribute "disabled" "disabled") config.customAttrs then
                         class "tff-select-disabled"
 
-                      else
+                       else
                         required (requiredData formField.presence)
-                    ]
+                     ]
+                        ++ config.onInput fieldName
+                    )
                     (option
                         ([ disabled True
                          , defaultSelected (valueString == "" && not (chosenForYou choices))
                          , attribute "value" ""
                          ]
                             ++ config.customAttrs
-                            ++ config.onInput fieldName
                         )
                         [ text "-- Select an option --" ]
                         :: List.map
@@ -1584,7 +1585,6 @@ viewFormFieldOptionsPreview config fieldID formField =
                                     (value choice.value
                                         :: defaultSelected (valueString == choice.value || chosenForYou choices)
                                         :: config.customAttrs
-                                        ++ config.onInput fieldName
                                     )
                                     [ text choice.label ]
                             )

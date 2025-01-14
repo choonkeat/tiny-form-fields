@@ -6029,7 +6029,7 @@ var $author$project$Main$viewModeFromString = function (str) {
 		case 'Editor':
 			return $elm$core$Maybe$Just(
 				$author$project$Main$Editor(
-					{aq: $elm$core$Maybe$Nothing}));
+					{ap: $elm$core$Maybe$Nothing}));
 		case 'CollectData':
 			return $elm$core$Maybe$Just($author$project$Main$CollectData);
 		default:
@@ -6105,7 +6105,7 @@ var $author$project$Main$decodeConfig = A2(
 					$elm$json$Json$Decode$map,
 					$elm$core$Maybe$withDefault(
 						$author$project$Main$Editor(
-							{aq: $elm$core$Maybe$Nothing})),
+							{ap: $elm$core$Maybe$Nothing})),
 					A2($elm_community$json_extra$Json$Decode$Extra$optionalNullableField, 'viewMode', $author$project$Main$decodeViewMode)),
 				$elm$json$Json$Decode$succeed($author$project$Main$Config)))));
 var $elm$core$List$singleton = function (value) {
@@ -6835,7 +6835,7 @@ var $author$project$Main$init = function (flags) {
 				ac: _List_Nil,
 				C: $elm$core$Dict$empty,
 				S: $author$project$Main$Editor(
-					{aq: $elm$core$Maybe$Nothing})
+					{ap: $elm$core$Maybe$Nothing})
 			},
 			$elm$core$Platform$Cmd$none);
 	}
@@ -8207,7 +8207,7 @@ var $author$project$Main$update = F2(
 							model,
 							{
 								S: $author$project$Main$Editor(
-									{aq: maybeAnimate})
+									{ap: maybeAnimate})
 							}),
 						$elm$core$Platform$Cmd$none);
 				case 8:
@@ -8223,7 +8223,7 @@ var $author$project$Main$update = F2(
 									B: $elm$core$Maybe$Nothing,
 									S: $author$project$Main$Editor(
 										{
-											aq: $elm$core$Maybe$Just(
+											ap: $elm$core$Maybe$Just(
 												_Utils_Tuple2(prevIndex, 0))
 										})
 								}),
@@ -8895,7 +8895,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 											extraAttrs,
 											_Utils_ap(
 												config.T,
-												config.ai(fieldName)))))),
+												config.aq(fieldName)))))),
 							_List_Nil),
 							dataListElement
 						]));
@@ -8937,7 +8937,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 							extraAttrs,
 							_Utils_ap(
 								config.T,
-								config.ai(fieldName)))),
+								config.aq(fieldName)))),
 					_List_Nil);
 			case 2:
 				var choices = _v0.a;
@@ -8959,16 +8959,18 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 							$author$project$Main$selectArrowDown,
 							A2(
 							$elm$html$Html$select,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$name(fieldName),
-									$elm$html$Html$Attributes$id(fieldID),
-									A2(
-									$elm$core$List$member,
-									A2($elm$html$Html$Attributes$attribute, 'disabled', 'disabled'),
-									config.T) ? $elm$html$Html$Attributes$class('tff-select-disabled') : $elm$html$Html$Attributes$required(
-									$author$project$Main$requiredData(formField.v))
-								]),
+							_Utils_ap(
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$name(fieldName),
+										$elm$html$Html$Attributes$id(fieldID),
+										A2(
+										$elm$core$List$member,
+										A2($elm$html$Html$Attributes$attribute, 'disabled', 'disabled'),
+										config.T) ? $elm$html$Html$Attributes$class('tff-select-disabled') : $elm$html$Html$Attributes$required(
+										$author$project$Main$requiredData(formField.v))
+									]),
+								config.aq(fieldName)),
 							A2(
 								$elm$core$List$cons,
 								A2(
@@ -8981,9 +8983,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 												(valueString === '') && (!chosenForYou(choices))),
 												A2($elm$html$Html$Attributes$attribute, 'value', '')
 											]),
-										_Utils_ap(
-											config.T,
-											config.ai(fieldName))),
+										config.T),
 									_List_fromArray(
 										[
 											$elm$html$Html$text('-- Select an option --')
@@ -9000,9 +9000,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 													$elm$core$List$cons,
 													$author$project$Main$defaultSelected(
 														_Utils_eq(valueString, choice.t) || chosenForYou(choices)),
-													_Utils_ap(
-														config.T,
-														config.ai(fieldName)))),
+													config.T)),
 											_List_fromArray(
 												[
 													$elm$html$Html$text(choice.h)
@@ -9068,7 +9066,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 																]),
 															_Utils_ap(
 																config.T,
-																config.ai(fieldName))),
+																config.aq(fieldName))),
 														_List_Nil),
 														$elm$html$Html$text(' '),
 														$elm$html$Html$text(choice.h)
@@ -9353,7 +9351,7 @@ var $author$project$Main$renderFormField = F4(
 												function (_v7, _v8) {
 													return _List_Nil;
 												}),
-											ai: function (_v9) {
+											aq: function (_v9) {
 												return _List_Nil;
 											},
 											ab: model.ab,
@@ -10784,7 +10782,7 @@ var $author$project$Main$viewFormPreview = F2(
 				function (_v2, _v3) {
 					return _List_Nil;
 				}),
-			ai: needsFormLogic ? onInput : function (_v4) {
+			aq: needsFormLogic ? onInput : function (_v4) {
 				return _List_Nil;
 			},
 			ab: shortTextTypeDict,
@@ -10837,7 +10835,7 @@ var $author$project$Main$viewMain = function (model) {
 									$author$project$Main$encodeFormFields(model.d)))
 							]),
 						_List_Nil),
-					A2($author$project$Main$viewFormBuilder, editorAttr.aq, model));
+					A2($author$project$Main$viewFormBuilder, editorAttr.ap, model));
 			} else {
 				return A2($author$project$Main$viewFormPreview, _List_Nil, model);
 			}

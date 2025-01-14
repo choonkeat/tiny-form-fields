@@ -13824,16 +13824,18 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 							$author$project$Main$selectArrowDown,
 							A2(
 							$elm$html$Html$select,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$name(fieldName),
-									$elm$html$Html$Attributes$id(fieldID),
-									A2(
-									$elm$core$List$member,
-									A2($elm$html$Html$Attributes$attribute, 'disabled', 'disabled'),
-									config.customAttrs) ? $elm$html$Html$Attributes$class('tff-select-disabled') : $elm$html$Html$Attributes$required(
-									$author$project$Main$requiredData(formField.presence))
-								]),
+							_Utils_ap(
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$name(fieldName),
+										$elm$html$Html$Attributes$id(fieldID),
+										A2(
+										$elm$core$List$member,
+										A2($elm$html$Html$Attributes$attribute, 'disabled', 'disabled'),
+										config.customAttrs) ? $elm$html$Html$Attributes$class('tff-select-disabled') : $elm$html$Html$Attributes$required(
+										$author$project$Main$requiredData(formField.presence))
+									]),
+								config.onInput(fieldName)),
 							A2(
 								$elm$core$List$cons,
 								A2(
@@ -13846,9 +13848,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 												(valueString === '') && (!chosenForYou(choices))),
 												A2($elm$html$Html$Attributes$attribute, 'value', '')
 											]),
-										_Utils_ap(
-											config.customAttrs,
-											config.onInput(fieldName))),
+										config.customAttrs),
 									_List_fromArray(
 										[
 											$elm$html$Html$text('-- Select an option --')
@@ -13865,9 +13865,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 													$elm$core$List$cons,
 													$author$project$Main$defaultSelected(
 														_Utils_eq(valueString, choice.value) || chosenForYou(choices)),
-													_Utils_ap(
-														config.customAttrs,
-														config.onInput(fieldName)))),
+													config.customAttrs)),
 											_List_fromArray(
 												[
 													$elm$html$Html$text(choice.label)
