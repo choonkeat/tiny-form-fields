@@ -73,6 +73,8 @@ type alias Config =
     { viewMode : ViewMode
     , formFields : Array FormField
     , formValues : Json.Encode.Value
+
+    -- List because order matters
     , shortTextTypeList : List CustomElement
     }
 
@@ -83,7 +85,11 @@ type alias Model =
     , formFields : Array FormField
     , needsFormLogic : Bool
     , trackedFormValues : Dict String (List String)
+
+    -- List because order matters
     , shortTextTypeList : List CustomElement
+
+    -- Dict to lookup by `inputType`
     , shortTextTypeDict : Dict String CustomElement
     , dropdownState : DropdownState
     , selectedFieldIndex : Maybe Int
@@ -510,6 +516,10 @@ init flags =
               }
             , Cmd.batch
                 [ outgoing (encodePortOutgoingValue (PortOutgoingFormFields config.formFields))
+
+                -- js could've just done `document.body.addEventListener` and `app.ports.incoming.send` anyways
+                -- but we're sending out PortOutgoingSetupCloseDropdown to be surer that js would do it
+                -- also, we now dictate what `app.ports.incoming.send` sends back: PortIncomingCloseDropdown
                 , outgoing (encodePortOutgoingValue (PortOutgoingSetupCloseDropdown PortIncomingCloseDropdown))
                 ]
             )
