@@ -37,7 +37,7 @@ Add support for conditional visibility where each field can specify when it shou
         - Add text to show current rule ("Always shown")
         - No editing capability yet
 - [ ] Allow selecting which other fields' values control this field's visibility
-    - [x] Iteration 1: Just the model
+    - [ ] Iteration 1: Just the model
         - Add `FieldDependency` type:
           ```elm
           type alias FieldDependency =

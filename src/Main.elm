@@ -2043,10 +2043,10 @@ viewFormFieldBuilder shortTextTypeList index totalLength formFields formField =
                         []
             }
             formField.description
-         , visibilityRulesSection index formFields formField
          ]
             ++ viewFormFieldOptionsBuilder shortTextTypeList index formField
-            ++ [ div [ class "tff-build-field-buttons" ]
+            ++ [ visibilityRulesSection index formFields formField
+               , div [ class "tff-build-field-buttons" ]
                     [ div [ class "tff-move" ]
                         [ if index == 0 then
                             text ""

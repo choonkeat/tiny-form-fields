@@ -15084,13 +15084,13 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 									'');
 							}
 						},
-						formField.description),
-						A3($author$project$Main$visibilityRulesSection, index, formFields, formField)
+						formField.description)
 					]),
 				_Utils_ap(
 					A3($author$project$Main$viewFormFieldOptionsBuilder, shortTextTypeList, index, formField),
 					_List_fromArray(
 						[
+							A3($author$project$Main$visibilityRulesSection, index, formFields, formField),
 							A2(
 							$elm$html$Html$div,
 							_List_fromArray(
