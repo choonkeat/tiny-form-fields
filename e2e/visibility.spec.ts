@@ -5,9 +5,36 @@ import { addField, FieldEdit } from './test-utils';
 test('visibility rules in preview mode', async ({ page }) => {
     await page.goto("http://localhost:8000/");
 
+    // Add radio button field first since other fields will reference it
     await addField(page, 'Radio buttons', [{ label: 'Radio buttons question title', value: 'Do you agree?' }]);
-    await addField(page, 'Single-line free text', [{ label: 'Single-line free text question title', value: 'Why so?' }]);
-    await addField(page, 'Single-line free text', [{ label: 'Single-line free text question title', value: 'Why not?' }]);
+
+    // Add "Why so?" text field that shows when "Yes" is selected
+    await addField(page, 'Single-line free text', [{
+        label: 'Single-line free text question title',
+        value: 'Why so?',
+        visibilityRule: {
+            type: 'Show when',
+            field: 'Do you agree?',
+            comparison: {
+                type: 'equals',
+                value: 'Yes'
+            }
+        }
+    }]);
+
+    // Add "Why not?" text field that shows when "No" is selected
+    await addField(page, 'Single-line free text', [{
+        label: 'Single-line free text question title',
+        value: 'Why not?',
+        visibilityRule: {
+            type: 'Show when',
+            field: 'Do you agree?',
+            comparison: {
+                type: 'equals',
+                value: 'No'
+            }
+        }
+    }]);
 
     // Switch to preview mode
     const page1Promise = page.waitForEvent("popup");

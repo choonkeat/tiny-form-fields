@@ -14853,7 +14853,7 @@ var $author$project$Main$visibilityRulesSection = F3(
 											$elm$html$Html$select,
 											_List_fromArray(
 												[
-													$elm$html$Html$Attributes$class('tff-text-field'),
+													$elm$html$Html$Attributes$class('tff-text-field tff-show-or-hide'),
 													$elm$html$Html$Events$onInput(
 													function (str) {
 														return A3(
@@ -14920,7 +14920,7 @@ var $author$project$Main$visibilityRulesSection = F3(
 															$elm$html$Html$select,
 															_List_fromArray(
 																[
-																	$elm$html$Html$Attributes$class('tff-text-field'),
+																	$elm$html$Html$Attributes$class('tff-text-field tff-question-title'),
 																	$elm$html$Html$Events$onInput(
 																	function (str) {
 																		return A3(
@@ -14962,7 +14962,7 @@ var $author$project$Main$visibilityRulesSection = F3(
 															$elm$html$Html$select,
 															_List_fromArray(
 																[
-																	$elm$html$Html$Attributes$class('tff-text-field'),
+																	$elm$html$Html$Attributes$class('tff-text-field tff-comparison-type'),
 																	$elm$html$Html$Events$onInput(
 																	function (str) {
 																		return A3(
@@ -15032,6 +15032,7 @@ var $author$project$Main$visibilityRulesSection = F3(
 													_List_fromArray(
 														[
 															$elm$html$Html$Attributes$type_('text'),
+															$elm$html$Html$Attributes$class('tff-comparison-value'),
 															$elm$html$Html$Attributes$value(
 															function () {
 																switch (comparison.$) {

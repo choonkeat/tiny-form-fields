@@ -1846,7 +1846,7 @@ visibilityRulesSection index formFields formField =
                             [ div [ class "tff-dropdown-group" ]
                                 [ selectArrowDown
                                 , select
-                                    [ class "tff-text-field"
+                                    [ class "tff-text-field tff-show-or-hide"
                                     , onInput (\str -> OnFormField (OnVisibilityRuleTypeInput (str == "Show")) index "")
                                     ]
                                     [ option
@@ -1867,7 +1867,7 @@ visibilityRulesSection index formFields formField =
                                         [ div [ class "tff-dropdown-group" ]
                                             [ selectArrowDown
                                             , select
-                                                [ class "tff-text-field"
+                                                [ class "tff-text-field tff-question-title"
                                                 , onInput (\str -> OnFormField (OnVisibilityConditionFieldInput str) index "")
                                                 , value fieldName
                                                 ]
@@ -1885,7 +1885,7 @@ visibilityRulesSection index formFields formField =
                                         , div [ class "tff-dropdown-group" ]
                                             [ selectArrowDown
                                             , select
-                                                [ class "tff-text-field"
+                                                [ class "tff-text-field tff-comparison-type"
                                                 , onInput (\str -> OnFormField (OnVisibilityConditionTypeInput str) index "")
                                                 ]
                                                 [ option
@@ -1910,6 +1910,7 @@ visibilityRulesSection index formFields formField =
                                             ]
                                         , input
                                             [ type_ "text"
+                                            , class "tff-comparison-value"
                                             , value
                                                 (case comparison of
                                                     Equals v ->
