@@ -971,66 +971,10 @@ updateFormField msg string index formFields formField =
             }
 
         OnVisibilityConditionTypeInput str ->
-            case formField.visibilityRule of
-                AttributeNotNeeded _ ->
-                    { formField
-                        | visibilityRule =
-                            case str of
-                                "Always" ->
-                                    AttributeNotNeeded Nothing
-
-                                "FieldEquals" ->
-                                    AttributeNotNeeded (Just (ShowWhen (Field "" (Equals ""))))
-
-                                "FieldContains" ->
-                                    AttributeNotNeeded (Just (ShowWhen (Field "" (Contains ""))))
-
-                                "FieldEndsWith" ->
-                                    AttributeNotNeeded (Just (ShowWhen (Field "" (EndsWith ""))))
-
-                                _ ->
-                                    formField.visibilityRule
-                    }
-
-                AttributeInvalid _ ->
-                    { formField
-                        | visibilityRule =
-                            case str of
-                                "Always" ->
-                                    AttributeNotNeeded Nothing
-
-                                "FieldEquals" ->
-                                    AttributeNotNeeded (Just (ShowWhen (Field "" (Equals ""))))
-
-                                "FieldContains" ->
-                                    AttributeNotNeeded (Just (ShowWhen (Field "" (Contains ""))))
-
-                                "FieldEndsWith" ->
-                                    AttributeNotNeeded (Just (ShowWhen (Field "" (EndsWith ""))))
-
-                                _ ->
-                                    formField.visibilityRule
-                    }
-
-                AttributeGiven rule ->
-                    { formField
-                        | visibilityRule =
-                            case str of
-                                "Always" ->
-                                    AttributeNotNeeded Nothing
-
-                                "FieldEquals" ->
-                                    AttributeGiven (ShowWhen (Field "" (Equals "")))
-
-                                "FieldContains" ->
-                                    AttributeGiven (ShowWhen (Field "" (Contains "")))
-
-                                "FieldEndsWith" ->
-                                    AttributeGiven (ShowWhen (Field "" (EndsWith "")))
-
-                                _ ->
-                                    AttributeGiven rule
-                    }
+            { formField
+                | visibilityRule =
+                    setAttributeOptionalVisibilityRule str formField.visibilityRule
+            }
 
         OnVisibilityConditionFieldInput newFieldName ->
             case formField.visibilityRule of
@@ -3308,3 +3252,72 @@ isComparingWith expected maybeComparison =
 
                 _ ->
                     False
+
+
+updateVisibilityRule : String -> VisibilityRule -> VisibilityRule
+updateVisibilityRule comparisonType rule =
+    case rule of
+        ShowWhen condition ->
+            case condition of
+                Field fieldName comparison ->
+                    ShowWhen (Field fieldName (updateComparison comparisonType comparison))
+
+                _ ->
+                    rule
+
+        HideWhen condition ->
+            case condition of
+                Field fieldName comparison ->
+                    HideWhen (Field fieldName (updateComparison comparisonType comparison))
+
+                _ ->
+                    rule
+
+
+updateComparison : String -> Comparison -> Comparison
+updateComparison comparisonType comparison =
+    case comparisonType of
+        "Equals" ->
+            case comparison of
+                Equals str ->
+                    Equals str
+
+                _ ->
+                    Equals ""
+
+        "Contains" ->
+            case comparison of
+                Contains str ->
+                    Contains str
+
+                _ ->
+                    Contains ""
+
+        "EndsWith" ->
+            case comparison of
+                EndsWith str ->
+                    EndsWith str
+
+                _ ->
+                    EndsWith ""
+
+        _ ->
+            comparison
+
+
+setAttributeOptionalVisibilityRule : String -> AttributeOptional VisibilityRule -> AttributeOptional VisibilityRule
+setAttributeOptionalVisibilityRule comparisonType attributeOptional =
+    case attributeOptional of
+        AttributeNotNeeded maybeRule ->
+            case maybeRule of
+                Just rule ->
+                    AttributeGiven (updateVisibilityRule comparisonType rule)
+
+                Nothing ->
+                    attributeOptional
+
+        AttributeInvalid str ->
+            attributeOptional
+
+        AttributeGiven rule ->
+            AttributeGiven (updateVisibilityRule comparisonType rule)

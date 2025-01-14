@@ -12456,6 +12456,85 @@ var $author$project$Main$getPreviousFieldLabel = F2(
 				A2($elm$core$Array$get, index - 1, formFields))) : '';
 	});
 var $elm$core$String$lines = _String_lines;
+var $author$project$Main$updateComparison = F2(
+	function (comparisonType, comparison) {
+		switch (comparisonType) {
+			case 'Equals':
+				if (comparison.$ === 'Equals') {
+					var str = comparison.a;
+					return $author$project$Main$Equals(str);
+				} else {
+					return $author$project$Main$Equals('');
+				}
+			case 'Contains':
+				if (comparison.$ === 'Contains') {
+					var str = comparison.a;
+					return $author$project$Main$Contains(str);
+				} else {
+					return $author$project$Main$Contains('');
+				}
+			case 'EndsWith':
+				if (comparison.$ === 'EndsWith') {
+					var str = comparison.a;
+					return $author$project$Main$EndsWith(str);
+				} else {
+					return $author$project$Main$EndsWith('');
+				}
+			default:
+				return comparison;
+		}
+	});
+var $author$project$Main$updateVisibilityRule = F2(
+	function (comparisonType, rule) {
+		if (rule.$ === 'ShowWhen') {
+			var condition = rule.a;
+			if (condition.$ === 'Field') {
+				var fieldName = condition.a;
+				var comparison = condition.b;
+				return $author$project$Main$ShowWhen(
+					A2(
+						$author$project$Main$Field,
+						fieldName,
+						A2($author$project$Main$updateComparison, comparisonType, comparison)));
+			} else {
+				return rule;
+			}
+		} else {
+			var condition = rule.a;
+			if (condition.$ === 'Field') {
+				var fieldName = condition.a;
+				var comparison = condition.b;
+				return $author$project$Main$HideWhen(
+					A2(
+						$author$project$Main$Field,
+						fieldName,
+						A2($author$project$Main$updateComparison, comparisonType, comparison)));
+			} else {
+				return rule;
+			}
+		}
+	});
+var $author$project$Main$setAttributeOptionalVisibilityRule = F2(
+	function (comparisonType, attributeOptional) {
+		switch (attributeOptional.$) {
+			case 'AttributeNotNeeded':
+				var maybeRule = attributeOptional.a;
+				if (maybeRule.$ === 'Just') {
+					var rule = maybeRule.a;
+					return $author$project$Main$AttributeGiven(
+						A2($author$project$Main$updateVisibilityRule, comparisonType, rule));
+				} else {
+					return attributeOptional;
+				}
+			case 'AttributeInvalid':
+				var str = attributeOptional.a;
+				return attributeOptional;
+			default:
+				var rule = attributeOptional.a;
+				return $author$project$Main$AttributeGiven(
+					A2($author$project$Main$updateVisibilityRule, comparisonType, rule));
+		}
+	});
 var $author$project$Main$toggleAttributeOptional = F2(
 	function (toggle, attributeOptional) {
 		switch (attributeOptional.$) {
@@ -12744,120 +12823,57 @@ var $author$project$Main$updateFormField = F5(
 					});
 			case 'OnVisibilityConditionTypeInput':
 				var str = msg.a;
+				return _Utils_update(
+					formField,
+					{
+						visibilityRule: A2($author$project$Main$setAttributeOptionalVisibilityRule, str, formField.visibilityRule)
+					});
+			case 'OnVisibilityConditionFieldInput':
+				var newFieldName = msg.a;
 				var _v11 = formField.visibilityRule;
 				switch (_v11.$) {
 					case 'AttributeNotNeeded':
-						return _Utils_update(
-							formField,
-							{
-								visibilityRule: function () {
-									switch (str) {
-										case 'Always':
-											return $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing);
-										case 'FieldEquals':
-											return $author$project$Main$AttributeNotNeeded(
-												$elm$core$Maybe$Just(
-													$author$project$Main$ShowWhen(
-														A2(
-															$author$project$Main$Field,
-															'',
-															$author$project$Main$Equals('')))));
-										case 'FieldContains':
-											return $author$project$Main$AttributeNotNeeded(
-												$elm$core$Maybe$Just(
-													$author$project$Main$ShowWhen(
-														A2(
-															$author$project$Main$Field,
-															'',
-															$author$project$Main$Contains('')))));
-										case 'FieldEndsWith':
-											return $author$project$Main$AttributeNotNeeded(
-												$elm$core$Maybe$Just(
-													$author$project$Main$ShowWhen(
-														A2(
-															$author$project$Main$Field,
-															'',
-															$author$project$Main$EndsWith('')))));
-										default:
-											return formField.visibilityRule;
-									}
-								}()
-							});
+						return formField;
 					case 'AttributeInvalid':
-						return _Utils_update(
-							formField,
-							{
-								visibilityRule: function () {
-									switch (str) {
-										case 'Always':
-											return $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing);
-										case 'FieldEquals':
-											return $author$project$Main$AttributeNotNeeded(
-												$elm$core$Maybe$Just(
-													$author$project$Main$ShowWhen(
-														A2(
-															$author$project$Main$Field,
-															'',
-															$author$project$Main$Equals('')))));
-										case 'FieldContains':
-											return $author$project$Main$AttributeNotNeeded(
-												$elm$core$Maybe$Just(
-													$author$project$Main$ShowWhen(
-														A2(
-															$author$project$Main$Field,
-															'',
-															$author$project$Main$Contains('')))));
-										case 'FieldEndsWith':
-											return $author$project$Main$AttributeNotNeeded(
-												$elm$core$Maybe$Just(
-													$author$project$Main$ShowWhen(
-														A2(
-															$author$project$Main$Field,
-															'',
-															$author$project$Main$EndsWith('')))));
-										default:
-											return formField.visibilityRule;
-									}
-								}()
-							});
+						return formField;
 					default:
 						var rule = _v11.a;
 						return _Utils_update(
 							formField,
 							{
 								visibilityRule: function () {
-									switch (str) {
-										case 'Always':
-											return $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing);
-										case 'FieldEquals':
-											return $author$project$Main$AttributeGiven(
-												$author$project$Main$ShowWhen(
-													A2(
-														$author$project$Main$Field,
-														'',
-														$author$project$Main$Equals(''))));
-										case 'FieldContains':
-											return $author$project$Main$AttributeGiven(
-												$author$project$Main$ShowWhen(
-													A2(
-														$author$project$Main$Field,
-														'',
-														$author$project$Main$Contains(''))));
-										case 'FieldEndsWith':
-											return $author$project$Main$AttributeGiven(
-												$author$project$Main$ShowWhen(
-													A2(
-														$author$project$Main$Field,
-														'',
-														$author$project$Main$EndsWith(''))));
-										default:
-											return $author$project$Main$AttributeGiven(rule);
+									_v12$2:
+									while (true) {
+										if (rule.$ === 'ShowWhen') {
+											if (rule.a.$ === 'Field') {
+												var _v13 = rule.a;
+												var fieldName = _v13.a;
+												var comparison = _v13.b;
+												return $author$project$Main$AttributeGiven(
+													$author$project$Main$ShowWhen(
+														A2($author$project$Main$Field, newFieldName, comparison)));
+											} else {
+												break _v12$2;
+											}
+										} else {
+											if (rule.a.$ === 'Field') {
+												var _v14 = rule.a;
+												var fieldName = _v14.a;
+												var comparison = _v14.b;
+												return $author$project$Main$AttributeGiven(
+													$author$project$Main$HideWhen(
+														A2($author$project$Main$Field, newFieldName, comparison)));
+											} else {
+												break _v12$2;
+											}
+										}
 									}
+									return formField.visibilityRule;
 								}()
 							});
 				}
-			case 'OnVisibilityConditionFieldInput':
-				var newFieldName = msg.a;
+			case 'OnVisibilityConditionValueInput':
+				var newValue = msg.a;
 				var _v15 = formField.visibilityRule;
 				switch (_v15.$) {
 					case 'AttributeNotNeeded':
@@ -12870,56 +12886,32 @@ var $author$project$Main$updateFormField = F5(
 							formField,
 							{
 								visibilityRule: function () {
-									_v16$2:
-									while (true) {
-										if (rule.$ === 'ShowWhen') {
-											if (rule.a.$ === 'Field') {
-												var _v17 = rule.a;
-												var fieldName = _v17.a;
-												var comparison = _v17.b;
-												return $author$project$Main$AttributeGiven(
-													$author$project$Main$ShowWhen(
-														A2($author$project$Main$Field, newFieldName, comparison)));
-											} else {
-												break _v16$2;
-											}
-										} else {
-											if (rule.a.$ === 'Field') {
-												var _v18 = rule.a;
-												var fieldName = _v18.a;
-												var comparison = _v18.b;
-												return $author$project$Main$AttributeGiven(
-													$author$project$Main$HideWhen(
-														A2($author$project$Main$Field, newFieldName, comparison)));
-											} else {
-												break _v16$2;
-											}
-										}
-									}
-									return formField.visibilityRule;
-								}()
-							});
-				}
-			case 'OnVisibilityConditionValueInput':
-				var newValue = msg.a;
-				var _v19 = formField.visibilityRule;
-				switch (_v19.$) {
-					case 'AttributeNotNeeded':
-						return formField;
-					case 'AttributeInvalid':
-						return formField;
-					default:
-						var rule = _v19.a;
-						return _Utils_update(
-							formField,
-							{
-								visibilityRule: function () {
-									_v20$6:
+									_v16$6:
 									while (true) {
 										if (rule.$ === 'ShowWhen') {
 											if (rule.a.$ === 'Field') {
 												switch (rule.a.b.$) {
 													case 'Equals':
+														var _v17 = rule.a;
+														var fieldName = _v17.a;
+														var value = _v17.b.a;
+														return $author$project$Main$AttributeGiven(
+															$author$project$Main$ShowWhen(
+																A2(
+																	$author$project$Main$Field,
+																	fieldName,
+																	$author$project$Main$Equals(newValue))));
+													case 'Contains':
+														var _v19 = rule.a;
+														var fieldName = _v19.a;
+														var value = _v19.b.a;
+														return $author$project$Main$AttributeGiven(
+															$author$project$Main$ShowWhen(
+																A2(
+																	$author$project$Main$Field,
+																	fieldName,
+																	$author$project$Main$Contains(newValue))));
+													default:
 														var _v21 = rule.a;
 														var fieldName = _v21.a;
 														var value = _v21.b.a;
@@ -12928,35 +12920,35 @@ var $author$project$Main$updateFormField = F5(
 																A2(
 																	$author$project$Main$Field,
 																	fieldName,
-																	$author$project$Main$Equals(newValue))));
-													case 'Contains':
-														var _v23 = rule.a;
-														var fieldName = _v23.a;
-														var value = _v23.b.a;
-														return $author$project$Main$AttributeGiven(
-															$author$project$Main$ShowWhen(
-																A2(
-																	$author$project$Main$Field,
-																	fieldName,
-																	$author$project$Main$Contains(newValue))));
-													default:
-														var _v25 = rule.a;
-														var fieldName = _v25.a;
-														var value = _v25.b.a;
-														return $author$project$Main$AttributeGiven(
-															$author$project$Main$ShowWhen(
-																A2(
-																	$author$project$Main$Field,
-																	fieldName,
 																	$author$project$Main$EndsWith(newValue))));
 												}
 											} else {
-												break _v20$6;
+												break _v16$6;
 											}
 										} else {
 											if (rule.a.$ === 'Field') {
 												switch (rule.a.b.$) {
 													case 'Equals':
+														var _v18 = rule.a;
+														var fieldName = _v18.a;
+														var value = _v18.b.a;
+														return $author$project$Main$AttributeGiven(
+															$author$project$Main$HideWhen(
+																A2(
+																	$author$project$Main$Field,
+																	fieldName,
+																	$author$project$Main$Equals(newValue))));
+													case 'Contains':
+														var _v20 = rule.a;
+														var fieldName = _v20.a;
+														var value = _v20.b.a;
+														return $author$project$Main$AttributeGiven(
+															$author$project$Main$HideWhen(
+																A2(
+																	$author$project$Main$Field,
+																	fieldName,
+																	$author$project$Main$Contains(newValue))));
+													default:
 														var _v22 = rule.a;
 														var fieldName = _v22.a;
 														var value = _v22.b.a;
@@ -12965,30 +12957,10 @@ var $author$project$Main$updateFormField = F5(
 																A2(
 																	$author$project$Main$Field,
 																	fieldName,
-																	$author$project$Main$Equals(newValue))));
-													case 'Contains':
-														var _v24 = rule.a;
-														var fieldName = _v24.a;
-														var value = _v24.b.a;
-														return $author$project$Main$AttributeGiven(
-															$author$project$Main$HideWhen(
-																A2(
-																	$author$project$Main$Field,
-																	fieldName,
-																	$author$project$Main$Contains(newValue))));
-													default:
-														var _v26 = rule.a;
-														var fieldName = _v26.a;
-														var value = _v26.b.a;
-														return $author$project$Main$AttributeGiven(
-															$author$project$Main$HideWhen(
-																A2(
-																	$author$project$Main$Field,
-																	fieldName,
 																	$author$project$Main$EndsWith(newValue))));
 												}
 											} else {
-												break _v20$6;
+												break _v16$6;
 											}
 										}
 									}
@@ -13003,10 +12975,10 @@ var $author$project$Main$updateFormField = F5(
 					{
 						visibilityRule: function () {
 							if (bool) {
-								var _v27 = formField.visibilityRule;
-								if (_v27.$ === 'AttributeNotNeeded') {
-									if (_v27.a.$ === 'Nothing') {
-										var _v28 = _v27.a;
+								var _v23 = formField.visibilityRule;
+								if (_v23.$ === 'AttributeNotNeeded') {
+									if (_v23.a.$ === 'Nothing') {
+										var _v24 = _v23.a;
 										var previousLabel = A2($author$project$Main$getPreviousFieldLabel, index, formFields);
 										return $author$project$Main$AttributeGiven(
 											$author$project$Main$ShowWhen(
@@ -13015,7 +12987,7 @@ var $author$project$Main$updateFormField = F5(
 													previousLabel,
 													$author$project$Main$Equals(''))));
 									} else {
-										var rule = _v27.a.a;
+										var rule = _v23.a.a;
 										return $author$project$Main$AttributeGiven(rule);
 									}
 								} else {
