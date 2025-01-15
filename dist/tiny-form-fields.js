@@ -5301,14 +5301,17 @@ var $author$project$Main$Not = function (a) {
 var $author$project$Main$Or = function (a) {
 	return {$: 2, a: a};
 };
-var $author$project$Main$Contains = function (a) {
-	return {$: 1, a: a};
+var $author$project$Main$ChoiceIncludes = function (a) {
+	return {$: 2, a: a};
 };
 var $author$project$Main$EndsWith = function (a) {
-	return {$: 2, a: a};
+	return {$: 3, a: a};
 };
 var $author$project$Main$Equals = function (a) {
 	return {$: 0, a: a};
+};
+var $author$project$Main$StringContains = function (a) {
+	return {$: 1, a: a};
 };
 var $elm$json$Json$Decode$fail = _Json_fail;
 var $author$project$Main$decodeComparison = A2(
@@ -5320,11 +5323,16 @@ var $author$project$Main$decodeComparison = A2(
 					$elm_community$json_extra$Json$Decode$Extra$andMap,
 					A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$string),
 					$elm$json$Json$Decode$succeed($author$project$Main$Equals));
-			case 'Contains':
+			case 'StringContains':
 				return A2(
 					$elm_community$json_extra$Json$Decode$Extra$andMap,
 					A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$string),
-					$elm$json$Json$Decode$succeed($author$project$Main$Contains));
+					$elm$json$Json$Decode$succeed($author$project$Main$StringContains));
+			case 'ChoiceIncludes':
+				return A2(
+					$elm_community$json_extra$Json$Decode$Extra$andMap,
+					A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$string),
+					$elm$json$Json$Decode$succeed($author$project$Main$ChoiceIncludes));
 			case 'EndsWith':
 				return A2(
 					$elm_community$json_extra$Json$Decode$Extra$andMap,
@@ -6404,7 +6412,19 @@ var $author$project$Main$encodeComparison = function (comparison) {
 					[
 						_Utils_Tuple2(
 						'type',
-						$elm$json$Json$Encode$string('Contains')),
+						$elm$json$Json$Encode$string('StringContains')),
+						_Utils_Tuple2(
+						'value',
+						$elm$json$Json$Encode$string(value))
+					]));
+		case 2:
+			var value = comparison.a;
+			return $elm$json$Json$Encode$object(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'type',
+						$elm$json$Json$Encode$string('ChoiceIncludes')),
 						_Utils_Tuple2(
 						'value',
 						$elm$json$Json$Encode$string(value))
@@ -7530,21 +7550,42 @@ var $author$project$Main$updateComparison = F2(
 					case 1:
 						var str = comparison.a;
 						return $author$project$Main$Equals(str);
+					case 2:
+						var str = comparison.a;
+						return $author$project$Main$Equals(str);
 					default:
 						var str = comparison.a;
 						return $author$project$Main$Equals(str);
 				}
-			case 'Contains':
+			case 'StringContains':
 				switch (comparison.$) {
 					case 0:
 						var str = comparison.a;
-						return $author$project$Main$Contains(str);
+						return $author$project$Main$StringContains(str);
 					case 1:
 						var str = comparison.a;
-						return $author$project$Main$Contains(str);
+						return $author$project$Main$StringContains(str);
+					case 2:
+						var str = comparison.a;
+						return $author$project$Main$StringContains(str);
 					default:
 						var str = comparison.a;
-						return $author$project$Main$Contains(str);
+						return $author$project$Main$StringContains(str);
+				}
+			case 'ChoiceIncludes':
+				switch (comparison.$) {
+					case 0:
+						var str = comparison.a;
+						return $author$project$Main$ChoiceIncludes(str);
+					case 1:
+						var str = comparison.a;
+						return $author$project$Main$ChoiceIncludes(str);
+					case 2:
+						var str = comparison.a;
+						return $author$project$Main$ChoiceIncludes(str);
+					default:
+						var str = comparison.a;
+						return $author$project$Main$ChoiceIncludes(str);
 				}
 			case 'EndsWith':
 				switch (comparison.$) {
@@ -7552,6 +7593,9 @@ var $author$project$Main$updateComparison = F2(
 						var str = comparison.a;
 						return $author$project$Main$EndsWith(str);
 					case 1:
+						var str = comparison.a;
+						return $author$project$Main$EndsWith(str);
+					case 2:
 						var str = comparison.a;
 						return $author$project$Main$EndsWith(str);
 					default:
@@ -7961,7 +8005,7 @@ var $author$project$Main$updateFormField = F5(
 							formField,
 							{
 								l: function () {
-									_v16$6:
+									_v16$8:
 									while (true) {
 										if (!rule.$) {
 											if (!rule.a.$) {
@@ -7983,10 +8027,19 @@ var $author$project$Main$updateFormField = F5(
 																A2(
 																	$author$project$Main$Field,
 																	fieldName,
-																	$author$project$Main$Contains(newValue))));
-													default:
+																	$author$project$Main$StringContains(newValue))));
+													case 2:
 														var _v21 = rule.a;
 														var fieldName = _v21.a;
+														return $author$project$Main$AttributeGiven(
+															$author$project$Main$ShowWhen(
+																A2(
+																	$author$project$Main$Field,
+																	fieldName,
+																	$author$project$Main$ChoiceIncludes(newValue))));
+													default:
+														var _v23 = rule.a;
+														var fieldName = _v23.a;
 														return $author$project$Main$AttributeGiven(
 															$author$project$Main$ShowWhen(
 																A2(
@@ -7995,7 +8048,7 @@ var $author$project$Main$updateFormField = F5(
 																	$author$project$Main$EndsWith(newValue))));
 												}
 											} else {
-												break _v16$6;
+												break _v16$8;
 											}
 										} else {
 											if (!rule.a.$) {
@@ -8017,10 +8070,19 @@ var $author$project$Main$updateFormField = F5(
 																A2(
 																	$author$project$Main$Field,
 																	fieldName,
-																	$author$project$Main$Contains(newValue))));
-													default:
+																	$author$project$Main$StringContains(newValue))));
+													case 2:
 														var _v22 = rule.a;
 														var fieldName = _v22.a;
+														return $author$project$Main$AttributeGiven(
+															$author$project$Main$HideWhen(
+																A2(
+																	$author$project$Main$Field,
+																	fieldName,
+																	$author$project$Main$ChoiceIncludes(newValue))));
+													default:
+														var _v24 = rule.a;
+														var fieldName = _v24.a;
 														return $author$project$Main$AttributeGiven(
 															$author$project$Main$HideWhen(
 																A2(
@@ -8029,7 +8091,7 @@ var $author$project$Main$updateFormField = F5(
 																	$author$project$Main$EndsWith(newValue))));
 												}
 											} else {
-												break _v16$6;
+												break _v16$8;
 											}
 										}
 									}
@@ -8044,10 +8106,10 @@ var $author$project$Main$updateFormField = F5(
 					{
 						l: function () {
 							if (bool) {
-								var _v23 = formField.l;
-								if (!_v23.$) {
-									if (_v23.a.$ === 1) {
-										var _v24 = _v23.a;
+								var _v25 = formField.l;
+								if (!_v25.$) {
+									if (_v25.a.$ === 1) {
+										var _v26 = _v25.a;
 										var previousLabel = A2($author$project$Main$getPreviousFieldLabel, index, formFields);
 										return $author$project$Main$AttributeGiven(
 											$author$project$Main$ShowWhen(
@@ -8056,7 +8118,7 @@ var $author$project$Main$updateFormField = F5(
 													previousLabel,
 													$author$project$Main$Equals(''))));
 									} else {
-										var rule = _v23.a.a;
+										var rule = _v25.a.a;
 										return $author$project$Main$AttributeGiven(rule);
 									}
 								} else {
@@ -9942,8 +10004,14 @@ var $author$project$Main$isComparingWith = F2(
 				} else {
 					return false;
 				}
-			default:
+			case 2:
 				if ((!maybeComparison.$) && (maybeComparison.a.$ === 2)) {
+					return true;
+				} else {
+					return false;
+				}
+			default:
+				if ((!maybeComparison.$) && (maybeComparison.a.$ === 3)) {
 					return true;
 				} else {
 					return false;
@@ -10156,15 +10224,32 @@ var $author$project$Main$visibilityRulesSection = F3(
 																			$elm$html$Html$Attributes$selected(
 																			A2(
 																				$author$project$Main$isComparingWith,
-																				$author$project$Main$Contains('something'),
+																				$author$project$Main$StringContains('something'),
 																				$author$project$Main$comparisonOf(
 																					$author$project$Main$visibilityRuleCondition(
 																						$author$project$Main$visibilityRuleOf(formField))))),
-																			$elm$html$Html$Attributes$value('Contains')
+																			$elm$html$Html$Attributes$value('StringContains')
 																		]),
 																	_List_fromArray(
 																		[
 																			$elm$html$Html$text('contains')
+																		])),
+																	A2(
+																	$elm$html$Html$option,
+																	_List_fromArray(
+																		[
+																			$elm$html$Html$Attributes$selected(
+																			A2(
+																				$author$project$Main$isComparingWith,
+																				$author$project$Main$ChoiceIncludes('something'),
+																				$author$project$Main$comparisonOf(
+																					$author$project$Main$visibilityRuleCondition(
+																						$author$project$Main$visibilityRuleOf(formField))))),
+																			$elm$html$Html$Attributes$value('ChoiceIncludes')
+																		]),
+																	_List_fromArray(
+																		[
+																			$elm$html$Html$text('choice includes')
 																		])),
 																	A2(
 																	$elm$html$Html$option,
@@ -10198,6 +10283,9 @@ var $author$project$Main$visibilityRulesSection = F3(
 																		var v = comparison.a;
 																		return v;
 																	case 1:
+																		var v = comparison.a;
+																		return v;
+																	case 2:
 																		var v = comparison.a;
 																		return v;
 																	default:
@@ -10710,6 +10798,17 @@ var $author$project$Main$evaluateCondition = F2(
 								_List_fromArray(
 									[value])));
 					case 1:
+						var value = comparison.a;
+						return A2(
+							$elm$core$List$any,
+							function (fieldValue) {
+								return A2($elm$core$String$contains, value, fieldValue);
+							},
+							A2(
+								$elm$core$Maybe$withDefault,
+								_List_Nil,
+								A2($elm$core$Dict$get, fieldName, trackedFormValues)));
+					case 2:
 						var value = comparison.a;
 						return A2(
 							$elm$core$List$member,

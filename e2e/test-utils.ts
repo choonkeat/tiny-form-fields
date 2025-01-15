@@ -10,7 +10,7 @@ export interface FieldEdit {
         type: 'Show when' | 'Hide when';
         field: string;
         comparison: {
-            type: 'equals' | 'contains' | 'endsWith';
+            type: 'equals' | 'contains' | 'choice includes' | 'endsWith';
             value: string;
         };
     };

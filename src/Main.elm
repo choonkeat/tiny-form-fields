@@ -150,7 +150,8 @@ requiredData presence =
 
 type Comparison
     = Equals String
-    | Contains String
+    | StringContains String
+    | ChoiceIncludes String
     | EndsWith String
 
 
@@ -1025,11 +1026,17 @@ updateFormField msg string index formFields formField =
                                 HideWhen (Field fieldName (Equals _)) ->
                                     AttributeGiven (HideWhen (Field fieldName (Equals newValue)))
 
-                                ShowWhen (Field fieldName (Contains _)) ->
-                                    AttributeGiven (ShowWhen (Field fieldName (Contains newValue)))
+                                ShowWhen (Field fieldName (StringContains _)) ->
+                                    AttributeGiven (ShowWhen (Field fieldName (StringContains newValue)))
 
-                                HideWhen (Field fieldName (Contains _)) ->
-                                    AttributeGiven (HideWhen (Field fieldName (Contains newValue)))
+                                HideWhen (Field fieldName (StringContains _)) ->
+                                    AttributeGiven (HideWhen (Field fieldName (StringContains newValue)))
+
+                                ShowWhen (Field fieldName (ChoiceIncludes _)) ->
+                                    AttributeGiven (ShowWhen (Field fieldName (ChoiceIncludes newValue)))
+
+                                HideWhen (Field fieldName (ChoiceIncludes _)) ->
+                                    AttributeGiven (HideWhen (Field fieldName (ChoiceIncludes newValue)))
 
                                 ShowWhen (Field fieldName (EndsWith _)) ->
                                     AttributeGiven (ShowWhen (Field fieldName (EndsWith newValue)))
@@ -1902,10 +1909,16 @@ visibilityRulesSection index formFields formField =
                                                     [ text "equals" ]
                                                 , option
                                                     [ selected
-                                                        (isComparingWith (Contains "something") (comparisonOf (visibilityRuleCondition (visibilityRuleOf formField))))
-                                                    , value "Contains"
+                                                        (isComparingWith (StringContains "something") (comparisonOf (visibilityRuleCondition (visibilityRuleOf formField))))
+                                                    , value "StringContains"
                                                     ]
                                                     [ text "contains" ]
+                                                , option
+                                                    [ selected
+                                                        (isComparingWith (ChoiceIncludes "something") (comparisonOf (visibilityRuleCondition (visibilityRuleOf formField))))
+                                                    , value "ChoiceIncludes"
+                                                    ]
+                                                    [ text "choice includes" ]
                                                 , option
                                                     [ selected
                                                         (isComparingWith (EndsWith "something") (comparisonOf (visibilityRuleCondition (visibilityRuleOf formField))))
@@ -1922,7 +1935,10 @@ visibilityRulesSection index formFields formField =
                                                     Equals v ->
                                                         v
 
-                                                    Contains v ->
+                                                    StringContains v ->
+                                                        v
+
+                                                    ChoiceIncludes v ->
                                                         v
 
                                                     EndsWith v ->
@@ -2714,9 +2730,15 @@ encodeComparison comparison =
                 , ( "value", Json.Encode.string value )
                 ]
 
-        Contains value ->
+        StringContains value ->
             Json.Encode.object
-                [ ( "type", Json.Encode.string "Contains" )
+                [ ( "type", Json.Encode.string "StringContains" )
+                , ( "value", Json.Encode.string value )
+                ]
+
+        ChoiceIncludes value ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "ChoiceIncludes" )
                 , ( "value", Json.Encode.string value )
                 ]
 
@@ -3159,8 +3181,12 @@ decodeComparison =
                         Json.Decode.succeed Equals
                             |> andMap (Json.Decode.field "value" Json.Decode.string)
 
-                    "Contains" ->
-                        Json.Decode.succeed Contains
+                    "StringContains" ->
+                        Json.Decode.succeed StringContains
+                            |> andMap (Json.Decode.field "value" Json.Decode.string)
+
+                    "ChoiceIncludes" ->
+                        Json.Decode.succeed ChoiceIncludes
                             |> andMap (Json.Decode.field "value" Json.Decode.string)
 
                     "EndsWith" ->
@@ -3183,7 +3209,15 @@ evaluateCondition trackedFormValues condition =
                 Equals value ->
                     Dict.get fieldName trackedFormValues == Just [ value ]
 
-                Contains value ->
+                StringContains value ->
+                    Dict.get fieldName trackedFormValues
+                        |> Maybe.withDefault []
+                        |> List.any
+                            (\fieldValue ->
+                                String.contains value fieldValue
+                            )
+
+                ChoiceIncludes value ->
                     Dict.get fieldName trackedFormValues
                         |> Maybe.withDefault []
                         |> List.member value
@@ -3246,9 +3280,17 @@ isComparingWith expected maybeComparison =
                 _ ->
                     False
 
-        Contains _ ->
+        StringContains _ ->
             case maybeComparison of
-                Just (Contains _) ->
+                Just (StringContains _) ->
+                    True
+
+                _ ->
+                    False
+
+        ChoiceIncludes _ ->
+            case maybeComparison of
+                Just (ChoiceIncludes _) ->
                     True
 
                 _ ->
@@ -3291,29 +3333,52 @@ updateComparison comparisonType comparison =
                 Equals str ->
                     Equals str
 
-                Contains str ->
+                StringContains str ->
+                    Equals str
+
+                ChoiceIncludes str ->
                     Equals str
 
                 EndsWith str ->
                     Equals str
 
-        "Contains" ->
+        "StringContains" ->
             case comparison of
                 Equals str ->
-                    Contains str
+                    StringContains str
 
-                Contains str ->
-                    Contains str
+                StringContains str ->
+                    StringContains str
+
+                ChoiceIncludes str ->
+                    StringContains str
 
                 EndsWith str ->
-                    Contains str
+                    StringContains str
+
+        "ChoiceIncludes" ->
+            case comparison of
+                Equals str ->
+                    ChoiceIncludes str
+
+                StringContains str ->
+                    ChoiceIncludes str
+
+                ChoiceIncludes str ->
+                    ChoiceIncludes str
+
+                EndsWith str ->
+                    ChoiceIncludes str
 
         "EndsWith" ->
             case comparison of
                 Equals str ->
                     EndsWith str
 
-                Contains str ->
+                StringContains str ->
+                    EndsWith str
+
+                ChoiceIncludes str ->
                     EndsWith str
 
                 EndsWith str ->
