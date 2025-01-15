@@ -12460,25 +12460,40 @@ var $author$project$Main$updateComparison = F2(
 	function (comparisonType, comparison) {
 		switch (comparisonType) {
 			case 'Equals':
-				if (comparison.$ === 'Equals') {
-					var str = comparison.a;
-					return $author$project$Main$Equals(str);
-				} else {
-					return $author$project$Main$Equals('');
+				switch (comparison.$) {
+					case 'Equals':
+						var str = comparison.a;
+						return $author$project$Main$Equals(str);
+					case 'Contains':
+						var str = comparison.a;
+						return $author$project$Main$Equals(str);
+					default:
+						var str = comparison.a;
+						return $author$project$Main$Equals(str);
 				}
 			case 'Contains':
-				if (comparison.$ === 'Contains') {
-					var str = comparison.a;
-					return $author$project$Main$Contains(str);
-				} else {
-					return $author$project$Main$Contains('');
+				switch (comparison.$) {
+					case 'Equals':
+						var str = comparison.a;
+						return $author$project$Main$Contains(str);
+					case 'Contains':
+						var str = comparison.a;
+						return $author$project$Main$Contains(str);
+					default:
+						var str = comparison.a;
+						return $author$project$Main$Contains(str);
 				}
 			case 'EndsWith':
-				if (comparison.$ === 'EndsWith') {
-					var str = comparison.a;
-					return $author$project$Main$EndsWith(str);
-				} else {
-					return $author$project$Main$EndsWith('');
+				switch (comparison.$) {
+					case 'Equals':
+						var str = comparison.a;
+						return $author$project$Main$EndsWith(str);
+					case 'Contains':
+						var str = comparison.a;
+						return $author$project$Main$EndsWith(str);
+					default:
+						var str = comparison.a;
+						return $author$project$Main$EndsWith(str);
 				}
 			default:
 				return comparison;
@@ -14983,7 +14998,7 @@ var $author$project$Main$visibilityRulesSection = F3(
 																				$author$project$Main$comparisonOf(
 																					$author$project$Main$visibilityRuleCondition(
 																						$author$project$Main$visibilityRuleOf(formField))))),
-																			$elm$html$Html$Attributes$value('FieldEquals')
+																			$elm$html$Html$Attributes$value('Equals')
 																		]),
 																	_List_fromArray(
 																		[
@@ -15000,7 +15015,7 @@ var $author$project$Main$visibilityRulesSection = F3(
 																				$author$project$Main$comparisonOf(
 																					$author$project$Main$visibilityRuleCondition(
 																						$author$project$Main$visibilityRuleOf(formField))))),
-																			$elm$html$Html$Attributes$value('FieldContains')
+																			$elm$html$Html$Attributes$value('Contains')
 																		]),
 																	_List_fromArray(
 																		[
@@ -15017,7 +15032,7 @@ var $author$project$Main$visibilityRulesSection = F3(
 																				$author$project$Main$comparisonOf(
 																					$author$project$Main$visibilityRuleCondition(
 																						$author$project$Main$visibilityRuleOf(formField))))),
-																			$elm$html$Html$Attributes$value('FieldEndsWith')
+																			$elm$html$Html$Attributes$value('EndsWith')
 																		]),
 																	_List_fromArray(
 																		[
@@ -15528,6 +15543,7 @@ var $elm$core$List$all = F2(
 			list);
 	});
 var $elm$core$String$endsWith = _String_endsWith;
+var $elm$core$Debug$log = _Debug_log;
 var $author$project$Main$evaluateCondition = F2(
 	function (trackedFormValues, condition) {
 		switch (condition.$) {
@@ -15536,23 +15552,40 @@ var $author$project$Main$evaluateCondition = F2(
 			case 'Field':
 				var fieldName = condition.a;
 				var comparison = condition.b;
-				var _v1 = A2($elm$core$Dict$get, fieldName, trackedFormValues);
-				if (((_v1.$ === 'Just') && _v1.a.b) && (!_v1.a.b.b)) {
-					var _v2 = _v1.a;
-					var fieldValue = _v2.a;
-					switch (comparison.$) {
-						case 'Equals':
-							var value = comparison.a;
-							return _Utils_eq(fieldValue, value);
-						case 'Contains':
-							var value = comparison.a;
-							return A2($elm$core$String$contains, value, fieldValue);
-						default:
-							var value = comparison.a;
-							return A2($elm$core$String$endsWith, value, fieldValue);
-					}
-				} else {
-					return false;
+				var _v1 = A2(
+					$elm$core$Debug$log,
+					'comparing',
+					_Utils_Tuple2(
+						comparison,
+						A2($elm$core$Dict$get, fieldName, trackedFormValues)));
+				switch (comparison.$) {
+					case 'Equals':
+						var value = comparison.a;
+						return _Utils_eq(
+							A2($elm$core$Dict$get, fieldName, trackedFormValues),
+							$elm$core$Maybe$Just(
+								_List_fromArray(
+									[value])));
+					case 'Contains':
+						var value = comparison.a;
+						return A2(
+							$elm$core$List$member,
+							value,
+							A2(
+								$elm$core$Maybe$withDefault,
+								_List_Nil,
+								A2($elm$core$Dict$get, fieldName, trackedFormValues)));
+					default:
+						var value = comparison.a;
+						return A2(
+							$elm$core$List$any,
+							function (fieldValue) {
+								return A2($elm$core$String$endsWith, value, fieldValue);
+							},
+							A2(
+								$elm$core$Maybe$withDefault,
+								_List_Nil,
+								A2($elm$core$Dict$get, fieldName, trackedFormValues)));
 				}
 			case 'And':
 				var conditions = condition.a;

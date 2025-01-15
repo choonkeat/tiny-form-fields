@@ -10696,23 +10696,34 @@ var $author$project$Main$evaluateCondition = F2(
 			case 0:
 				var fieldName = condition.a;
 				var comparison = condition.b;
-				var _v1 = A2($elm$core$Dict$get, fieldName, trackedFormValues);
-				if (((!_v1.$) && _v1.a.b) && (!_v1.a.b.b)) {
-					var _v2 = _v1.a;
-					var fieldValue = _v2.a;
-					switch (comparison.$) {
-						case 0:
-							var value = comparison.a;
-							return _Utils_eq(fieldValue, value);
-						case 1:
-							var value = comparison.a;
-							return A2($elm$core$String$contains, value, fieldValue);
-						default:
-							var value = comparison.a;
-							return A2($elm$core$String$endsWith, value, fieldValue);
-					}
-				} else {
-					return false;
+				switch (comparison.$) {
+					case 0:
+						var value = comparison.a;
+						return _Utils_eq(
+							A2($elm$core$Dict$get, fieldName, trackedFormValues),
+							$elm$core$Maybe$Just(
+								_List_fromArray(
+									[value])));
+					case 1:
+						var value = comparison.a;
+						return A2(
+							$elm$core$List$member,
+							value,
+							A2(
+								$elm$core$Maybe$withDefault,
+								_List_Nil,
+								A2($elm$core$Dict$get, fieldName, trackedFormValues)));
+					default:
+						var value = comparison.a;
+						return A2(
+							$elm$core$List$any,
+							function (fieldValue) {
+								return A2($elm$core$String$endsWith, value, fieldValue);
+							},
+							A2(
+								$elm$core$Maybe$withDefault,
+								_List_Nil,
+								A2($elm$core$Dict$get, fieldName, trackedFormValues)));
 				}
 			case 1:
 				var conditions = condition.a;

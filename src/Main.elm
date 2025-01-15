@@ -1901,19 +1901,19 @@ visibilityRulesSection index formFields formField =
                                                 [ option
                                                     [ selected
                                                         (isComparingWith (Equals "something") (comparisonOf (visibilityRuleCondition (visibilityRuleOf formField))))
-                                                    , value "FieldEquals"
+                                                    , value "Equals"
                                                     ]
                                                     [ text "equals" ]
                                                 , option
                                                     [ selected
                                                         (isComparingWith (Contains "something") (comparisonOf (visibilityRuleCondition (visibilityRuleOf formField))))
-                                                    , value "FieldContains"
+                                                    , value "Contains"
                                                     ]
                                                     [ text "contains" ]
                                                 , option
                                                     [ selected
                                                         (isComparingWith (EndsWith "something") (comparisonOf (visibilityRuleCondition (visibilityRuleOf formField))))
-                                                    , value "FieldEndsWith"
+                                                    , value "EndsWith"
                                                     ]
                                                     [ text "ends with" ]
                                                 ]
@@ -3183,20 +3183,26 @@ evaluateCondition trackedFormValues condition =
             True
 
         Field fieldName comparison ->
-            case Dict.get fieldName trackedFormValues of
-                Just [ fieldValue ] ->
-                    case comparison of
-                        Equals value ->
-                            fieldValue == value
+            let
+                _ =
+                    Debug.log "comparing" ( comparison, Dict.get fieldName trackedFormValues )
+            in
+            case comparison of
+                Equals value ->
+                    Dict.get fieldName trackedFormValues == Just [ value ]
 
-                        Contains value ->
-                            String.contains value fieldValue
+                Contains value ->
+                    Dict.get fieldName trackedFormValues
+                        |> Maybe.withDefault []
+                        |> List.member value
 
-                        EndsWith value ->
-                            String.endsWith value fieldValue
-
-                _ ->
-                    False
+                EndsWith value ->
+                    Dict.get fieldName trackedFormValues
+                        |> Maybe.withDefault []
+                        |> List.any
+                            (\fieldValue ->
+                                String.endsWith value fieldValue
+                            )
 
         And conditions ->
             List.all (evaluateCondition trackedFormValues) conditions
@@ -3293,24 +3299,33 @@ updateComparison comparisonType comparison =
                 Equals str ->
                     Equals str
 
-                _ ->
-                    Equals ""
+                Contains str ->
+                    Equals str
+
+                EndsWith str ->
+                    Equals str
 
         "Contains" ->
             case comparison of
+                Equals str ->
+                    Contains str
+
                 Contains str ->
                     Contains str
 
-                _ ->
-                    Contains ""
+                EndsWith str ->
+                    Contains str
 
         "EndsWith" ->
             case comparison of
-                EndsWith str ->
+                Equals str ->
                     EndsWith str
 
-                _ ->
-                    EndsWith ""
+                Contains str ->
+                    EndsWith str
+
+                EndsWith str ->
+                    EndsWith str
 
         _ ->
             comparison
