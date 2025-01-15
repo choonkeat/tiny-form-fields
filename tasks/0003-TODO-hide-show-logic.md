@@ -14,12 +14,8 @@ Add support for conditional visibility where each field can specify when it shou
         - Add `Condition` type for field value comparisons:
           ```elm
           type Condition
-              = FieldEquals String String      -- (fieldName, value)
-              | FieldContains String String    -- (fieldName, value)
-              | And (List Condition)           -- explicit AND of conditions
-              | Or (List Condition)            -- explicit OR of conditions
-              | Not Condition                  -- negate a condition
-              | Always                         -- always true condition
+              = Field String Comparison    -- (fieldName, comparison)
+              | Always                     -- always true condition
           ```
         - Add `VisibilityRule` constructors:
           ```elm
@@ -30,35 +26,35 @@ Add support for conditional visibility where each field can specify when it shou
         - Add `visibilityRule` field of type `VisibilityRule` to field model
         - Update decoder/encoder
     - [x] Iteration 2: Just the settings section presence
-        - Add container div for "Visibility Rules" section
+        - Add container div for "Field logic" section
         - Add section header text
         - No content yet
     - [x] Iteration 3: Just display current rule
-        - Add text to show current rule ("Always shown")
-        - No editing capability yet
-- [ ] Allow selecting which other fields' values control this field's visibility
-    - [ ] Iteration 1: Just the model
-        - Add `FieldDependency` type:
+        - Add dropdown to select field
+        - Add dropdown to select comparison type
+        - Add text input for comparison value
+        - No styling yet
+- [x] Allow selecting which other fields' values control this field's visibility
+    - [x] Iteration 1: Just the model
+        - Add `Comparison` type:
           ```elm
-          type alias FieldDependency =
-              { fieldIndex : Int
-              , operator : Operator
-              }
+          type Comparison
+              = Equals String      -- exact match
+              | Contains String    -- substring match
           ```
-        - Add `dependencies` field to `VisibilityRule` type
         - Update decoder/encoder
         - Nothing else
-    - [ ] Iteration 2: Just the UI presence
-        - Add "Add Dependency" button below current rule text
-        - Add placeholder dropdown for field selection (disabled)
+    - [x] Iteration 2: Just the UI presence
+        - Add dropdowns for field selection and comparison type
+        - Add text input for comparison value
         - No event handlers yet
         - Nothing else
-    - [ ] Iteration 3: Just the field selection
+    - [x] Iteration 3: Just the field selection
         - Populate field dropdown with previous fields only
         - Wire up field selection event
         - Update model when field is selected
         - Nothing else
-    - [ ] Iteration 4: Just the validation
+    - [x] Iteration 4: Just the validation
         - Prevent selecting fields that come after current field
         - Show error message for invalid selections
         - Nothing else
@@ -75,6 +71,10 @@ Add support for conditional visibility where each field can specify when it shou
 
 ### Runtime Behavior
 - [x] Implement real-time visibility updates in CollectData mode
+    - [x] Support Dropdown field type
+    - [x] Support Radio buttons field type  
+    - [x] Support Checkboxes field type
+    - [x] Support Single-line free text with contains comparison
 - [ ] Handle dependent fields (fields that depend on hidden fields)
 - [ ] Skip validation for hidden required fields during form submission
 - [ ] Preserve values of hidden fields when they become visible again
