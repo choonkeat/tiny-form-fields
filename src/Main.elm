@@ -1856,22 +1856,24 @@ visibilityRulesSection index formFields formField =
                 case result of
                     Ok _ ->
                         div []
-                            [ div [ class "tff-dropdown-group" ]
-                                [ selectArrowDown
-                                , select
-                                    [ class "tff-text-field tff-show-or-hide"
-                                    , onInput (\str -> OnFormField (OnVisibilityRuleTypeInput (str == "Show")) index "")
-                                    ]
-                                    [ option
-                                        [ selected (isShowWhen (visibilityRuleOf formField))
-                                        , value "Show"
+                            [ div [ class "tff-field-group" ]
+                                [ div [ class "tff-dropdown-group" ]
+                                    [ selectArrowDown
+                                    , select
+                                        [ class "tff-text-field tff-show-or-hide"
+                                        , onInput (\str -> OnFormField (OnVisibilityRuleTypeInput (str == "Show")) index "")
                                         ]
-                                        [ text "Shown when" ]
-                                    , option
-                                        [ selected (isHideWhen (visibilityRuleOf formField))
-                                        , value "Hide"
+                                        [ option
+                                            [ selected (isShowWhen (visibilityRuleOf formField))
+                                            , value "Show"
+                                            ]
+                                            [ text "Show this question when" ]
+                                        , option
+                                            [ selected (isHideWhen (visibilityRuleOf formField))
+                                            , value "Hide"
+                                            ]
+                                            [ text "Hide this question when" ]
                                         ]
-                                        [ text "Hidden when" ]
                                     ]
                                 ]
                             , case visibilityRuleCondition (visibilityRuleOf formField) of
@@ -1890,7 +1892,7 @@ visibilityRulesSection index formFields formField =
                                                             [ value title
                                                             , selected (title == fieldName)
                                                             ]
-                                                            [ text title ]
+                                                            [ text (Json.Encode.encode 0 (Json.Encode.string title)) ]
                                                     )
                                                     (otherQuestionTitles formFields index)
                                                 )

@@ -14915,52 +14915,61 @@ var $author$project$Main$visibilityRulesSection = F3(
 									$elm$html$Html$div,
 									_List_fromArray(
 										[
-											$elm$html$Html$Attributes$class('tff-dropdown-group')
+											$elm$html$Html$Attributes$class('tff-field-group')
 										]),
 									_List_fromArray(
 										[
-											$author$project$Main$selectArrowDown,
 											A2(
-											$elm$html$Html$select,
+											$elm$html$Html$div,
 											_List_fromArray(
 												[
-													$elm$html$Html$Attributes$class('tff-text-field tff-show-or-hide'),
-													$elm$html$Html$Events$onInput(
-													function (str) {
-														return A3(
-															$author$project$Main$OnFormField,
-															$author$project$Main$OnVisibilityRuleTypeInput(str === 'Show'),
-															index,
-															'');
-													})
+													$elm$html$Html$Attributes$class('tff-dropdown-group')
 												]),
 											_List_fromArray(
 												[
+													$author$project$Main$selectArrowDown,
 													A2(
-													$elm$html$Html$option,
+													$elm$html$Html$select,
 													_List_fromArray(
 														[
-															$elm$html$Html$Attributes$selected(
-															$author$project$Main$isShowWhen(
-																$author$project$Main$visibilityRuleOf(formField))),
-															$elm$html$Html$Attributes$value('Show')
+															$elm$html$Html$Attributes$class('tff-text-field tff-show-or-hide'),
+															$elm$html$Html$Events$onInput(
+															function (str) {
+																return A3(
+																	$author$project$Main$OnFormField,
+																	$author$project$Main$OnVisibilityRuleTypeInput(str === 'Show'),
+																	index,
+																	'');
+															})
 														]),
 													_List_fromArray(
 														[
-															$elm$html$Html$text('Shown when')
-														])),
-													A2(
-													$elm$html$Html$option,
-													_List_fromArray(
-														[
-															$elm$html$Html$Attributes$selected(
-															$author$project$Main$isHideWhen(
-																$author$project$Main$visibilityRuleOf(formField))),
-															$elm$html$Html$Attributes$value('Hide')
-														]),
-													_List_fromArray(
-														[
-															$elm$html$Html$text('Hidden when')
+															A2(
+															$elm$html$Html$option,
+															_List_fromArray(
+																[
+																	$elm$html$Html$Attributes$selected(
+																	$author$project$Main$isShowWhen(
+																		$author$project$Main$visibilityRuleOf(formField))),
+																	$elm$html$Html$Attributes$value('Show')
+																]),
+															_List_fromArray(
+																[
+																	$elm$html$Html$text('Show this question when')
+																])),
+															A2(
+															$elm$html$Html$option,
+															_List_fromArray(
+																[
+																	$elm$html$Html$Attributes$selected(
+																	$author$project$Main$isHideWhen(
+																		$author$project$Main$visibilityRuleOf(formField))),
+																	$elm$html$Html$Attributes$value('Hide')
+																]),
+															_List_fromArray(
+																[
+																	$elm$html$Html$text('Hide this question when')
+																]))
 														]))
 												]))
 										])),
@@ -15015,7 +15024,11 @@ var $author$project$Main$visibilityRulesSection = F3(
 																			]),
 																		_List_fromArray(
 																			[
-																				$elm$html$Html$text(title)
+																				$elm$html$Html$text(
+																				A2(
+																					$elm$json$Json$Encode$encode,
+																					0,
+																					$elm$json$Json$Encode$string(title)))
 																			]));
 																},
 																A2($author$project$Main$otherQuestionTitles, formFields, index)))

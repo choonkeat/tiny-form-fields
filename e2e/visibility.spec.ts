@@ -13,7 +13,7 @@ test('[Dropdown] visibility rules in preview mode', async ({ page }) => {
         label: 'Single-line free text question title',
         value: 'Why Red?',
         visibilityRule: {
-            type: 'Shown when',
+            type: 'Show this question when',
             field: 'Logic question',
             comparison: {
                 type: 'equals',
@@ -27,7 +27,7 @@ test('[Dropdown] visibility rules in preview mode', async ({ page }) => {
         label: 'Single-line free text question title',
         value: 'Why Orange?',
         visibilityRule: {
-            type: 'Shown when',
+            type: 'Show this question when',
             field: 'Logic question',
             comparison: {
                 type: 'equals',
@@ -65,7 +65,7 @@ test('[Radio buttons] visibility rules in preview mode', async ({ page }) => {
         label: 'Single-line free text question title',
         value: 'Why Yes?',
         visibilityRule: {
-            type: 'Shown when',
+            type: 'Show this question when',
             field: 'Logic question',
             comparison: {
                 type: 'equals',
@@ -79,7 +79,7 @@ test('[Radio buttons] visibility rules in preview mode', async ({ page }) => {
         label: 'Single-line free text question title',
         value: 'Why No?',
         visibilityRule: {
-            type: 'Shown when',
+            type: 'Show this question when',
             field: 'Logic question',
             comparison: {
                 type: 'equals',
@@ -117,7 +117,7 @@ test('[Checkboxes] visibility rules in preview mode', async ({ page }) => {
         label: 'Single-line free text question title',
         value: 'Why Apple?',
         visibilityRule: {
-            type: 'Shown when',
+            type: 'Show this question when',
             field: 'Logic question',
             comparison: {
                 type: 'choice includes',
@@ -131,7 +131,7 @@ test('[Checkboxes] visibility rules in preview mode', async ({ page }) => {
         label: 'Single-line free text question title',
         value: 'Why Banana?',
         visibilityRule: {
-            type: 'Shown when',
+            type: 'Show this question when',
             field: 'Logic question',
             comparison: {
                 type: 'choice includes',
@@ -174,7 +174,7 @@ test('[Multi-line description] visibility rules with contains in preview mode', 
         label: 'Single-line free text question title',
         value: 'Contains urgent',
         visibilityRule: {
-            type: 'Shown when',
+            type: 'Show this question when',
             field: 'Logic question',
             comparison: {
                 type: 'contains',
@@ -188,7 +188,7 @@ test('[Multi-line description] visibility rules with contains in preview mode', 
         label: 'Single-line free text question title',
         value: 'Contains important',
         visibilityRule: {
-            type: 'Shown when',
+            type: 'Show this question when',
             field: 'Logic question',
             comparison: {
                 type: 'contains',
@@ -236,7 +236,7 @@ test('[Single-line free text] visibility rules with contains in preview mode', a
         label: 'Single-line free text question title',
         value: 'Contains urgent',
         visibilityRule: {
-            type: 'Shown when',
+            type: 'Show this question when',
             field: 'Logic question',
             comparison: {
                 type: 'contains',
@@ -250,7 +250,7 @@ test('[Single-line free text] visibility rules with contains in preview mode', a
         label: 'Single-line free text question title',
         value: 'Contains important',
         visibilityRule: {
-            type: 'Shown when',
+            type: 'Show this question when',
             field: 'Logic question',
             comparison: {
                 type: 'contains',
