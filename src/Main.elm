@@ -25,7 +25,6 @@ port module Main exposing
     , encodeVisibilityRule
     , fieldsWithPlaceholder
     , fromRawCustomElement
-    , getPreviousFieldLabel
     , main
     , onDropped
     , stringFromViewMode
@@ -998,10 +997,10 @@ updateFormField msg string index formFields formField =
                     { formField
                         | visibilityRule =
                             case rule of
-                                ShowWhen (Field fieldName comparison) ->
+                                ShowWhen (Field _ comparison) ->
                                     AttributeGiven (ShowWhen (Field newFieldName comparison))
 
-                                HideWhen (Field fieldName comparison) ->
+                                HideWhen (Field _ comparison) ->
                                     AttributeGiven (HideWhen (Field newFieldName comparison))
 
                                 _ ->
@@ -1020,22 +1019,22 @@ updateFormField msg string index formFields formField =
                     { formField
                         | visibilityRule =
                             case rule of
-                                ShowWhen (Field fieldName (Equals value)) ->
+                                ShowWhen (Field fieldName (Equals _)) ->
                                     AttributeGiven (ShowWhen (Field fieldName (Equals newValue)))
 
-                                HideWhen (Field fieldName (Equals value)) ->
+                                HideWhen (Field fieldName (Equals _)) ->
                                     AttributeGiven (HideWhen (Field fieldName (Equals newValue)))
 
-                                ShowWhen (Field fieldName (Contains value)) ->
+                                ShowWhen (Field fieldName (Contains _)) ->
                                     AttributeGiven (ShowWhen (Field fieldName (Contains newValue)))
 
-                                HideWhen (Field fieldName (Contains value)) ->
+                                HideWhen (Field fieldName (Contains _)) ->
                                     AttributeGiven (HideWhen (Field fieldName (Contains newValue)))
 
-                                ShowWhen (Field fieldName (EndsWith value)) ->
+                                ShowWhen (Field fieldName (EndsWith _)) ->
                                     AttributeGiven (ShowWhen (Field fieldName (EndsWith newValue)))
 
-                                HideWhen (Field fieldName (EndsWith value)) ->
+                                HideWhen (Field fieldName (EndsWith _)) ->
                                     AttributeGiven (HideWhen (Field fieldName (EndsWith newValue)))
 
                                 _ ->
@@ -1300,9 +1299,6 @@ viewFormFieldPreview config index formField =
         fieldID =
             -- so clicking on label will focus on field
             "tff-field-input-" ++ String.fromInt index
-
-        fieldName =
-            fieldNameOf formField
     in
     div []
         [ div
@@ -3183,10 +3179,6 @@ evaluateCondition trackedFormValues condition =
             True
 
         Field fieldName comparison ->
-            let
-                _ =
-                    Debug.log "comparing" ( comparison, Dict.get fieldName trackedFormValues )
-            in
             case comparison of
                 Equals value ->
                     Dict.get fieldName trackedFormValues == Just [ value ]
@@ -3342,7 +3334,7 @@ setAttributeOptionalVisibilityRule comparisonType attributeOptional =
                 Nothing ->
                     attributeOptional
 
-        AttributeInvalid str ->
+        AttributeInvalid _ ->
             attributeOptional
 
         AttributeGiven rule ->

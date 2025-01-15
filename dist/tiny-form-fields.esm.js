@@ -12542,7 +12542,6 @@ var $author$project$Main$setAttributeOptionalVisibilityRule = F2(
 					return attributeOptional;
 				}
 			case 'AttributeInvalid':
-				var str = attributeOptional.a;
 				return attributeOptional;
 			default:
 				var rule = attributeOptional.a;
@@ -12862,7 +12861,6 @@ var $author$project$Main$updateFormField = F5(
 										if (rule.$ === 'ShowWhen') {
 											if (rule.a.$ === 'Field') {
 												var _v13 = rule.a;
-												var fieldName = _v13.a;
 												var comparison = _v13.b;
 												return $author$project$Main$AttributeGiven(
 													$author$project$Main$ShowWhen(
@@ -12873,7 +12871,6 @@ var $author$project$Main$updateFormField = F5(
 										} else {
 											if (rule.a.$ === 'Field') {
 												var _v14 = rule.a;
-												var fieldName = _v14.a;
 												var comparison = _v14.b;
 												return $author$project$Main$AttributeGiven(
 													$author$project$Main$HideWhen(
@@ -12909,7 +12906,6 @@ var $author$project$Main$updateFormField = F5(
 													case 'Equals':
 														var _v17 = rule.a;
 														var fieldName = _v17.a;
-														var value = _v17.b.a;
 														return $author$project$Main$AttributeGiven(
 															$author$project$Main$ShowWhen(
 																A2(
@@ -12919,7 +12915,6 @@ var $author$project$Main$updateFormField = F5(
 													case 'Contains':
 														var _v19 = rule.a;
 														var fieldName = _v19.a;
-														var value = _v19.b.a;
 														return $author$project$Main$AttributeGiven(
 															$author$project$Main$ShowWhen(
 																A2(
@@ -12929,7 +12924,6 @@ var $author$project$Main$updateFormField = F5(
 													default:
 														var _v21 = rule.a;
 														var fieldName = _v21.a;
-														var value = _v21.b.a;
 														return $author$project$Main$AttributeGiven(
 															$author$project$Main$ShowWhen(
 																A2(
@@ -12946,7 +12940,6 @@ var $author$project$Main$updateFormField = F5(
 													case 'Equals':
 														var _v18 = rule.a;
 														var fieldName = _v18.a;
-														var value = _v18.b.a;
 														return $author$project$Main$AttributeGiven(
 															$author$project$Main$HideWhen(
 																A2(
@@ -12956,7 +12949,6 @@ var $author$project$Main$updateFormField = F5(
 													case 'Contains':
 														var _v20 = rule.a;
 														var fieldName = _v20.a;
-														var value = _v20.b.a;
 														return $author$project$Main$AttributeGiven(
 															$author$project$Main$HideWhen(
 																A2(
@@ -12966,7 +12958,6 @@ var $author$project$Main$updateFormField = F5(
 													default:
 														var _v22 = rule.a;
 														var fieldName = _v22.a;
-														var value = _v22.b.a;
 														return $author$project$Main$AttributeGiven(
 															$author$project$Main$HideWhen(
 																A2(
@@ -14021,7 +14012,6 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 	});
 var $author$project$Main$viewFormFieldPreview = F3(
 	function (config, index, formField) {
-		var fieldName = $author$project$Main$fieldNameOf(formField);
 		var fieldID = 'tff-field-input-' + $elm$core$String$fromInt(index);
 		return A2(
 			$elm$html$Html$div,
@@ -15543,7 +15533,6 @@ var $elm$core$List$all = F2(
 			list);
 	});
 var $elm$core$String$endsWith = _String_endsWith;
-var $elm$core$Debug$log = _Debug_log;
 var $author$project$Main$evaluateCondition = F2(
 	function (trackedFormValues, condition) {
 		switch (condition.$) {
@@ -15552,12 +15541,6 @@ var $author$project$Main$evaluateCondition = F2(
 			case 'Field':
 				var fieldName = condition.a;
 				var comparison = condition.b;
-				var _v1 = A2(
-					$elm$core$Debug$log,
-					'comparing',
-					_Utils_Tuple2(
-						comparison,
-						A2($elm$core$Dict$get, fieldName, trackedFormValues)));
 				switch (comparison.$) {
 					case 'Equals':
 						var value = comparison.a;
