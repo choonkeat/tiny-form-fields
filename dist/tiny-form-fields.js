@@ -10102,7 +10102,7 @@ var $author$project$Main$visibilityRulesSection = F3(
 														]),
 													_List_fromArray(
 														[
-															$elm$html$Html$text('Show when')
+															$elm$html$Html$text('Shown when')
 														])),
 													A2(
 													$elm$html$Html$option,
@@ -10115,7 +10115,7 @@ var $author$project$Main$visibilityRulesSection = F3(
 														]),
 													_List_fromArray(
 														[
-															$elm$html$Html$text('Hide when')
+															$elm$html$Html$text('Hidden when')
 														]))
 												]))
 										])),

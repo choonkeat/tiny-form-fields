@@ -1866,12 +1866,12 @@ visibilityRulesSection index formFields formField =
                                         [ selected (isShowWhen (visibilityRuleOf formField))
                                         , value "Show"
                                         ]
-                                        [ text "Show when" ]
+                                        [ text "Shown when" ]
                                     , option
                                         [ selected (isHideWhen (visibilityRuleOf formField))
                                         , value "Hide"
                                         ]
-                                        [ text "Hide when" ]
+                                        [ text "Hidden when" ]
                                     ]
                                 ]
                             , case visibilityRuleCondition (visibilityRuleOf formField) of
