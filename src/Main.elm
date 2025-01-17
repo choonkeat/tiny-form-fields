@@ -184,16 +184,6 @@ isHideWhen rule =
             True
 
 
-visibilityRuleCondition : VisibilityRule -> List Condition
-visibilityRuleCondition rule =
-    case rule of
-        ShowWhen condition ->
-            condition
-
-        HideWhen condition ->
-            condition
-
-
 type alias FormField =
     { label : String
     , name : Maybe String
@@ -497,7 +487,7 @@ init flags =
               , formFields = config.formFields
               , needsFormLogic =
                     config.formFields
-                        |> Array.filter (\f -> visibilityRuleOf f /= ShowWhen [])
+                        |> Array.filter (\f -> not (List.isEmpty f.visibilityRule))
                         |> Array.isEmpty
                         |> not
               , trackedFormValues = initialTrackedFormValues
@@ -575,7 +565,7 @@ update msg model =
                     , presence = when (mustBeOptional fieldType) { true = Optional, false = Required }
                     , description = AttributeNotNeeded Nothing
                     , type_ = fieldType
-                    , visibilityRule = [ ShowWhen [] ]
+                    , visibilityRule = []
                     }
 
                 newFormFields =
@@ -1316,12 +1306,7 @@ viewFormPreview customAttrs { formFields, needsFormLogic, trackedFormValues, sho
     formFields
         |> Array.filter
             (\formField ->
-                case List.head formField.visibilityRule of
-                    Nothing ->
-                        True
-
-                    Just rule ->
-                        isVisibilityRuleSatisfied rule trackedFormValues
+                isVisibilityRuleSatisfied formField.visibilityRule trackedFormValues
             )
         |> Array.indexedMap (viewFormFieldPreview config)
         |> Array.toList
@@ -1352,9 +1337,6 @@ viewFormFieldPreview config index formField =
         fieldID =
             -- so clicking on label will focus on field
             "tff-field-input-" ++ String.fromInt index
-
-        fieldName =
-            fieldNameOf formField
     in
     div []
         [ div
@@ -1898,128 +1880,134 @@ selectArrowDown =
 visibilityRulesSection : Int -> Array FormField -> FormField -> Html Msg
 visibilityRulesSection index formFields formField =
     div []
+        (formField.visibilityRule
+            |> List.indexedMap (visibilityRuleSection index formFields formField)
+        )
+
+
+visibilityRuleSection : Int -> Array FormField -> FormField -> Int -> VisibilityRule -> Html Msg
+visibilityRuleSection index formFields formField ruleIndex visibilityRule =
+    div []
         [ div [ class "tff-field-group" ]
             [ div [ class "tff-dropdown-group" ]
                 [ selectArrowDown
                 , select
                     [ class "tff-text-field tff-question-title"
-                    , onInput (\str -> OnFormField (OnVisibilityRuleTypeInput (str == "Show this question when")) index "")
+                    , onInput (\str -> OnFormField (OnVisibilityRuleTypeInput (str == "ShowWhen")) index "")
                     ]
-                    [ option [ selected (isShowWhen (visibilityRuleOf formField)), value "Show this question when" ] [ text "Show this question when" ]
-                    , option [ selected (isHideWhen (visibilityRuleOf formField)), value "Hide this question when" ] [ text "Hide this question when" ]
+                    [ option [ selected (isShowWhen visibilityRule), value "ShowWhen" ] [ text "Show this question when" ]
+                    , option [ selected (isHideWhen visibilityRule), value "HideWhen" ] [ text "Hide this question when" ]
                     ]
                 ]
             ]
         , ul [] <|
-            case visibilityRuleCondition (visibilityRuleOf formField) of
-                conditions ->
-                    List.map
-                        (\condition ->
-                            div [ class "tff-field-group" ]
-                                [ div [ class "tff-dropdown-group" ]
-                                    [ selectArrowDown
-                                    , select
-                                        [ class "tff-text-field tff-question-title"
-                                        , onInput (\str -> OnFormField (OnVisibilityConditionFieldInput str) index "")
-                                        , value
-                                            (case condition of
-                                                Field fieldName _ ->
-                                                    fieldName
-                                            )
-                                        ]
-                                        (List.map
-                                            (\title ->
-                                                option
-                                                    [ value title
-                                                    , selected
-                                                        (title
-                                                            == (case condition of
-                                                                    Field fieldName _ ->
-                                                                        fieldName
-                                                               )
-                                                        )
-                                                    ]
-                                                    [ text (Json.Encode.encode 0 (Json.Encode.string title)) ]
-                                            )
-                                            (otherQuestionTitles formFields index)
-                                        )
-                                    ]
-                                , div [ class "tff-dropdown-group" ]
-                                    [ selectArrowDown
-                                    , select
-                                        [ class "tff-text-field tff-comparison-type"
-                                        , onInput (\str -> OnFormField (OnVisibilityConditionTypeInput str) index "")
-                                        ]
-                                        [ option
-                                            [ selected
-                                                (isComparingWith (Equals "something")
-                                                    (case condition of
-                                                        Field _ comparison ->
-                                                            comparison
-                                                    )
-                                                )
-                                            , value "Equals"
-                                            ]
-                                            [ text "equals" ]
-                                        , option
-                                            [ selected
-                                                (isComparingWith (StringContains "something")
-                                                    (case condition of
-                                                        Field _ comparison ->
-                                                            comparison
-                                                    )
-                                                )
-                                            , value "StringContains"
-                                            ]
-                                            [ text "contains" ]
-                                        , option
-                                            [ selected
-                                                (isComparingWith (ChoiceIncludes "something")
-                                                    (case condition of
-                                                        Field _ comparison ->
-                                                            comparison
-                                                    )
-                                                )
-                                            , value "ChoiceIncludes"
-                                            ]
-                                            [ text "choice includes" ]
-                                        , option
-                                            [ selected
-                                                (isComparingWith (EndsWith "something")
-                                                    (case condition of
-                                                        Field _ comparison ->
-                                                            comparison
-                                                    )
-                                                )
-                                            , value "EndsWith"
-                                            ]
-                                            [ text "ends with" ]
-                                        ]
-                                    ]
-                                , input
-                                    [ type_ "text"
-                                    , class "tff-comparison-value"
-                                    , value
-                                        (case condition of
-                                            Field _ (Equals v) ->
-                                                v
-
-                                            Field _ (StringContains v) ->
-                                                v
-
-                                            Field _ (ChoiceIncludes v) ->
-                                                v
-
-                                            Field _ (EndsWith v) ->
-                                                v
-                                        )
-                                    , onInput (\str -> OnFormField (OnVisibilityConditionValueInput str) index "")
-                                    , class "tff-text-field"
-                                    ]
-                                    []
+            List.map
+                (\rule ->
+                    div [ class "tff-field-group" ]
+                        [ div [ class "tff-dropdown-group" ]
+                            [ selectArrowDown
+                            , select
+                                [ class "tff-text-field tff-question-title"
+                                , onInput (\str -> OnFormField (OnVisibilityConditionFieldInput str) index "")
+                                , value
+                                    (case rule of
+                                        Field fieldName _ ->
+                                            fieldName
+                                    )
                                 ]
-                        )
-                        conditions
+                                (List.map
+                                    (\title ->
+                                        option
+                                            [ value title
+                                            , selected
+                                                (title
+                                                    == (case rule of
+                                                            Field fieldName _ ->
+                                                                fieldName
+                                                       )
+                                                )
+                                            ]
+                                            [ text (Json.Encode.encode 0 (Json.Encode.string title)) ]
+                                    )
+                                    (otherQuestionTitles formFields index)
+                                )
+                            ]
+                        , div [ class "tff-dropdown-group" ]
+                            [ selectArrowDown
+                            , select
+                                [ class "tff-text-field tff-comparison-type"
+                                , onInput (\str -> OnFormField (OnVisibilityConditionTypeInput str) index "")
+                                ]
+                                [ option
+                                    [ selected
+                                        (isComparingWith (Equals "something")
+                                            (case rule of
+                                                Field _ comparison ->
+                                                    comparison
+                                            )
+                                        )
+                                    , value "Equals"
+                                    ]
+                                    [ text "equals" ]
+                                , option
+                                    [ selected
+                                        (isComparingWith (StringContains "something")
+                                            (case rule of
+                                                Field _ comparison ->
+                                                    comparison
+                                            )
+                                        )
+                                    , value "StringContains"
+                                    ]
+                                    [ text "contains" ]
+                                , option
+                                    [ selected
+                                        (isComparingWith (ChoiceIncludes "something")
+                                            (case rule of
+                                                Field _ comparison ->
+                                                    comparison
+                                            )
+                                        )
+                                    , value "ChoiceIncludes"
+                                    ]
+                                    [ text "choice includes" ]
+                                , option
+                                    [ selected
+                                        (isComparingWith (EndsWith "something")
+                                            (case rule of
+                                                Field _ comparison ->
+                                                    comparison
+                                            )
+                                        )
+                                    , value "EndsWith"
+                                    ]
+                                    [ text "ends with" ]
+                                ]
+                            ]
+                        , input
+                            [ type_ "text"
+                            , class "tff-comparison-value"
+                            , value
+                                (case rule of
+                                    Field _ (Equals v) ->
+                                        v
+
+                                    Field _ (StringContains v) ->
+                                        v
+
+                                    Field _ (ChoiceIncludes v) ->
+                                        v
+
+                                    Field _ (EndsWith v) ->
+                                        v
+                                )
+                            , onInput (\str -> OnFormField (OnVisibilityConditionValueInput str) index "")
+                            , class "tff-text-field"
+                            ]
+                            []
+                        ]
+                )
+                (visibilityRuleCondition visibilityRule)
         ]
 
 
@@ -2177,16 +2165,6 @@ viewFormFieldBuilder shortTextTypeList index totalLength formFields formField =
         )
 
 
-visibilityRuleOf : FormField -> VisibilityRule
-visibilityRuleOf formField =
-    case List.head formField.visibilityRule of
-        Just rule ->
-            rule
-
-        Nothing ->
-            ShowWhen []
-
-
 viewRightPanel : Model -> Html Msg
 viewRightPanel modelData =
     let
@@ -2281,7 +2259,7 @@ viewAddQuestionsList inputFields =
                                 , presence = when (mustBeOptional inputField) { true = Optional, false = Required }
                                 , description = AttributeNotNeeded Nothing
                                 , type_ = inputField
-                                , visibilityRule = [ ShowWhen [] ]
+                                , visibilityRule = []
                                 }
                             )
                         )
@@ -2724,7 +2702,6 @@ encodeFormFields formFields =
                      , ( "type", encodeInputField formField.type_ )
                      , ( "visibilityRule", Json.Encode.list encodeVisibilityRule formField.visibilityRule )
                      ]
-                        -- smaller output json than if we encoded `null` all the time
                         |> List.filter (\( _, v ) -> v /= Json.Encode.null)
                     )
             )
@@ -2732,17 +2709,17 @@ encodeFormFields formFields =
 
 
 encodeVisibilityRule : VisibilityRule -> Json.Encode.Value
-encodeVisibilityRule visibilityRule =
-    case visibilityRule of
+encodeVisibilityRule rule =
+    case rule of
         ShowWhen conditions ->
             Json.Encode.object
-                [ ( "type", Json.Encode.string "Show this question when" )
+                [ ( "type", Json.Encode.string "ShowWhen" )
                 , ( "conditions", Json.Encode.list encodeCondition conditions )
                 ]
 
         HideWhen conditions ->
             Json.Encode.object
-                [ ( "type", Json.Encode.string "Hide this question when" )
+                [ ( "type", Json.Encode.string "HideWhen" )
                 , ( "conditions", Json.Encode.list encodeCondition conditions )
                 ]
 
@@ -2796,11 +2773,14 @@ decodeFormField : Json.Decode.Decoder FormField
 decodeFormField =
     Json.Decode.succeed FormField
         |> andMap (Json.Decode.field "label" Json.Decode.string)
-        |> andMap decodeFormFieldMaybeName
+        |> andMap decodeFormFieldName
         |> andMap (Json.Decode.oneOf [ Json.Decode.field "presence" decodePresence, decodeRequired ])
         |> andMap decodeFormFieldDescription
         |> andMap (Json.Decode.field "type" decodeInputField)
-        |> andMap (Json.Decode.field "visibilityRule" (Json.Decode.list decodeVisibilityRule))
+        |> andMap
+            (Json.Decode.Extra.optionalNullableField "visibilityRule" (Json.Decode.list decodeVisibilityRule)
+                |> Json.Decode.map (Maybe.withDefault [])
+            )
 
 
 decodeRequired : Json.Decode.Decoder Presence
@@ -2816,8 +2796,8 @@ decodeRequired =
             )
 
 
-decodeFormFieldMaybeName : Json.Decode.Decoder (Maybe String)
-decodeFormFieldMaybeName =
+decodeFormFieldName : Json.Decode.Decoder (Maybe String)
+decodeFormFieldName =
     Json.Decode.oneOf
         [ -- backward compat: presence.name takes precedence
           Json.Decode.at [ "presence", "name" ] Json.Decode.string
@@ -2832,8 +2812,8 @@ decodeFormFieldDescription : Json.Decode.Decoder (AttributeOptional String)
 decodeFormFieldDescription =
     Json.Decode.oneOf
         [ -- backward compat: presence.description takes precedence
-          Json.Decode.at [ "presence", "description" ] (decodeAttributeOptional (Just "") Json.Decode.string)
-        , Json.Decode.field "description" (decodeAttributeOptional (Just "") Json.Decode.string)
+          Json.Decode.at [ "presence", "description" ] (decodeAttributeOptional Nothing Json.Decode.string)
+        , Json.Decode.field "description" (decodeAttributeOptional Nothing Json.Decode.string)
         , Json.Decode.succeed (AttributeNotNeeded Nothing)
         ]
 
@@ -2844,11 +2824,11 @@ decodeVisibilityRule =
         |> Json.Decode.andThen
             (\str ->
                 case str of
-                    "Show this question when" ->
+                    "ShowWhen" ->
                         Json.Decode.succeed ShowWhen
                             |> andMap (Json.Decode.field "conditions" (Json.Decode.list decodeCondition))
 
-                    "Hide this question when" ->
+                    "HideWhen" ->
                         Json.Decode.succeed HideWhen
                             |> andMap (Json.Decode.field "conditions" (Json.Decode.list decodeCondition))
 
@@ -3173,15 +3153,15 @@ decodeCondition : Json.Decode.Decoder Condition
 decodeCondition =
     Json.Decode.field "type" Json.Decode.string
         |> Json.Decode.andThen
-            (\type_ ->
-                case type_ of
+            (\str ->
+                case str of
                     "Field" ->
                         Json.Decode.succeed Field
                             |> andMap (Json.Decode.field "fieldName" Json.Decode.string)
                             |> andMap (Json.Decode.field "comparison" decodeComparison)
 
                     _ ->
-                        Json.Decode.fail ("Unknown condition type: " ++ type_)
+                        Json.Decode.fail ("Unknown condition type: " ++ str)
             )
 
 
@@ -3189,8 +3169,8 @@ decodeComparison : Json.Decode.Decoder Comparison
 decodeComparison =
     Json.Decode.field "type" Json.Decode.string
         |> Json.Decode.andThen
-            (\type_ ->
-                case type_ of
+            (\str ->
+                case str of
                     "Equals" ->
                         Json.Decode.succeed Equals
                             |> andMap (Json.Decode.field "value" Json.Decode.string)
@@ -3208,7 +3188,7 @@ decodeComparison =
                             |> andMap (Json.Decode.field "value" Json.Decode.string)
 
                     _ ->
-                        Json.Decode.fail ("Unknown comparison type: " ++ type_)
+                        Json.Decode.fail ("Unknown comparison type: " ++ str)
             )
 
 
@@ -3242,14 +3222,36 @@ evaluateCondition trackedFormValues condition =
                             )
 
 
-isVisibilityRuleSatisfied : VisibilityRule -> Dict String (List String) -> Bool
-isVisibilityRuleSatisfied rule trackedFormValues =
+isVisibilityRuleSatisfied : List VisibilityRule -> Dict String (List String) -> Bool
+isVisibilityRuleSatisfied rules trackedFormValues =
+    List.all
+        (\rule ->
+            case rule of
+                ShowWhen conditions ->
+                    List.all (evaluateCondition trackedFormValues) conditions
+
+                HideWhen conditions ->
+                    not (List.all (evaluateCondition trackedFormValues) conditions)
+        )
+        rules
+
+
+
+{- Helper to get conditions from a rule -}
+
+
+visibilityRuleCondition : VisibilityRule -> List Condition
+visibilityRuleCondition rule =
     case rule of
         ShowWhen conditions ->
-            List.all (evaluateCondition trackedFormValues) conditions
+            conditions
 
         HideWhen conditions ->
-            not (List.all (evaluateCondition trackedFormValues) conditions)
+            conditions
+
+
+
+{- Helper to get conditions from a rule -}
 
 
 comparisonOf : Condition -> Maybe Comparison
@@ -3257,6 +3259,10 @@ comparisonOf condition =
     case condition of
         Field _ comparison ->
             Just comparison
+
+
+
+{- Helper to check if two comparisons are the same -}
 
 
 isComparingWith : Comparison -> Comparison -> Bool
@@ -3295,6 +3301,10 @@ isComparingWith expected given =
                     False
 
 
+
+{- Helper to update a comparison -}
+
+
 updateVisibilityRule : String -> VisibilityRule -> VisibilityRule
 updateVisibilityRule comparisonType rule =
     case rule of
@@ -3319,6 +3329,10 @@ updateVisibilityRule comparisonType rule =
                     )
                     conditions
                 )
+
+
+
+{- Helper to update a comparison -}
 
 
 updateComparison : String -> Comparison -> Comparison

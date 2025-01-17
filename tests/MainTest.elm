@@ -25,7 +25,7 @@ field1 =
     , presence = Main.Required
     , description = Main.AttributeNotNeeded Nothing
     , name = Nothing
-    , visibilityRule = Main.AttributeNotNeeded Nothing
+    , visibilityRule = []
     }
 
 
@@ -36,7 +36,7 @@ field2 =
     , presence = Main.Required
     , description = Main.AttributeNotNeeded Nothing
     , name = Nothing
-    , visibilityRule = Main.AttributeNotNeeded Nothing
+    , visibilityRule = []
     }
 
 
@@ -47,7 +47,7 @@ field3 =
     , presence = Main.Required
     , description = Main.AttributeNotNeeded Nothing
     , name = Nothing
-    , visibilityRule = Main.AttributeNotNeeded Nothing
+    , visibilityRule = []
     }
 
 
@@ -546,7 +546,7 @@ oldjson =
                                             , multiple = Main.AttributeNotNeeded Nothing
                                             , maxlength = Main.AttributeNotNeeded Nothing
                                             }
-                                  , visibilityRule = Main.AttributeNotNeeded Nothing
+                                  , visibilityRule = []
                                   }
                                 , { description = Main.AttributeGiven "your personal email"
                                   , label = "Email 2"
@@ -561,14 +561,14 @@ oldjson =
                                             , multiple = Main.AttributeNotNeeded Nothing
                                             , maxlength = Main.AttributeNotNeeded Nothing
                                             }
-                                  , visibilityRule = Main.AttributeNotNeeded Nothing
+                                  , visibilityRule = []
                                   }
                                 , { description = Main.AttributeGiven "any comments"
                                   , label = "Long text 3"
                                   , name = Nothing
                                   , presence = Main.Required
                                   , type_ = Main.LongText (Main.AttributeGiven 280)
-                                  , visibilityRule = Main.AttributeNotNeeded Nothing
+                                  , visibilityRule = []
                                   }
                                 , { description = Main.AttributeGiven "Binary choice"
                                   , label = "Dropdown 4"
@@ -583,7 +583,7 @@ oldjson =
                                               , value = "No"
                                               }
                                             ]
-                                  , visibilityRule = Main.AttributeNotNeeded Nothing
+                                  , visibilityRule = []
                                   }
                                 , { description = Main.AttributeGiven "Choose many or none"
                                   , label = "Checkboxes 5"
@@ -604,7 +604,7 @@ oldjson =
                                               , value = "Durian"
                                               }
                                             ]
-                                  , visibilityRule = Main.AttributeNotNeeded Nothing
+                                  , visibilityRule = []
                                   }
                                 ]
                             )
@@ -629,7 +629,7 @@ oldjson =
                             "Violet"
                         ]
                         },
-                        "visibilityRule": null
+                        "visibilityRule": []
                     },
                     {
                         "label": "Question 2",
@@ -656,12 +656,7 @@ oldjson =
                             "Durian"
                         ]
                         },
-                        "visibilityRule": {
-                            "type": "ShowWhen",
-                            "condition": {
-                                "type": "Always"
-                            }
-                        }
+                        "visibilityRule": [ ]
                     },
                     {
                         "label": "Question 4",
@@ -671,12 +666,10 @@ oldjson =
                         "type": "LongText",
                         "maxLength": 280
                         },
-                        "visibilityRule": {
+                        "visibilityRule": [ {
                             "type": "ShowWhen",
-                            "condition": {
-                                "type": "Always"
-                            }
-                        }
+                            "conditions": [ ]
+                        } ]
                     },
                     {
                         "label": "Question 5",
@@ -687,12 +680,17 @@ oldjson =
                         "inputType": "Single-line free text",
                         "maxLength": 140
                         },
-                        "visibilityRule": {
+                        "visibilityRule": [ {
                             "type": "ShowWhen",
-                            "condition": {
-                                "type": "Always"
-                            }
-                        }
+                            "conditions": [ {
+                                "type": "Field",
+                                "fieldName": "Question 2",
+                                "comparison": {
+                                    "type": "Equals",
+                                    "value": "Yes"
+                                }
+                            } ]
+                        } ]
                     },
                     {
                         "label": "Question 6",
@@ -703,12 +701,10 @@ oldjson =
                         "inputType": "NRIC",
                         "maxLength": null
                         },
-                        "visibilityRule": {
+                        "visibilityRule": [ {
                             "type": "ShowWhen",
-                            "condition": {
-                                "type": "Always"
-                            }
-                        }
+                            "conditions": [ ]
+                        } ]
                     }
                 ]
                 """
@@ -732,7 +728,7 @@ oldjson =
                                             , { label = "Indigo", value = "Indigo" }
                                             , { label = "Violet", value = "Violet" }
                                             ]
-                                  , visibilityRule = Main.AttributeNotNeeded Nothing
+                                  , visibilityRule = []
                                   }
                                 , { description = Main.AttributeGiven "my radio desc"
                                   , label = "Question 2"
@@ -743,7 +739,7 @@ oldjson =
                                             [ { label = "Yes", value = "Yes" }
                                             , { label = "No", value = "No" }
                                             ]
-                                  , visibilityRule = Main.AttributeNotNeeded Nothing
+                                  , visibilityRule = []
                                   }
                                 , { description = Main.AttributeGiven "My checkboxes desc"
                                   , label = "Question 3"
@@ -756,14 +752,14 @@ oldjson =
                                             , { label = "Cantaloupe", value = "Cantaloupe" }
                                             , { label = "Durian", value = "Durian" }
                                             ]
-                                  , visibilityRule = Main.AttributeNotNeeded Nothing
+                                  , visibilityRule = []
                                   }
                                 , { description = Main.AttributeGiven "any comments"
                                   , label = "Question 4"
                                   , name = Nothing
                                   , presence = Main.Required
                                   , type_ = Main.LongText (Main.AttributeGiven 280)
-                                  , visibilityRule = Main.AttributeNotNeeded Nothing
+                                  , visibilityRule = []
                                   }
                                 , { description = Main.AttributeGiven "any text"
                                   , label = "Question 5"
@@ -778,7 +774,7 @@ oldjson =
                                             , multiple = Main.AttributeNotNeeded Nothing
                                             , maxlength = Main.AttributeNotNeeded Nothing
                                             }
-                                  , visibilityRule = Main.AttributeNotNeeded Nothing
+                                  , visibilityRule = []
                                   }
                                 , { description = Main.AttributeGiven "custom nric format"
                                   , label = "Question 6"
@@ -793,7 +789,7 @@ oldjson =
                                             , multiple = Main.AttributeNotNeeded Nothing
                                             , maxlength = Main.AttributeNotNeeded Nothing
                                             }
-                                  , visibilityRule = Main.AttributeNotNeeded Nothing
+                                  , visibilityRule = []
                                   }
                                 ]
                             )
@@ -884,28 +880,24 @@ fuzzFormField =
         presenceFuzzer
         (attributeOptionalFuzzer string { blank = "" })
         inputFieldFuzzer
-        (attributeOptionalFuzzer fuzzVisibilityRule { blank = Main.ShowWhen Main.Always })
+        (Fuzz.constant [])
 
 
 fuzzVisibilityRule : Fuzzer Main.VisibilityRule
 fuzzVisibilityRule =
     Fuzz.oneOf
-        [ Fuzz.constant (Main.ShowWhen Main.Always)
-        , Fuzz.constant (Main.HideWhen Main.Always)
+        [ Fuzz.constant (Main.ShowWhen [])
+        , Fuzz.constant (Main.HideWhen [])
         ]
 
 
 attributeOptionalFuzzer : Fuzzer a -> { blank : a } -> Fuzzer (Main.AttributeOptional a)
 attributeOptionalFuzzer fuzzer { blank } =
-    fuzzer
-        |> Fuzz.andThen
-            (\value ->
-                if value == blank then
-                    Fuzz.constant (Main.AttributeNotNeeded Nothing)
-
-                else
-                    Fuzz.constant (Main.AttributeGiven value)
-            )
+    Fuzz.oneOf
+        [ Fuzz.map Main.AttributeGiven fuzzer
+        , Fuzz.map Main.AttributeInvalid string
+        , Fuzz.map Main.AttributeNotNeeded (Fuzz.maybe fuzzer)
+        ]
 
 
 choiceStringFuzzer : Fuzzer Main.Choice
@@ -955,10 +947,10 @@ oldFormFieldFuzzer : Fuzzer FormField
 oldFormFieldFuzzer =
     Fuzz.map5 FormField
         string
+        (Fuzz.maybe string)
         oldPresenceFuzzer
         string
         inputFieldFuzzer
-        (Fuzz.constant (Main.ShowWhen Main.Always))
 
 
 newFieldFromOldField : FormField -> Main.FormField
@@ -1041,7 +1033,7 @@ newFieldFromOldField oldField =
                 Main.AttributeNotNeeded _ ->
                     Main.AttributeGiven oldField.description
     , type_ = oldField.type_
-    , visibilityRule = Main.AttributeNotNeeded Nothing
+    , visibilityRule = []
     }
 
 
@@ -1086,10 +1078,10 @@ encodePresence presence =
 
 type alias FormField =
     { label : String
+    , name : Maybe String
     , presence : Presence
     , description : String
     , type_ : Main.InputField
-    , visibilityRule : Main.VisibilityRule
     }
 
 
@@ -1100,7 +1092,6 @@ encodeFormField formField =
          , ( "presence", encodePresence formField.presence )
          , ( "description", Json.Encode.string formField.description )
          , ( "type", Main.encodeInputField formField.type_ )
-         , ( "visibilityRule", Main.encodeVisibilityRule formField.visibilityRule )
          ]
             -- smaller output json than if we encoded `null` all the time
             |> List.filter (\( _, v ) -> v /= Json.Encode.null)
