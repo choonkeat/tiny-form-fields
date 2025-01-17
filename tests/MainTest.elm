@@ -701,10 +701,7 @@ oldjson =
                         "inputType": "NRIC",
                         "maxLength": null
                         },
-                        "visibilityRule": [ {
-                            "type": "ShowWhen",
-                            "conditions": [ ]
-                        } ]
+                        "visibilityRule": []
                     }
                 ]
                 """
@@ -759,7 +756,9 @@ oldjson =
                                   , name = Nothing
                                   , presence = Main.Required
                                   , type_ = Main.LongText (Main.AttributeGiven 280)
-                                  , visibilityRule = []
+                                  , visibilityRule =
+                                        [ Main.ShowWhen []
+                                        ]
                                   }
                                 , { description = Main.AttributeGiven "any text"
                                   , label = "Question 5"
@@ -774,7 +773,11 @@ oldjson =
                                             , multiple = Main.AttributeNotNeeded Nothing
                                             , maxlength = Main.AttributeNotNeeded Nothing
                                             }
-                                  , visibilityRule = []
+                                  , visibilityRule =
+                                        [ Main.ShowWhen
+                                            [ Main.Field "Question 2" (Main.Equals "Yes")
+                                            ]
+                                        ]
                                   }
                                 , { description = Main.AttributeGiven "custom nric format"
                                   , label = "Question 6"
@@ -893,11 +896,15 @@ fuzzVisibilityRule =
 
 attributeOptionalFuzzer : Fuzzer a -> { blank : a } -> Fuzzer (Main.AttributeOptional a)
 attributeOptionalFuzzer fuzzer { blank } =
-    Fuzz.oneOf
-        [ Fuzz.map Main.AttributeGiven fuzzer
-        , Fuzz.map Main.AttributeInvalid string
-        , Fuzz.map Main.AttributeNotNeeded (Fuzz.maybe fuzzer)
-        ]
+    fuzzer
+        |> Fuzz.andThen
+            (\value ->
+                if value == blank then
+                    Fuzz.constant (Main.AttributeNotNeeded Nothing)
+
+                else
+                    Fuzz.constant (Main.AttributeGiven value)
+            )
 
 
 choiceStringFuzzer : Fuzzer Main.Choice
@@ -945,9 +952,8 @@ oldPresenceFuzzer =
 
 oldFormFieldFuzzer : Fuzzer FormField
 oldFormFieldFuzzer =
-    Fuzz.map5 FormField
+    Fuzz.map4 FormField
         string
-        (Fuzz.maybe string)
         oldPresenceFuzzer
         string
         inputFieldFuzzer
@@ -1078,7 +1084,6 @@ encodePresence presence =
 
 type alias FormField =
     { label : String
-    , name : Maybe String
     , presence : Presence
     , description : String
     , type_ : Main.InputField

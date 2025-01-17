@@ -10614,15 +10614,21 @@ var $author$project$Main$decodeFormFieldDescription = $elm$json$Json$Decode$oneO
 			$elm$json$Json$Decode$at,
 			_List_fromArray(
 				['presence', 'description']),
-			A2($author$project$Main$decodeAttributeOptional, $elm$core$Maybe$Nothing, $elm$json$Json$Decode$string)),
+			A2(
+				$author$project$Main$decodeAttributeOptional,
+				$elm$core$Maybe$Just(''),
+				$elm$json$Json$Decode$string)),
 			A2(
 			$elm$json$Json$Decode$field,
 			'description',
-			A2($author$project$Main$decodeAttributeOptional, $elm$core$Maybe$Nothing, $elm$json$Json$Decode$string)),
+			A2(
+				$author$project$Main$decodeAttributeOptional,
+				$elm$core$Maybe$Just(''),
+				$elm$json$Json$Decode$string)),
 			$elm$json$Json$Decode$succeed(
 			$author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing))
 		]));
-var $author$project$Main$decodeFormFieldName = $elm$json$Json$Decode$oneOf(
+var $author$project$Main$decodeFormFieldMaybeName = $elm$json$Json$Decode$oneOf(
 	_List_fromArray(
 		[
 			A2(
@@ -11052,7 +11058,7 @@ var $author$project$Main$decodeFormField = A2(
 						])),
 				A2(
 					$elm_community$json_extra$Json$Decode$Extra$andMap,
-					$author$project$Main$decodeFormFieldName,
+					$author$project$Main$decodeFormFieldMaybeName,
 					A2(
 						$elm_community$json_extra$Json$Decode$Extra$andMap,
 						A2($elm$json$Json$Decode$field, 'label', $elm$json$Json$Decode$string),
@@ -13998,12 +14004,12 @@ var $author$project$Main$viewFormFieldPreview = F3(
 										switch (_v1.$) {
 											case 'AttributeNotNeeded':
 												return '';
-											case 'AttributeGiven':
-												var str = _v1.a;
-												return str;
+											case 'AttributeInvalid':
+												var s = _v1.a;
+												return s;
 											default:
-												var str = _v1.a;
-												return str;
+												var s = _v1.a;
+												return s;
 										}
 									}()),
 									function () {

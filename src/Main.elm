@@ -1360,11 +1360,11 @@ viewFormFieldPreview config index formField =
                         AttributeNotNeeded _ ->
                             ""
 
-                        AttributeGiven str ->
-                            str
+                        AttributeInvalid s ->
+                            s
 
-                        AttributeInvalid str ->
-                            str
+                        AttributeGiven s ->
+                            s
                     )
                 , case maybeMaxLengthOf formField of
                     Just maxLength ->
@@ -2773,7 +2773,7 @@ decodeFormField : Json.Decode.Decoder FormField
 decodeFormField =
     Json.Decode.succeed FormField
         |> andMap (Json.Decode.field "label" Json.Decode.string)
-        |> andMap decodeFormFieldName
+        |> andMap decodeFormFieldMaybeName
         |> andMap (Json.Decode.oneOf [ Json.Decode.field "presence" decodePresence, decodeRequired ])
         |> andMap decodeFormFieldDescription
         |> andMap (Json.Decode.field "type" decodeInputField)
@@ -2796,8 +2796,8 @@ decodeRequired =
             )
 
 
-decodeFormFieldName : Json.Decode.Decoder (Maybe String)
-decodeFormFieldName =
+decodeFormFieldMaybeName : Json.Decode.Decoder (Maybe String)
+decodeFormFieldMaybeName =
     Json.Decode.oneOf
         [ -- backward compat: presence.name takes precedence
           Json.Decode.at [ "presence", "name" ] Json.Decode.string
@@ -2812,8 +2812,8 @@ decodeFormFieldDescription : Json.Decode.Decoder (AttributeOptional String)
 decodeFormFieldDescription =
     Json.Decode.oneOf
         [ -- backward compat: presence.description takes precedence
-          Json.Decode.at [ "presence", "description" ] (decodeAttributeOptional Nothing Json.Decode.string)
-        , Json.Decode.field "description" (decodeAttributeOptional Nothing Json.Decode.string)
+          Json.Decode.at [ "presence", "description" ] (decodeAttributeOptional (Just "") Json.Decode.string)
+        , Json.Decode.field "description" (decodeAttributeOptional (Just "") Json.Decode.string)
         , Json.Decode.succeed (AttributeNotNeeded Nothing)
         ]
 
