@@ -157,10 +157,6 @@ type Comparison
 
 type Condition
     = Field String Comparison
-    | And (List Condition)
-    | Or (List Condition)
-    | Not Condition
-    | Always
 
 
 type VisibilityRule
@@ -501,7 +497,7 @@ init flags =
               , formFields = config.formFields
               , needsFormLogic =
                     config.formFields
-                        |> Array.filter (\f -> visibilityRuleOf f /= ShowWhen Always)
+                        |> Array.filter (\f -> visibilityRuleOf f /= ShowWhen (Field "" (Equals "")))
                         |> Array.isEmpty
                         |> not
               , trackedFormValues = initialTrackedFormValues
@@ -963,14 +959,14 @@ updateFormField msg string index formFields formField =
                                 AttributeNotNeeded Nothing
 
                             else
-                                AttributeNotNeeded (Just (HideWhen Always))
+                                AttributeNotNeeded (Just (HideWhen (Field "" (Equals ""))))
 
                         AttributeInvalid _ ->
                             if isShow then
                                 AttributeNotNeeded Nothing
 
                             else
-                                AttributeNotNeeded (Just (HideWhen Always))
+                                AttributeNotNeeded (Just (HideWhen (Field "" (Equals ""))))
 
                         AttributeGiven rule ->
                             if isShow then
@@ -1003,9 +999,6 @@ updateFormField msg string index formFields formField =
 
                                 HideWhen (Field _ comparison) ->
                                     AttributeGiven (HideWhen (Field newFieldName comparison))
-
-                                _ ->
-                                    formField.visibilityRule
                     }
 
         OnVisibilityConditionValueInput newValue ->
@@ -1043,9 +1036,6 @@ updateFormField msg string index formFields formField =
 
                                 HideWhen (Field fieldName (EndsWith _)) ->
                                     AttributeGiven (HideWhen (Field fieldName (EndsWith newValue)))
-
-                                _ ->
-                                    formField.visibilityRule
                     }
 
         OnVisibilityToggle bool ->
@@ -1951,9 +1941,6 @@ visibilityRulesSection index formFields formField =
                                             ]
                                             []
                                         ]
-
-                                _ ->
-                                    text ""
                             ]
 
                     Err err ->
@@ -2120,10 +2107,10 @@ visibilityRuleOf : FormField -> VisibilityRule
 visibilityRuleOf formField =
     case formField.visibilityRule of
         AttributeNotNeeded maybeRule ->
-            Maybe.withDefault (ShowWhen Always) maybeRule
+            Maybe.withDefault (ShowWhen (Field "" (Equals ""))) maybeRule
 
         AttributeInvalid _ ->
-            ShowWhen Always
+            ShowWhen (Field "" (Equals ""))
 
         AttributeGiven rule ->
             rule
@@ -2699,29 +2686,6 @@ encodeCondition condition =
                 , ( "comparison", encodeComparison comparison )
                 ]
 
-        And conditions ->
-            Json.Encode.object
-                [ ( "type", Json.Encode.string "And" )
-                , ( "conditions", Json.Encode.list encodeCondition conditions )
-                ]
-
-        Or conditions ->
-            Json.Encode.object
-                [ ( "type", Json.Encode.string "Or" )
-                , ( "conditions", Json.Encode.list encodeCondition conditions )
-                ]
-
-        Not cond ->
-            Json.Encode.object
-                [ ( "type", Json.Encode.string "Not" )
-                , ( "condition", encodeCondition cond )
-                ]
-
-        Always ->
-            Json.Encode.object
-                [ ( "type", Json.Encode.string "Always" )
-                ]
-
 
 encodeComparison : Comparison -> Json.Encode.Value
 encodeComparison comparison =
@@ -2771,7 +2735,7 @@ decodeFormField =
 decodeFormFieldVisibilityRule : Json.Decode.Decoder (AttributeOptional VisibilityRule)
 decodeFormFieldVisibilityRule =
     Json.Decode.oneOf
-        [ Json.Decode.field "visibilityRule" (decodeAttributeOptional (Just (ShowWhen Always)) decodeVisibilityRule)
+        [ Json.Decode.field "visibilityRule" (decodeAttributeOptional (Just (ShowWhen (Field "" (Equals "")))) decodeVisibilityRule)
         , Json.Decode.succeed (AttributeNotNeeded Nothing)
         ]
 
@@ -3153,21 +3117,6 @@ decodeCondition =
                             |> andMap (Json.Decode.field "fieldName" Json.Decode.string)
                             |> andMap (Json.Decode.field "comparison" decodeComparison)
 
-                    "And" ->
-                        Json.Decode.succeed And
-                            |> andMap (Json.Decode.field "conditions" (Json.Decode.list decodeCondition))
-
-                    "Or" ->
-                        Json.Decode.succeed Or
-                            |> andMap (Json.Decode.field "conditions" (Json.Decode.list decodeCondition))
-
-                    "Not" ->
-                        Json.Decode.succeed Not
-                            |> andMap (Json.Decode.field "condition" decodeCondition)
-
-                    "Always" ->
-                        Json.Decode.succeed Always
-
                     _ ->
                         Json.Decode.fail ("Unknown condition type: " ++ type_)
             )
@@ -3203,9 +3152,6 @@ decodeComparison =
 evaluateCondition : Dict String (List String) -> Condition -> Bool
 evaluateCondition trackedFormValues condition =
     case condition of
-        Always ->
-            True
-
         Field fieldName comparison ->
             case comparison of
                 Equals value ->
@@ -3232,15 +3178,6 @@ evaluateCondition trackedFormValues condition =
                                 String.endsWith value fieldValue
                             )
 
-        And conditions ->
-            List.all (evaluateCondition trackedFormValues) conditions
-
-        Or conditions ->
-            List.any (evaluateCondition trackedFormValues) conditions
-
-        Not cond ->
-            not (evaluateCondition trackedFormValues cond)
-
 
 isVisibilityRuleSatisfied : VisibilityRule -> Dict String (List String) -> Bool
 isVisibilityRuleSatisfied rule trackedFormValues =
@@ -3257,18 +3194,6 @@ comparisonOf condition =
     case condition of
         Field _ comparison ->
             Just comparison
-
-        And _ ->
-            Nothing
-
-        Or _ ->
-            Nothing
-
-        Not _ ->
-            Nothing
-
-        Always ->
-            Nothing
 
 
 isComparingWith : Comparison -> Maybe Comparison -> Bool
@@ -3315,16 +3240,10 @@ updateVisibilityRule comparisonType rule =
                 Field fieldName comparison ->
                     ShowWhen (Field fieldName (updateComparison comparisonType comparison))
 
-                _ ->
-                    rule
-
         HideWhen condition ->
             case condition of
                 Field fieldName comparison ->
                     HideWhen (Field fieldName (updateComparison comparisonType comparison))
-
-                _ ->
-                    rule
 
 
 updateComparison : String -> Comparison -> Comparison

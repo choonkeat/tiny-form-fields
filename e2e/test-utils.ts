@@ -7,7 +7,7 @@ export interface FieldEdit {
     maxlength?: number;
     choices?: string[];
     visibilityRule?: {
-        type: "Show  this question when" | "Hide  this question when";
+        type: "Show this question when" | "Hide this question when";
         field: string;
         comparison: {
             type: "equals" | "contains" | "choice includes" | "endsWith";
