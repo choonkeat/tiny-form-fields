@@ -14638,6 +14638,10 @@ var $author$project$Main$OnVisibilityRuleTypeInput = F2(
 	function (a, b) {
 		return {$: 'OnVisibilityRuleTypeInput', a: a, b: b};
 	});
+var $author$project$Main$comparisonOf = function (condition) {
+	var comparison = condition.b;
+	return comparison;
+};
 var $author$project$Main$isComparingWith = F2(
 	function (expected, given) {
 		switch (expected.$) {
@@ -14873,10 +14877,7 @@ var $author$project$Main$visibilityRuleSection = F5(
 																A2(
 																	$author$project$Main$isComparingWith,
 																	$author$project$Main$Equals('something'),
-																	function () {
-																		var comparison = rule.b;
-																		return comparison;
-																	}())),
+																	$author$project$Main$comparisonOf(rule))),
 																$elm$html$Html$Attributes$value('Equals')
 															]),
 														_List_fromArray(
@@ -14891,10 +14892,7 @@ var $author$project$Main$visibilityRuleSection = F5(
 																A2(
 																	$author$project$Main$isComparingWith,
 																	$author$project$Main$StringContains('something'),
-																	function () {
-																		var comparison = rule.b;
-																		return comparison;
-																	}())),
+																	$author$project$Main$comparisonOf(rule))),
 																$elm$html$Html$Attributes$value('StringContains')
 															]),
 														_List_fromArray(
@@ -14909,10 +14907,7 @@ var $author$project$Main$visibilityRuleSection = F5(
 																A2(
 																	$author$project$Main$isComparingWith,
 																	$author$project$Main$ChoiceIncludes('something'),
-																	function () {
-																		var comparison = rule.b;
-																		return comparison;
-																	}())),
+																	$author$project$Main$comparisonOf(rule))),
 																$elm$html$Html$Attributes$value('ChoiceIncludes')
 															]),
 														_List_fromArray(
@@ -14927,10 +14922,7 @@ var $author$project$Main$visibilityRuleSection = F5(
 																A2(
 																	$author$project$Main$isComparingWith,
 																	$author$project$Main$EndsWith('something'),
-																	function () {
-																		var comparison = rule.b;
-																		return comparison;
-																	}())),
+																	$author$project$Main$comparisonOf(rule))),
 																$elm$html$Html$Attributes$value('EndsWith')
 															]),
 														_List_fromArray(

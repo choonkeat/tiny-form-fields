@@ -1928,45 +1928,25 @@ visibilityRuleSection index formFields formField ruleIndex visibilityRule =
                                 ]
                                 [ option
                                     [ selected
-                                        (isComparingWith (Equals "something")
-                                            (case rule of
-                                                Field _ comparison ->
-                                                    comparison
-                                            )
-                                        )
+                                        (isComparingWith (Equals "something") (comparisonOf rule))
                                     , value "Equals"
                                     ]
                                     [ text "equals" ]
                                 , option
                                     [ selected
-                                        (isComparingWith (StringContains "something")
-                                            (case rule of
-                                                Field _ comparison ->
-                                                    comparison
-                                            )
-                                        )
+                                        (isComparingWith (StringContains "something") (comparisonOf rule))
                                     , value "StringContains"
                                     ]
                                     [ text "contains" ]
                                 , option
                                     [ selected
-                                        (isComparingWith (ChoiceIncludes "something")
-                                            (case rule of
-                                                Field _ comparison ->
-                                                    comparison
-                                            )
-                                        )
+                                        (isComparingWith (ChoiceIncludes "something") (comparisonOf rule))
                                     , value "ChoiceIncludes"
                                     ]
                                     [ text "choice includes" ]
                                 , option
                                     [ selected
-                                        (isComparingWith (EndsWith "something")
-                                            (case rule of
-                                                Field _ comparison ->
-                                                    comparison
-                                            )
-                                        )
+                                        (isComparingWith (EndsWith "something") (comparisonOf rule))
                                     , value "EndsWith"
                                     ]
                                     [ text "ends with" ]
@@ -3242,11 +3222,11 @@ visibilityRuleCondition rule =
 {- Helper to get conditions from a rule -}
 
 
-comparisonOf : Condition -> Maybe Comparison
+comparisonOf : Condition -> Comparison
 comparisonOf condition =
     case condition of
         Field _ comparison ->
-            Just comparison
+            comparison
 
 
 
