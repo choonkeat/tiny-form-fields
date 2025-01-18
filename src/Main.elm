@@ -402,11 +402,12 @@ type FormFieldMsg
     | OnMaxLengthInput
     | OnDatalistToggle Bool
     | OnDatalistInput
-    | OnVisibilityRuleTypeInput Int Bool
+    | OnVisibilityRuleTypeInput Int String
     | OnVisibilityConditionTypeInput Int String
     | OnVisibilityConditionFieldInput Int String
     | OnVisibilityConditionValueInput Int String
     | OnAddVisibilityRule
+    | OnVisibilityConditionDuplicate Int
 
 
 otherQuestionTitles : Array FormField -> Int -> List String
@@ -938,16 +939,28 @@ updateFormField msg index string formFields formField =
                 ChooseMultiple _ ->
                     formField
 
-        OnVisibilityRuleTypeInput ruleIndex isShow ->
+        OnVisibilityRuleTypeInput ruleIndex "" ->
+            { formField
+                | visibilityRule =
+                    formField.visibilityRule
+                        |> List.Extra.removeAt ruleIndex
+            }
+
+        OnVisibilityRuleTypeInput ruleIndex str ->
             { formField
                 | visibilityRule =
                     updateVisibilityRuleAt ruleIndex
                         (\rule ->
-                            if isShow then
-                                ShowWhen (visibilityRuleCondition rule)
+                            case str of
+                                "ShowWhen" ->
+                                    ShowWhen (visibilityRuleCondition rule)
 
-                            else
-                                HideWhen (visibilityRuleCondition rule)
+                                "HideWhen" ->
+                                    HideWhen (visibilityRuleCondition rule)
+
+                                _ ->
+                                    -- no change
+                                    rule
                         )
                         formField.visibilityRule
             }
@@ -962,6 +975,13 @@ updateFormField msg index string formFields formField =
                             )
                         )
                         formField.visibilityRule
+            }
+
+        OnVisibilityConditionFieldInput ruleIndex "" ->
+            { formField
+                | visibilityRule =
+                    formField.visibilityRule
+                        |> List.Extra.removeAt ruleIndex
             }
 
         OnVisibilityConditionFieldInput ruleIndex newFieldName ->
@@ -990,6 +1010,30 @@ updateFormField msg index string formFields formField =
 
         OnAddVisibilityRule ->
             { formField | visibilityRule = formField.visibilityRule ++ [ ShowWhen [ Field (getPreviousFieldLabel index formFields) (Equals "") ] ] }
+
+        OnVisibilityConditionDuplicate ruleIndex ->
+            let
+                newCondition conditions =
+                    case List.reverse conditions of
+                        last :: _ ->
+                            last
+
+                        [] ->
+                            Field (getPreviousFieldLabel index formFields) (Equals "")
+            in
+            { formField
+                | visibilityRule =
+                    updateVisibilityRuleAt ruleIndex
+                        (\rule ->
+                            case rule of
+                                ShowWhen conditions ->
+                                    ShowWhen (conditions ++ [ newCondition conditions ])
+
+                                HideWhen conditions ->
+                                    HideWhen (conditions ++ [ newCondition conditions ])
+                        )
+                        formField.visibilityRule
+            }
 
 
 onDropped : Maybe Int -> { a | dragged : Maybe Dragged, formFields : Array FormField } -> { a | dragged : Maybe Dragged, formFields : Array FormField }
@@ -1766,6 +1810,11 @@ visibilityRulesSection index formFields formField =
     div []
         [ label [ class "tff-field-label" ]
             [ text "Field logic" ]
+        , div []
+            (formField.visibilityRule
+                |> List.indexedMap (visibilityRuleSection index formFields)
+                |> List.intersperse (label [ class "tff-field-label" ] [ text "OR" ])
+            )
         , div [ class "tff-button-group" ]
             [ button
                 [ class "tff-button tff-button-secondary"
@@ -1774,93 +1823,95 @@ visibilityRulesSection index formFields formField =
                 ]
                 [ text "Add field logic" ]
             ]
-        , div []
-            (formField.visibilityRule
-                |> List.indexedMap (visibilityRuleSection index formFields)
-            )
         ]
 
 
 visibilityRuleSection : Int -> Array FormField -> Int -> VisibilityRule -> Html Msg
 visibilityRuleSection index formFields ruleIndex visibilityRule =
+    let
+        ruleHtml rule =
+            div [ class "tff-field-group tff-field-rule-condition" ]
+                [ div [ class "tff-dropdown-group" ]
+                    [ selectArrowDown
+                    , select
+                        [ class "tff-text-field tff-question-title"
+                        , required True
+                        , onInput (\str -> OnFormField (OnVisibilityConditionFieldInput ruleIndex str) index "")
+                        , required True
+                        ]
+                        (option [ value "" ] [ text " - " ]
+                            :: List.map
+                                (\title ->
+                                    option
+                                        [ value title
+                                        , selected
+                                            (title
+                                                == (case rule of
+                                                        Field fieldName _ ->
+                                                            fieldName
+                                                   )
+                                            )
+                                        ]
+                                        [ text (Json.Encode.encode 0 (Json.Encode.string title)) ]
+                                )
+                                (otherQuestionTitles formFields index)
+                        )
+                    ]
+                , selectInputGroup
+                    { selectAttrs =
+                        [ onInput (\str -> OnFormField (OnVisibilityConditionTypeInput ruleIndex str) index "")
+                        ]
+                    , options =
+                        [ ( "Equals", "Equals", isComparingWith (Equals "something") (comparisonOf rule) )
+                        , ( "StringContains", "Contains", isComparingWith (StringContains "something") (comparisonOf rule) )
+                        , ( "EndsWith", "Ends with", isComparingWith (EndsWith "something") (comparisonOf rule) )
+                        ]
+                    , inputAttrs =
+                        [ type_ "text"
+                        , value
+                            (case rule of
+                                Field _ (Equals v) ->
+                                    v
+
+                                Field _ (StringContains v) ->
+                                    v
+
+                                Field _ (EndsWith v) ->
+                                    v
+                            )
+                        , onInput (\str -> OnFormField (OnVisibilityConditionValueInput ruleIndex str) index "")
+                        , required True
+                        ]
+                    , children = []
+                    }
+                ]
+
+        rulesHtml =
+            List.map ruleHtml (visibilityRuleCondition visibilityRule)
+    in
     div [ class "tff-field-rule" ]
         [ div [ class "tff-field-group tff-field-rule-type" ]
             [ div [ class "tff-dropdown-group" ]
                 [ selectArrowDown
                 , select
                     [ class "tff-text-field tff-question-title"
-                    , onInput (\str -> OnFormField (OnVisibilityRuleTypeInput ruleIndex (str == "ShowWhen")) index "")
+                    , onInput (\str -> OnFormField (OnVisibilityRuleTypeInput ruleIndex str) index "")
                     , required True
                     ]
-                    [ option [ selected (isShowWhen visibilityRule), value "ShowWhen" ] [ text "Show this question when" ]
+                    [ option [ value "" ] [ text " - " ]
+                    , option [ selected (isShowWhen visibilityRule), value "ShowWhen" ] [ text "Show this question when" ]
                     , option [ selected (isHideWhen visibilityRule), value "HideWhen" ] [ text "Hide this question when" ]
                     ]
                 ]
             ]
-        , div [ class "tff-field-rule-conditions" ] <|
-            List.map
-                (\rule ->
-                    div [ class "tff-field-group tff-field-rule-condition" ]
-                        [ div [ class "tff-dropdown-group" ]
-                            [ selectArrowDown
-                            , select
-                                [ class "tff-text-field tff-question-title"
-                                , required True
-                                , onInput (\str -> OnFormField (OnVisibilityConditionFieldInput ruleIndex str) index "")
-                                , value
-                                    (case rule of
-                                        Field fieldName _ ->
-                                            fieldName
-                                    )
-                                , required True
-                                ]
-                                (List.map
-                                    (\title ->
-                                        option
-                                            [ value title
-                                            , selected
-                                                (title
-                                                    == (case rule of
-                                                            Field fieldName _ ->
-                                                                fieldName
-                                                       )
-                                                )
-                                            ]
-                                            [ text (Json.Encode.encode 0 (Json.Encode.string title)) ]
-                                    )
-                                    (otherQuestionTitles formFields index)
-                                )
-                            ]
-                        , selectInputGroup
-                            { selectAttrs =
-                                [ onInput (\str -> OnFormField (OnVisibilityConditionTypeInput ruleIndex str) index "")
-                                ]
-                            , options =
-                                [ ( "Equals", "Equals", isComparingWith (Equals "something") (comparisonOf rule) )
-                                , ( "StringContains", "Contains", isComparingWith (StringContains "something") (comparisonOf rule) )
-                                , ( "EndsWith", "Ends with", isComparingWith (EndsWith "something") (comparisonOf rule) )
-                                ]
-                            , inputAttrs =
-                                [ type_ "text"
-                                , value
-                                    (case rule of
-                                        Field _ (Equals v) ->
-                                            v
-
-                                        Field _ (StringContains v) ->
-                                            v
-
-                                        Field _ (EndsWith v) ->
-                                            v
-                                    )
-                                , onInput (\str -> OnFormField (OnVisibilityConditionValueInput ruleIndex str) index "")
-                                , required True
-                                ]
-                            , children = []
-                            }
-                        ]
-                )
-                (visibilityRuleCondition visibilityRule)
+        , div [ class "tff-field-rule-conditions" ]
+            (List.intersperse (label [ class "tff-field-label" ] [ text "AND" ]) rulesHtml)
+        , button
+            [ class "tff-button tff-button-secondary"
+            , type_ "button"
+            , onClick (OnFormField (OnVisibilityConditionDuplicate ruleIndex) index "")
+            ]
+            [ text "Add condition" ]
         ]
 
 
@@ -3195,10 +3246,10 @@ updateComparisonValue newValue comparison =
 
 
 updateVisibilityRuleAt : Int -> (VisibilityRule -> VisibilityRule) -> List VisibilityRule -> List VisibilityRule
-updateVisibilityRuleAt index updater rules =
+updateVisibilityRuleAt targetIndex updater rules =
     List.indexedMap
         (\i rule ->
-            if i == index then
+            if i == targetIndex then
                 updater rule
 
             else

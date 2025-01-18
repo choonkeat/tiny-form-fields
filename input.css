@@ -51,6 +51,7 @@
 
 .tff-field-rule-conditions {
     @apply pl-4;
+    @apply mb-2;
 }
 
 .tff-toggle-group {
@@ -627,4 +628,13 @@
 
 .tff-fields-container {
     @apply min-h-[200px];
+}
+
+.tff-button {
+    @apply inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-semibold;
+    @apply shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2;
+}
+
+.tff-button-secondary {
+    @apply bg-white text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50;
 }
