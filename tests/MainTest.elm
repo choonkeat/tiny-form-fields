@@ -886,14 +886,6 @@ fuzzFormField =
         (Fuzz.constant [])
 
 
-fuzzVisibilityRule : Fuzzer Main.VisibilityRule
-fuzzVisibilityRule =
-    Fuzz.oneOf
-        [ Fuzz.constant (Main.ShowWhen [])
-        , Fuzz.constant (Main.HideWhen [])
-        ]
-
-
 attributeOptionalFuzzer : Fuzzer a -> { blank : a } -> Fuzzer (Main.AttributeOptional a)
 attributeOptionalFuzzer fuzzer { blank } =
     fuzzer

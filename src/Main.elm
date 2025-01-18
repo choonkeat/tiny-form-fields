@@ -22,7 +22,6 @@ port module Main exposing
     , encodeFormFields
     , encodeInputField
     , encodePairsFromCustomElement
-    , encodeVisibilityRule
     , fieldsWithPlaceholder
     , fromRawCustomElement
     , main
@@ -404,7 +403,6 @@ type FormFieldMsg
     | OnMaxLengthInput
     | OnDatalistToggle Bool
     | OnDatalistInput
-    | OnVisibilityToggle Bool
     | OnVisibilityRuleTypeInput Int Bool
     | OnVisibilityConditionTypeInput Int String
     | OnVisibilityConditionFieldInput Int String
@@ -989,21 +987,6 @@ updateFormField msg index string formFields formField =
                             )
                         )
                         formField.visibilityRule
-            }
-
-        OnVisibilityToggle bool ->
-            { formField
-                | visibilityRule =
-                    if bool then
-                        case formField.visibilityRule of
-                            [] ->
-                                [ ShowWhen [] ]
-
-                            rules ->
-                                rules
-
-                    else
-                        []
             }
 
         OnAddVisibilityRule ->
@@ -1792,23 +1775,22 @@ visibilityRulesSection index formFields formField =
             ]
         , div []
             (formField.visibilityRule
-                |> List.indexedMap (visibilityRuleSection index formFields formField)
+                |> List.indexedMap (visibilityRuleSection index formFields)
             )
         ]
 
 
-visibilityRuleSection : Int -> Array FormField -> FormField -> Int -> VisibilityRule -> Html Msg
-visibilityRuleSection index formFields formField ruleIndex visibilityRule =
+visibilityRuleSection : Int -> Array FormField -> Int -> VisibilityRule -> Html Msg
+visibilityRuleSection index formFields ruleIndex visibilityRule =
     div []
         [ div [ class "tff-field-group" ]
             [ div [ class "tff-dropdown-group" ]
                 [ selectArrowDown
                 , select
-                    ([ class "tff-text-field tff-question-title"
-                     , onInput (\str -> OnFormField (OnVisibilityRuleTypeInput ruleIndex (str == "ShowWhen")) index "")
-                     ]
-                        ++ [ required True ]
-                    )
+                    [ class "tff-text-field tff-question-title"
+                    , onInput (\str -> OnFormField (OnVisibilityRuleTypeInput ruleIndex (str == "ShowWhen")) index "")
+                    , required True
+                    ]
                     [ option [ selected (isShowWhen visibilityRule), value "ShowWhen" ] [ text "Show this question when" ]
                     , option [ selected (isHideWhen visibilityRule), value "HideWhen" ] [ text "Hide this question when" ]
                     ]
@@ -1821,17 +1803,16 @@ visibilityRuleSection index formFields formField ruleIndex visibilityRule =
                         [ div [ class "tff-dropdown-group" ]
                             [ selectArrowDown
                             , select
-                                ([ class "tff-text-field tff-question-title"
-                                 , required True
-                                 , onInput (\str -> OnFormField (OnVisibilityConditionFieldInput ruleIndex str) index "")
-                                 , value
+                                [ class "tff-text-field tff-question-title"
+                                , required True
+                                , onInput (\str -> OnFormField (OnVisibilityConditionFieldInput ruleIndex str) index "")
+                                , value
                                     (case rule of
                                         Field fieldName _ ->
                                             fieldName
                                     )
-                                 ]
-                                    ++ [ required True ]
-                                )
+                                , required True
+                                ]
                                 (List.map
                                     (\title ->
                                         option
@@ -1852,11 +1833,10 @@ visibilityRuleSection index formFields formField ruleIndex visibilityRule =
                         , div [ class "tff-dropdown-group" ]
                             [ selectArrowDown
                             , select
-                                ([ class "tff-text-field tff-comparison-type"
-                                 , onInput (\str -> OnFormField (OnVisibilityConditionTypeInput ruleIndex str) index "")
-                                 ]
-                                    ++ [ required True ]
-                                )
+                                [ class "tff-text-field tff-comparison-type"
+                                , onInput (\str -> OnFormField (OnVisibilityConditionTypeInput ruleIndex str) index "")
+                                , required True
+                                ]
                                 [ option
                                     [ selected
                                         (isComparingWith (Equals "something") (comparisonOf rule))
@@ -1884,9 +1864,9 @@ visibilityRuleSection index formFields formField ruleIndex visibilityRule =
                                 ]
                             ]
                         , input
-                            ([ type_ "text"
-                             , class "tff-comparison-value"
-                             , value
+                            [ type_ "text"
+                            , class "tff-comparison-value"
+                            , value
                                 (case rule of
                                     Field _ (Equals v) ->
                                         v
@@ -1900,11 +1880,10 @@ visibilityRuleSection index formFields formField ruleIndex visibilityRule =
                                     Field _ (EndsWith v) ->
                                         v
                                 )
-                             , onInput (\str -> OnFormField (OnVisibilityConditionValueInput ruleIndex str) index "")
-                             , class "tff-text-field"
-                             ]
-                                ++ [ required True ]
-                            )
+                            , onInput (\str -> OnFormField (OnVisibilityConditionValueInput ruleIndex str) index "")
+                            , class "tff-text-field"
+                            , required True
+                            ]
                             []
                         ]
                 )
@@ -3200,36 +3179,6 @@ isComparingWith expected given =
 
                 _ ->
                     False
-
-
-
-{- Helper to update a comparison -}
-
-
-updateVisibilityRule : String -> VisibilityRule -> VisibilityRule
-updateVisibilityRule comparisonType rule =
-    case rule of
-        ShowWhen conditions ->
-            ShowWhen
-                (List.map
-                    (\condition ->
-                        case condition of
-                            Field fieldName comparison ->
-                                Field fieldName (updateComparison comparisonType comparison)
-                    )
-                    conditions
-                )
-
-        HideWhen conditions ->
-            HideWhen
-                (List.map
-                    (\condition ->
-                        case condition of
-                            Field fieldName comparison ->
-                                Field fieldName (updateComparison comparisonType comparison)
-                    )
-                    conditions
-                )
 
 
 
