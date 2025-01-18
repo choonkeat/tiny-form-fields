@@ -409,6 +409,7 @@ type FormFieldMsg
     | OnVisibilityConditionTypeInput Int String
     | OnVisibilityConditionFieldInput Int String
     | OnVisibilityConditionValueInput Int String
+    | OnAddVisibilityRule
 
 
 otherQuestionTitles : Array FormField -> Int -> List String
@@ -1004,6 +1005,9 @@ updateFormField msg index string formFields formField =
                     else
                         []
             }
+
+        OnAddVisibilityRule ->
+            { formField | visibilityRule = formField.visibilityRule ++ [ ShowWhen [ Field (getPreviousFieldLabel index formFields) (Equals "") ] ] }
 
 
 onDropped : Maybe Int -> { a | dragged : Maybe Dragged, formFields : Array FormField } -> { a | dragged : Maybe Dragged, formFields : Array FormField }
@@ -1778,6 +1782,14 @@ visibilityRulesSection index formFields formField =
     div []
         [ label [ class "tff-field-label" ]
             [ text "Field logic" ]
+        , div [ class "tff-button-group" ]
+            [ button
+                [ class "tff-button tff-button-secondary"
+                , type_ "button"
+                , onClick (OnFormField OnAddVisibilityRule index "")
+                ]
+                [ text "Add field logic" ]
+            ]
         , div []
             (formField.visibilityRule
                 |> List.indexedMap (visibilityRuleSection index formFields formField)
@@ -1792,9 +1804,11 @@ visibilityRuleSection index formFields formField ruleIndex visibilityRule =
             [ div [ class "tff-dropdown-group" ]
                 [ selectArrowDown
                 , select
-                    [ class "tff-text-field tff-question-title"
-                    , onInput (\str -> OnFormField (OnVisibilityRuleTypeInput ruleIndex (str == "ShowWhen")) index "")
-                    ]
+                    ([ class "tff-text-field tff-question-title"
+                     , onInput (\str -> OnFormField (OnVisibilityRuleTypeInput ruleIndex (str == "ShowWhen")) index "")
+                     ]
+                        ++ [ required True ]
+                    )
                     [ option [ selected (isShowWhen visibilityRule), value "ShowWhen" ] [ text "Show this question when" ]
                     , option [ selected (isHideWhen visibilityRule), value "HideWhen" ] [ text "Hide this question when" ]
                     ]
@@ -1807,15 +1821,17 @@ visibilityRuleSection index formFields formField ruleIndex visibilityRule =
                         [ div [ class "tff-dropdown-group" ]
                             [ selectArrowDown
                             , select
-                                [ class "tff-text-field tff-question-title"
-                                , required True
-                                , onInput (\str -> OnFormField (OnVisibilityConditionFieldInput ruleIndex str) index "")
-                                , value
+                                ([ class "tff-text-field tff-question-title"
+                                 , required True
+                                 , onInput (\str -> OnFormField (OnVisibilityConditionFieldInput ruleIndex str) index "")
+                                 , value
                                     (case rule of
                                         Field fieldName _ ->
                                             fieldName
                                     )
-                                ]
+                                 ]
+                                    ++ [ required True ]
+                                )
                                 (List.map
                                     (\title ->
                                         option
@@ -1836,9 +1852,11 @@ visibilityRuleSection index formFields formField ruleIndex visibilityRule =
                         , div [ class "tff-dropdown-group" ]
                             [ selectArrowDown
                             , select
-                                [ class "tff-text-field tff-comparison-type"
-                                , onInput (\str -> OnFormField (OnVisibilityConditionTypeInput ruleIndex str) index "")
-                                ]
+                                ([ class "tff-text-field tff-comparison-type"
+                                 , onInput (\str -> OnFormField (OnVisibilityConditionTypeInput ruleIndex str) index "")
+                                 ]
+                                    ++ [ required True ]
+                                )
                                 [ option
                                     [ selected
                                         (isComparingWith (Equals "something") (comparisonOf rule))
@@ -1866,9 +1884,9 @@ visibilityRuleSection index formFields formField ruleIndex visibilityRule =
                                 ]
                             ]
                         , input
-                            [ type_ "text"
-                            , class "tff-comparison-value"
-                            , value
+                            ([ type_ "text"
+                             , class "tff-comparison-value"
+                             , value
                                 (case rule of
                                     Field _ (Equals v) ->
                                         v
@@ -1882,9 +1900,11 @@ visibilityRuleSection index formFields formField ruleIndex visibilityRule =
                                     Field _ (EndsWith v) ->
                                         v
                                 )
-                            , onInput (\str -> OnFormField (OnVisibilityConditionValueInput ruleIndex str) index "")
-                            , class "tff-text-field"
-                            ]
+                             , onInput (\str -> OnFormField (OnVisibilityConditionValueInput ruleIndex str) index "")
+                             , class "tff-text-field"
+                             ]
+                                ++ [ required True ]
+                            )
                             []
                         ]
                 )
