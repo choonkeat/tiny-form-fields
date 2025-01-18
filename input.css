@@ -216,6 +216,7 @@
     0% {
         @apply opacity-100;
     }
+
     100% {
         @apply opacity-0;
     }
@@ -225,6 +226,7 @@
     0% {
         @apply opacity-0;
     }
+
     100% {
         @apply opacity-100;
     }
@@ -416,7 +418,7 @@
     }
 
     .tff-left-panel {
-        @apply w-64;
+        @apply w-80;
         @apply border-t-0;
         @apply border-r;
         @apply order-none;
@@ -437,7 +439,7 @@
     }
 
     .tff-right-panel {
-        @apply w-64;
+        @apply w-80;
         @apply absolute;
         @apply top-0;
         @apply left-0;
