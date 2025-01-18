@@ -40,7 +40,9 @@ Add support for conditional visibility where each field can specify when it shou
           ```elm
           type Comparison
               = Equals String      -- exact match
-              | Contains String    -- substring match
+              | StringContains String    -- substring match
+              | ChoiceIncludes String    -- choice includes value
+              | EndsWith String          -- string ends with value
           ```
         - Update decoder/encoder
         - Nothing else
@@ -50,24 +52,20 @@ Add support for conditional visibility where each field can specify when it shou
         - No event handlers yet
         - Nothing else
     - [x] Iteration 3: Just the field selection
-        - Populate field dropdown with previous fields only
+        - Populate field dropdown with all available fields
         - Wire up field selection event
         - Update model when field is selected
         - Nothing else
-    - [x] Iteration 4: Just the validation
-        - Prevent selecting fields that come after current field
-        - Show error message for invalid selections
-        - Nothing else
-- [ ] Support common operators (equals, not equals, contains, etc.)
-- [ ] Support multiple conditions with AND/OR logic
+- [x] Support common operators (equals, contains, choice includes, ends with)
+- [x] Support multiple conditions with AND/OR logic
+    - Added support for multiple visibility rules
+    - Each rule can have multiple conditions
+    - Rules are evaluated independently
 - [ ] Show indicator when a field has other fields depending on its value
 
 ### Validation & Dependencies
-- [ ] Enforce "fields can only depend on previous answers" rule
-- [ ] Automatically remove visibility rules when their referenced fields are moved after the dependent field
 - [ ] Automatically remove visibility rules when their referenced fields are deleted
 - [ ] Validate that referenced fields still exist when importing form definitions
-- [ ] Show warning indicator before reordering fields that have dependent rules
 
 ### Runtime Behavior
 - [x] Implement real-time visibility updates in CollectData mode
