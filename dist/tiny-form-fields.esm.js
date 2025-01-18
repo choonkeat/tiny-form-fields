@@ -12439,7 +12439,16 @@ var $author$project$Main$updateComparisonValue = F2(
 				return $author$project$Main$EndsWith(newValue);
 		}
 	});
-var $author$project$Main$updateConditions = $elm$core$List$map;
+var $author$project$Main$updateConditions = F3(
+	function (conditionIndex, updater, conditions) {
+		return A2(
+			$elm$core$List$indexedMap,
+			F2(
+				function (i, condition) {
+					return _Utils_eq(i, conditionIndex) ? updater(condition) : condition;
+				}),
+			conditions);
+	});
 var $author$project$Main$updateConditionsInRule = F2(
 	function (updater, rule) {
 		if (rule.$ === 'ShowWhen') {
@@ -12452,7 +12461,7 @@ var $author$project$Main$updateConditionsInRule = F2(
 				updater(conditions));
 		}
 	});
-var $author$project$Main$updateFieldInCondition = F2(
+var $author$project$Main$updateFieldnameInCondition = F2(
 	function (updater, condition) {
 		var fieldName = condition.a;
 		var comparison = condition.b;
@@ -12481,7 +12490,7 @@ var $author$project$Main$visibilityRuleCondition = function (rule) {
 	}
 };
 var $author$project$Main$updateFormField = F5(
-	function (msg, index, string, formFields, formField) {
+	function (msg, fieldIndex, string, formFields, formField) {
 		switch (msg.$) {
 			case 'OnLabelInput':
 				return _Utils_update(
@@ -12746,7 +12755,8 @@ var $author$project$Main$updateFormField = F5(
 				}
 			case 'OnVisibilityConditionTypeInput':
 				var ruleIndex = msg.a;
-				var str = msg.b;
+				var conditionIndex = msg.b;
+				var str = msg.c;
 				return _Utils_update(
 					formField,
 					{
@@ -12754,22 +12764,17 @@ var $author$project$Main$updateFormField = F5(
 							$author$project$Main$updateVisibilityRuleAt,
 							ruleIndex,
 							$author$project$Main$updateConditionsInRule(
-								$author$project$Main$updateConditions(
+								A2(
+									$author$project$Main$updateConditions,
+									conditionIndex,
 									$author$project$Main$updateComparisonInCondition(
 										$author$project$Main$updateComparison(str)))),
 							formField.visibilityRule)
 					});
 			case 'OnVisibilityConditionFieldInput':
-				if (msg.b === '') {
+				if (msg.c === '') {
 					var ruleIndex = msg.a;
-					return _Utils_update(
-						formField,
-						{
-							visibilityRule: A2($elm_community$list_extra$List$Extra$removeAt, ruleIndex, formField.visibilityRule)
-						});
-				} else {
-					var ruleIndex = msg.a;
-					var newFieldName = msg.b;
+					var conditionIndex = msg.b;
 					return _Utils_update(
 						formField,
 						{
@@ -12777,15 +12782,32 @@ var $author$project$Main$updateFormField = F5(
 								$author$project$Main$updateVisibilityRuleAt,
 								ruleIndex,
 								$author$project$Main$updateConditionsInRule(
-									$author$project$Main$updateConditions(
-										$author$project$Main$updateFieldInCondition(
+									$elm_community$list_extra$List$Extra$removeAt(conditionIndex)),
+								formField.visibilityRule)
+						});
+				} else {
+					var ruleIndex = msg.a;
+					var conditionIndex = msg.b;
+					var newFieldName = msg.c;
+					return _Utils_update(
+						formField,
+						{
+							visibilityRule: A3(
+								$author$project$Main$updateVisibilityRuleAt,
+								ruleIndex,
+								$author$project$Main$updateConditionsInRule(
+									A2(
+										$author$project$Main$updateConditions,
+										conditionIndex,
+										$author$project$Main$updateFieldnameInCondition(
 											$elm$core$Basics$always(newFieldName)))),
 								formField.visibilityRule)
 						});
 				}
 			case 'OnVisibilityConditionValueInput':
 				var ruleIndex = msg.a;
-				var newValue = msg.b;
+				var conditionIndex = msg.b;
+				var newValue = msg.c;
 				return _Utils_update(
 					formField,
 					{
@@ -12793,7 +12815,9 @@ var $author$project$Main$updateFormField = F5(
 							$author$project$Main$updateVisibilityRuleAt,
 							ruleIndex,
 							$author$project$Main$updateConditionsInRule(
-								$author$project$Main$updateConditions(
+								A2(
+									$author$project$Main$updateConditions,
+									conditionIndex,
 									$author$project$Main$updateComparisonInCondition(
 										$author$project$Main$updateComparisonValue(newValue)))),
 							formField.visibilityRule)
@@ -12811,7 +12835,7 @@ var $author$project$Main$updateFormField = F5(
 										[
 											A2(
 											$author$project$Main$Field,
-											A2($author$project$Main$getPreviousFieldLabel, index, formFields),
+											A2($author$project$Main$getPreviousFieldLabel, fieldIndex, formFields),
 											$author$project$Main$Equals(''))
 										]))
 								]))
@@ -12826,7 +12850,7 @@ var $author$project$Main$updateFormField = F5(
 					} else {
 						return A2(
 							$author$project$Main$Field,
-							A2($author$project$Main$getPreviousFieldLabel, index, formFields),
+							A2($author$project$Main$getPreviousFieldLabel, fieldIndex, formFields),
 							$author$project$Main$Equals(''));
 					}
 				};
@@ -12935,7 +12959,7 @@ var $author$project$Main$update = F2(
 												]))))
 								])));
 				case 'DeleteFormField':
-					var index = msg.a;
+					var fieldIndex = msg.a;
 					var newFormFields = $elm$core$Array$fromList(
 						A2(
 							$elm$core$List$map,
@@ -12944,7 +12968,7 @@ var $author$project$Main$update = F2(
 								$elm$core$List$filter,
 								function (_v3) {
 									var i = _v3.a;
-									return !_Utils_eq(i, index);
+									return !_Utils_eq(i, fieldIndex);
 								},
 								$elm$core$Array$toIndexedList(model.formFields))));
 					return _Utils_Tuple2(
@@ -12955,40 +12979,40 @@ var $author$project$Main$update = F2(
 							$author$project$Main$encodePortOutgoingValue(
 								$author$project$Main$PortOutgoingFormFields(newFormFields))));
 				case 'MoveFormFieldUp':
-					var index = msg.a;
-					var newFormFields = A3($author$project$Main$swapArrayIndex, index, index - 1, model.formFields);
+					var fieldIndex = msg.a;
+					var newFormFields = A3($author$project$Main$swapArrayIndex, fieldIndex, fieldIndex - 1, model.formFields);
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
 							{
 								formFields: newFormFields,
-								selectedFieldIndex: $elm$core$Maybe$Just(index - 1)
+								selectedFieldIndex: $elm$core$Maybe$Just(fieldIndex - 1)
 							}),
 						$author$project$Main$outgoing(
 							$author$project$Main$encodePortOutgoingValue(
 								$author$project$Main$PortOutgoingFormFields(newFormFields))));
 				case 'MoveFormFieldDown':
-					var index = msg.a;
-					var newFormFields = A3($author$project$Main$swapArrayIndex, index, index + 1, model.formFields);
+					var fieldIndex = msg.a;
+					var newFormFields = A3($author$project$Main$swapArrayIndex, fieldIndex, fieldIndex + 1, model.formFields);
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
 							{
 								formFields: newFormFields,
-								selectedFieldIndex: $elm$core$Maybe$Just(index + 1)
+								selectedFieldIndex: $elm$core$Maybe$Just(fieldIndex + 1)
 							}),
 						$author$project$Main$outgoing(
 							$author$project$Main$encodePortOutgoingValue(
 								$author$project$Main$PortOutgoingFormFields(newFormFields))));
 				case 'OnFormField':
 					var fmsg = msg.a;
-					var index = msg.b;
+					var fieldIndex = msg.b;
 					var string = msg.c;
 					var newFormFields = A2(
 						$elm$core$Array$indexedMap,
 						F2(
 							function (i, formField) {
-								return _Utils_eq(i, index) ? A5($author$project$Main$updateFormField, fmsg, index, string, model.formFields, formField) : formField;
+								return _Utils_eq(i, fieldIndex) ? A5($author$project$Main$updateFormField, fmsg, fieldIndex, string, model.formFields, formField) : formField;
 							}),
 						model.formFields);
 					return _Utils_Tuple2(
@@ -13009,8 +13033,8 @@ var $author$project$Main$update = F2(
 							}),
 						$elm$core$Platform$Cmd$none);
 				case 'SelectField':
-					var index = msg.a;
-					var _v4 = _Utils_Tuple2(model.selectedFieldIndex, index);
+					var fieldIndex = msg.a;
+					var _v4 = _Utils_Tuple2(model.selectedFieldIndex, fieldIndex);
 					if ((_v4.a.$ === 'Just') && (_v4.b.$ === 'Nothing')) {
 						var prevIndex = _v4.a.a;
 						var _v5 = _v4.b;
@@ -13030,23 +13054,23 @@ var $author$project$Main$update = F2(
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
-								{selectedFieldIndex: index}),
+								{selectedFieldIndex: fieldIndex}),
 							$elm$core$Platform$Cmd$none);
 					}
 				case 'DragStart':
-					var index = msg.a;
+					var fieldIndex = msg.a;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
 							{
 								dragged: $elm$core$Maybe$Just(
 									$author$project$Main$DragExisting(
-										{dragIndex: index, dropIndex: $elm$core$Maybe$Nothing})),
+										{dragIndex: fieldIndex, dropIndex: $elm$core$Maybe$Nothing})),
 								selectedFieldIndex: $elm$core$Maybe$Nothing
 							}),
 						$elm$core$Platform$Cmd$none);
 				case 'DragStartNew':
-					var field = msg.a;
+					var fieldIndex = msg.a;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
@@ -13056,7 +13080,7 @@ var $author$project$Main$update = F2(
 										{
 											dropIndex: $elm$core$Maybe$Just(
 												_Utils_Tuple2(0, $elm$core$Maybe$Nothing)),
-											field: field
+											field: fieldIndex
 										}))
 							}),
 						$elm$core$Platform$Cmd$none);
@@ -13100,8 +13124,8 @@ var $author$project$Main$update = F2(
 							}),
 						$elm$core$Platform$Cmd$none);
 				case 'Drop':
-					var targetIndex = msg.a;
-					var newModel = A2($author$project$Main$onDropped, targetIndex, model);
+					var targetFieldIndex = msg.a;
+					var newModel = A2($author$project$Main$onDropped, targetFieldIndex, model);
 					return _Utils_Tuple2(
 						newModel,
 						(!_Utils_eq(newModel.formFields, model.formFields)) ? $author$project$Main$outgoing(
@@ -14603,17 +14627,17 @@ var $author$project$Main$OnAddVisibilityRule = {$: 'OnAddVisibilityRule'};
 var $author$project$Main$OnVisibilityConditionDuplicate = function (a) {
 	return {$: 'OnVisibilityConditionDuplicate', a: a};
 };
-var $author$project$Main$OnVisibilityConditionFieldInput = F2(
-	function (a, b) {
-		return {$: 'OnVisibilityConditionFieldInput', a: a, b: b};
+var $author$project$Main$OnVisibilityConditionFieldInput = F3(
+	function (a, b, c) {
+		return {$: 'OnVisibilityConditionFieldInput', a: a, b: b, c: c};
 	});
-var $author$project$Main$OnVisibilityConditionTypeInput = F2(
-	function (a, b) {
-		return {$: 'OnVisibilityConditionTypeInput', a: a, b: b};
+var $author$project$Main$OnVisibilityConditionTypeInput = F3(
+	function (a, b, c) {
+		return {$: 'OnVisibilityConditionTypeInput', a: a, b: b, c: c};
 	});
-var $author$project$Main$OnVisibilityConditionValueInput = F2(
-	function (a, b) {
-		return {$: 'OnVisibilityConditionValueInput', a: a, b: b};
+var $author$project$Main$OnVisibilityConditionValueInput = F3(
+	function (a, b, c) {
+		return {$: 'OnVisibilityConditionValueInput', a: a, b: b, c: c};
 	});
 var $author$project$Main$OnVisibilityRuleTypeInput = F2(
 	function (a, b) {
@@ -14687,6 +14711,25 @@ var $author$project$Main$selectInputGroup = function (_v0) {
 	var options = _v0.options;
 	var inputAttrs = _v0.inputAttrs;
 	var children = _v0.children;
+	var calculatedAttrs = A2(
+		$elm$core$List$append,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('tff-selectinput-select')
+			]),
+		A2(
+			$elm$core$List$map,
+			function (_v3) {
+				var value = _v3.a;
+				return $elm$html$Html$Attributes$value(value);
+			},
+			A2(
+				$elm$core$List$filter,
+				function (_v2) {
+					var selected = _v2.c;
+					return selected;
+				},
+				options)));
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
@@ -14713,10 +14756,7 @@ var $author$project$Main$selectInputGroup = function (_v0) {
 							[
 								A2(
 								$elm$html$Html$select,
-								A2(
-									$elm$core$List$cons,
-									$elm$html$Html$Attributes$class('tff-selectinput-select'),
-									selectAttrs),
+								_Utils_ap(calculatedAttrs, selectAttrs),
 								A2(
 									$elm$core$List$map,
 									function (_v1) {
@@ -14749,150 +14789,156 @@ var $author$project$Main$selectInputGroup = function (_v0) {
 			]));
 };
 var $author$project$Main$visibilityRuleSection = F4(
-	function (index, formFields, ruleIndex, visibilityRule) {
-		var ruleHtml = function (rule) {
-			return A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('tff-field-group tff-field-rule-condition')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('tff-dropdown-group')
-							]),
-						_List_fromArray(
-							[
-								$author$project$Main$selectArrowDown,
-								A2(
-								$elm$html$Html$select,
-								_List_fromArray(
+	function (fieldIndex, formFields, ruleIndex, visibilityRule) {
+		var ruleHtml = F2(
+			function (conditionIndex, rule) {
+				return A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('tff-field-group tff-field-rule-condition')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('tff-dropdown-group')
+								]),
+							_List_fromArray(
+								[
+									$author$project$Main$selectArrowDown,
+									A2(
+									$elm$html$Html$select,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('tff-text-field tff-question-title'),
+											$elm$html$Html$Attributes$required(true),
+											$elm$html$Html$Events$onInput(
+											function (str) {
+												return A3(
+													$author$project$Main$OnFormField,
+													A3($author$project$Main$OnVisibilityConditionFieldInput, ruleIndex, conditionIndex, str),
+													fieldIndex,
+													'');
+											}),
+											$elm$html$Html$Attributes$required(true),
+											$elm$html$Html$Attributes$value(
+											function () {
+												var fieldName = rule.a;
+												return fieldName;
+											}())
+										]),
+									A2(
+										$elm$core$List$cons,
+										A2(
+											$elm$html$Html$option,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$value('')
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text(' - ')
+												])),
+										A2(
+											$elm$core$List$map,
+											function (title) {
+												return A2(
+													$elm$html$Html$option,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$value(title),
+															$elm$html$Html$Attributes$selected(
+															_Utils_eq(
+																title,
+																function () {
+																	var fieldName = rule.a;
+																	return fieldName;
+																}()))
+														]),
+													_List_fromArray(
+														[
+															$elm$html$Html$text(
+															A2(
+																$elm$json$Json$Encode$encode,
+																0,
+																$elm$json$Json$Encode$string(title)))
+														]));
+											},
+											A2($author$project$Main$otherQuestionTitles, formFields, fieldIndex))))
+								])),
+							$author$project$Main$selectInputGroup(
+							{
+								children: _List_Nil,
+								inputAttrs: _List_fromArray(
 									[
-										$elm$html$Html$Attributes$class('tff-text-field tff-question-title'),
-										$elm$html$Html$Attributes$required(true),
+										$elm$html$Html$Attributes$type_('text'),
+										$elm$html$Html$Attributes$value(
+										function () {
+											switch (rule.b.$) {
+												case 'Equals':
+													var v = rule.b.a;
+													return v;
+												case 'StringContains':
+													var v = rule.b.a;
+													return v;
+												default:
+													var v = rule.b.a;
+													return v;
+											}
+										}()),
 										$elm$html$Html$Events$onInput(
 										function (str) {
 											return A3(
 												$author$project$Main$OnFormField,
-												A2($author$project$Main$OnVisibilityConditionFieldInput, ruleIndex, str),
-												index,
+												A3($author$project$Main$OnVisibilityConditionValueInput, ruleIndex, conditionIndex, str),
+												fieldIndex,
 												'');
 										}),
 										$elm$html$Html$Attributes$required(true)
 									]),
-								A2(
-									$elm$core$List$cons,
-									A2(
-										$elm$html$Html$option,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$value('')
-											]),
-										_List_fromArray(
-											[
-												$elm$html$Html$text(' - ')
-											])),
-									A2(
-										$elm$core$List$map,
-										function (title) {
-											return A2(
-												$elm$html$Html$option,
-												_List_fromArray(
-													[
-														$elm$html$Html$Attributes$value(title),
-														$elm$html$Html$Attributes$selected(
-														_Utils_eq(
-															title,
-															function () {
-																var fieldName = rule.a;
-																return fieldName;
-															}()))
-													]),
-												_List_fromArray(
-													[
-														$elm$html$Html$text(
-														A2(
-															$elm$json$Json$Encode$encode,
-															0,
-															$elm$json$Json$Encode$string(title)))
-													]));
-										},
-										A2($author$project$Main$otherQuestionTitles, formFields, index))))
-							])),
-						$author$project$Main$selectInputGroup(
-						{
-							children: _List_Nil,
-							inputAttrs: _List_fromArray(
-								[
-									$elm$html$Html$Attributes$type_('text'),
-									$elm$html$Html$Attributes$value(
-									function () {
-										switch (rule.b.$) {
-											case 'Equals':
-												var v = rule.b.a;
-												return v;
-											case 'StringContains':
-												var v = rule.b.a;
-												return v;
-											default:
-												var v = rule.b.a;
-												return v;
-										}
-									}()),
-									$elm$html$Html$Events$onInput(
-									function (str) {
-										return A3(
-											$author$project$Main$OnFormField,
-											A2($author$project$Main$OnVisibilityConditionValueInput, ruleIndex, str),
-											index,
-											'');
-									}),
-									$elm$html$Html$Attributes$required(true)
-								]),
-							options: _List_fromArray(
-								[
-									_Utils_Tuple3(
-									'Equals',
-									'Equals',
-									A2(
-										$author$project$Main$isComparingWith,
-										$author$project$Main$Equals('something'),
-										$author$project$Main$comparisonOf(rule))),
-									_Utils_Tuple3(
-									'StringContains',
-									'Contains',
-									A2(
-										$author$project$Main$isComparingWith,
-										$author$project$Main$StringContains('something'),
-										$author$project$Main$comparisonOf(rule))),
-									_Utils_Tuple3(
-									'EndsWith',
-									'Ends with',
-									A2(
-										$author$project$Main$isComparingWith,
-										$author$project$Main$EndsWith('something'),
-										$author$project$Main$comparisonOf(rule)))
-								]),
-							selectAttrs: _List_fromArray(
-								[
-									$elm$html$Html$Events$onInput(
-									function (str) {
-										return A3(
-											$author$project$Main$OnFormField,
-											A2($author$project$Main$OnVisibilityConditionTypeInput, ruleIndex, str),
-											index,
-											'');
-									})
-								])
-						})
-					]));
-		};
+								options: _List_fromArray(
+									[
+										_Utils_Tuple3(
+										'Equals',
+										'Equals',
+										A2(
+											$author$project$Main$isComparingWith,
+											$author$project$Main$Equals('something'),
+											$author$project$Main$comparisonOf(rule))),
+										_Utils_Tuple3(
+										'StringContains',
+										'Contains',
+										A2(
+											$author$project$Main$isComparingWith,
+											$author$project$Main$StringContains('something'),
+											$author$project$Main$comparisonOf(rule))),
+										_Utils_Tuple3(
+										'EndsWith',
+										'Ends with',
+										A2(
+											$author$project$Main$isComparingWith,
+											$author$project$Main$EndsWith('something'),
+											$author$project$Main$comparisonOf(rule)))
+									]),
+								selectAttrs: _List_fromArray(
+									[
+										$elm$html$Html$Events$onInput(
+										function (str) {
+											return A3(
+												$author$project$Main$OnFormField,
+												A3($author$project$Main$OnVisibilityConditionTypeInput, ruleIndex, conditionIndex, str),
+												fieldIndex,
+												'');
+										})
+									])
+							})
+						]));
+			});
 		var rulesHtml = A2(
-			$elm$core$List$map,
+			$elm$core$List$indexedMap,
 			ruleHtml,
 			$author$project$Main$visibilityRuleCondition(visibilityRule));
 		return A2(
@@ -14930,10 +14976,18 @@ var $author$project$Main$visibilityRuleSection = F4(
 												return A3(
 													$author$project$Main$OnFormField,
 													A2($author$project$Main$OnVisibilityRuleTypeInput, ruleIndex, str),
-													index,
+													fieldIndex,
 													'');
 											}),
-											$elm$html$Html$Attributes$required(true)
+											$elm$html$Html$Attributes$required(true),
+											$elm$html$Html$Attributes$value(
+											function () {
+												if (visibilityRule.$ === 'ShowWhen') {
+													return 'ShowWhen';
+												} else {
+													return 'HideWhen';
+												}
+											}())
 										]),
 									_List_fromArray(
 										[
@@ -15003,7 +15057,7 @@ var $author$project$Main$visibilityRuleSection = F4(
 							A3(
 								$author$project$Main$OnFormField,
 								$author$project$Main$OnVisibilityConditionDuplicate(ruleIndex),
-								index,
+								fieldIndex,
 								''))
 						]),
 					_List_fromArray(
@@ -15706,7 +15760,7 @@ var $author$project$Main$view = function (model) {
 var $author$project$Main$main = $elm$browser$Browser$element(
 	{init: $author$project$Main$init, subscriptions: $author$project$Main$subscriptions, update: $author$project$Main$update, view: $author$project$Main$view});
 /*
-_Platform_export({'Main':{'init':$author$project$Main$main($elm$json$Json$Decode$value)({"versions":{"elm":"0.19.1"},"types":{"message":"Main.Msg","aliases":{"Main.Droppable":{"args":[],"type":"( Basics.Int, Maybe.Maybe Main.FormField )"},"Main.FormField":{"args":[],"type":"{ label : String.String, name : Maybe.Maybe String.String, presence : Main.Presence, description : Main.AttributeOptional String.String, type_ : Main.InputField, visibilityRule : List.List Main.VisibilityRule }"},"Main.Choice":{"args":[],"type":"{ label : String.String, value : String.String }"},"Main.CustomElement":{"args":[],"type":"{ inputType : String.String, inputTag : String.String, attributes : Dict.Dict String.String String.String, multiple : Main.AttributeOptional Basics.Bool, maxlength : Main.AttributeOptional Basics.Int, datalist : Main.AttributeOptional (List.List Main.Choice) }"}},"unions":{"Main.Msg":{"args":[],"tags":{"NoOp":[],"OnPortIncoming":["Json.Encode.Value"],"AddFormField":["Main.InputField"],"DeleteFormField":["Basics.Int"],"MoveFormFieldUp":["Basics.Int"],"MoveFormFieldDown":["Basics.Int"],"OnFormField":["Main.FormFieldMsg","Basics.Int","String.String"],"SetEditorAnimate":["Maybe.Maybe ( Basics.Int, Main.Animate )"],"SelectField":["Maybe.Maybe Basics.Int"],"DragStart":["Basics.Int"],"DragStartNew":["Main.FormField"],"DragEnd":[],"DragOver":["Maybe.Maybe Main.Droppable"],"Drop":["Maybe.Maybe Basics.Int"],"DoSleepDo":["Basics.Float","List.List Main.Msg"],"OnFormValuesUpdated":["String.String","String.String"]}},"Main.Animate":{"args":[],"tags":{"AnimateYellowFade":[],"AnimateFadeOut":[]}},"Main.AttributeOptional":{"args":["a"],"tags":{"AttributeNotNeeded":["Maybe.Maybe a"],"AttributeInvalid":["String.String"],"AttributeGiven":["a"]}},"Basics.Float":{"args":[],"tags":{"Float":[]}},"Main.FormFieldMsg":{"args":[],"tags":{"OnLabelInput":[],"OnDescriptionInput":[],"OnDescriptionToggle":["Basics.Bool"],"OnRequiredInput":["Basics.Bool"],"OnChoicesInput":[],"OnMultipleToggle":["Basics.Bool"],"OnMaxLengthToggle":["Basics.Bool"],"OnMaxLengthInput":[],"OnDatalistToggle":["Basics.Bool"],"OnDatalistInput":[],"OnVisibilityRuleTypeInput":["Basics.Int","String.String"],"OnVisibilityConditionTypeInput":["Basics.Int","String.String"],"OnVisibilityConditionFieldInput":["Basics.Int","String.String"],"OnVisibilityConditionValueInput":["Basics.Int","String.String"],"OnAddVisibilityRule":[],"OnVisibilityConditionDuplicate":["Basics.Int"]}},"Main.InputField":{"args":[],"tags":{"ShortText":["Main.CustomElement"],"LongText":["Main.AttributeOptional Basics.Int"],"Dropdown":["List.List Main.Choice"],"ChooseOne":["List.List Main.Choice"],"ChooseMultiple":["List.List Main.Choice"]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"List.List":{"args":["a"],"tags":{}},"Maybe.Maybe":{"args":["a"],"tags":{"Just":["a"],"Nothing":[]}},"Main.Presence":{"args":[],"tags":{"Required":[],"Optional":[],"System":[]}},"String.String":{"args":[],"tags":{"String":[]}},"Json.Encode.Value":{"args":[],"tags":{"Value":[]}},"Main.VisibilityRule":{"args":[],"tags":{"ShowWhen":["List.List Main.Condition"],"HideWhen":["List.List Main.Condition"]}},"Basics.Bool":{"args":[],"tags":{"True":[],"False":[]}},"Main.Condition":{"args":[],"tags":{"Field":["String.String","Main.Comparison"]}},"Dict.Dict":{"args":["k","v"],"tags":{"RBNode_elm_builtin":["Dict.NColor","k","v","Dict.Dict k v","Dict.Dict k v"],"RBEmpty_elm_builtin":[]}},"Main.Comparison":{"args":[],"tags":{"Equals":["String.String"],"StringContains":["String.String"],"EndsWith":["String.String"]}},"Dict.NColor":{"args":[],"tags":{"Red":[],"Black":[]}}}}})}});}(this));
+_Platform_export({'Main':{'init':$author$project$Main$main($elm$json$Json$Decode$value)({"versions":{"elm":"0.19.1"},"types":{"message":"Main.Msg","aliases":{"Main.Droppable":{"args":[],"type":"( Basics.Int, Maybe.Maybe Main.FormField )"},"Main.FormField":{"args":[],"type":"{ label : String.String, name : Maybe.Maybe String.String, presence : Main.Presence, description : Main.AttributeOptional String.String, type_ : Main.InputField, visibilityRule : List.List Main.VisibilityRule }"},"Main.Choice":{"args":[],"type":"{ label : String.String, value : String.String }"},"Main.CustomElement":{"args":[],"type":"{ inputType : String.String, inputTag : String.String, attributes : Dict.Dict String.String String.String, multiple : Main.AttributeOptional Basics.Bool, maxlength : Main.AttributeOptional Basics.Int, datalist : Main.AttributeOptional (List.List Main.Choice) }"}},"unions":{"Main.Msg":{"args":[],"tags":{"NoOp":[],"OnPortIncoming":["Json.Encode.Value"],"AddFormField":["Main.InputField"],"DeleteFormField":["Basics.Int"],"MoveFormFieldUp":["Basics.Int"],"MoveFormFieldDown":["Basics.Int"],"OnFormField":["Main.FormFieldMsg","Basics.Int","String.String"],"SetEditorAnimate":["Maybe.Maybe ( Basics.Int, Main.Animate )"],"SelectField":["Maybe.Maybe Basics.Int"],"DragStart":["Basics.Int"],"DragStartNew":["Main.FormField"],"DragEnd":[],"DragOver":["Maybe.Maybe Main.Droppable"],"Drop":["Maybe.Maybe Basics.Int"],"DoSleepDo":["Basics.Float","List.List Main.Msg"],"OnFormValuesUpdated":["String.String","String.String"]}},"Main.Animate":{"args":[],"tags":{"AnimateYellowFade":[],"AnimateFadeOut":[]}},"Main.AttributeOptional":{"args":["a"],"tags":{"AttributeNotNeeded":["Maybe.Maybe a"],"AttributeInvalid":["String.String"],"AttributeGiven":["a"]}},"Basics.Float":{"args":[],"tags":{"Float":[]}},"Main.FormFieldMsg":{"args":[],"tags":{"OnLabelInput":[],"OnDescriptionInput":[],"OnDescriptionToggle":["Basics.Bool"],"OnRequiredInput":["Basics.Bool"],"OnChoicesInput":[],"OnMultipleToggle":["Basics.Bool"],"OnMaxLengthToggle":["Basics.Bool"],"OnMaxLengthInput":[],"OnDatalistToggle":["Basics.Bool"],"OnDatalistInput":[],"OnVisibilityRuleTypeInput":["Basics.Int","String.String"],"OnVisibilityConditionTypeInput":["Basics.Int","Basics.Int","String.String"],"OnVisibilityConditionFieldInput":["Basics.Int","Basics.Int","String.String"],"OnVisibilityConditionValueInput":["Basics.Int","Basics.Int","String.String"],"OnAddVisibilityRule":[],"OnVisibilityConditionDuplicate":["Basics.Int"]}},"Main.InputField":{"args":[],"tags":{"ShortText":["Main.CustomElement"],"LongText":["Main.AttributeOptional Basics.Int"],"Dropdown":["List.List Main.Choice"],"ChooseOne":["List.List Main.Choice"],"ChooseMultiple":["List.List Main.Choice"]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"List.List":{"args":["a"],"tags":{}},"Maybe.Maybe":{"args":["a"],"tags":{"Just":["a"],"Nothing":[]}},"Main.Presence":{"args":[],"tags":{"Required":[],"Optional":[],"System":[]}},"String.String":{"args":[],"tags":{"String":[]}},"Json.Encode.Value":{"args":[],"tags":{"Value":[]}},"Main.VisibilityRule":{"args":[],"tags":{"ShowWhen":["List.List Main.Condition"],"HideWhen":["List.List Main.Condition"]}},"Basics.Bool":{"args":[],"tags":{"True":[],"False":[]}},"Main.Condition":{"args":[],"tags":{"Field":["String.String","Main.Comparison"]}},"Dict.Dict":{"args":["k","v"],"tags":{"RBNode_elm_builtin":["Dict.NColor","k","v","Dict.Dict k v","Dict.Dict k v"],"RBEmpty_elm_builtin":[]}},"Main.Comparison":{"args":[],"tags":{"Equals":["String.String"],"StringContains":["String.String"],"EndsWith":["String.String"]}},"Dict.NColor":{"args":[],"tags":{"Red":[],"Black":[]}}}}})}});}(this));
 */
-export const Elm = {'Main':{'init':$author$project$Main$main($elm$json$Json$Decode$value)({"versions":{"elm":"0.19.1"},"types":{"message":"Main.Msg","aliases":{"Main.Droppable":{"args":[],"type":"( Basics.Int, Maybe.Maybe Main.FormField )"},"Main.FormField":{"args":[],"type":"{ label : String.String, name : Maybe.Maybe String.String, presence : Main.Presence, description : Main.AttributeOptional String.String, type_ : Main.InputField, visibilityRule : List.List Main.VisibilityRule }"},"Main.Choice":{"args":[],"type":"{ label : String.String, value : String.String }"},"Main.CustomElement":{"args":[],"type":"{ inputType : String.String, inputTag : String.String, attributes : Dict.Dict String.String String.String, multiple : Main.AttributeOptional Basics.Bool, maxlength : Main.AttributeOptional Basics.Int, datalist : Main.AttributeOptional (List.List Main.Choice) }"}},"unions":{"Main.Msg":{"args":[],"tags":{"NoOp":[],"OnPortIncoming":["Json.Encode.Value"],"AddFormField":["Main.InputField"],"DeleteFormField":["Basics.Int"],"MoveFormFieldUp":["Basics.Int"],"MoveFormFieldDown":["Basics.Int"],"OnFormField":["Main.FormFieldMsg","Basics.Int","String.String"],"SetEditorAnimate":["Maybe.Maybe ( Basics.Int, Main.Animate )"],"SelectField":["Maybe.Maybe Basics.Int"],"DragStart":["Basics.Int"],"DragStartNew":["Main.FormField"],"DragEnd":[],"DragOver":["Maybe.Maybe Main.Droppable"],"Drop":["Maybe.Maybe Basics.Int"],"DoSleepDo":["Basics.Float","List.List Main.Msg"],"OnFormValuesUpdated":["String.String","String.String"]}},"Main.Animate":{"args":[],"tags":{"AnimateYellowFade":[],"AnimateFadeOut":[]}},"Main.AttributeOptional":{"args":["a"],"tags":{"AttributeNotNeeded":["Maybe.Maybe a"],"AttributeInvalid":["String.String"],"AttributeGiven":["a"]}},"Basics.Float":{"args":[],"tags":{"Float":[]}},"Main.FormFieldMsg":{"args":[],"tags":{"OnLabelInput":[],"OnDescriptionInput":[],"OnDescriptionToggle":["Basics.Bool"],"OnRequiredInput":["Basics.Bool"],"OnChoicesInput":[],"OnMultipleToggle":["Basics.Bool"],"OnMaxLengthToggle":["Basics.Bool"],"OnMaxLengthInput":[],"OnDatalistToggle":["Basics.Bool"],"OnDatalistInput":[],"OnVisibilityRuleTypeInput":["Basics.Int","String.String"],"OnVisibilityConditionTypeInput":["Basics.Int","String.String"],"OnVisibilityConditionFieldInput":["Basics.Int","String.String"],"OnVisibilityConditionValueInput":["Basics.Int","String.String"],"OnAddVisibilityRule":[],"OnVisibilityConditionDuplicate":["Basics.Int"]}},"Main.InputField":{"args":[],"tags":{"ShortText":["Main.CustomElement"],"LongText":["Main.AttributeOptional Basics.Int"],"Dropdown":["List.List Main.Choice"],"ChooseOne":["List.List Main.Choice"],"ChooseMultiple":["List.List Main.Choice"]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"List.List":{"args":["a"],"tags":{}},"Maybe.Maybe":{"args":["a"],"tags":{"Just":["a"],"Nothing":[]}},"Main.Presence":{"args":[],"tags":{"Required":[],"Optional":[],"System":[]}},"String.String":{"args":[],"tags":{"String":[]}},"Json.Encode.Value":{"args":[],"tags":{"Value":[]}},"Main.VisibilityRule":{"args":[],"tags":{"ShowWhen":["List.List Main.Condition"],"HideWhen":["List.List Main.Condition"]}},"Basics.Bool":{"args":[],"tags":{"True":[],"False":[]}},"Main.Condition":{"args":[],"tags":{"Field":["String.String","Main.Comparison"]}},"Dict.Dict":{"args":["k","v"],"tags":{"RBNode_elm_builtin":["Dict.NColor","k","v","Dict.Dict k v","Dict.Dict k v"],"RBEmpty_elm_builtin":[]}},"Main.Comparison":{"args":[],"tags":{"Equals":["String.String"],"StringContains":["String.String"],"EndsWith":["String.String"]}},"Dict.NColor":{"args":[],"tags":{"Red":[],"Black":[]}}}}})}};
+export const Elm = {'Main':{'init':$author$project$Main$main($elm$json$Json$Decode$value)({"versions":{"elm":"0.19.1"},"types":{"message":"Main.Msg","aliases":{"Main.Droppable":{"args":[],"type":"( Basics.Int, Maybe.Maybe Main.FormField )"},"Main.FormField":{"args":[],"type":"{ label : String.String, name : Maybe.Maybe String.String, presence : Main.Presence, description : Main.AttributeOptional String.String, type_ : Main.InputField, visibilityRule : List.List Main.VisibilityRule }"},"Main.Choice":{"args":[],"type":"{ label : String.String, value : String.String }"},"Main.CustomElement":{"args":[],"type":"{ inputType : String.String, inputTag : String.String, attributes : Dict.Dict String.String String.String, multiple : Main.AttributeOptional Basics.Bool, maxlength : Main.AttributeOptional Basics.Int, datalist : Main.AttributeOptional (List.List Main.Choice) }"}},"unions":{"Main.Msg":{"args":[],"tags":{"NoOp":[],"OnPortIncoming":["Json.Encode.Value"],"AddFormField":["Main.InputField"],"DeleteFormField":["Basics.Int"],"MoveFormFieldUp":["Basics.Int"],"MoveFormFieldDown":["Basics.Int"],"OnFormField":["Main.FormFieldMsg","Basics.Int","String.String"],"SetEditorAnimate":["Maybe.Maybe ( Basics.Int, Main.Animate )"],"SelectField":["Maybe.Maybe Basics.Int"],"DragStart":["Basics.Int"],"DragStartNew":["Main.FormField"],"DragEnd":[],"DragOver":["Maybe.Maybe Main.Droppable"],"Drop":["Maybe.Maybe Basics.Int"],"DoSleepDo":["Basics.Float","List.List Main.Msg"],"OnFormValuesUpdated":["String.String","String.String"]}},"Main.Animate":{"args":[],"tags":{"AnimateYellowFade":[],"AnimateFadeOut":[]}},"Main.AttributeOptional":{"args":["a"],"tags":{"AttributeNotNeeded":["Maybe.Maybe a"],"AttributeInvalid":["String.String"],"AttributeGiven":["a"]}},"Basics.Float":{"args":[],"tags":{"Float":[]}},"Main.FormFieldMsg":{"args":[],"tags":{"OnLabelInput":[],"OnDescriptionInput":[],"OnDescriptionToggle":["Basics.Bool"],"OnRequiredInput":["Basics.Bool"],"OnChoicesInput":[],"OnMultipleToggle":["Basics.Bool"],"OnMaxLengthToggle":["Basics.Bool"],"OnMaxLengthInput":[],"OnDatalistToggle":["Basics.Bool"],"OnDatalistInput":[],"OnVisibilityRuleTypeInput":["Basics.Int","String.String"],"OnVisibilityConditionTypeInput":["Basics.Int","Basics.Int","String.String"],"OnVisibilityConditionFieldInput":["Basics.Int","Basics.Int","String.String"],"OnVisibilityConditionValueInput":["Basics.Int","Basics.Int","String.String"],"OnAddVisibilityRule":[],"OnVisibilityConditionDuplicate":["Basics.Int"]}},"Main.InputField":{"args":[],"tags":{"ShortText":["Main.CustomElement"],"LongText":["Main.AttributeOptional Basics.Int"],"Dropdown":["List.List Main.Choice"],"ChooseOne":["List.List Main.Choice"],"ChooseMultiple":["List.List Main.Choice"]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"List.List":{"args":["a"],"tags":{}},"Maybe.Maybe":{"args":["a"],"tags":{"Just":["a"],"Nothing":[]}},"Main.Presence":{"args":[],"tags":{"Required":[],"Optional":[],"System":[]}},"String.String":{"args":[],"tags":{"String":[]}},"Json.Encode.Value":{"args":[],"tags":{"Value":[]}},"Main.VisibilityRule":{"args":[],"tags":{"ShowWhen":["List.List Main.Condition"],"HideWhen":["List.List Main.Condition"]}},"Basics.Bool":{"args":[],"tags":{"True":[],"False":[]}},"Main.Condition":{"args":[],"tags":{"Field":["String.String","Main.Comparison"]}},"Dict.Dict":{"args":["k","v"],"tags":{"RBNode_elm_builtin":["Dict.NColor","k","v","Dict.Dict k v","Dict.Dict k v"],"RBEmpty_elm_builtin":[]}},"Main.Comparison":{"args":[],"tags":{"Equals":["String.String"],"StringContains":["String.String"],"EndsWith":["String.String"]}},"Dict.NColor":{"args":[],"tags":{"Red":[],"Black":[]}}}}})}};
   

@@ -403,9 +403,9 @@ type FormFieldMsg
     | OnDatalistToggle Bool
     | OnDatalistInput
     | OnVisibilityRuleTypeInput Int String
-    | OnVisibilityConditionTypeInput Int String
-    | OnVisibilityConditionFieldInput Int String
-    | OnVisibilityConditionValueInput Int String
+    | OnVisibilityConditionTypeInput Int Int String
+    | OnVisibilityConditionFieldInput Int Int String
+    | OnVisibilityConditionValueInput Int Int String
     | OnAddVisibilityRule
     | OnVisibilityConditionDuplicate Int
 
@@ -587,11 +587,11 @@ update msg model =
                 ]
             )
 
-        DeleteFormField index ->
+        DeleteFormField fieldIndex ->
             let
                 newFormFields =
                     Array.toIndexedList model.formFields
-                        |> List.filter (\( i, _ ) -> i /= index)
+                        |> List.filter (\( i, _ ) -> i /= fieldIndex)
                         |> List.map Tuple.second
                         |> Array.fromList
             in
@@ -599,37 +599,37 @@ update msg model =
             , outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
             )
 
-        MoveFormFieldUp index ->
+        MoveFormFieldUp fieldIndex ->
             let
                 newFormFields =
-                    swapArrayIndex index (index - 1) model.formFields
+                    swapArrayIndex fieldIndex (fieldIndex - 1) model.formFields
             in
             ( { model
                 | formFields = newFormFields
-                , selectedFieldIndex = Just (index - 1)
+                , selectedFieldIndex = Just (fieldIndex - 1)
               }
             , outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
             )
 
-        MoveFormFieldDown index ->
+        MoveFormFieldDown fieldIndex ->
             let
                 newFormFields =
-                    swapArrayIndex index (index + 1) model.formFields
+                    swapArrayIndex fieldIndex (fieldIndex + 1) model.formFields
             in
             ( { model
                 | formFields = newFormFields
-                , selectedFieldIndex = Just (index + 1)
+                , selectedFieldIndex = Just (fieldIndex + 1)
               }
             , outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
             )
 
-        OnFormField fmsg index string ->
+        OnFormField fmsg fieldIndex string ->
             let
                 newFormFields =
                     Array.indexedMap
                         (\i formField ->
-                            if i == index then
-                                updateFormField fmsg index string model.formFields formField
+                            if i == fieldIndex then
+                                updateFormField fmsg fieldIndex string model.formFields formField
 
                             else
                                 formField
@@ -645,8 +645,8 @@ update msg model =
             , Cmd.none
             )
 
-        SelectField index ->
-            case ( model.selectedFieldIndex, index ) of
+        SelectField fieldIndex ->
+            case ( model.selectedFieldIndex, fieldIndex ) of
                 ( Just prevIndex, Nothing ) ->
                     ( { model
                         | selectedFieldIndex = Nothing
@@ -656,21 +656,21 @@ update msg model =
                     )
 
                 _ ->
-                    ( { model | selectedFieldIndex = index }
+                    ( { model | selectedFieldIndex = fieldIndex }
                     , Cmd.none
                     )
 
-        DragStart index ->
+        DragStart fieldIndex ->
             ( { model
-                | dragged = Just (DragExisting { dragIndex = index, dropIndex = Nothing }) -- use index as initial dropTargetIndex
+                | dragged = Just (DragExisting { dragIndex = fieldIndex, dropIndex = Nothing }) -- use index as initial dropTargetIndex
                 , selectedFieldIndex = Nothing
               }
             , Cmd.none
             )
 
-        DragStartNew field ->
+        DragStartNew fieldIndex ->
             ( { model
-                | dragged = Just (DragNew { field = field, dropIndex = Just ( 0, Nothing ) }) -- new field starts at index 0
+                | dragged = Just (DragNew { field = fieldIndex, dropIndex = Just ( 0, Nothing ) }) -- new field starts at index 0
               }
             , Cmd.none
             )
@@ -693,10 +693,10 @@ update msg model =
             , Cmd.none
             )
 
-        Drop targetIndex ->
+        Drop targetFieldIndex ->
             let
                 newModel =
-                    onDropped targetIndex model
+                    onDropped targetFieldIndex model
             in
             ( newModel
             , if newModel.formFields /= model.formFields then
@@ -767,7 +767,7 @@ update msg model =
 
 
 updateFormField : FormFieldMsg -> Int -> String -> Array FormField -> FormField -> FormField
-updateFormField msg index string formFields formField =
+updateFormField msg fieldIndex string formFields formField =
     case msg of
         OnLabelInput ->
             { formField | label = string }
@@ -965,43 +965,46 @@ updateFormField msg index string formFields formField =
                         formField.visibilityRule
             }
 
-        OnVisibilityConditionTypeInput ruleIndex str ->
+        OnVisibilityConditionTypeInput ruleIndex conditionIndex str ->
             { formField
                 | visibilityRule =
                     updateVisibilityRuleAt ruleIndex
                         (updateConditionsInRule
-                            (updateConditions
+                            (updateConditions conditionIndex
                                 (updateComparisonInCondition (updateComparison str))
                             )
                         )
                         formField.visibilityRule
             }
 
-        OnVisibilityConditionFieldInput ruleIndex "" ->
-            { formField
-                | visibilityRule =
-                    formField.visibilityRule
-                        |> List.Extra.removeAt ruleIndex
-            }
-
-        OnVisibilityConditionFieldInput ruleIndex newFieldName ->
+        OnVisibilityConditionFieldInput ruleIndex conditionIndex "" ->
             { formField
                 | visibilityRule =
                     updateVisibilityRuleAt ruleIndex
                         (updateConditionsInRule
-                            (updateConditions
-                                (updateFieldInCondition (always newFieldName))
+                            (List.Extra.removeAt conditionIndex)
+                        )
+                        formField.visibilityRule
+            }
+
+        OnVisibilityConditionFieldInput ruleIndex conditionIndex newFieldName ->
+            { formField
+                | visibilityRule =
+                    updateVisibilityRuleAt ruleIndex
+                        (updateConditionsInRule
+                            (updateConditions conditionIndex
+                                (updateFieldnameInCondition (always newFieldName))
                             )
                         )
                         formField.visibilityRule
             }
 
-        OnVisibilityConditionValueInput ruleIndex newValue ->
+        OnVisibilityConditionValueInput ruleIndex conditionIndex newValue ->
             { formField
                 | visibilityRule =
                     updateVisibilityRuleAt ruleIndex
                         (updateConditionsInRule
-                            (updateConditions
+                            (updateConditions conditionIndex
                                 (updateComparisonInCondition (updateComparisonValue newValue))
                             )
                         )
@@ -1009,7 +1012,7 @@ updateFormField msg index string formFields formField =
             }
 
         OnAddVisibilityRule ->
-            { formField | visibilityRule = formField.visibilityRule ++ [ ShowWhen [ Field (getPreviousFieldLabel index formFields) (Equals "") ] ] }
+            { formField | visibilityRule = formField.visibilityRule ++ [ ShowWhen [ Field (getPreviousFieldLabel fieldIndex formFields) (Equals "") ] ] }
 
         OnVisibilityConditionDuplicate ruleIndex ->
             let
@@ -1019,7 +1022,7 @@ updateFormField msg index string formFields formField =
                             last
 
                         [] ->
-                            Field (getPreviousFieldLabel index formFields) (Equals "")
+                            Field (getPreviousFieldLabel fieldIndex formFields) (Equals "")
             in
             { formField
                 | visibilityRule =
@@ -1827,17 +1830,22 @@ visibilityRulesSection index formFields formField =
 
 
 visibilityRuleSection : Int -> Array FormField -> Int -> VisibilityRule -> Html Msg
-visibilityRuleSection index formFields ruleIndex visibilityRule =
+visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
     let
-        ruleHtml rule =
+        ruleHtml conditionIndex rule =
             div [ class "tff-field-group tff-field-rule-condition" ]
                 [ div [ class "tff-dropdown-group" ]
                     [ selectArrowDown
                     , select
                         [ class "tff-text-field tff-question-title"
                         , required True
-                        , onInput (\str -> OnFormField (OnVisibilityConditionFieldInput ruleIndex str) index "")
+                        , onInput (\str -> OnFormField (OnVisibilityConditionFieldInput ruleIndex conditionIndex str) fieldIndex "")
                         , required True
+                        , value
+                            (case rule of
+                                Field fieldName _ ->
+                                    fieldName
+                            )
                         ]
                         (option [ value "" ] [ text " - " ]
                             :: List.map
@@ -1854,12 +1862,12 @@ visibilityRuleSection index formFields ruleIndex visibilityRule =
                                         ]
                                         [ text (Json.Encode.encode 0 (Json.Encode.string title)) ]
                                 )
-                                (otherQuestionTitles formFields index)
+                                (otherQuestionTitles formFields fieldIndex)
                         )
                     ]
                 , selectInputGroup
                     { selectAttrs =
-                        [ onInput (\str -> OnFormField (OnVisibilityConditionTypeInput ruleIndex str) index "")
+                        [ onInput (\str -> OnFormField (OnVisibilityConditionTypeInput ruleIndex conditionIndex str) fieldIndex "")
                         ]
                     , options =
                         [ ( "Equals", "Equals", isComparingWith (Equals "something") (comparisonOf rule) )
@@ -1879,7 +1887,7 @@ visibilityRuleSection index formFields ruleIndex visibilityRule =
                                 Field _ (EndsWith v) ->
                                     v
                             )
-                        , onInput (\str -> OnFormField (OnVisibilityConditionValueInput ruleIndex str) index "")
+                        , onInput (\str -> OnFormField (OnVisibilityConditionValueInput ruleIndex conditionIndex str) fieldIndex "")
                         , required True
                         ]
                     , children = []
@@ -1887,7 +1895,7 @@ visibilityRuleSection index formFields ruleIndex visibilityRule =
                 ]
 
         rulesHtml =
-            List.map ruleHtml (visibilityRuleCondition visibilityRule)
+            List.indexedMap ruleHtml (visibilityRuleCondition visibilityRule)
     in
     div [ class "tff-field-rule" ]
         [ div [ class "tff-field-group tff-field-rule-type" ]
@@ -1895,8 +1903,16 @@ visibilityRuleSection index formFields ruleIndex visibilityRule =
                 [ selectArrowDown
                 , select
                     [ class "tff-text-field tff-question-title"
-                    , onInput (\str -> OnFormField (OnVisibilityRuleTypeInput ruleIndex str) index "")
+                    , onInput (\str -> OnFormField (OnVisibilityRuleTypeInput ruleIndex str) fieldIndex "")
                     , required True
+                    , value
+                        (case visibilityRule of
+                            ShowWhen _ ->
+                                "ShowWhen"
+
+                            HideWhen _ ->
+                                "HideWhen"
+                        )
                     ]
                     [ option [ value "" ] [ text " - " ]
                     , option [ selected (isShowWhen visibilityRule), value "ShowWhen" ] [ text "Show this question when" ]
@@ -1909,7 +1925,7 @@ visibilityRuleSection index formFields ruleIndex visibilityRule =
         , button
             [ class "tff-button tff-button-secondary"
             , type_ "button"
-            , onClick (OnFormField (OnVisibilityConditionDuplicate ruleIndex) index "")
+            , onClick (OnFormField (OnVisibilityConditionDuplicate ruleIndex) fieldIndex "")
             ]
             [ text "Add condition" ]
         ]
@@ -3268,13 +3284,21 @@ updateConditionsInRule updater rule =
             HideWhen (updater conditions)
 
 
-updateConditions : (Condition -> Condition) -> List Condition -> List Condition
-updateConditions =
-    List.map
+updateConditions : Int -> (Condition -> Condition) -> List Condition -> List Condition
+updateConditions conditionIndex updater conditions =
+    List.indexedMap
+        (\i condition ->
+            if i == conditionIndex then
+                updater condition
+
+            else
+                condition
+        )
+        conditions
 
 
-updateFieldInCondition : (String -> String) -> Condition -> Condition
-updateFieldInCondition updater condition =
+updateFieldnameInCondition : (String -> String) -> Condition -> Condition
+updateFieldnameInCondition updater condition =
     case condition of
         Field fieldName comparison ->
             Field (updater fieldName) comparison
@@ -3293,6 +3317,12 @@ updateComparisonInCondition updater condition =
 
 selectInputGroup : { selectAttrs : List (Html.Attribute msg), options : List ( String, String, Bool ), inputAttrs : List (Html.Attribute msg), children : List (Html.Html msg) } -> Html msg
 selectInputGroup { selectAttrs, options, inputAttrs, children } =
+    let
+        calculatedAttrs =
+            List.filter (\( _, _, selected ) -> selected) options
+                |> List.map (\( value, _, _ ) -> Attr.value value)
+                |> List.append [ class "tff-selectinput-select" ]
+    in
     div
         [ Attr.class "tff-selectinput-wrapper"
         ]
@@ -3302,7 +3332,7 @@ selectInputGroup { selectAttrs, options, inputAttrs, children } =
             [ div
                 [ Attr.class "tff-selectinput-select-wrapper"
                 ]
-                [ select (class "tff-selectinput-select" :: selectAttrs)
+                [ select (calculatedAttrs ++ selectAttrs)
                     (List.map
                         (\( value, label, selected ) ->
                             option

@@ -7512,7 +7512,16 @@ var $author$project$Main$updateComparisonValue = F2(
 				return $author$project$Main$EndsWith(newValue);
 		}
 	});
-var $author$project$Main$updateConditions = $elm$core$List$map;
+var $author$project$Main$updateConditions = F3(
+	function (conditionIndex, updater, conditions) {
+		return A2(
+			$elm$core$List$indexedMap,
+			F2(
+				function (i, condition) {
+					return _Utils_eq(i, conditionIndex) ? updater(condition) : condition;
+				}),
+			conditions);
+	});
 var $author$project$Main$updateConditionsInRule = F2(
 	function (updater, rule) {
 		if (!rule.$) {
@@ -7525,7 +7534,7 @@ var $author$project$Main$updateConditionsInRule = F2(
 				updater(conditions));
 		}
 	});
-var $author$project$Main$updateFieldInCondition = F2(
+var $author$project$Main$updateFieldnameInCondition = F2(
 	function (updater, condition) {
 		var fieldName = condition.a;
 		var comparison = condition.b;
@@ -7554,7 +7563,7 @@ var $author$project$Main$visibilityRuleCondition = function (rule) {
 	}
 };
 var $author$project$Main$updateFormField = F5(
-	function (msg, index, string, formFields, formField) {
+	function (msg, fieldIndex, string, formFields, formField) {
 		switch (msg.$) {
 			case 0:
 				return _Utils_update(
@@ -7819,7 +7828,8 @@ var $author$project$Main$updateFormField = F5(
 				}
 			case 11:
 				var ruleIndex = msg.a;
-				var str = msg.b;
+				var conditionIndex = msg.b;
+				var str = msg.c;
 				return _Utils_update(
 					formField,
 					{
@@ -7827,22 +7837,17 @@ var $author$project$Main$updateFormField = F5(
 							$author$project$Main$updateVisibilityRuleAt,
 							ruleIndex,
 							$author$project$Main$updateConditionsInRule(
-								$author$project$Main$updateConditions(
+								A2(
+									$author$project$Main$updateConditions,
+									conditionIndex,
 									$author$project$Main$updateComparisonInCondition(
 										$author$project$Main$updateComparison(str)))),
 							formField.l)
 					});
 			case 12:
-				if (msg.b === '') {
+				if (msg.c === '') {
 					var ruleIndex = msg.a;
-					return _Utils_update(
-						formField,
-						{
-							l: A2($elm_community$list_extra$List$Extra$removeAt, ruleIndex, formField.l)
-						});
-				} else {
-					var ruleIndex = msg.a;
-					var newFieldName = msg.b;
+					var conditionIndex = msg.b;
 					return _Utils_update(
 						formField,
 						{
@@ -7850,15 +7855,32 @@ var $author$project$Main$updateFormField = F5(
 								$author$project$Main$updateVisibilityRuleAt,
 								ruleIndex,
 								$author$project$Main$updateConditionsInRule(
-									$author$project$Main$updateConditions(
-										$author$project$Main$updateFieldInCondition(
+									$elm_community$list_extra$List$Extra$removeAt(conditionIndex)),
+								formField.l)
+						});
+				} else {
+					var ruleIndex = msg.a;
+					var conditionIndex = msg.b;
+					var newFieldName = msg.c;
+					return _Utils_update(
+						formField,
+						{
+							l: A3(
+								$author$project$Main$updateVisibilityRuleAt,
+								ruleIndex,
+								$author$project$Main$updateConditionsInRule(
+									A2(
+										$author$project$Main$updateConditions,
+										conditionIndex,
+										$author$project$Main$updateFieldnameInCondition(
 											$elm$core$Basics$always(newFieldName)))),
 								formField.l)
 						});
 				}
 			case 13:
 				var ruleIndex = msg.a;
-				var newValue = msg.b;
+				var conditionIndex = msg.b;
+				var newValue = msg.c;
 				return _Utils_update(
 					formField,
 					{
@@ -7866,7 +7888,9 @@ var $author$project$Main$updateFormField = F5(
 							$author$project$Main$updateVisibilityRuleAt,
 							ruleIndex,
 							$author$project$Main$updateConditionsInRule(
-								$author$project$Main$updateConditions(
+								A2(
+									$author$project$Main$updateConditions,
+									conditionIndex,
 									$author$project$Main$updateComparisonInCondition(
 										$author$project$Main$updateComparisonValue(newValue)))),
 							formField.l)
@@ -7884,7 +7908,7 @@ var $author$project$Main$updateFormField = F5(
 										[
 											A2(
 											$author$project$Main$Field,
-											A2($author$project$Main$getPreviousFieldLabel, index, formFields),
+											A2($author$project$Main$getPreviousFieldLabel, fieldIndex, formFields),
 											$author$project$Main$Equals(''))
 										]))
 								]))
@@ -7899,7 +7923,7 @@ var $author$project$Main$updateFormField = F5(
 					} else {
 						return A2(
 							$author$project$Main$Field,
-							A2($author$project$Main$getPreviousFieldLabel, index, formFields),
+							A2($author$project$Main$getPreviousFieldLabel, fieldIndex, formFields),
 							$author$project$Main$Equals(''));
 					}
 				};
@@ -8008,7 +8032,7 @@ var $author$project$Main$update = F2(
 												]))))
 								])));
 				case 3:
-					var index = msg.a;
+					var fieldIndex = msg.a;
 					var newFormFields = $elm$core$Array$fromList(
 						A2(
 							$elm$core$List$map,
@@ -8017,7 +8041,7 @@ var $author$project$Main$update = F2(
 								$elm$core$List$filter,
 								function (_v3) {
 									var i = _v3.a;
-									return !_Utils_eq(i, index);
+									return !_Utils_eq(i, fieldIndex);
 								},
 								$elm$core$Array$toIndexedList(model.d))));
 					return _Utils_Tuple2(
@@ -8028,40 +8052,40 @@ var $author$project$Main$update = F2(
 							$author$project$Main$encodePortOutgoingValue(
 								$author$project$Main$PortOutgoingFormFields(newFormFields))));
 				case 4:
-					var index = msg.a;
-					var newFormFields = A3($author$project$Main$swapArrayIndex, index, index - 1, model.d);
+					var fieldIndex = msg.a;
+					var newFormFields = A3($author$project$Main$swapArrayIndex, fieldIndex, fieldIndex - 1, model.d);
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
 							{
 								d: newFormFields,
-								B: $elm$core$Maybe$Just(index - 1)
+								B: $elm$core$Maybe$Just(fieldIndex - 1)
 							}),
 						$author$project$Main$outgoing(
 							$author$project$Main$encodePortOutgoingValue(
 								$author$project$Main$PortOutgoingFormFields(newFormFields))));
 				case 5:
-					var index = msg.a;
-					var newFormFields = A3($author$project$Main$swapArrayIndex, index, index + 1, model.d);
+					var fieldIndex = msg.a;
+					var newFormFields = A3($author$project$Main$swapArrayIndex, fieldIndex, fieldIndex + 1, model.d);
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
 							{
 								d: newFormFields,
-								B: $elm$core$Maybe$Just(index + 1)
+								B: $elm$core$Maybe$Just(fieldIndex + 1)
 							}),
 						$author$project$Main$outgoing(
 							$author$project$Main$encodePortOutgoingValue(
 								$author$project$Main$PortOutgoingFormFields(newFormFields))));
 				case 6:
 					var fmsg = msg.a;
-					var index = msg.b;
+					var fieldIndex = msg.b;
 					var string = msg.c;
 					var newFormFields = A2(
 						$elm$core$Array$indexedMap,
 						F2(
 							function (i, formField) {
-								return _Utils_eq(i, index) ? A5($author$project$Main$updateFormField, fmsg, index, string, model.d, formField) : formField;
+								return _Utils_eq(i, fieldIndex) ? A5($author$project$Main$updateFormField, fmsg, fieldIndex, string, model.d, formField) : formField;
 							}),
 						model.d);
 					return _Utils_Tuple2(
@@ -8082,8 +8106,8 @@ var $author$project$Main$update = F2(
 							}),
 						$elm$core$Platform$Cmd$none);
 				case 8:
-					var index = msg.a;
-					var _v4 = _Utils_Tuple2(model.B, index);
+					var fieldIndex = msg.a;
+					var _v4 = _Utils_Tuple2(model.B, fieldIndex);
 					if ((!_v4.a.$) && (_v4.b.$ === 1)) {
 						var prevIndex = _v4.a.a;
 						var _v5 = _v4.b;
@@ -8103,23 +8127,23 @@ var $author$project$Main$update = F2(
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
-								{B: index}),
+								{B: fieldIndex}),
 							$elm$core$Platform$Cmd$none);
 					}
 				case 9:
-					var index = msg.a;
+					var fieldIndex = msg.a;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
 							{
 								m: $elm$core$Maybe$Just(
 									$author$project$Main$DragExisting(
-										{aT: index, D: $elm$core$Maybe$Nothing})),
+										{aT: fieldIndex, D: $elm$core$Maybe$Nothing})),
 								B: $elm$core$Maybe$Nothing
 							}),
 						$elm$core$Platform$Cmd$none);
 				case 10:
-					var field = msg.a;
+					var fieldIndex = msg.a;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
@@ -8129,7 +8153,7 @@ var $author$project$Main$update = F2(
 										{
 											D: $elm$core$Maybe$Just(
 												_Utils_Tuple2(0, $elm$core$Maybe$Nothing)),
-											bl: field
+											bl: fieldIndex
 										}))
 							}),
 						$elm$core$Platform$Cmd$none);
@@ -8173,8 +8197,8 @@ var $author$project$Main$update = F2(
 							}),
 						$elm$core$Platform$Cmd$none);
 				case 13:
-					var targetIndex = msg.a;
-					var newModel = A2($author$project$Main$onDropped, targetIndex, model);
+					var targetFieldIndex = msg.a;
+					var newModel = A2($author$project$Main$onDropped, targetFieldIndex, model);
 					return _Utils_Tuple2(
 						newModel,
 						(!_Utils_eq(newModel.d, model.d)) ? $author$project$Main$outgoing(
@@ -9786,17 +9810,17 @@ var $elm$core$List$intersperse = F2(
 var $author$project$Main$OnVisibilityConditionDuplicate = function (a) {
 	return {$: 15, a: a};
 };
-var $author$project$Main$OnVisibilityConditionFieldInput = F2(
-	function (a, b) {
-		return {$: 12, a: a, b: b};
+var $author$project$Main$OnVisibilityConditionFieldInput = F3(
+	function (a, b, c) {
+		return {$: 12, a: a, b: b, c: c};
 	});
-var $author$project$Main$OnVisibilityConditionTypeInput = F2(
-	function (a, b) {
-		return {$: 11, a: a, b: b};
+var $author$project$Main$OnVisibilityConditionTypeInput = F3(
+	function (a, b, c) {
+		return {$: 11, a: a, b: b, c: c};
 	});
-var $author$project$Main$OnVisibilityConditionValueInput = F2(
-	function (a, b) {
-		return {$: 13, a: a, b: b};
+var $author$project$Main$OnVisibilityConditionValueInput = F3(
+	function (a, b, c) {
+		return {$: 13, a: a, b: b, c: c};
 	});
 var $author$project$Main$OnVisibilityRuleTypeInput = F2(
 	function (a, b) {
@@ -9932,150 +9956,151 @@ var $author$project$Main$selectInputGroup = function (_v0) {
 			]));
 };
 var $author$project$Main$visibilityRuleSection = F4(
-	function (index, formFields, ruleIndex, visibilityRule) {
-		var ruleHtml = function (rule) {
-			return A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('tff-field-group tff-field-rule-condition')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('tff-dropdown-group')
-							]),
-						_List_fromArray(
-							[
-								$author$project$Main$selectArrowDown,
-								A2(
-								$elm$html$Html$select,
-								_List_fromArray(
+	function (fieldIndex, formFields, ruleIndex, visibilityRule) {
+		var ruleHtml = F2(
+			function (conditionIndex, rule) {
+				return A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('tff-field-group tff-field-rule-condition')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('tff-dropdown-group')
+								]),
+							_List_fromArray(
+								[
+									$author$project$Main$selectArrowDown,
+									A2(
+									$elm$html$Html$select,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('tff-text-field tff-question-title'),
+											$elm$html$Html$Attributes$required(true),
+											$elm$html$Html$Events$onInput(
+											function (str) {
+												return A3(
+													$author$project$Main$OnFormField,
+													A3($author$project$Main$OnVisibilityConditionFieldInput, ruleIndex, conditionIndex, str),
+													fieldIndex,
+													'');
+											}),
+											$elm$html$Html$Attributes$required(true)
+										]),
+									A2(
+										$elm$core$List$cons,
+										A2(
+											$elm$html$Html$option,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$value('')
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text(' - ')
+												])),
+										A2(
+											$elm$core$List$map,
+											function (title) {
+												return A2(
+													$elm$html$Html$option,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$value(title),
+															$elm$html$Html$Attributes$selected(
+															_Utils_eq(
+																title,
+																function () {
+																	var fieldName = rule.a;
+																	return fieldName;
+																}()))
+														]),
+													_List_fromArray(
+														[
+															$elm$html$Html$text(
+															A2(
+																$elm$json$Json$Encode$encode,
+																0,
+																$elm$json$Json$Encode$string(title)))
+														]));
+											},
+											A2($author$project$Main$otherQuestionTitles, formFields, fieldIndex))))
+								])),
+							$author$project$Main$selectInputGroup(
+							{
+								bc: _List_Nil,
+								bw: _List_fromArray(
 									[
-										$elm$html$Html$Attributes$class('tff-text-field tff-question-title'),
-										$elm$html$Html$Attributes$required(true),
+										$elm$html$Html$Attributes$type_('text'),
+										$elm$html$Html$Attributes$value(
+										function () {
+											switch (rule.b.$) {
+												case 0:
+													var v = rule.b.a;
+													return v;
+												case 1:
+													var v = rule.b.a;
+													return v;
+												default:
+													var v = rule.b.a;
+													return v;
+											}
+										}()),
 										$elm$html$Html$Events$onInput(
 										function (str) {
 											return A3(
 												$author$project$Main$OnFormField,
-												A2($author$project$Main$OnVisibilityConditionFieldInput, ruleIndex, str),
-												index,
+												A3($author$project$Main$OnVisibilityConditionValueInput, ruleIndex, conditionIndex, str),
+												fieldIndex,
 												'');
 										}),
 										$elm$html$Html$Attributes$required(true)
 									]),
-								A2(
-									$elm$core$List$cons,
-									A2(
-										$elm$html$Html$option,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$value('')
-											]),
-										_List_fromArray(
-											[
-												$elm$html$Html$text(' - ')
-											])),
-									A2(
-										$elm$core$List$map,
-										function (title) {
-											return A2(
-												$elm$html$Html$option,
-												_List_fromArray(
-													[
-														$elm$html$Html$Attributes$value(title),
-														$elm$html$Html$Attributes$selected(
-														_Utils_eq(
-															title,
-															function () {
-																var fieldName = rule.a;
-																return fieldName;
-															}()))
-													]),
-												_List_fromArray(
-													[
-														$elm$html$Html$text(
-														A2(
-															$elm$json$Json$Encode$encode,
-															0,
-															$elm$json$Json$Encode$string(title)))
-													]));
-										},
-										A2($author$project$Main$otherQuestionTitles, formFields, index))))
-							])),
-						$author$project$Main$selectInputGroup(
-						{
-							bc: _List_Nil,
-							bw: _List_fromArray(
-								[
-									$elm$html$Html$Attributes$type_('text'),
-									$elm$html$Html$Attributes$value(
-									function () {
-										switch (rule.b.$) {
-											case 0:
-												var v = rule.b.a;
-												return v;
-											case 1:
-												var v = rule.b.a;
-												return v;
-											default:
-												var v = rule.b.a;
-												return v;
-										}
-									}()),
-									$elm$html$Html$Events$onInput(
-									function (str) {
-										return A3(
-											$author$project$Main$OnFormField,
-											A2($author$project$Main$OnVisibilityConditionValueInput, ruleIndex, str),
-											index,
-											'');
-									}),
-									$elm$html$Html$Attributes$required(true)
-								]),
-							bI: _List_fromArray(
-								[
-									_Utils_Tuple3(
-									'Equals',
-									'Equals',
-									A2(
-										$author$project$Main$isComparingWith,
-										$author$project$Main$Equals('something'),
-										$author$project$Main$comparisonOf(rule))),
-									_Utils_Tuple3(
-									'StringContains',
-									'Contains',
-									A2(
-										$author$project$Main$isComparingWith,
-										$author$project$Main$StringContains('something'),
-										$author$project$Main$comparisonOf(rule))),
-									_Utils_Tuple3(
-									'EndsWith',
-									'Ends with',
-									A2(
-										$author$project$Main$isComparingWith,
-										$author$project$Main$EndsWith('something'),
-										$author$project$Main$comparisonOf(rule)))
-								]),
-							bY: _List_fromArray(
-								[
-									$elm$html$Html$Events$onInput(
-									function (str) {
-										return A3(
-											$author$project$Main$OnFormField,
-											A2($author$project$Main$OnVisibilityConditionTypeInput, ruleIndex, str),
-											index,
-											'');
-									})
-								])
-						})
-					]));
-		};
+								bI: _List_fromArray(
+									[
+										_Utils_Tuple3(
+										'Equals',
+										'Equals',
+										A2(
+											$author$project$Main$isComparingWith,
+											$author$project$Main$Equals('something'),
+											$author$project$Main$comparisonOf(rule))),
+										_Utils_Tuple3(
+										'StringContains',
+										'Contains',
+										A2(
+											$author$project$Main$isComparingWith,
+											$author$project$Main$StringContains('something'),
+											$author$project$Main$comparisonOf(rule))),
+										_Utils_Tuple3(
+										'EndsWith',
+										'Ends with',
+										A2(
+											$author$project$Main$isComparingWith,
+											$author$project$Main$EndsWith('something'),
+											$author$project$Main$comparisonOf(rule)))
+									]),
+								bY: _List_fromArray(
+									[
+										$elm$html$Html$Events$onInput(
+										function (str) {
+											return A3(
+												$author$project$Main$OnFormField,
+												A3($author$project$Main$OnVisibilityConditionTypeInput, ruleIndex, conditionIndex, str),
+												fieldIndex,
+												'');
+										})
+									])
+							})
+						]));
+			});
 		var rulesHtml = A2(
-			$elm$core$List$map,
+			$elm$core$List$indexedMap,
 			ruleHtml,
 			$author$project$Main$visibilityRuleCondition(visibilityRule));
 		return A2(
@@ -10113,7 +10138,7 @@ var $author$project$Main$visibilityRuleSection = F4(
 												return A3(
 													$author$project$Main$OnFormField,
 													A2($author$project$Main$OnVisibilityRuleTypeInput, ruleIndex, str),
-													index,
+													fieldIndex,
 													'');
 											}),
 											$elm$html$Html$Attributes$required(true)
@@ -10186,7 +10211,7 @@ var $author$project$Main$visibilityRuleSection = F4(
 							A3(
 								$author$project$Main$OnFormField,
 								$author$project$Main$OnVisibilityConditionDuplicate(ruleIndex),
-								index,
+								fieldIndex,
 								''))
 						]),
 					_List_fromArray(
