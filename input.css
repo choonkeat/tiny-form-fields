@@ -42,7 +42,7 @@
 
 .tff-field-rule {
     @apply bg-white;
-    @apply p-1;
+    @apply p-2;
     @apply rounded;
     @apply border;
     @apply border-gray-300;
@@ -224,6 +224,37 @@
     @apply hidden;
 }
 
+/* Input with currency styles */
+.tff-selectinput-wrapper {
+    @apply mt-2;
+}
+
+.tff-selectinput-group {
+    @apply flex items-center rounded-md bg-white outline outline-1 -outline-offset-1 outline-gray-300;
+    @apply has-[input:focus-within]:outline has-[input:focus-within]:outline-2 has-[input:focus-within]:-outline-offset-2 has-[input:focus-within]:outline-indigo-600;
+}
+
+.tff-selectinput-input {
+    @apply block min-w-0 grow py-1.5 pl-1 pr-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline focus:outline-0 sm:text-sm/6;
+}
+
+.tff-selectinput-select-wrapper {
+    @apply grid shrink-0 grid-cols-1 focus-within:relative;
+}
+
+.tff-selectinput-select {
+    @apply col-start-1 row-start-1 w-full appearance-none rounded-md py-1.5 pl-3 pr-7 text-base text-gray-500 placeholder:text-gray-400;
+    @apply focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6;
+}
+
+.tff-selectarrow-icon {
+    @apply pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4;
+}
+
+.tff-price-label {
+    @apply block text-sm/6 font-medium text-gray-900;
+}
+
 /* Animation keyframes */
 @keyframes fadeOut {
     0% {
@@ -366,7 +397,7 @@
     @apply min-h-[40px];
 }
 
-.tff-field-preview>div:last-child {
+.tff-field-preview > div:last-child {
     @apply flex-grow;
 }
 
@@ -473,7 +504,7 @@
         @apply translate-x-0;
     }
 
-    .tff-right-panel.tff-panel-visible~.tff-left-panel {
+    .tff-right-panel.tff-panel-visible ~ .tff-left-panel {
         @apply opacity-0;
         @apply pointer-events-none;
     }
@@ -569,7 +600,7 @@
     @apply overflow-y-auto;
 }
 
-.tff-right-panel>div:last-child {
+.tff-right-panel > div:last-child {
     @apply overflow-y-auto;
 }
 

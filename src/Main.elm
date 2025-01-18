@@ -34,7 +34,7 @@ import Array exposing (Array)
 import Browser
 import Dict exposing (Dict)
 import Html exposing (Html, button, div, h2, h3, input, label, option, pre, select, text, textarea, ul)
-import Html.Attributes exposing (attribute, checked, class, classList, disabled, for, id, maxlength, minlength, name, placeholder, readonly, required, selected, tabindex, title, type_, value)
+import Html.Attributes as Attr exposing (attribute, checked, class, classList, disabled, for, id, maxlength, minlength, name, placeholder, readonly, required, selected, tabindex, title, type_, value)
 import Html.Events exposing (on, onCheck, onClick, onInput, preventDefaultOn, stopPropagationOn)
 import Json.Decode
 import Json.Decode.Extra exposing (andMap)
@@ -150,7 +150,6 @@ requiredData presence =
 type Comparison
     = Equals String
     | StringContains String
-    | ChoiceIncludes String
     | EndsWith String
 
 
@@ -1331,7 +1330,7 @@ attributesFromTuple : ( String, String ) -> Maybe (Html.Attribute msg)
 attributesFromTuple ( k, v ) =
     case ( k, v ) of
         ( "multiple", "true" ) ->
-            Just (Html.Attributes.multiple True)
+            Just (Attr.multiple True)
 
         ( "multiple", "false" ) ->
             Nothing
@@ -1747,9 +1746,11 @@ viewFormBuilder maybeAnimate model =
 selectArrowDown : Html msg
 selectArrowDown =
     svg
-        [ SvgAttr.viewBox "0 0 16 16"
+        [ SvgAttr.class "tff-selectarrow-icon"
+        , SvgAttr.viewBox "0 0 16 16"
         , SvgAttr.fill "currentColor"
-        , attribute "aria-hidden" "true"
+        , Attr.attribute "aria-hidden" "true"
+        , Attr.attribute "data-slot" "icon"
         ]
         [ path
             [ SvgAttr.fillRule "evenodd"
@@ -1830,61 +1831,33 @@ visibilityRuleSection index formFields ruleIndex visibilityRule =
                                     (otherQuestionTitles formFields index)
                                 )
                             ]
-                        , div [ class "tff-dropdown-group" ]
-                            [ selectArrowDown
-                            , select
-                                [ class "tff-text-field tff-comparison-type"
-                                , onInput (\str -> OnFormField (OnVisibilityConditionTypeInput ruleIndex str) index "")
+                        , selectInputGroup
+                            { selectAttrs =
+                                [ onInput (\str -> OnFormField (OnVisibilityConditionTypeInput ruleIndex str) index "")
+                                ]
+                            , options =
+                                [ ( "Equals", "Equals", isComparingWith (Equals "something") (comparisonOf rule) )
+                                , ( "StringContains", "Contains", isComparingWith (StringContains "something") (comparisonOf rule) )
+                                , ( "EndsWith", "Ends with", isComparingWith (EndsWith "something") (comparisonOf rule) )
+                                ]
+                            , inputAttrs =
+                                [ type_ "text"
+                                , value
+                                    (case rule of
+                                        Field _ (Equals v) ->
+                                            v
+
+                                        Field _ (StringContains v) ->
+                                            v
+
+                                        Field _ (EndsWith v) ->
+                                            v
+                                    )
+                                , onInput (\str -> OnFormField (OnVisibilityConditionValueInput ruleIndex str) index "")
                                 , required True
                                 ]
-                                [ option
-                                    [ selected
-                                        (isComparingWith (Equals "something") (comparisonOf rule))
-                                    , value "Equals"
-                                    ]
-                                    [ text "equals" ]
-                                , option
-                                    [ selected
-                                        (isComparingWith (StringContains "something") (comparisonOf rule))
-                                    , value "StringContains"
-                                    ]
-                                    [ text "contains" ]
-                                , option
-                                    [ selected
-                                        (isComparingWith (ChoiceIncludes "something") (comparisonOf rule))
-                                    , value "ChoiceIncludes"
-                                    ]
-                                    [ text "choice includes" ]
-                                , option
-                                    [ selected
-                                        (isComparingWith (EndsWith "something") (comparisonOf rule))
-                                    , value "EndsWith"
-                                    ]
-                                    [ text "ends with" ]
-                                ]
-                            ]
-                        , input
-                            [ type_ "text"
-                            , class "tff-comparison-value"
-                            , value
-                                (case rule of
-                                    Field _ (Equals v) ->
-                                        v
-
-                                    Field _ (StringContains v) ->
-                                        v
-
-                                    Field _ (ChoiceIncludes v) ->
-                                        v
-
-                                    Field _ (EndsWith v) ->
-                                        v
-                                )
-                            , onInput (\str -> OnFormField (OnVisibilityConditionValueInput ruleIndex str) index "")
-                            , class "tff-text-field"
-                            , required True
-                            ]
-                            []
+                            , children = []
+                            }
                         ]
                 )
                 (visibilityRuleCondition visibilityRule)
@@ -2213,7 +2186,7 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
                                 Html.input
                                     [ class "tff-text-field"
                                     , type_ "number"
-                                    , Html.Attributes.min "1"
+                                    , Attr.min "1"
                                     , value valueString
                                     , onInput (OnFormField OnMaxLengthInput index)
                                     ]
@@ -2268,7 +2241,7 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
                                 Html.input
                                     [ class "tff-text-field"
                                     , type_ "number"
-                                    , Html.Attributes.min "1"
+                                    , Attr.min "1"
                                     , value (String.fromInt i)
                                     , onInput (OnFormField OnMaxLengthInput index)
                                     ]
@@ -2278,7 +2251,7 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
                                 Html.input
                                     [ class "tff-text-field"
                                     , type_ "number"
-                                    , Html.Attributes.min "1"
+                                    , Attr.min "1"
                                     , value err
                                     , onInput (OnFormField OnMaxLengthInput index)
                                     ]
@@ -2627,12 +2600,6 @@ encodeComparison comparison =
         StringContains value ->
             Json.Encode.object
                 [ ( "type", Json.Encode.string "StringContains" )
-                , ( "value", Json.Encode.string value )
-                ]
-
-        ChoiceIncludes value ->
-            Json.Encode.object
-                [ ( "type", Json.Encode.string "ChoiceIncludes" )
                 , ( "value", Json.Encode.string value )
                 ]
 
@@ -3059,10 +3026,6 @@ decodeComparison =
                         Json.Decode.succeed StringContains
                             |> andMap (Json.Decode.field "value" Json.Decode.string)
 
-                    "ChoiceIncludes" ->
-                        Json.Decode.succeed ChoiceIncludes
-                            |> andMap (Json.Decode.field "value" Json.Decode.string)
-
                     "EndsWith" ->
                         Json.Decode.succeed EndsWith
                             |> andMap (Json.Decode.field "value" Json.Decode.string)
@@ -3078,7 +3041,9 @@ evaluateCondition trackedFormValues condition =
         Field fieldName comparison ->
             case comparison of
                 Equals value ->
-                    Dict.get fieldName trackedFormValues == Just [ value ]
+                    Dict.get fieldName trackedFormValues
+                        |> Maybe.withDefault []
+                        |> List.member value
 
                 StringContains value ->
                     Dict.get fieldName trackedFormValues
@@ -3087,11 +3052,6 @@ evaluateCondition trackedFormValues condition =
                             (\fieldValue ->
                                 String.contains value fieldValue
                             )
-
-                ChoiceIncludes value ->
-                    Dict.get fieldName trackedFormValues
-                        |> Maybe.withDefault []
-                        |> List.member value
 
                 EndsWith value ->
                     Dict.get fieldName trackedFormValues
@@ -3164,14 +3124,6 @@ isComparingWith expected given =
                 _ ->
                     False
 
-        ChoiceIncludes _ ->
-            case given of
-                ChoiceIncludes _ ->
-                    True
-
-                _ ->
-                    False
-
         EndsWith _ ->
             case given of
                 EndsWith _ ->
@@ -3196,9 +3148,6 @@ updateComparison comparisonType comparison =
                 StringContains str ->
                     Equals str
 
-                ChoiceIncludes str ->
-                    Equals str
-
                 EndsWith str ->
                     Equals str
 
@@ -3210,25 +3159,8 @@ updateComparison comparisonType comparison =
                 StringContains str ->
                     StringContains str
 
-                ChoiceIncludes str ->
-                    StringContains str
-
                 EndsWith str ->
                     StringContains str
-
-        "ChoiceIncludes" ->
-            case comparison of
-                Equals str ->
-                    ChoiceIncludes str
-
-                StringContains str ->
-                    ChoiceIncludes str
-
-                ChoiceIncludes str ->
-                    ChoiceIncludes str
-
-                EndsWith str ->
-                    ChoiceIncludes str
 
         "EndsWith" ->
             case comparison of
@@ -3236,9 +3168,6 @@ updateComparison comparisonType comparison =
                     EndsWith str
 
                 StringContains str ->
-                    EndsWith str
-
-                ChoiceIncludes str ->
                     EndsWith str
 
                 EndsWith str ->
@@ -3256,9 +3185,6 @@ updateComparisonValue newValue comparison =
 
         StringContains _ ->
             StringContains newValue
-
-        ChoiceIncludes _ ->
-            ChoiceIncludes newValue
 
         EndsWith _ ->
             EndsWith newValue
@@ -3308,3 +3234,36 @@ updateComparisonInCondition updater condition =
     case condition of
         Field fieldName comparison ->
             Field fieldName (updater comparison)
+
+
+
+-- UI HELPER
+
+
+selectInputGroup : { selectAttrs : List (Html.Attribute msg), options : List ( String, String, Bool ), inputAttrs : List (Html.Attribute msg), children : List (Html.Html msg) } -> Html msg
+selectInputGroup { selectAttrs, options, inputAttrs, children } =
+    div
+        [ Attr.class "tff-selectinput-wrapper"
+        ]
+        [ div
+            [ Attr.class "tff-selectinput-group"
+            ]
+            [ div
+                [ Attr.class "tff-selectinput-select-wrapper"
+                ]
+                [ select (class "tff-selectinput-select" :: selectAttrs)
+                    (List.map
+                        (\( value, label, selected ) ->
+                            option
+                                [ Attr.value value
+                                , Attr.selected selected
+                                ]
+                                [ text label ]
+                        )
+                        options
+                    )
+                , selectArrowDown
+                ]
+            , input (class "tff-selectinput-input" :: inputAttrs) children
+            ]
+        ]
