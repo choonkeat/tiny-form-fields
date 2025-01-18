@@ -38,7 +38,7 @@ test.describe("responsive layout tests", () => {
 
   test("2 column layout has correct structure and panel switching behavior", async ({ page }) => {
     // Set a md viewport
-    await page.setViewportSize({ width: 1268, height: 800 });
+    await page.setViewportSize({ width: 1024, height: 800 });
     await page.goto("http://localhost:8000/");
 
     // Verify initial mobile layout - center panel on top, add questions at bottom

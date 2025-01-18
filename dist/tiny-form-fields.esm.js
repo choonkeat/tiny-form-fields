@@ -14649,14 +14649,17 @@ var $author$project$Main$visibilityRuleSection = F4(
 	function (index, formFields, ruleIndex, visibilityRule) {
 		return A2(
 			$elm$html$Html$div,
-			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('tff-field-rule')
+				]),
 			_List_fromArray(
 				[
 					A2(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('tff-field-group')
+							$elm$html$Html$Attributes$class('tff-field-group tff-field-rule-type')
 						]),
 					_List_fromArray(
 						[
@@ -14714,8 +14717,11 @@ var $author$project$Main$visibilityRuleSection = F4(
 								]))
 						])),
 					A2(
-					$elm$html$Html$ul,
-					_List_Nil,
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('tff-field-rule-conditions')
+						]),
 					A2(
 						$elm$core$List$map,
 						function (rule) {
@@ -14723,7 +14729,7 @@ var $author$project$Main$visibilityRuleSection = F4(
 								$elm$html$Html$div,
 								_List_fromArray(
 									[
-										$elm$html$Html$Attributes$class('tff-field-group')
+										$elm$html$Html$Attributes$class('tff-field-group tff-field-rule-condition')
 									]),
 								_List_fromArray(
 									[

@@ -40,6 +40,19 @@
     @apply mb-12;
 }
 
+.tff-field-rule {
+    @apply bg-white;
+    @apply p-1;
+    @apply rounded;
+    @apply border;
+    @apply border-gray-300;
+    @apply mb-4;
+}
+
+.tff-field-rule-conditions {
+    @apply pl-4;
+}
+
 .tff-toggle-group {
     @apply mb-12;
 }

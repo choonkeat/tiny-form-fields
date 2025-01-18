@@ -1782,8 +1782,8 @@ visibilityRulesSection index formFields formField =
 
 visibilityRuleSection : Int -> Array FormField -> Int -> VisibilityRule -> Html Msg
 visibilityRuleSection index formFields ruleIndex visibilityRule =
-    div []
-        [ div [ class "tff-field-group" ]
+    div [ class "tff-field-rule" ]
+        [ div [ class "tff-field-group tff-field-rule-type" ]
             [ div [ class "tff-dropdown-group" ]
                 [ selectArrowDown
                 , select
@@ -1796,10 +1796,10 @@ visibilityRuleSection index formFields ruleIndex visibilityRule =
                     ]
                 ]
             ]
-        , ul [] <|
+        , div [ class "tff-field-rule-conditions" ] <|
             List.map
                 (\rule ->
-                    div [ class "tff-field-group" ]
+                    div [ class "tff-field-group tff-field-rule-condition" ]
                         [ div [ class "tff-dropdown-group" ]
                             [ selectArrowDown
                             , select
