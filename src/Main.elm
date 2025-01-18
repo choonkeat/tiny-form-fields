@@ -1776,9 +1776,13 @@ selectArrowDown =
 visibilityRulesSection : Int -> Array FormField -> FormField -> Html Msg
 visibilityRulesSection index formFields formField =
     div []
-        (formField.visibilityRule
-            |> List.indexedMap (visibilityRuleSection index formFields formField)
-        )
+        [ label [ class "tff-field-label" ]
+            [ text "Field logic" ]
+        , div []
+            (formField.visibilityRule
+                |> List.indexedMap (visibilityRuleSection index formFields formField)
+            )
+        ]
 
 
 visibilityRuleSection : Int -> Array FormField -> FormField -> Int -> VisibilityRule -> Html Msg

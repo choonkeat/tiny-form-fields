@@ -14904,10 +14904,26 @@ var $author$project$Main$visibilityRulesSection = F3(
 		return A2(
 			$elm$html$Html$div,
 			_List_Nil,
-			A2(
-				$elm$core$List$indexedMap,
-				A3($author$project$Main$visibilityRuleSection, index, formFields, formField),
-				formField.visibilityRule));
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$label,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('tff-field-label')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Field logic')
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_Nil,
+					A2(
+						$elm$core$List$indexedMap,
+						A3($author$project$Main$visibilityRuleSection, index, formFields, formField),
+						formField.visibilityRule))
+				]));
 	});
 var $author$project$Main$viewFormFieldBuilder = F5(
 	function (shortTextTypeList, index, totalLength, formFields, formField) {
