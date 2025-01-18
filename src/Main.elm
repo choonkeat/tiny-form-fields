@@ -943,17 +943,13 @@ updateFormField msg index string formFields formField =
         OnVisibilityRuleTypeInput ruleIndex isShow ->
             { formField
                 | visibilityRule =
-                    List.indexedMap
-                        (\i rule ->
-                            if i == ruleIndex then
-                                if isShow then
-                                    ShowWhen (visibilityRuleCondition rule)
-
-                                else
-                                    HideWhen (visibilityRuleCondition rule)
+                    updateVisibilityRuleAt ruleIndex
+                        (\rule ->
+                            if isShow then
+                                ShowWhen (visibilityRuleCondition rule)
 
                             else
-                                rule
+                                HideWhen (visibilityRuleCondition rule)
                         )
                         formField.visibilityRule
             }
@@ -961,34 +957,11 @@ updateFormField msg index string formFields formField =
         OnVisibilityConditionTypeInput ruleIndex str ->
             { formField
                 | visibilityRule =
-                    List.indexedMap
-                        (\i rule ->
-                            if i == ruleIndex then
-                                case rule of
-                                    ShowWhen conditions ->
-                                        ShowWhen
-                                            (List.map
-                                                (\condition ->
-                                                    case condition of
-                                                        Field fieldName comparison ->
-                                                            Field fieldName (updateComparison str comparison)
-                                                )
-                                                conditions
-                                            )
-
-                                    HideWhen conditions ->
-                                        HideWhen
-                                            (List.map
-                                                (\condition ->
-                                                    case condition of
-                                                        Field fieldName comparison ->
-                                                            Field fieldName (updateComparison str comparison)
-                                                )
-                                                conditions
-                                            )
-
-                            else
-                                rule
+                    updateVisibilityRuleAt ruleIndex
+                        (updateConditionsInRule
+                            (updateConditions
+                                (updateComparisonInCondition (updateComparison str))
+                            )
                         )
                         formField.visibilityRule
             }
@@ -996,34 +969,11 @@ updateFormField msg index string formFields formField =
         OnVisibilityConditionFieldInput ruleIndex newFieldName ->
             { formField
                 | visibilityRule =
-                    List.indexedMap
-                        (\i rule ->
-                            if i == ruleIndex then
-                                case rule of
-                                    ShowWhen conditions ->
-                                        ShowWhen
-                                            (List.map
-                                                (\condition ->
-                                                    case condition of
-                                                        Field _ comparison ->
-                                                            Field newFieldName comparison
-                                                )
-                                                conditions
-                                            )
-
-                                    HideWhen conditions ->
-                                        HideWhen
-                                            (List.map
-                                                (\condition ->
-                                                    case condition of
-                                                        Field _ comparison ->
-                                                            Field newFieldName comparison
-                                                )
-                                                conditions
-                                            )
-
-                            else
-                                rule
+                    updateVisibilityRuleAt ruleIndex
+                        (updateConditionsInRule
+                            (updateConditions
+                                (updateFieldInCondition (always newFieldName))
+                            )
                         )
                         formField.visibilityRule
             }
@@ -1031,52 +981,11 @@ updateFormField msg index string formFields formField =
         OnVisibilityConditionValueInput ruleIndex newValue ->
             { formField
                 | visibilityRule =
-                    List.indexedMap
-                        (\i rule ->
-                            if i == ruleIndex then
-                                case rule of
-                                    ShowWhen conditions ->
-                                        ShowWhen
-                                            (List.map
-                                                (\condition ->
-                                                    case condition of
-                                                        Field fieldName (Equals _) ->
-                                                            Field fieldName (Equals newValue)
-
-                                                        Field fieldName (StringContains _) ->
-                                                            Field fieldName (StringContains newValue)
-
-                                                        Field fieldName (ChoiceIncludes _) ->
-                                                            Field fieldName (ChoiceIncludes newValue)
-
-                                                        Field fieldName (EndsWith _) ->
-                                                            Field fieldName (EndsWith newValue)
-                                                )
-                                                conditions
-                                            )
-
-                                    HideWhen conditions ->
-                                        HideWhen
-                                            (List.map
-                                                (\condition ->
-                                                    case condition of
-                                                        Field fieldName (Equals _) ->
-                                                            Field fieldName (Equals newValue)
-
-                                                        Field fieldName (StringContains _) ->
-                                                            Field fieldName (StringContains newValue)
-
-                                                        Field fieldName (ChoiceIncludes _) ->
-                                                            Field fieldName (ChoiceIncludes newValue)
-
-                                                        Field fieldName (EndsWith _) ->
-                                                            Field fieldName (EndsWith newValue)
-                                                )
-                                                conditions
-                                            )
-
-                            else
-                                rule
+                    updateVisibilityRuleAt ruleIndex
+                        (updateConditionsInRule
+                            (updateConditions
+                                (updateComparisonInCondition (updateComparisonValue newValue))
+                            )
                         )
                         formField.visibilityRule
             }
@@ -3364,3 +3273,65 @@ updateComparison comparisonType comparison =
 
         _ ->
             comparison
+
+
+updateComparisonValue : String -> Comparison -> Comparison
+updateComparisonValue newValue comparison =
+    case comparison of
+        Equals _ ->
+            Equals newValue
+
+        StringContains _ ->
+            StringContains newValue
+
+        ChoiceIncludes _ ->
+            ChoiceIncludes newValue
+
+        EndsWith _ ->
+            EndsWith newValue
+
+
+
+{- VISIBILITY RULE HELPERS -}
+
+
+updateVisibilityRuleAt : Int -> (VisibilityRule -> VisibilityRule) -> List VisibilityRule -> List VisibilityRule
+updateVisibilityRuleAt index updater rules =
+    List.indexedMap
+        (\i rule ->
+            if i == index then
+                updater rule
+
+            else
+                rule
+        )
+        rules
+
+
+updateConditionsInRule : (List Condition -> List Condition) -> VisibilityRule -> VisibilityRule
+updateConditionsInRule updater rule =
+    case rule of
+        ShowWhen conditions ->
+            ShowWhen (updater conditions)
+
+        HideWhen conditions ->
+            HideWhen (updater conditions)
+
+
+updateConditions : (Condition -> Condition) -> List Condition -> List Condition
+updateConditions =
+    List.map
+
+
+updateFieldInCondition : (String -> String) -> Condition -> Condition
+updateFieldInCondition updater condition =
+    case condition of
+        Field fieldName comparison ->
+            Field (updater fieldName) comparison
+
+
+updateComparisonInCondition : (Comparison -> Comparison) -> Condition -> Condition
+updateComparisonInCondition updater condition =
+    case condition of
+        Field fieldName comparison ->
+            Field fieldName (updater comparison)

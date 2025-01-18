@@ -12435,6 +12435,60 @@ var $author$project$Main$updateComparison = F2(
 				return comparison;
 		}
 	});
+var $author$project$Main$updateComparisonInCondition = F2(
+	function (updater, condition) {
+		var fieldName = condition.a;
+		var comparison = condition.b;
+		return A2(
+			$author$project$Main$Field,
+			fieldName,
+			updater(comparison));
+	});
+var $author$project$Main$updateComparisonValue = F2(
+	function (newValue, comparison) {
+		switch (comparison.$) {
+			case 'Equals':
+				return $author$project$Main$Equals(newValue);
+			case 'StringContains':
+				return $author$project$Main$StringContains(newValue);
+			case 'ChoiceIncludes':
+				return $author$project$Main$ChoiceIncludes(newValue);
+			default:
+				return $author$project$Main$EndsWith(newValue);
+		}
+	});
+var $author$project$Main$updateConditions = $elm$core$List$map;
+var $author$project$Main$updateConditionsInRule = F2(
+	function (updater, rule) {
+		if (rule.$ === 'ShowWhen') {
+			var conditions = rule.a;
+			return $author$project$Main$ShowWhen(
+				updater(conditions));
+		} else {
+			var conditions = rule.a;
+			return $author$project$Main$HideWhen(
+				updater(conditions));
+		}
+	});
+var $author$project$Main$updateFieldInCondition = F2(
+	function (updater, condition) {
+		var fieldName = condition.a;
+		var comparison = condition.b;
+		return A2(
+			$author$project$Main$Field,
+			updater(fieldName),
+			comparison);
+	});
+var $author$project$Main$updateVisibilityRuleAt = F3(
+	function (index, updater, rules) {
+		return A2(
+			$elm$core$List$indexedMap,
+			F2(
+				function (i, rule) {
+					return _Utils_eq(i, index) ? updater(rule) : rule;
+				}),
+			rules);
+	});
 var $author$project$Main$visibilityRuleCondition = function (rule) {
 	if (rule.$ === 'ShowWhen') {
 		var conditions = rule.a;
@@ -12682,14 +12736,14 @@ var $author$project$Main$updateFormField = F5(
 				return _Utils_update(
 					formField,
 					{
-						visibilityRule: A2(
-							$elm$core$List$indexedMap,
-							F2(
-								function (i, rule) {
-									return _Utils_eq(i, ruleIndex) ? (isShow ? $author$project$Main$ShowWhen(
-										$author$project$Main$visibilityRuleCondition(rule)) : $author$project$Main$HideWhen(
-										$author$project$Main$visibilityRuleCondition(rule))) : rule;
-								}),
+						visibilityRule: A3(
+							$author$project$Main$updateVisibilityRuleAt,
+							ruleIndex,
+							function (rule) {
+								return isShow ? $author$project$Main$ShowWhen(
+									$author$project$Main$visibilityRuleCondition(rule)) : $author$project$Main$HideWhen(
+									$author$project$Main$visibilityRuleCondition(rule));
+							},
 							formField.visibilityRule)
 					});
 			case 'OnVisibilityConditionTypeInput':
@@ -12698,44 +12752,13 @@ var $author$project$Main$updateFormField = F5(
 				return _Utils_update(
 					formField,
 					{
-						visibilityRule: A2(
-							$elm$core$List$indexedMap,
-							F2(
-								function (i, rule) {
-									if (_Utils_eq(i, ruleIndex)) {
-										if (rule.$ === 'ShowWhen') {
-											var conditions = rule.a;
-											return $author$project$Main$ShowWhen(
-												A2(
-													$elm$core$List$map,
-													function (condition) {
-														var fieldName = condition.a;
-														var comparison = condition.b;
-														return A2(
-															$author$project$Main$Field,
-															fieldName,
-															A2($author$project$Main$updateComparison, str, comparison));
-													},
-													conditions));
-										} else {
-											var conditions = rule.a;
-											return $author$project$Main$HideWhen(
-												A2(
-													$elm$core$List$map,
-													function (condition) {
-														var fieldName = condition.a;
-														var comparison = condition.b;
-														return A2(
-															$author$project$Main$Field,
-															fieldName,
-															A2($author$project$Main$updateComparison, str, comparison));
-													},
-													conditions));
-										}
-									} else {
-										return rule;
-									}
-								}),
+						visibilityRule: A3(
+							$author$project$Main$updateVisibilityRuleAt,
+							ruleIndex,
+							$author$project$Main$updateConditionsInRule(
+								$author$project$Main$updateConditions(
+									$author$project$Main$updateComparisonInCondition(
+										$author$project$Main$updateComparison(str)))),
 							formField.visibilityRule)
 					});
 			case 'OnVisibilityConditionFieldInput':
@@ -12744,36 +12767,13 @@ var $author$project$Main$updateFormField = F5(
 				return _Utils_update(
 					formField,
 					{
-						visibilityRule: A2(
-							$elm$core$List$indexedMap,
-							F2(
-								function (i, rule) {
-									if (_Utils_eq(i, ruleIndex)) {
-										if (rule.$ === 'ShowWhen') {
-											var conditions = rule.a;
-											return $author$project$Main$ShowWhen(
-												A2(
-													$elm$core$List$map,
-													function (condition) {
-														var comparison = condition.b;
-														return A2($author$project$Main$Field, newFieldName, comparison);
-													},
-													conditions));
-										} else {
-											var conditions = rule.a;
-											return $author$project$Main$HideWhen(
-												A2(
-													$elm$core$List$map,
-													function (condition) {
-														var comparison = condition.b;
-														return A2($author$project$Main$Field, newFieldName, comparison);
-													},
-													conditions));
-										}
-									} else {
-										return rule;
-									}
-								}),
+						visibilityRule: A3(
+							$author$project$Main$updateVisibilityRuleAt,
+							ruleIndex,
+							$author$project$Main$updateConditionsInRule(
+								$author$project$Main$updateConditions(
+									$author$project$Main$updateFieldInCondition(
+										$elm$core$Basics$always(newFieldName)))),
 							formField.visibilityRule)
 					});
 			case 'OnVisibilityConditionValueInput':
@@ -12782,84 +12782,13 @@ var $author$project$Main$updateFormField = F5(
 				return _Utils_update(
 					formField,
 					{
-						visibilityRule: A2(
-							$elm$core$List$indexedMap,
-							F2(
-								function (i, rule) {
-									if (_Utils_eq(i, ruleIndex)) {
-										if (rule.$ === 'ShowWhen') {
-											var conditions = rule.a;
-											return $author$project$Main$ShowWhen(
-												A2(
-													$elm$core$List$map,
-													function (condition) {
-														switch (condition.b.$) {
-															case 'Equals':
-																var fieldName = condition.a;
-																return A2(
-																	$author$project$Main$Field,
-																	fieldName,
-																	$author$project$Main$Equals(newValue));
-															case 'StringContains':
-																var fieldName = condition.a;
-																return A2(
-																	$author$project$Main$Field,
-																	fieldName,
-																	$author$project$Main$StringContains(newValue));
-															case 'ChoiceIncludes':
-																var fieldName = condition.a;
-																return A2(
-																	$author$project$Main$Field,
-																	fieldName,
-																	$author$project$Main$ChoiceIncludes(newValue));
-															default:
-																var fieldName = condition.a;
-																return A2(
-																	$author$project$Main$Field,
-																	fieldName,
-																	$author$project$Main$EndsWith(newValue));
-														}
-													},
-													conditions));
-										} else {
-											var conditions = rule.a;
-											return $author$project$Main$HideWhen(
-												A2(
-													$elm$core$List$map,
-													function (condition) {
-														switch (condition.b.$) {
-															case 'Equals':
-																var fieldName = condition.a;
-																return A2(
-																	$author$project$Main$Field,
-																	fieldName,
-																	$author$project$Main$Equals(newValue));
-															case 'StringContains':
-																var fieldName = condition.a;
-																return A2(
-																	$author$project$Main$Field,
-																	fieldName,
-																	$author$project$Main$StringContains(newValue));
-															case 'ChoiceIncludes':
-																var fieldName = condition.a;
-																return A2(
-																	$author$project$Main$Field,
-																	fieldName,
-																	$author$project$Main$ChoiceIncludes(newValue));
-															default:
-																var fieldName = condition.a;
-																return A2(
-																	$author$project$Main$Field,
-																	fieldName,
-																	$author$project$Main$EndsWith(newValue));
-														}
-													},
-													conditions));
-										}
-									} else {
-										return rule;
-									}
-								}),
+						visibilityRule: A3(
+							$author$project$Main$updateVisibilityRuleAt,
+							ruleIndex,
+							$author$project$Main$updateConditionsInRule(
+								$author$project$Main$updateConditions(
+									$author$project$Main$updateComparisonInCondition(
+										$author$project$Main$updateComparisonValue(newValue)))),
 							formField.visibilityRule)
 					});
 			default:
@@ -12869,14 +12798,14 @@ var $author$project$Main$updateFormField = F5(
 					{
 						visibilityRule: function () {
 							if (bool) {
-								var _v19 = formField.visibilityRule;
-								if (!_v19.b) {
+								var _v10 = formField.visibilityRule;
+								if (!_v10.b) {
 									return _List_fromArray(
 										[
 											$author$project$Main$ShowWhen(_List_Nil)
 										]);
 								} else {
-									var rules = _v19;
+									var rules = _v10;
 									return rules;
 								}
 							} else {
