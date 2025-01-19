@@ -225,7 +225,6 @@
     @apply hidden;
 }
 
-/* Input with currency styles */
 .tff-selectinput-wrapper {
     @apply mt-2;
 }
@@ -398,7 +397,7 @@
     @apply min-h-[40px];
 }
 
-.tff-field-preview > div:last-child {
+.tff-field-preview>div:last-child {
     @apply flex-grow;
 }
 
@@ -505,7 +504,7 @@
         @apply translate-x-0;
     }
 
-    .tff-right-panel.tff-panel-visible ~ .tff-left-panel {
+    .tff-right-panel.tff-panel-visible~.tff-left-panel {
         @apply opacity-0;
         @apply pointer-events-none;
     }
@@ -601,7 +600,7 @@
     @apply overflow-y-auto;
 }
 
-.tff-right-panel > div:last-child {
+.tff-right-panel>div:last-child {
     @apply overflow-y-auto;
 }
 
