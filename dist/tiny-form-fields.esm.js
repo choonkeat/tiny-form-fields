@@ -14792,6 +14792,105 @@ var $author$project$Main$visibilityRuleSection = F4(
 	function (fieldIndex, formFields, ruleIndex, visibilityRule) {
 		var ruleHtml = F2(
 			function (conditionIndex, rule) {
+				var selectedFieldName = function () {
+					var fieldName = rule.a;
+					return fieldName;
+				}();
+				var selectedField = $elm$core$List$head(
+					A2(
+						$elm$core$List$filter,
+						function (f) {
+							return _Utils_eq(
+								$author$project$Main$fieldNameOf(f),
+								selectedFieldName);
+						},
+						$elm$core$Array$toList(formFields)));
+				var datalistId = 'datalist-' + ($elm$core$String$fromInt(fieldIndex) + ('-' + ($elm$core$String$fromInt(ruleIndex) + ('-' + $elm$core$String$fromInt(conditionIndex)))));
+				var datalistElement = function () {
+					if (selectedField.$ === 'Just') {
+						var field = selectedField.a;
+						var _v7 = field.type_;
+						switch (_v7.$) {
+							case 'Dropdown':
+								var choices = _v7.a;
+								return $elm$core$Maybe$Just(
+									A2(
+										$elm$html$Html$datalist,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$id(datalistId)
+											]),
+										A2(
+											$elm$core$List$map,
+											function (c) {
+												return A2(
+													$elm$html$Html$option,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$value(c.value)
+														]),
+													_List_Nil);
+											},
+											choices)));
+							case 'ChooseOne':
+								var choices = _v7.a;
+								return $elm$core$Maybe$Just(
+									A2(
+										$elm$html$Html$datalist,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$id(datalistId)
+											]),
+										A2(
+											$elm$core$List$map,
+											function (c) {
+												return A2(
+													$elm$html$Html$option,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$value(c.value)
+														]),
+													_List_Nil);
+											},
+											choices)));
+							case 'ChooseMultiple':
+								var choices = _v7.a;
+								return $elm$core$Maybe$Just(
+									A2(
+										$elm$html$Html$datalist,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$id(datalistId)
+											]),
+										A2(
+											$elm$core$List$map,
+											function (c) {
+												return A2(
+													$elm$html$Html$option,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$value(c.value)
+														]),
+													_List_Nil);
+											},
+											choices)));
+							default:
+								return $elm$core$Maybe$Nothing;
+						}
+					} else {
+						return $elm$core$Maybe$Nothing;
+					}
+				}();
+				var datalistAttr = function () {
+					if (datalistElement.$ === 'Just') {
+						return _List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$attribute, 'list', datalistId)
+							]);
+					} else {
+						return _List_Nil;
+					}
+				}();
 				return A2(
 					$elm$html$Html$div,
 					_List_fromArray(
@@ -14871,35 +14970,45 @@ var $author$project$Main$visibilityRuleSection = F4(
 								])),
 							$author$project$Main$selectInputGroup(
 							{
-								children: _List_Nil,
-								inputAttrs: _List_fromArray(
-									[
-										$elm$html$Html$Attributes$type_('text'),
-										$elm$html$Html$Attributes$value(
-										function () {
-											switch (rule.b.$) {
-												case 'Equals':
-													var v = rule.b.a;
-													return v;
-												case 'StringContains':
-													var v = rule.b.a;
-													return v;
-												default:
-													var v = rule.b.a;
-													return v;
-											}
-										}()),
-										$elm$html$Html$Events$onInput(
-										function (str) {
-											return A3(
-												$author$project$Main$OnFormField,
-												A3($author$project$Main$OnVisibilityConditionValueInput, ruleIndex, conditionIndex, str),
-												fieldIndex,
-												'');
-										}),
-										$elm$html$Html$Attributes$required(true),
-										$elm$html$Html$Attributes$class('tff-comparison-value')
-									]),
+								children: function () {
+									if (datalistElement.$ === 'Just') {
+										var element = datalistElement.a;
+										return _List_fromArray(
+											[element]);
+									} else {
+										return _List_Nil;
+									}
+								}(),
+								inputAttrs: _Utils_ap(
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$type_('text'),
+											$elm$html$Html$Attributes$value(
+											function () {
+												switch (rule.b.$) {
+													case 'Equals':
+														var v = rule.b.a;
+														return v;
+													case 'StringContains':
+														var v = rule.b.a;
+														return v;
+													default:
+														var v = rule.b.a;
+														return v;
+												}
+											}()),
+											$elm$html$Html$Events$onInput(
+											function (str) {
+												return A3(
+													$author$project$Main$OnFormField,
+													A3($author$project$Main$OnVisibilityConditionValueInput, ruleIndex, conditionIndex, str),
+													fieldIndex,
+													'');
+											}),
+											$elm$html$Html$Attributes$required(true),
+											$elm$html$Html$Attributes$class('tff-comparison-value')
+										]),
+									datalistAttr),
 								options: _List_fromArray(
 									[
 										_Utils_Tuple3(

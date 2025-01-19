@@ -65,12 +65,12 @@ export async function addField(
         let index = 0;
         for (const comparison of rule.comparison) {
             await page.selectOption(
-                `.tff-field-rule-condition:nth-child(${index + 1}) select.tff-question-title`,
+                `.tff-field-rule-conditions > div:nth-child(${2 * index + 1}) select.tff-question-title`,
                 JSON.stringify(rule.field)
             );
             await page.waitForTimeout(100);
             await page.selectOption(
-                `.tff-field-rule-condition:nth-child(${index + 1}) select.tff-comparison-type`,
+                `.tff-field-rule-conditions > div:nth-child(${2 * index + 1}) select.tff-comparison-type`,
                 comparison.type
             );
             await page.waitForTimeout(100);

@@ -1841,6 +1841,47 @@ visibilityRuleSection : Int -> Array FormField -> Int -> VisibilityRule -> Html 
 visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
     let
         ruleHtml conditionIndex rule =
+            let
+                selectedFieldName =
+                    case rule of
+                        Field fieldName _ ->
+                            fieldName
+
+                selectedField =
+                    Array.toList formFields
+                        |> List.filter (\f -> fieldNameOf f == selectedFieldName)
+                        |> List.head
+
+                datalistId =
+                    "datalist-" ++ String.fromInt fieldIndex ++ "-" ++ String.fromInt ruleIndex ++ "-" ++ String.fromInt conditionIndex
+
+                datalistElement =
+                    case selectedField of
+                        Just field ->
+                            case field.type_ of
+                                Dropdown choices ->
+                                    Just (Html.datalist [ id datalistId ] (List.map (\c -> Html.option [ value c.value ] []) choices))
+
+                                ChooseOne choices ->
+                                    Just (Html.datalist [ id datalistId ] (List.map (\c -> Html.option [ value c.value ] []) choices))
+
+                                ChooseMultiple choices ->
+                                    Just (Html.datalist [ id datalistId ] (List.map (\c -> Html.option [ value c.value ] []) choices))
+
+                                _ ->
+                                    Nothing
+
+                        Nothing ->
+                            Nothing
+
+                datalistAttr =
+                    case datalistElement of
+                        Just _ ->
+                            [ attribute "list" datalistId ]
+
+                        Nothing ->
+                            []
+            in
             div [ class "tff-field-group tff-field-rule-condition" ]
                 [ div [ class "tff-dropdown-group" ]
                     [ selectArrowDown
@@ -1900,7 +1941,14 @@ visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
                         , required True
                         , class "tff-comparison-value"
                         ]
-                    , children = []
+                            ++ datalistAttr
+                    , children =
+                        case datalistElement of
+                            Just element ->
+                                [ element ]
+
+                            Nothing ->
+                                []
                     }
                 ]
 
