@@ -12,28 +12,28 @@ test('[Dropdown] visibility rules in preview mode', async ({ page }) => {
     await addField(page, 'Single-line free text', [{
         label: 'Single-line free text question title',
         value: 'Why Red?',
-        visibilityRule: {
+        visibilityRule: [{
             type: 'Show this question when',
             field: 'Logic question',
-            comparison: {
+            comparison: [{
                 type: 'Equals',
                 value: 'Red'
-            }
-        }
+            }]
+        }]
     }]);
 
     // Add "Why Orange?" text field that shows when "Orange" is selected
     await addField(page, 'Single-line free text', [{
         label: 'Single-line free text question title',
         value: 'Why Orange?',
-        visibilityRule: {
+        visibilityRule: [{
             type: 'Show this question when',
             field: 'Logic question',
-            comparison: {
+            comparison: [{
                 type: 'Equals',
                 value: 'Orange'
-            }
-        }
+            }]
+        }]
     }]);
 
     // Switch to preview mode
@@ -64,28 +64,28 @@ test('[Radio buttons] visibility rules in preview mode', async ({ page }) => {
     await addField(page, 'Single-line free text', [{
         label: 'Single-line free text question title',
         value: 'Why Yes?',
-        visibilityRule: {
+        visibilityRule: [{
             type: 'Show this question when',
             field: 'Logic question',
-            comparison: {
+            comparison: [{
                 type: 'Equals',
                 value: 'Yes'
-            }
-        }
+            }]
+        }]
     }]);
 
     // Add "Why No?" text field that shows when "No" is selected
     await addField(page, 'Single-line free text', [{
         label: 'Single-line free text question title',
         value: 'Why No?',
-        visibilityRule: {
+        visibilityRule: [{
             type: 'Show this question when',
             field: 'Logic question',
-            comparison: {
+            comparison: [{
                 type: 'Equals',
                 value: 'No'
-            }
-        }
+            }]
+        }]
     }]);
 
     // Switch to preview mode
@@ -116,28 +116,45 @@ test('[Checkboxes] visibility rules in preview mode', async ({ page }) => {
     await addField(page, 'Single-line free text', [{
         label: 'Single-line free text question title',
         value: 'Why Apple?',
-        visibilityRule: {
+        visibilityRule: [{
             type: 'Show this question when',
             field: 'Logic question',
-            comparison: {
+            comparison: [{
                 type: 'Equals',
                 value: 'Apple'
-            }
-        }
+            }]
+        }]
     }]);
 
     // Add "Why Banana?" text field that shows when "Banana" is selected
     await addField(page, 'Single-line free text', [{
         label: 'Single-line free text question title',
         value: 'Why Banana?',
-        visibilityRule: {
+        visibilityRule: [{
             type: 'Show this question when',
             field: 'Logic question',
-            comparison: {
+            comparison: [{
                 type: 'Equals',
                 value: 'Banana'
-            }
-        }
+            }]
+        }]
+    }]);
+
+    // Add "Why Banana?" text field that shows when "Banana" is selected
+    await addField(page, 'Single-line free text', [{
+        label: 'Single-line free text question title',
+        value: 'Why Apple and Banana?',
+        visibilityRule: [{
+            type: 'Show this question when',
+            field: 'Logic question',
+            comparison: [{
+                type: 'Equals',
+                value: 'Apple'
+            }, {
+                type: 'EndsWith',
+                value: 'Banana'
+            }]
+        }]
     }]);
 
     // Switch to preview mode
@@ -151,16 +168,19 @@ test('[Checkboxes] visibility rules in preview mode', async ({ page }) => {
     await page1.click('input[value="Apple"]');
     await expect(page1.locator('text="Why Apple?"')).toBeVisible();
     await expect(page1.locator('text="Why Banana?"')).toHaveCount(0);
+    await expect(page1.locator('text="Why Apple and Banana?"')).toHaveCount(0);
 
     // Test Banana selection  
     await page1.click('input[value="Banana"]');
     await expect(page1.locator('text="Why Apple?"')).toBeVisible(); // Both should be visible since checkboxes allow multiple selections
     await expect(page1.locator('text="Why Banana?"')).toBeVisible();
+    await expect(page1.locator('text="Why Apple and Banana?"')).toBeVisible();
 
     // Uncheck Apple
     await page1.click('input[value="Apple"]');
     await expect(page1.locator('text="Why Apple?"')).toHaveCount(0);
     await expect(page1.locator('text="Why Banana?"')).toBeVisible();
+    await expect(page1.locator('text="Why Apple and Banana?"')).toHaveCount(0);
 });
 
 test('[Multi-line description] visibility rules with contains in preview mode', async ({ page }) => {
@@ -173,28 +193,28 @@ test('[Multi-line description] visibility rules with contains in preview mode', 
     await addField(page, 'Single-line free text', [{
         label: 'Single-line free text question title',
         value: 'Contains urgent',
-        visibilityRule: {
+        visibilityRule: [{
             type: 'Show this question when',
             field: 'Logic question',
-            comparison: {
+            comparison: [{
                 type: 'StringContains',
                 value: 'urgent'
-            }
-        }
+            }]
+        }]
     }]);
 
     // Add "Contains important" text field that shows when text contains "important"
     await addField(page, 'Single-line free text', [{
         label: 'Single-line free text question title',
         value: 'Contains important',
-        visibilityRule: {
+        visibilityRule: [{
             type: 'Show this question when',
             field: 'Logic question',
-            comparison: {
+            comparison: [{
                 type: 'StringContains',
                 value: 'important'
-            }
-        }
+            }]
+        }]
     }]);
 
     // Switch to preview mode
@@ -235,28 +255,28 @@ test('[Single-line free text] visibility rules with contains in preview mode', a
     await addField(page, 'Single-line free text', [{
         label: 'Single-line free text question title',
         value: 'Contains urgent',
-        visibilityRule: {
+        visibilityRule: [{
             type: 'Show this question when',
             field: 'Logic question',
-            comparison: {
+            comparison: [{
                 type: 'StringContains',
                 value: 'urgent'
-            }
-        }
+            }]
+        }]
     }]);
 
     // Add "Contains important" text field that shows when text contains "important"
     await addField(page, 'Single-line free text', [{
         label: 'Single-line free text question title',
         value: 'Contains important',
-        visibilityRule: {
+        visibilityRule: [{
             type: 'Show this question when',
             field: 'Logic question',
-            comparison: {
+            comparison: [{
                 type: 'StringContains',
                 value: 'important'
-            }
-        }
+            }]
+        }]
     }]);
 
     // Switch to preview mode

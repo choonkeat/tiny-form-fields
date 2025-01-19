@@ -6,14 +6,18 @@ export interface FieldEdit {
     description?: string;
     maxlength?: number;
     choices?: string[];
-    visibilityRule?: {
-        type: "Show this question when" | "Hide this question when";
-        field: string;
-        comparison: {
-            type: "Equals" | "StringContains" | "EndsWith";
-            value: string;
-        };
-    };
+    visibilityRule?: VisibilityRule[];
+}
+
+export interface VisibilityRule {
+    type: "Show this question when" | "Hide this question when";
+    field: string;
+    comparison: Comparison[];
+}
+
+export interface Comparison {
+    type: "Equals" | "StringContains" | "EndsWith";
+    value: string;
 }
 
 export async function addField(
@@ -44,24 +48,41 @@ export async function addField(
         }
 
         if (edit.visibilityRule) {
-            await page.getByRole("button", { name: "Add field logic" }).click();
-            await page.waitForTimeout(100);
-            await page.selectOption(
-                "select.tff-show-or-hide",
-                edit.visibilityRule.type,
-            );
-            await page.selectOption(
-                "select.tff-question-title",
-                edit.visibilityRule.field,
-            );
-            await page.selectOption(
-                "select.tff-comparison-type",
-                edit.visibilityRule.comparison.type,
-            );
-            await page.locator(".tff-comparison-value").click();
-            await page.keyboard.press("ControlOrMeta+a");
-            await page.keyboard.type(edit.visibilityRule.comparison.value);
+            for (const rule of edit.visibilityRule) {
+                await addFieldLogic(rule);
+            }
         }
     }
     await page.locator(".tff-close-button").click();
+
+    async function addFieldLogic(rule: VisibilityRule) {
+        await page.getByRole("button", { name: "Add field logic" }).click();
+        await page.waitForTimeout(100);
+        await page.selectOption(
+            "select.tff-show-or-hide",
+            rule.type
+        );
+        let index = 0;
+        for (const comparison of rule.comparison) {
+            await page.selectOption(
+                `.tff-field-rule-condition:nth-child(${index + 1}) select.tff-question-title`,
+                JSON.stringify(rule.field)
+            );
+            await page.waitForTimeout(100);
+            await page.selectOption(
+                `.tff-field-rule-condition:nth-child(${index + 1}) select.tff-comparison-type`,
+                comparison.type
+            );
+            await page.waitForTimeout(100);
+            await page.locator(`.tff-comparison-value`).last().click();
+            await page.keyboard.press("ControlOrMeta+a");
+            await page.keyboard.type(comparison.value);
+
+            if (comparison != rule.comparison[rule.comparison.length - 1]) {
+                await page.getByRole("button", { name: "Add condition" }).click();
+                await page.waitForTimeout(100);
+            }
+            index++;
+        };
+    }
 }
