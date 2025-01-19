@@ -695,6 +695,90 @@ suite =
                     |> Json.Encode.encode 0
                     |> Json.Decode.decodeString Main.decodeFormField
                     |> Expect.equal (Ok newField)
+        , describe "updateComparisonInCondition"
+            [ test "updates comparison in Field condition" <|
+                \_ ->
+                    let
+                        condition =
+                            Main.Field "fieldName" (Main.Equals "oldValue")
+                    in
+                    Main.updateComparisonInCondition (\_ -> Main.Equals "newValue") condition
+                        |> Expect.equal (Main.Field "fieldName" (Main.Equals "newValue"))
+            ]
+        , describe "updateConditions"
+            [ test "updates condition at specified index" <|
+                \_ ->
+                    let
+                        conditions =
+                            [ Main.Field "field1" (Main.Equals "value1")
+                            , Main.Field "field2" (Main.Equals "value2")
+                            , Main.Field "field3" (Main.Equals "value3")
+                            ]
+                    in
+                    Main.updateConditions 1 (\_ -> Main.Field "updatedField" (Main.Equals "updatedValue")) conditions
+                        |> Expect.equal
+                            [ Main.Field "field1" (Main.Equals "value1")
+                            , Main.Field "updatedField" (Main.Equals "updatedValue")
+                            , Main.Field "field3" (Main.Equals "value3")
+                            ]
+            , test "does nothing if index is out of bounds" <|
+                \_ ->
+                    let
+                        conditions =
+                            [ Main.Field "field1" (Main.Equals "value1") ]
+                    in
+                    Main.updateConditions 1 (\_ -> Main.Field "updatedField" (Main.Equals "updatedValue")) conditions
+                        |> Expect.equal [ Main.Field "field1" (Main.Equals "value1") ]
+            ]
+        , describe "updateConditionsInRule"
+            [ test "updates conditions in ShowWhen rule" <|
+                \_ ->
+                    let
+                        rule =
+                            Main.ShowWhen [ Main.Field "field1" (Main.Equals "value1") ]
+                    in
+                    Main.updateConditionsInRule
+                        (\_ -> [ Main.Field "updatedField" (Main.Equals "updatedValue") ])
+                        rule
+                        |> Expect.equal (Main.ShowWhen [ Main.Field "updatedField" (Main.Equals "updatedValue") ])
+            , test "updates conditions in HideWhen rule" <|
+                \_ ->
+                    let
+                        rule =
+                            Main.HideWhen [ Main.Field "field1" (Main.Equals "value1") ]
+                    in
+                    Main.updateConditionsInRule
+                        (\_ -> [ Main.Field "updatedField" (Main.Equals "updatedValue") ])
+                        rule
+                        |> Expect.equal (Main.HideWhen [ Main.Field "updatedField" (Main.Equals "updatedValue") ])
+            ]
+        , describe "updateFieldnameInCondition"
+            [ test "updates fieldname in Field condition" <|
+                \_ ->
+                    let
+                        condition =
+                            Main.Field "oldFieldName" (Main.Equals "value")
+                    in
+                    Main.updateFieldnameInCondition (\_ -> "newFieldName") condition
+                        |> Expect.equal (Main.Field "newFieldName" (Main.Equals "value"))
+            ]
+        , describe "updateFormField"
+            [ test "updates label" <|
+                \_ ->
+                    Main.updateFormField Main.OnLabelInput 0 "New Label" Array.empty field1
+                        |> .label
+                        |> Expect.equal "New Label"
+            , test "updates description" <|
+                \_ ->
+                    Main.updateFormField Main.OnDescriptionInput 0 "New Description" Array.empty field1
+                        |> .description
+                        |> Expect.equal (Main.AttributeGiven "New Description")
+            , test "updates presence" <|
+                \_ ->
+                    Main.updateFormField (Main.OnRequiredInput False) 0 "" Array.empty field1
+                        |> .presence
+                        |> Expect.equal Main.Optional
+            ]
         ]
 
 
