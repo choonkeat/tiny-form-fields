@@ -9894,6 +9894,25 @@ var $author$project$Main$selectInputGroup = function (_v0) {
 	var options = _v0.bI;
 	var inputAttrs = _v0.bw;
 	var children = _v0.bc;
+	var calculatedAttrs = A2(
+		$elm$core$List$append,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('tff-selectinput-select')
+			]),
+		A2(
+			$elm$core$List$map,
+			function (_v3) {
+				var value = _v3.a;
+				return $elm$html$Html$Attributes$value(value);
+			},
+			A2(
+				$elm$core$List$filter,
+				function (_v2) {
+					var selected = _v2.c;
+					return selected;
+				},
+				options)));
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
@@ -9920,10 +9939,7 @@ var $author$project$Main$selectInputGroup = function (_v0) {
 							[
 								A2(
 								$elm$html$Html$select,
-								A2(
-									$elm$core$List$cons,
-									$elm$html$Html$Attributes$class('tff-selectinput-select'),
-									selectAttrs),
+								_Utils_ap(calculatedAttrs, selectAttrs),
 								A2(
 									$elm$core$List$map,
 									function (_v1) {
@@ -9990,7 +10006,12 @@ var $author$project$Main$visibilityRuleSection = F4(
 													fieldIndex,
 													'');
 											}),
-											$elm$html$Html$Attributes$required(true)
+											$elm$html$Html$Attributes$required(true),
+											$elm$html$Html$Attributes$value(
+											function () {
+												var fieldName = rule.a;
+												return fieldName;
+											}())
 										]),
 									A2(
 										$elm$core$List$cons,
@@ -10059,7 +10080,8 @@ var $author$project$Main$visibilityRuleSection = F4(
 												fieldIndex,
 												'');
 										}),
-										$elm$html$Html$Attributes$required(true)
+										$elm$html$Html$Attributes$required(true),
+										$elm$html$Html$Attributes$class('tff-comparison-value')
 									]),
 								bI: _List_fromArray(
 									[
@@ -10094,7 +10116,8 @@ var $author$project$Main$visibilityRuleSection = F4(
 												A3($author$project$Main$OnVisibilityConditionTypeInput, ruleIndex, conditionIndex, str),
 												fieldIndex,
 												'');
-										})
+										}),
+										$elm$html$Html$Attributes$class('tff-comparison-type')
 									])
 							})
 						]));
@@ -10132,7 +10155,7 @@ var $author$project$Main$visibilityRuleSection = F4(
 									$elm$html$Html$select,
 									_List_fromArray(
 										[
-											$elm$html$Html$Attributes$class('tff-text-field tff-question-title'),
+											$elm$html$Html$Attributes$class('tff-text-field tff-show-or-hide'),
 											$elm$html$Html$Events$onInput(
 											function (str) {
 												return A3(
@@ -10141,7 +10164,15 @@ var $author$project$Main$visibilityRuleSection = F4(
 													fieldIndex,
 													'');
 											}),
-											$elm$html$Html$Attributes$required(true)
+											$elm$html$Html$Attributes$required(true),
+											$elm$html$Html$Attributes$value(
+											function () {
+												if (!visibilityRule.$) {
+													return 'ShowWhen';
+												} else {
+													return 'HideWhen';
+												}
+											}())
 										]),
 									_List_fromArray(
 										[
@@ -10776,7 +10807,7 @@ var $author$project$Main$evaluateCondition = F2(
 var $author$project$Main$isVisibilityRuleSatisfied = F2(
 	function (rules, trackedFormValues) {
 		return A2(
-			$elm$core$List$all,
+			$elm$core$List$any,
 			function (rule) {
 				if (!rule.$) {
 					var conditions = rule.a;

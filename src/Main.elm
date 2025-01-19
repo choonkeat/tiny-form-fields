@@ -3139,16 +3139,17 @@ evaluateCondition trackedFormValues condition =
 
 isVisibilityRuleSatisfied : List VisibilityRule -> Dict String (List String) -> Bool
 isVisibilityRuleSatisfied rules trackedFormValues =
-    List.all
-        (\rule ->
-            case rule of
-                ShowWhen conditions ->
-                    List.all (evaluateCondition trackedFormValues) conditions
+    List.isEmpty rules
+        || List.any
+            (\rule ->
+                case rule of
+                    ShowWhen conditions ->
+                        List.all (evaluateCondition trackedFormValues) conditions
 
-                HideWhen conditions ->
-                    not (List.all (evaluateCondition trackedFormValues) conditions)
-        )
-        rules
+                    HideWhen conditions ->
+                        not (List.all (evaluateCondition trackedFormValues) conditions)
+            )
+            rules
 
 
 

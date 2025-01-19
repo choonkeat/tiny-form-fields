@@ -15618,8 +15618,8 @@ var $author$project$Main$evaluateCondition = F2(
 	});
 var $author$project$Main$isVisibilityRuleSatisfied = F2(
 	function (rules, trackedFormValues) {
-		return A2(
-			$elm$core$List$all,
+		return $elm$core$List$isEmpty(rules) || A2(
+			$elm$core$List$any,
 			function (rule) {
 				if (rule.$ === 'ShowWhen') {
 					var conditions = rule.a;
