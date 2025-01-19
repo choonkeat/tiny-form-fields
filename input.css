@@ -185,7 +185,7 @@
     @apply space-x-2;
 }
 
-.tff-build-field-buttons button {
+.tff-settings-content button {
     @apply text-xs;
     @apply bg-gray-200;
     @apply hover:bg-gray-400;

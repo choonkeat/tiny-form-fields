@@ -1828,7 +1828,7 @@ visibilityRulesSection index formFields formField =
             )
         , div [ class "tff-button-group" ]
             [ button
-                [ class "tff-button tff-button-secondary"
+                [ class "button"
                 , type_ "button"
                 , onClick (OnFormField OnAddVisibilityRule index "")
                 ]
@@ -1979,13 +1979,15 @@ visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
                 ]
             ]
         , div [ class "tff-field-rule-conditions" ]
-            (List.intersperse (label [ class "tff-field-label" ] [ text "AND" ]) rulesHtml)
-        , button
-            [ class "tff-button tff-button-secondary"
-            , type_ "button"
-            , onClick (OnFormField (OnVisibilityConditionDuplicate ruleIndex) fieldIndex "")
-            ]
-            [ text "Add condition" ]
+            (List.intersperse (label [ class "tff-field-label" ] [ text "AND" ]) rulesHtml
+                ++ [ button
+                        [ class "button"
+                        , type_ "button"
+                        , onClick (OnFormField (OnVisibilityConditionDuplicate ruleIndex) fieldIndex "")
+                        ]
+                        [ text "Add condition" ]
+                   ]
+            )
         ]
 
 

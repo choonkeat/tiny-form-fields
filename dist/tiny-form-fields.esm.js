@@ -15145,36 +15145,40 @@ var $author$project$Main$visibilityRuleSection = F4(
 						[
 							$elm$html$Html$Attributes$class('tff-field-rule-conditions')
 						]),
-					A2(
-						$elm$core$List$intersperse,
+					_Utils_ap(
 						A2(
-							$elm$html$Html$label,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('tff-field-label')
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text('AND')
-								])),
-						rulesHtml)),
-					A2(
-					$elm$html$Html$button,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('tff-button tff-button-secondary'),
-							$elm$html$Html$Attributes$type_('button'),
-							$elm$html$Html$Events$onClick(
-							A3(
-								$author$project$Main$OnFormField,
-								$author$project$Main$OnVisibilityConditionDuplicate(ruleIndex),
-								fieldIndex,
-								''))
-						]),
-					_List_fromArray(
-						[
-							$elm$html$Html$text('Add condition')
-						]))
+							$elm$core$List$intersperse,
+							A2(
+								$elm$html$Html$label,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('tff-field-label')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('AND')
+									])),
+							rulesHtml),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$button,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('button'),
+										$elm$html$Html$Attributes$type_('button'),
+										$elm$html$Html$Events$onClick(
+										A3(
+											$author$project$Main$OnFormField,
+											$author$project$Main$OnVisibilityConditionDuplicate(ruleIndex),
+											fieldIndex,
+											''))
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Add condition')
+									]))
+							])))
 				]));
 	});
 var $author$project$Main$visibilityRulesSection = F3(
@@ -15225,7 +15229,7 @@ var $author$project$Main$visibilityRulesSection = F3(
 							$elm$html$Html$button,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('tff-button tff-button-secondary'),
+									$elm$html$Html$Attributes$class('button'),
 									$elm$html$Html$Attributes$type_('button'),
 									$elm$html$Html$Events$onClick(
 									A3($author$project$Main$OnFormField, $author$project$Main$OnAddVisibilityRule, index, ''))
