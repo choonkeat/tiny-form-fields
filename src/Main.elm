@@ -23,8 +23,10 @@ port module Main exposing
     , encodeFormFields
     , encodeInputField
     , encodePairsFromCustomElement
+    , evaluateCondition
     , fieldsWithPlaceholder
     , fromRawCustomElement
+    , isVisibilityRuleSatisfied
     , main
     , onDropped
     , stringFromViewMode

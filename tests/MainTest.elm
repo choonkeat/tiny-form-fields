@@ -283,6 +283,241 @@ suite =
                             , field3
                             ]
             ]
+        , describe "isVisibilityRuleSatisfied"
+            [ test "empty rules list returns True" <|
+                \_ ->
+                    Main.isVisibilityRuleSatisfied [] Dict.empty
+                        |> Expect.equal True
+            , test "ShowWhen with single matching condition returns True" <|
+                \_ ->
+                    let
+                        rules =
+                            [ Main.ShowWhen [ Main.Field "field1" (Main.Equals "value1") ] ]
+
+                        values =
+                            Dict.fromList [ ( "field1", [ "value1" ] ) ]
+                    in
+                    Main.isVisibilityRuleSatisfied rules values
+                        |> Expect.equal True
+            , test "ShowWhen with non-matching condition returns False" <|
+                \_ ->
+                    let
+                        rules =
+                            [ Main.ShowWhen [ Main.Field "field1" (Main.Equals "value1") ] ]
+
+                        values =
+                            Dict.fromList [ ( "field1", [ "wrong" ] ) ]
+                    in
+                    Main.isVisibilityRuleSatisfied rules values
+                        |> Expect.equal False
+            , test "HideWhen with matching condition returns False" <|
+                \_ ->
+                    let
+                        rules =
+                            [ Main.HideWhen [ Main.Field "field1" (Main.Equals "value1") ] ]
+
+                        values =
+                            Dict.fromList [ ( "field1", [ "value1" ] ) ]
+                    in
+                    Main.isVisibilityRuleSatisfied rules values
+                        |> Expect.equal False
+            , test "HideWhen with non-matching condition returns True" <|
+                \_ ->
+                    let
+                        rules =
+                            [ Main.HideWhen [ Main.Field "field1" (Main.Equals "value1") ] ]
+
+                        values =
+                            Dict.fromList [ ( "field1", [ "wrong" ] ) ]
+                    in
+                    Main.isVisibilityRuleSatisfied rules values
+                        |> Expect.equal True
+            , test "Multiple rules with OR logic - any rule can satisfy" <|
+                \_ ->
+                    let
+                        rules =
+                            [ Main.ShowWhen [ Main.Field "field1" (Main.Equals "wrong") ]
+                            , Main.ShowWhen [ Main.Field "field2" (Main.Equals "value2") ]
+                            ]
+
+                        values =
+                            Dict.fromList
+                                [ ( "field1", [ "value1" ] )
+                                , ( "field2", [ "value2" ] )
+                                ]
+                    in
+                    Main.isVisibilityRuleSatisfied rules values
+                        |> Expect.equal True
+            , test "Multiple conditions in ShowWhen require all to match" <|
+                \_ ->
+                    let
+                        rules =
+                            [ Main.ShowWhen
+                                [ Main.Field "field1" (Main.Equals "value1")
+                                , Main.Field "field2" (Main.Equals "value2")
+                                ]
+                            ]
+
+                        values =
+                            Dict.fromList
+                                [ ( "field1", [ "value1" ] )
+                                , ( "field2", [ "wrong" ] )
+                                ]
+                    in
+                    Main.isVisibilityRuleSatisfied rules values
+                        |> Expect.equal False
+            ]
+        , describe "evaluateCondition"
+            [ describe "Comparison behavior with 'hello123'"
+                [ test "Equals matches exact string only" <|
+                    \_ ->
+                        let
+                            values =
+                                Dict.fromList [ ( "field1", [ "hello123" ] ) ]
+                        in
+                        Expect.all
+                            [ \_ ->
+                                Main.evaluateCondition values (Main.Field "field1" (Main.Equals "hello123"))
+                                    |> Expect.equal True
+                            , \_ ->
+                                Main.evaluateCondition values (Main.Field "field1" (Main.Equals "hello"))
+                                    |> Expect.equal False
+                            , \_ ->
+                                Main.evaluateCondition values (Main.Field "field1" (Main.Equals "123"))
+                                    |> Expect.equal False
+                            ]
+                            ()
+                , test "StringContains matches substrings" <|
+                    \_ ->
+                        let
+                            values =
+                                Dict.fromList [ ( "field1", [ "hello123" ] ) ]
+                        in
+                        Expect.all
+                            [ \_ ->
+                                Main.evaluateCondition values (Main.Field "field1" (Main.StringContains "hello123"))
+                                    |> Expect.equal True
+                            , \_ ->
+                                Main.evaluateCondition values (Main.Field "field1" (Main.StringContains "hello"))
+                                    |> Expect.equal True
+                            , \_ ->
+                                Main.evaluateCondition values (Main.Field "field1" (Main.StringContains "123"))
+                                    |> Expect.equal True
+                            , \_ ->
+                                Main.evaluateCondition values (Main.Field "field1" (Main.StringContains "llo12"))
+                                    |> Expect.equal True
+                            , \_ ->
+                                Main.evaluateCondition values (Main.Field "field1" (Main.StringContains "hello124"))
+                                    |> Expect.equal False
+                            ]
+                            ()
+                , test "EndsWith matches suffix only" <|
+                    \_ ->
+                        let
+                            values =
+                                Dict.fromList [ ( "field1", [ "hello123" ] ) ]
+                        in
+                        Expect.all
+                            [ \_ ->
+                                Main.evaluateCondition values (Main.Field "field1" (Main.EndsWith "hello123"))
+                                    |> Expect.equal True
+                            , \_ ->
+                                Main.evaluateCondition values (Main.Field "field1" (Main.EndsWith "123"))
+                                    |> Expect.equal True
+                            , \_ ->
+                                Main.evaluateCondition values (Main.Field "field1" (Main.EndsWith "hello"))
+                                    |> Expect.equal False
+                            , \_ ->
+                                Main.evaluateCondition values (Main.Field "field1" (Main.EndsWith "23"))
+                                    |> Expect.equal True
+                            , \_ ->
+                                Main.evaluateCondition values (Main.Field "field1" (Main.EndsWith "124"))
+                                    |> Expect.equal False
+                            ]
+                            ()
+                ]
+            , describe "Multiple values with '123' pattern"
+                [ test "Values ['hello123', 'world123', 'test'] behave differently across comparisons" <|
+                    \_ ->
+                        let
+                            values =
+                                Dict.fromList [ ( "field1", [ "hello123", "world123", "test" ] ) ]
+                        in
+                        Expect.all
+                            [ -- Equals: must match complete value
+                              \_ ->
+                                Main.evaluateCondition values (Main.Field "field1" (Main.Equals "123"))
+                                    |> Expect.equal False
+                            , \_ ->
+                                Main.evaluateCondition values (Main.Field "field1" (Main.Equals "hello123"))
+                                    |> Expect.equal True
+                            , \_ ->
+                                Main.evaluateCondition values (Main.Field "field1" (Main.Equals "test"))
+                                    |> Expect.equal True
+
+                            -- StringContains: matches anywhere in string
+                            , \_ ->
+                                Main.evaluateCondition values (Main.Field "field1" (Main.StringContains "123"))
+                                    |> Expect.equal True
+                            , \_ ->
+                                Main.evaluateCondition values (Main.Field "field1" (Main.StringContains "hello"))
+                                    |> Expect.equal True
+                            , \_ ->
+                                Main.evaluateCondition values (Main.Field "field1" (Main.StringContains "world"))
+                                    |> Expect.equal True
+
+                            -- EndsWith: must match at end
+                            , \_ ->
+                                Main.evaluateCondition values (Main.Field "field1" (Main.EndsWith "123"))
+                                    |> Expect.equal True
+                            , \_ ->
+                                Main.evaluateCondition values (Main.Field "field1" (Main.EndsWith "hello"))
+                                    |> Expect.equal False
+                            , \_ ->
+                                Main.evaluateCondition values (Main.Field "field1" (Main.EndsWith "test"))
+                                    |> Expect.equal True
+                            ]
+                            ()
+                ]
+            , describe "Edge cases"
+                [ test "Empty string behaviors" <|
+                    \_ ->
+                        let
+                            values =
+                                Dict.fromList [ ( "field1", [ "" ] ) ]
+                        in
+                        Expect.all
+                            [ \_ ->
+                                Main.evaluateCondition values (Main.Field "field1" (Main.Equals ""))
+                                    |> Expect.equal True
+                            , \_ ->
+                                Main.evaluateCondition values (Main.Field "field1" (Main.StringContains ""))
+                                    |> Expect.equal True
+                            , \_ ->
+                                Main.evaluateCondition values (Main.Field "field1" (Main.EndsWith ""))
+                                    |> Expect.equal True
+                            ]
+                            ()
+                , test "Missing field behaviors" <|
+                    \_ ->
+                        let
+                            values =
+                                Dict.empty
+                        in
+                        Expect.all
+                            [ \_ ->
+                                Main.evaluateCondition values (Main.Field "field1" (Main.Equals "anything"))
+                                    |> Expect.equal False
+                            , \_ ->
+                                Main.evaluateCondition values (Main.Field "field1" (Main.StringContains "anything"))
+                                    |> Expect.equal False
+                            , \_ ->
+                                Main.evaluateCondition values (Main.Field "field1" (Main.EndsWith "anything"))
+                                    |> Expect.equal False
+                            ]
+                            ()
+                ]
+            ]
         , describe "dragOverDecoder"
             [ test "decodes dragover event with formfield" <|
                 \_ ->
@@ -461,348 +696,6 @@ suite =
                     |> Json.Decode.decodeString Main.decodeFormField
                     |> Expect.equal (Ok newField)
         ]
-
-
-oldjson : Test
-oldjson =
-    describe "Old JSON"
-        [ test "initial a7fd507" <|
-            \_ ->
-                """
-                [
-                    {
-                        "label": "Short text 1",
-                        "required": true,
-                        "description": "description 1",
-                        "type": {
-                        "type": "ShortText",
-                        "inputType": "text",
-                        "maxLength": 12
-                        }
-                    },
-                    {
-                        "label": "Email 2",
-                        "required": true,
-                        "description": "your personal email",
-                        "type": {
-                        "type": "ShortText",
-                        "inputType": "email",
-                        "maxLength": 23
-                        }
-                    },
-                    {
-                        "label": "Long text 3",
-                        "required": true,
-                        "description": "any comments",
-                        "type": {
-                        "type": "LongText",
-                        "maxLength": 280
-                        }
-                    },
-                    {
-                        "label": "Dropdown 4",
-                        "required": true,
-                        "description": "Binary choice",
-                        "type": {
-                        "type": "ChooseOne",
-                        "choices": [
-                            "Yes",
-                            "No"
-                        ]
-                        }
-                    },
-                    {
-                        "label": "Checkboxes 5",
-                        "required": true,
-                        "description": "Choose many or none",
-                        "type": {
-                        "type": "ChooseMultiple",
-                        "choices": [
-                            "Apple",
-                            "Banana",
-                            "Cantaloupe",
-                            "Durian"
-                        ]
-                        }
-                    }
-                ]
-                """
-                    |> Json.Decode.decodeString Main.decodeFormFields
-                    |> Result.map Main.encodeFormFields
-                    |> Result.andThen (Json.Decode.decodeValue Main.decodeFormFields)
-                    |> Expect.equal
-                        (Ok
-                            (Array.fromList
-                                [ { description = Main.AttributeGiven "description 1"
-                                  , label = "Short text 1"
-                                  , name = Nothing
-                                  , presence = Main.Required
-                                  , type_ =
-                                        Main.ShortText
-                                            { attributes = Dict.empty
-                                            , datalist = Main.AttributeNotNeeded Nothing
-                                            , inputTag = "input"
-                                            , inputType = "text"
-                                            , multiple = Main.AttributeNotNeeded Nothing
-                                            , maxlength = Main.AttributeNotNeeded Nothing
-                                            }
-                                  , visibilityRule = []
-                                  }
-                                , { description = Main.AttributeGiven "your personal email"
-                                  , label = "Email 2"
-                                  , name = Nothing
-                                  , presence = Main.Required
-                                  , type_ =
-                                        Main.ShortText
-                                            { attributes = Dict.empty
-                                            , datalist = Main.AttributeNotNeeded Nothing
-                                            , inputTag = "input"
-                                            , inputType = "email"
-                                            , multiple = Main.AttributeNotNeeded Nothing
-                                            , maxlength = Main.AttributeNotNeeded Nothing
-                                            }
-                                  , visibilityRule = []
-                                  }
-                                , { description = Main.AttributeGiven "any comments"
-                                  , label = "Long text 3"
-                                  , name = Nothing
-                                  , presence = Main.Required
-                                  , type_ = Main.LongText (Main.AttributeGiven 280)
-                                  , visibilityRule = []
-                                  }
-                                , { description = Main.AttributeGiven "Binary choice"
-                                  , label = "Dropdown 4"
-                                  , name = Nothing
-                                  , presence = Main.Required
-                                  , type_ =
-                                        Main.ChooseOne
-                                            [ { label = "Yes"
-                                              , value = "Yes"
-                                              }
-                                            , { label = "No"
-                                              , value = "No"
-                                              }
-                                            ]
-                                  , visibilityRule = []
-                                  }
-                                , { description = Main.AttributeGiven "Choose many or none"
-                                  , label = "Checkboxes 5"
-                                  , name = Nothing
-                                  , presence = Main.Required
-                                  , type_ =
-                                        Main.ChooseMultiple
-                                            [ { label = "Apple"
-                                              , value = "Apple"
-                                              }
-                                            , { label = "Banana"
-                                              , value = "Banana"
-                                              }
-                                            , { label = "Cantaloupe"
-                                              , value = "Cantaloupe"
-                                              }
-                                            , { label = "Durian"
-                                              , value = "Durian"
-                                              }
-                                            ]
-                                  , visibilityRule = []
-                                  }
-                                ]
-                            )
-                        )
-        , test "initial aee8a74" <|
-            \_ ->
-                """
-                [
-                    {
-                        "label": "Question 1",
-                        "presence": "Required",
-                        "description": "dropdown desc",
-                        "type": {
-                        "type": "Dropdown",
-                        "choices": [
-                            "Red",
-                            "Orange",
-                            "Yellow",
-                            "Green",
-                            "Blue",
-                            "Indigo",
-                            "Violet"
-                        ]
-                        },
-                        "visibilityRule": []
-                    },
-                    {
-                        "label": "Question 2",
-                        "presence": "Required",
-                        "description": "my radio desc",
-                        "type": {
-                        "type": "ChooseOne",
-                        "choices": [
-                            "Yes",
-                            "No"
-                        ]
-                        }
-                    },
-                    {
-                        "label": "Question 3",
-                        "presence": "Optional",
-                        "description": "My checkboxes desc",
-                        "type": {
-                        "type": "ChooseMultiple",
-                        "choices": [
-                            "Apple",
-                            "Banana",
-                            "Cantaloupe",
-                            "Durian"
-                        ]
-                        },
-                        "visibilityRule": [ ]
-                    },
-                    {
-                        "label": "Question 4",
-                        "presence": "Required",
-                        "description": "any comments",
-                        "type": {
-                        "type": "LongText",
-                        "maxLength": 280
-                        },
-                        "visibilityRule": [ {
-                            "type": "ShowWhen",
-                            "conditions": [ ]
-                        } ]
-                    },
-                    {
-                        "label": "Question 5",
-                        "presence": "Required",
-                        "description": "any text",
-                        "type": {
-                        "type": "ShortText",
-                        "inputType": "Single-line free text",
-                        "maxLength": 140
-                        },
-                        "visibilityRule": [ {
-                            "type": "ShowWhen",
-                            "conditions": [ {
-                                "type": "Field",
-                                "fieldName": "Question 2",
-                                "comparison": {
-                                    "type": "Equals",
-                                    "value": "Yes"
-                                }
-                            } ]
-                        } ]
-                    },
-                    {
-                        "label": "Question 6",
-                        "presence": "Required",
-                        "description": "custom nric format",
-                        "type": {
-                        "type": "ShortText",
-                        "inputType": "NRIC",
-                        "maxLength": null
-                        },
-                        "visibilityRule": []
-                    }
-                ]
-                """
-                    |> Json.Decode.decodeString Main.decodeFormFields
-                    |> Result.map Main.encodeFormFields
-                    |> Result.andThen (Json.Decode.decodeValue Main.decodeFormFields)
-                    |> Expect.equal
-                        (Ok
-                            (Array.fromList
-                                [ { description = Main.AttributeGiven "dropdown desc"
-                                  , label = "Question 1"
-                                  , name = Nothing
-                                  , presence = Main.Required
-                                  , type_ =
-                                        Main.Dropdown
-                                            [ { label = "Red", value = "Red" }
-                                            , { label = "Orange", value = "Orange" }
-                                            , { label = "Yellow", value = "Yellow" }
-                                            , { label = "Green", value = "Green" }
-                                            , { label = "Blue", value = "Blue" }
-                                            , { label = "Indigo", value = "Indigo" }
-                                            , { label = "Violet", value = "Violet" }
-                                            ]
-                                  , visibilityRule = []
-                                  }
-                                , { description = Main.AttributeGiven "my radio desc"
-                                  , label = "Question 2"
-                                  , name = Nothing
-                                  , presence = Main.Required
-                                  , type_ =
-                                        Main.ChooseOne
-                                            [ { label = "Yes", value = "Yes" }
-                                            , { label = "No", value = "No" }
-                                            ]
-                                  , visibilityRule = []
-                                  }
-                                , { description = Main.AttributeGiven "My checkboxes desc"
-                                  , label = "Question 3"
-                                  , name = Nothing
-                                  , presence = Main.Optional
-                                  , type_ =
-                                        Main.ChooseMultiple
-                                            [ { label = "Apple", value = "Apple" }
-                                            , { label = "Banana", value = "Banana" }
-                                            , { label = "Cantaloupe", value = "Cantaloupe" }
-                                            , { label = "Durian", value = "Durian" }
-                                            ]
-                                  , visibilityRule = []
-                                  }
-                                , { description = Main.AttributeGiven "any comments"
-                                  , label = "Question 4"
-                                  , name = Nothing
-                                  , presence = Main.Required
-                                  , type_ = Main.LongText (Main.AttributeGiven 280)
-                                  , visibilityRule =
-                                        [ Main.ShowWhen []
-                                        ]
-                                  }
-                                , { description = Main.AttributeGiven "any text"
-                                  , label = "Question 5"
-                                  , name = Nothing
-                                  , presence = Main.Required
-                                  , type_ =
-                                        Main.ShortText
-                                            { attributes = Dict.empty
-                                            , datalist = Main.AttributeNotNeeded Nothing
-                                            , inputTag = "input"
-                                            , inputType = "Single-line free text"
-                                            , multiple = Main.AttributeNotNeeded Nothing
-                                            , maxlength = Main.AttributeNotNeeded Nothing
-                                            }
-                                  , visibilityRule =
-                                        [ Main.ShowWhen
-                                            [ Main.Field "Question 2" (Main.Equals "Yes")
-                                            ]
-                                        ]
-                                  }
-                                , { description = Main.AttributeGiven "custom nric format"
-                                  , label = "Question 6"
-                                  , name = Nothing
-                                  , presence = Main.Required
-                                  , type_ =
-                                        Main.ShortText
-                                            { attributes = Dict.empty
-                                            , datalist = Main.AttributeNotNeeded Nothing
-                                            , inputTag = "input"
-                                            , inputType = "NRIC"
-                                            , multiple = Main.AttributeNotNeeded Nothing
-                                            , maxlength = Main.AttributeNotNeeded Nothing
-                                            }
-                                  , visibilityRule = []
-                                  }
-                                ]
-                            )
-                        )
-        ]
-
-
-
---
---
 
 
 viewModeFuzzer : Fuzzer Main.ViewMode
