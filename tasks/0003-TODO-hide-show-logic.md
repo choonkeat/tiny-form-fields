@@ -82,5 +82,10 @@ Add support for conditional visibility where each field can specify when it shou
 - [ ] Update documentation with new feature
 - [ ] Document behavior of hidden fields in form submission
 - [x] Add tests for conditional logic
+    - [x] Unit tests for isVisibilityRuleSatisfied
+    - [x] Unit tests for evaluateCondition with precise behavior documentation
+    - [x] Tests cover all comparison types (Equals, StringContains, EndsWith)
+    - [x] Tests cover single and multiple values
+    - [x] Tests cover edge cases (empty strings, missing fields)
 - [ ] Add tests for form validation with hidden fields
 - [ ] Add tests for import/export with visibility rules

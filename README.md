@@ -20,6 +20,11 @@ A lightweight, customizable form builder and renderer written in Elm. Create dyn
   - Rich text editor (via custom field integration)
 - Drag-and-drop field reordering
 - Field validation
+- Conditional visibility rules:
+  - Show/Hide fields based on other field values
+  - Multiple conditions with AND/OR logic
+  - Real-time updates in CollectData mode
+  - Support for various comparison types (equals, contains, ends with)
 - Responsive design
 - Two modes: Editor (for building forms) and CollectData (for end users)
 - JSON import/export of form definitions
