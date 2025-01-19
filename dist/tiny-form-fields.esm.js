@@ -14897,7 +14897,8 @@ var $author$project$Main$visibilityRuleSection = F4(
 												fieldIndex,
 												'');
 										}),
-										$elm$html$Html$Attributes$required(true)
+										$elm$html$Html$Attributes$required(true),
+										$elm$html$Html$Attributes$class('tff-comparison-value')
 									]),
 								options: _List_fromArray(
 									[
@@ -14932,7 +14933,8 @@ var $author$project$Main$visibilityRuleSection = F4(
 												A3($author$project$Main$OnVisibilityConditionTypeInput, ruleIndex, conditionIndex, str),
 												fieldIndex,
 												'');
-										})
+										}),
+										$elm$html$Html$Attributes$class('tff-comparison-type')
 									])
 							})
 						]));
@@ -14970,7 +14972,7 @@ var $author$project$Main$visibilityRuleSection = F4(
 									$elm$html$Html$select,
 									_List_fromArray(
 										[
-											$elm$html$Html$Attributes$class('tff-text-field tff-question-title'),
+											$elm$html$Html$Attributes$class('tff-text-field tff-show-or-hide'),
 											$elm$html$Html$Events$onInput(
 											function (str) {
 												return A3(

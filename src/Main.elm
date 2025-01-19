@@ -5,6 +5,7 @@ port module Main exposing
     , Condition(..)
     , Dragged(..)
     , FormField
+    , FormFieldMsg(..)
     , InputField(..)
     , Msg(..)
     , Presence(..)
@@ -27,6 +28,11 @@ port module Main exposing
     , main
     , onDropped
     , stringFromViewMode
+    , updateComparisonInCondition
+    , updateConditions
+    , updateConditionsInRule
+    , updateFieldnameInCondition
+    , updateFormField
     , viewModeFromString
     )
 
@@ -1868,6 +1874,7 @@ visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
                 , selectInputGroup
                     { selectAttrs =
                         [ onInput (\str -> OnFormField (OnVisibilityConditionTypeInput ruleIndex conditionIndex str) fieldIndex "")
+                        , class "tff-comparison-type"
                         ]
                     , options =
                         [ ( "Equals", "Equals", isComparingWith (Equals "something") (comparisonOf rule) )
@@ -1889,6 +1896,7 @@ visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
                             )
                         , onInput (\str -> OnFormField (OnVisibilityConditionValueInput ruleIndex conditionIndex str) fieldIndex "")
                         , required True
+                        , class "tff-comparison-value"
                         ]
                     , children = []
                     }
@@ -1902,7 +1910,7 @@ visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
             [ div [ class "tff-dropdown-group" ]
                 [ selectArrowDown
                 , select
-                    [ class "tff-text-field tff-question-title"
+                    [ class "tff-text-field tff-show-or-hide"
                     , onInput (\str -> OnFormField (OnVisibilityRuleTypeInput ruleIndex str) fieldIndex "")
                     , required True
                     , value

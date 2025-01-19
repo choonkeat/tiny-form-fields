@@ -16,7 +16,7 @@ test('[Dropdown] visibility rules in preview mode', async ({ page }) => {
             type: 'Show this question when',
             field: 'Logic question',
             comparison: {
-                type: 'equals',
+                type: 'Equals',
                 value: 'Red'
             }
         }
@@ -30,7 +30,7 @@ test('[Dropdown] visibility rules in preview mode', async ({ page }) => {
             type: 'Show this question when',
             field: 'Logic question',
             comparison: {
-                type: 'equals',
+                type: 'Equals',
                 value: 'Orange'
             }
         }
@@ -68,7 +68,7 @@ test('[Radio buttons] visibility rules in preview mode', async ({ page }) => {
             type: 'Show this question when',
             field: 'Logic question',
             comparison: {
-                type: 'equals',
+                type: 'Equals',
                 value: 'Yes'
             }
         }
@@ -82,7 +82,7 @@ test('[Radio buttons] visibility rules in preview mode', async ({ page }) => {
             type: 'Show this question when',
             field: 'Logic question',
             comparison: {
-                type: 'equals',
+                type: 'Equals',
                 value: 'No'
             }
         }
@@ -120,7 +120,7 @@ test('[Checkboxes] visibility rules in preview mode', async ({ page }) => {
             type: 'Show this question when',
             field: 'Logic question',
             comparison: {
-                type: 'choice includes',
+                type: 'Equals',
                 value: 'Apple'
             }
         }
@@ -134,7 +134,7 @@ test('[Checkboxes] visibility rules in preview mode', async ({ page }) => {
             type: 'Show this question when',
             field: 'Logic question',
             comparison: {
-                type: 'choice includes',
+                type: 'Equals',
                 value: 'Banana'
             }
         }
@@ -177,7 +177,7 @@ test('[Multi-line description] visibility rules with contains in preview mode', 
             type: 'Show this question when',
             field: 'Logic question',
             comparison: {
-                type: 'contains',
+                type: 'StringContains',
                 value: 'urgent'
             }
         }
@@ -191,7 +191,7 @@ test('[Multi-line description] visibility rules with contains in preview mode', 
             type: 'Show this question when',
             field: 'Logic question',
             comparison: {
-                type: 'contains',
+                type: 'StringContains',
                 value: 'important'
             }
         }
@@ -239,7 +239,7 @@ test('[Single-line free text] visibility rules with contains in preview mode', a
             type: 'Show this question when',
             field: 'Logic question',
             comparison: {
-                type: 'contains',
+                type: 'StringContains',
                 value: 'urgent'
             }
         }
@@ -253,7 +253,7 @@ test('[Single-line free text] visibility rules with contains in preview mode', a
             type: 'Show this question when',
             field: 'Logic question',
             comparison: {
-                type: 'contains',
+                type: 'StringContains',
                 value: 'important'
             }
         }

@@ -10,7 +10,7 @@ export interface FieldEdit {
         type: "Show this question when" | "Hide this question when";
         field: string;
         comparison: {
-            type: "equals" | "contains" | "choice includes" | "endsWith";
+            type: "Equals" | "StringContains" | "EndsWith";
             value: string;
         };
     };
@@ -44,7 +44,7 @@ export async function addField(
         }
 
         if (edit.visibilityRule) {
-            await page.getByText("Field logic").click();
+            await page.getByRole("button", { name: "Add field logic" }).click();
             await page.waitForTimeout(100);
             await page.selectOption(
                 "select.tff-show-or-hide",
