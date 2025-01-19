@@ -55,11 +55,27 @@ func (p *TinyFormFieldPresence) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type VisibilityComparison struct {
+	Type  string `json:"type"`
+	Value string `json:"value"`
+}
+
+type VisibilityCondition struct {
+	Field      string               `json:"field"`
+	Comparison VisibilityComparison `json:"comparison"`
+}
+
+type VisibilityRule struct {
+	Type       string                `json:"type"`
+	Conditions []VisibilityCondition `json:"conditions"`
+}
+
 type TinyFormField struct {
-	Label    string                `json:"label"`
-	Name     string                `json:"name,omitempty"`
-	Presence TinyFormFieldPresence `json:"presence,omitempty"`
-	Type     FieldType             `json:"type"`
+	Label          string                `json:"label"`
+	Name           string                `json:"name,omitempty"`
+	Presence       TinyFormFieldPresence `json:"presence,omitempty"`
+	Type           FieldType             `json:"type"`
+	VisibilityRule []VisibilityRule      `json:"visibilityRule,omitempty"`
 }
 
 func (tff TinyFormField) FieldName() string {
@@ -76,10 +92,11 @@ func (tff TinyFormField) FieldName() string {
 func (f *TinyFormField) UnmarshalJSON(data []byte) error {
 	// Create a temporary struct to get the base fields
 	var tmp struct {
-		Label    string          `json:"label"`
-		Name     string          `json:"name,omitempty"`
-		Presence json.RawMessage `json:"presence,omitempty"`
-		Type     json.RawMessage `json:"type"`
+		Label          string          `json:"label"`
+		Name           string          `json:"name,omitempty"`
+		Presence       json.RawMessage `json:"presence,omitempty"`
+		Type           json.RawMessage `json:"type"`
+		VisibilityRule json.RawMessage `json:"visibilityRule,omitempty"`
 	}
 	if err := json.Unmarshal(data, &tmp); err != nil {
 		return err
@@ -91,6 +108,13 @@ func (f *TinyFormField) UnmarshalJSON(data []byte) error {
 	if tmp.Presence != nil {
 		if err := json.Unmarshal(tmp.Presence, &f.Presence); err != nil {
 			return fmt.Errorf("error parsing presence for field %s: %v", f.Label, err)
+		}
+	}
+
+	// Unmarshal VisibilityRule
+	if tmp.VisibilityRule != nil {
+		if err := json.Unmarshal(tmp.VisibilityRule, &f.VisibilityRule); err != nil {
+			return fmt.Errorf("error parsing visibility rule for field %s: %v", f.Label, err)
 		}
 	}
 
@@ -526,19 +550,65 @@ func isRequired(field TinyFormField) bool {
 	}
 }
 
+func isVisibilityRuleSatisfied(rule VisibilityRule, values url.Values) bool {
+	for _, condition := range rule.Conditions {
+		fieldValue := values.Get(condition.Field)
+
+		var conditionMet bool
+		switch condition.Comparison.Type {
+		case "Equals":
+			conditionMet = fieldValue == condition.Comparison.Value
+		case "StringContains":
+			conditionMet = strings.Contains(fieldValue, condition.Comparison.Value)
+		}
+
+		if rule.Type == "HideWhen" {
+			if conditionMet {
+				return true // Rule is satisfied, field should be hidden
+			}
+		} else { // ShowWhen
+			if !conditionMet {
+				return false // Rule is not satisfied, field should be hidden
+			}
+		}
+	}
+
+	return rule.Type == "ShowWhen" // Default: show for ShowWhen, hide for HideWhen
+}
+
+func isFieldVisible(field TinyFormField, values url.Values) bool {
+	if len(field.VisibilityRule) == 0 {
+		return true
+	}
+
+	for _, rule := range field.VisibilityRule {
+		if isVisibilityRuleSatisfied(rule, values) {
+			return rule.Type == "ShowWhen" // If rule is satisfied: show for ShowWhen, hide for HideWhen
+		}
+	}
+
+	return field.VisibilityRule[0].Type == "HideWhen" // Default: show for HideWhen, hide for ShowWhen
+}
+
 // ValidFormValues validates the form submission values against the form definition.
 // Returns nil if validation passes, otherwise returns an error.
 func ValidFormValues(formFields []byte, values url.Values) error {
 	var fields []TinyFormField
 	if err := json.Unmarshal(formFields, &fields); err != nil {
-		return fmt.Errorf("error parsing form fields: %v", err)
+		return fmt.Errorf("error parsing form fields: %w", err)
 	}
+
 	for _, field := range fields {
-		fieldName := field.FieldName()
-		value := values[fieldName]
+		// Skip validation if field is not visible
+		if !isFieldVisible(field, values) {
+			continue
+		}
+
+		value := values[field.FieldName()]
 		if err := field.Type.Validate(value, field); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }

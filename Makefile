@@ -50,6 +50,9 @@ test-playwright:
 test-playwright-ui:
 	npx playwright test --ui
 
+test-go:
+	make -C go test
+
 stop-run:
 	killall node
 
