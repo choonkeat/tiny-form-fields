@@ -1,5 +1,6 @@
 SHELL = /bin/bash -u -e -o pipefail
 export PATH := node_modules/.bin:$(PATH)
+ELM_MAKE_FLAGS=--debug
 
 build: ELM_MAKE_FLAGS=--optimize
 build: css compile test test-go test-playwright
@@ -10,10 +11,10 @@ diff:
 compile: dist/tiny-form-fields.js dist/tiny-form-fields.esm.js dist/base-custom-field.js
 
 dist/tiny-form-fields.js: src/Main.elm Makefile
-	elm         make src/Main.elm --optimize --output dist/tiny-form-fields.js
+	elm         make src/Main.elm $(ELM_MAKE_FLAGS) --output dist/tiny-form-fields.js
 
 dist/tiny-form-fields.esm.js: src/Main.elm Makefile
-	npx elm-esm make src/Main.elm --optimize --output=dist/tiny-form-fields.esm.js
+	npx elm-esm make src/Main.elm $(ELM_MAKE_FLAGS) --output=dist/tiny-form-fields.esm.js
 	cp src/base-custom-field.js dist/
 
 dist/base-custom-field.js: src/base-custom-field.js
@@ -25,7 +26,6 @@ dist/tiny-form-fields.min.css: input.css tailwind.config.js index.html src/Main.
 	npx tailwindcss --input input.css --output dist/tiny-form-fields.min.css --minify
 	touch dist/tiny-form-fields.min.css
 
-ELM_MAKE_FLAGS=--debug
 run: node_modules/.bin/elm-esm
 	npx elm-live src/Main.elm \
 		--start-page index.html \
