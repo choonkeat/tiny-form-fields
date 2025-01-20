@@ -649,7 +649,10 @@ suite =
                                         ]
                               , multiple = Main.AttributeNotNeeded Nothing
                               , maxlength = Main.AttributeNotNeeded Nothing
-                              , datalist = Main.AttributeNotNeeded Nothing
+                              , datalist =
+                                    Main.AttributeGiven
+                                        [ { label = "someid", value = "someid" }
+                                        ]
                               }
                             , { inputType = "Text"
                               , inputTag = "input"
@@ -820,6 +823,39 @@ suite =
                     Main.updateFormField (Main.OnRequiredInput False) 0 "" Array.empty field1
                         |> .presence
                         |> Expect.equal Main.Optional
+            , test "accepts single line datalist input" <|
+                \_ ->
+                    let
+                        formField =
+                            { field1
+                                | type_ =
+                                    Main.ShortText
+                                        { inputType = "Text"
+                                        , inputTag = "input"
+                                        , attributes = Dict.empty
+                                        , datalist = Main.AttributeNotNeeded Nothing
+                                        , maxlength = Main.AttributeNotNeeded Nothing
+                                        , multiple = Main.AttributeNotNeeded Nothing
+                                        }
+                            }
+                    in
+                    Main.updateFormField Main.OnDatalistInput 0 "option1" Array.empty formField
+                        |> .type_
+                        |> (\t ->
+                                case t of
+                                    Main.ShortText customElement ->
+                                        case customElement.datalist of
+                                            Main.AttributeGiven choices ->
+                                                choices
+                                                    |> List.map .value
+                                                    |> Expect.equal [ "option1" ]
+
+                                            _ ->
+                                                Expect.fail "Expected AttributeGiven but got something else"
+
+                                    _ ->
+                                        Expect.fail "Expected ShortText but got something else"
+                           )
             ]
         ]
 

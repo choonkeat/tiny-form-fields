@@ -923,9 +923,6 @@ updateFormField msg fieldIndex string formFields formField =
                                         [] ->
                                             AttributeInvalid string
 
-                                        [ _ ] ->
-                                            AttributeInvalid string
-
                                         list ->
                                             AttributeGiven (List.map choiceFromString list)
                             }
@@ -3026,9 +3023,6 @@ fromRawCustomElement ele =
             Just s ->
                 case String.split "\n" (String.trim s) of
                     [] ->
-                        AttributeNotNeeded Nothing
-
-                    [ _ ] ->
                         AttributeNotNeeded Nothing
 
                     list ->

@@ -5546,13 +5546,9 @@ var $author$project$Main$fromRawCustomElement = function (ele) {
 				if (!_v1.b) {
 					return $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing);
 				} else {
-					if (!_v1.b.b) {
-						return $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing);
-					} else {
-						var list = _v1;
-						return $author$project$Main$AttributeGiven(
-							A2($elm$core$List$map, $author$project$Main$choiceFromString, list));
-					}
+					var list = _v1;
+					return $author$project$Main$AttributeGiven(
+						A2($elm$core$List$map, $author$project$Main$choiceFromString, list));
 				}
 			} else {
 				return $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing);
@@ -7745,13 +7741,9 @@ var $author$project$Main$updateFormField = F5(
 									if (!_v9.b) {
 										return $author$project$Main$AttributeInvalid(string);
 									} else {
-										if (!_v9.b.b) {
-											return $author$project$Main$AttributeInvalid(string);
-										} else {
-											var list = _v9;
-											return $author$project$Main$AttributeGiven(
-												A2($elm$core$List$map, $author$project$Main$choiceFromString, list));
-										}
+										var list = _v9;
+										return $author$project$Main$AttributeGiven(
+											A2($elm$core$List$map, $author$project$Main$choiceFromString, list));
 									}
 								}()
 							});
