@@ -97,7 +97,6 @@ type alias Model =
 
     -- Dict to lookup by `inputType`
     , shortTextTypeDict : Dict String CustomElement
-    , dropdownState : DropdownState
     , selectedFieldIndex : Maybe Int
     , dragged : Maybe Dragged
     , nextQuestionNumber : Int
@@ -505,18 +504,12 @@ init flags =
                     effectiveShortTextTypeList
                         |> List.map (\customElement -> ( customElement.inputType, customElement ))
                         |> Dict.fromList
-              , dropdownState = DropdownClosed
               , selectedFieldIndex = Nothing
               , dragged = Nothing
               , nextQuestionNumber = Array.length config.formFields + 1
               }
             , Cmd.batch
                 [ outgoing (encodePortOutgoingValue (PortOutgoingFormFields config.formFields))
-
-                -- js could've just done `document.body.addEventListener` and `app.ports.incoming.send` anyways
-                -- but we're sending out PortOutgoingSetupCloseDropdown to be surer that js would do it
-                -- also, we now dictate what `app.ports.incoming.send` sends back: PortIncomingCloseDropdown
-                , outgoing (encodePortOutgoingValue (PortOutgoingSetupCloseDropdown PortIncomingCloseDropdown))
                 ]
             )
 
@@ -528,7 +521,6 @@ init flags =
               , trackedFormValues = Dict.empty
               , shortTextTypeList = []
               , shortTextTypeDict = Dict.empty
-              , dropdownState = DropdownClosed
               , selectedFieldIndex = Nothing
               , dragged = Nothing
               , nextQuestionNumber = 1
@@ -554,15 +546,8 @@ update msg model =
 
         OnPortIncoming value ->
             case Json.Decode.decodeValue decodePortIncomingValue value of
-                Ok (PortIncomingViewMode viewMode) ->
-                    ( { model | viewMode = viewMode }
-                    , Cmd.none
-                    )
-
-                Ok PortIncomingCloseDropdown ->
-                    ( { model | dropdownState = DropdownClosed }
-                    , Cmd.none
-                    )
+                Ok PortIncomingValue ->
+                    ( model, Cmd.none )
 
                 Err _ ->
                     ( model, Cmd.none )
@@ -608,7 +593,10 @@ update msg model =
                         |> List.map Tuple.second
                         |> Array.fromList
             in
-            ( { model | formFields = newFormFields, selectedFieldIndex = Nothing }
+            ( { model
+                | formFields = newFormFields
+                , selectedFieldIndex = Nothing
+              }
             , outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
             )
 
@@ -649,7 +637,9 @@ update msg model =
                         )
                         model.formFields
             in
-            ( { model | formFields = newFormFields }
+            ( { model
+                | formFields = newFormFields
+              }
             , outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
             )
 
@@ -774,7 +764,9 @@ update msg model =
                         |> Dict.fromList
                         |> Json.Encode.dict identity identity
             in
-            ( { model | trackedFormValues = newTrackedFormValues }
+            ( { model
+                | trackedFormValues = newTrackedFormValues
+              }
             , outgoing (encodePortOutgoingValue (PortOutgoingFormValues formValues))
             )
 
@@ -2211,10 +2203,6 @@ viewRightPanel modelData =
         ]
 
 
-type DropdownState
-    = DropdownClosed
-
-
 dragHandleIcon : Html msg
 dragHandleIcon =
     svg
@@ -2441,7 +2429,6 @@ hasDuplicateLabel currentIndex newLabel formFields =
 
 type PortOutgoingValue
     = PortOutgoingFormFields (Array FormField)
-    | PortOutgoingSetupCloseDropdown PortIncomingValue
     | PortOutgoingFormValues Json.Encode.Value
 
 
@@ -2454,37 +2441,15 @@ encodePortOutgoingValue value =
                 , ( "formFields", encodeFormFields formFields )
                 ]
 
-        PortOutgoingSetupCloseDropdown incomingValue ->
-            Json.Encode.object
-                [ ( "type", Json.Encode.string "setupCloseDropdown" )
-                , ( "value", encodePortIncomingValue incomingValue )
-                ]
-
         PortOutgoingFormValues formValues ->
             Json.Encode.object
                 [ ( "type", Json.Encode.string "formValues" )
-                , ( "value", formValues )
+                , ( "formValues", formValues )
                 ]
 
 
 type PortIncomingValue
-    = PortIncomingViewMode ViewMode
-    | PortIncomingCloseDropdown
-
-
-encodePortIncomingValue : PortIncomingValue -> Json.Encode.Value
-encodePortIncomingValue value =
-    case value of
-        PortIncomingViewMode viewMode ->
-            Json.Encode.object
-                [ ( "type", Json.Encode.string "viewMode" )
-                , ( "viewMode", Json.Encode.string (stringFromViewMode viewMode) )
-                ]
-
-        PortIncomingCloseDropdown ->
-            Json.Encode.object
-                [ ( "type", Json.Encode.string "closeDropdown" )
-                ]
+    = PortIncomingValue
 
 
 decodePortIncomingValue : Json.Decode.Decoder PortIncomingValue
@@ -2492,25 +2457,7 @@ decodePortIncomingValue =
     Json.Decode.field "type" Json.Decode.string
         |> Json.Decode.andThen
             (\type_ ->
-                case type_ of
-                    "viewMode" ->
-                        -- app.ports.incoming.send({ type: "viewMode", viewMode: "Preview" })
-                        Json.Decode.field "viewMode" Json.Decode.string
-                            |> Json.Decode.andThen
-                                (\viewModeString ->
-                                    case viewModeFromString viewModeString of
-                                        Just viewMode ->
-                                            Json.Decode.succeed (PortIncomingViewMode viewMode)
-
-                                        Nothing ->
-                                            Json.Decode.fail ("Unknown view mode: " ++ viewModeString)
-                                )
-
-                    "closeDropdown" ->
-                        Json.Decode.succeed PortIncomingCloseDropdown
-
-                    _ ->
-                        Json.Decode.fail ("Unknown port event type: " ++ type_)
+                Json.Decode.fail ("Unknown port event type: " ++ type_)
             )
 
 
