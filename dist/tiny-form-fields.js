@@ -7729,7 +7729,10 @@ var $author$project$Main$updateFormField = F5(
 							customElement,
 							{
 								X: function () {
-									var _v9 = A2($elm$core$String$split, '\n', string);
+									var _v9 = A2(
+										$elm$core$String$split,
+										'\n',
+										$elm$core$String$trim(string));
 									if (!_v9.b) {
 										return $author$project$Main$AttributeInvalid(string);
 									} else {

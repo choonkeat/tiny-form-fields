@@ -919,7 +919,7 @@ updateFormField msg fieldIndex string formFields formField =
                         newCustomElement =
                             { customElement
                                 | datalist =
-                                    case String.split "\n" string of
+                                    case String.split "\n" (String.trim string) of
                                         [] ->
                                             AttributeInvalid string
 

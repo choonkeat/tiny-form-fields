@@ -844,17 +844,68 @@ suite =
                         |> (\t ->
                                 case t of
                                     Main.ShortText customElement ->
-                                        case customElement.datalist of
-                                            Main.AttributeGiven choices ->
-                                                choices
-                                                    |> List.map .value
-                                                    |> Expect.equal [ "option1" ]
-
-                                            _ ->
-                                                Expect.fail "Expected AttributeGiven but got something else"
+                                        Expect.equal
+                                            (Main.AttributeGiven [ { label = "option1", value = "option1" } ])
+                                            customElement.datalist
 
                                     _ ->
-                                        Expect.fail "Expected ShortText but got something else"
+                                        Expect.fail ("Expected ShortText but got " ++ Debug.toString t)
+                           )
+            , test "accepts 2 lines datalist input" <|
+                \_ ->
+                    let
+                        formField =
+                            { field1
+                                | type_ =
+                                    Main.ShortText
+                                        { inputType = "Text"
+                                        , inputTag = "input"
+                                        , attributes = Dict.empty
+                                        , datalist = Main.AttributeNotNeeded Nothing
+                                        , maxlength = Main.AttributeNotNeeded Nothing
+                                        , multiple = Main.AttributeNotNeeded Nothing
+                                        }
+                            }
+                    in
+                    Main.updateFormField Main.OnDatalistInput 0 "option1\noption2\n" Array.empty formField
+                        |> .type_
+                        |> (\t ->
+                                case t of
+                                    Main.ShortText customElement ->
+                                        Expect.equal
+                                            (Main.AttributeGiven [ { label = "option1", value = "option1" }, { label = "option2", value = "option2" } ])
+                                            customElement.datalist
+
+                                    _ ->
+                                        Expect.fail ("Expected ShortText but got " ++ Debug.toString t)
+                           )
+            , test "accepts complex lines datalist input" <|
+                \_ ->
+                    let
+                        formField =
+                            { field1
+                                | type_ =
+                                    Main.ShortText
+                                        { inputType = "Text"
+                                        , inputTag = "input"
+                                        , attributes = Dict.empty
+                                        , datalist = Main.AttributeNotNeeded Nothing
+                                        , maxlength = Main.AttributeNotNeeded Nothing
+                                        , multiple = Main.AttributeNotNeeded Nothing
+                                        }
+                            }
+                    in
+                    Main.updateFormField Main.OnDatalistInput 0 "option1 | huh\noption2\n" Array.empty formField
+                        |> .type_
+                        |> (\t ->
+                                case t of
+                                    Main.ShortText customElement ->
+                                        Expect.equal
+                                            (Main.AttributeGiven [ { label = "huh", value = "option1" }, { label = "option2", value = "option2" } ])
+                                            customElement.datalist
+
+                                    _ ->
+                                        Expect.fail ("Expected ShortText but got " ++ Debug.toString t)
                            )
             ]
         ]
