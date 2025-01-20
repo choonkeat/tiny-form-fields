@@ -435,6 +435,39 @@ suite =
                                     |> Expect.equal False
                             ]
                             ()
+                , test "GreaterThan handles both numeric and string comparisons" <|
+                    \_ ->
+                        Expect.all
+                            [ -- Numeric comparisons (when value is float)
+                              \_ ->
+                                Main.evaluateCondition
+                                    (Dict.fromList [ ( "field1", [ "123" ] ) ])
+                                    (Main.Field "field1" (Main.GreaterThan "45"))
+                                    |> Expect.equal True
+                            , \_ ->
+                                Main.evaluateCondition
+                                    (Dict.fromList [ ( "field1", [ "45" ] ) ])
+                                    (Main.Field "field1" (Main.GreaterThan "123"))
+                                    |> Expect.equal False
+                            , -- String comparisons (when value is not float)
+                              \_ ->
+                                Main.evaluateCondition
+                                    (Dict.fromList [ ( "field1", [ "xyz" ] ) ])
+                                    (Main.Field "field1" (Main.GreaterThan "abc"))
+                                    |> Expect.equal True
+                            , \_ ->
+                                Main.evaluateCondition
+                                    (Dict.fromList [ ( "field1", [ "abc" ] ) ])
+                                    (Main.Field "field1" (Main.GreaterThan "xyz"))
+                                    |> Expect.equal False
+                            , -- Mixed comparisons (when value is float but field value is not)
+                              \_ ->
+                                Main.evaluateCondition
+                                    (Dict.fromList [ ( "field1", [ "abc" ] ) ])
+                                    (Main.Field "field1" (Main.GreaterThan "123"))
+                                    |> Expect.equal False
+                            ]
+                            ()
                 ]
             , describe "Multiple values with '123' pattern"
                 [ test "Values ['hello123', 'world123', 'test'] behave differently across comparisons" <|

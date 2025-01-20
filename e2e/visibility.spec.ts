@@ -306,3 +306,43 @@ test('[Single-line free text] visibility rules with contains in preview mode', a
     await expect(page1.locator('text="Contains urgent"')).toHaveCount(0);
     await expect(page1.locator('text="Contains important"')).toBeVisible();
 });
+
+test('[Single-line free text] visibility rules with greater than in preview mode', async ({ page }) => {
+    await page.goto("http://localhost:8000/");
+
+    // Add single-line free text field first since other fields will reference it
+    await addField(page, 'Single-line free text', [{ label: 'Single-line free text question title', value: 'Logic question' }]);
+
+    // Add "High Score!" text field that shows when number is greater than 100
+    await addField(page, 'Single-line free text', [{
+        label: 'Single-line free text question title',
+        value: 'High Score!',
+        visibilityRule: [{
+            type: 'Show this question when',
+            field: 'Logic question',
+            comparison: [{
+                type: 'GreaterThan',
+                value: '100'
+            }]
+        }]
+    }]);
+
+    // Switch to preview mode
+    const page1Promise = page.waitForEvent("popup");
+    await page
+        .getByRole("link", { name: "View sample Collect Data page" })
+        .click();
+    const page1 = await page1Promise;
+
+    // Test with value less than 100
+    await page1.getByLabel('Logic question').fill('50');
+    await expect(page1.locator('text="High Score!"')).toHaveCount(0);
+
+    // Test with value greater than 100
+    await page1.getByLabel('Logic question').fill('150');
+    await expect(page1.locator('text="High Score!"')).toBeVisible();
+
+    // Test with non-numeric value
+    await page1.getByLabel('Logic question').fill('xyz');
+    await expect(page1.locator('text="High Score!"')).toHaveCount(0);
+});

@@ -5759,6 +5759,9 @@ var $author$project$Main$EndsWith = function (a) {
 var $author$project$Main$Equals = function (a) {
 	return {$: 0, a: a};
 };
+var $author$project$Main$GreaterThan = function (a) {
+	return {$: 3, a: a};
+};
 var $author$project$Main$StringContains = function (a) {
 	return {$: 1, a: a};
 };
@@ -5781,6 +5784,11 @@ var $author$project$Main$decodeComparison = A2(
 					$elm_community$json_extra$Json$Decode$Extra$andMap,
 					A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$string),
 					$elm$json$Json$Decode$succeed($author$project$Main$EndsWith));
+			case 'GreaterThan':
+				return A2(
+					$elm_community$json_extra$Json$Decode$Extra$andMap,
+					A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$string),
+					$elm$json$Json$Decode$succeed($author$project$Main$GreaterThan));
 			default:
 				return $elm$json$Json$Decode$fail('Unknown comparison type: ' + str);
 		}
@@ -6362,7 +6370,7 @@ var $author$project$Main$encodeComparison = function (comparison) {
 						'value',
 						$elm$json$Json$Encode$string(value))
 					]));
-		default:
+		case 2:
 			var value = comparison.a;
 			return $elm$json$Json$Encode$object(
 				_List_fromArray(
@@ -6370,6 +6378,18 @@ var $author$project$Main$encodeComparison = function (comparison) {
 						_Utils_Tuple2(
 						'type',
 						$elm$json$Json$Encode$string('EndsWith')),
+						_Utils_Tuple2(
+						'value',
+						$elm$json$Json$Encode$string(value))
+					]));
+		default:
+			var value = comparison.a;
+			return $elm$json$Json$Encode$object(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'type',
+						$elm$json$Json$Encode$string('GreaterThan')),
 						_Utils_Tuple2(
 						'value',
 						$elm$json$Json$Encode$string(value))
@@ -7460,6 +7480,9 @@ var $author$project$Main$updateComparison = F2(
 					case 1:
 						var str = comparison.a;
 						return $author$project$Main$Equals(str);
+					case 2:
+						var str = comparison.a;
+						return $author$project$Main$Equals(str);
 					default:
 						var str = comparison.a;
 						return $author$project$Main$Equals(str);
@@ -7470,6 +7493,9 @@ var $author$project$Main$updateComparison = F2(
 						var str = comparison.a;
 						return $author$project$Main$StringContains(str);
 					case 1:
+						var str = comparison.a;
+						return $author$project$Main$StringContains(str);
+					case 2:
 						var str = comparison.a;
 						return $author$project$Main$StringContains(str);
 					default:
@@ -7484,9 +7510,27 @@ var $author$project$Main$updateComparison = F2(
 					case 1:
 						var str = comparison.a;
 						return $author$project$Main$EndsWith(str);
+					case 2:
+						var str = comparison.a;
+						return $author$project$Main$EndsWith(str);
 					default:
 						var str = comparison.a;
 						return $author$project$Main$EndsWith(str);
+				}
+			case 'GreaterThan':
+				switch (comparison.$) {
+					case 0:
+						var str = comparison.a;
+						return $author$project$Main$GreaterThan(str);
+					case 1:
+						var str = comparison.a;
+						return $author$project$Main$GreaterThan(str);
+					case 2:
+						var str = comparison.a;
+						return $author$project$Main$GreaterThan(str);
+					default:
+						var str = comparison.a;
+						return $author$project$Main$GreaterThan(str);
 				}
 			default:
 				return comparison;
@@ -7508,8 +7552,10 @@ var $author$project$Main$updateComparisonValue = F2(
 				return $author$project$Main$Equals(newValue);
 			case 1:
 				return $author$project$Main$StringContains(newValue);
-			default:
+			case 2:
 				return $author$project$Main$EndsWith(newValue);
+			default:
+				return $author$project$Main$GreaterThan(newValue);
 		}
 	});
 var $author$project$Main$updateConditions = F3(
@@ -9868,8 +9914,14 @@ var $author$project$Main$isComparingWith = F2(
 				} else {
 					return false;
 				}
-			default:
+			case 2:
 				if (given.$ === 2) {
+					return true;
+				} else {
+					return false;
+				}
+			default:
+				if (given.$ === 3) {
 					return true;
 				} else {
 					return false;
@@ -10198,6 +10250,9 @@ var $author$project$Main$visibilityRuleSection = F4(
 													case 1:
 														var v = rule.b.a;
 														return v;
+													case 2:
+														var v = rule.b.a;
+														return v;
 													default:
 														var v = rule.b.a;
 														return v;
@@ -10237,6 +10292,13 @@ var $author$project$Main$visibilityRuleSection = F4(
 										A2(
 											$author$project$Main$isComparingWith,
 											$author$project$Main$EndsWith('something'),
+											$author$project$Main$comparisonOf(rule))),
+										_Utils_Tuple3(
+										'GreaterThan',
+										'Greater than',
+										A2(
+											$author$project$Main$isComparingWith,
+											$author$project$Main$GreaterThan('something'),
 											$author$project$Main$comparisonOf(rule)))
 									]),
 								bY: _List_fromArray(
@@ -10917,37 +10979,59 @@ var $elm$core$List$all = F2(
 			list);
 	});
 var $elm$core$String$endsWith = _String_endsWith;
+var $elm$core$String$toFloat = _String_toFloat;
 var $author$project$Main$evaluateCondition = F2(
 	function (trackedFormValues, condition) {
 		var fieldName = condition.a;
 		var comparison = condition.b;
 		switch (comparison.$) {
 			case 0:
-				var value = comparison.a;
+				var givenValue = comparison.a;
 				return A2(
 					$elm$core$List$member,
-					value,
+					givenValue,
 					A2(
 						$elm$core$Maybe$withDefault,
 						_List_Nil,
 						A2($elm$core$Dict$get, fieldName, trackedFormValues)));
 			case 1:
-				var value = comparison.a;
+				var givenValue = comparison.a;
 				return A2(
 					$elm$core$List$any,
-					function (fieldValue) {
-						return A2($elm$core$String$contains, value, fieldValue);
-					},
+					$elm$core$String$contains(givenValue),
+					A2(
+						$elm$core$Maybe$withDefault,
+						_List_Nil,
+						A2($elm$core$Dict$get, fieldName, trackedFormValues)));
+			case 2:
+				var givenValue = comparison.a;
+				return A2(
+					$elm$core$List$any,
+					$elm$core$String$endsWith(givenValue),
 					A2(
 						$elm$core$Maybe$withDefault,
 						_List_Nil,
 						A2($elm$core$Dict$get, fieldName, trackedFormValues)));
 			default:
-				var value = comparison.a;
+				var givenValue = comparison.a;
 				return A2(
 					$elm$core$List$any,
-					function (fieldValue) {
-						return A2($elm$core$String$endsWith, value, fieldValue);
+					function (formValue) {
+						var _v2 = $elm$core$String$toFloat(givenValue);
+						if (!_v2.$) {
+							var givenFloat = _v2.a;
+							return A2(
+								$elm$core$Maybe$withDefault,
+								false,
+								A2(
+									$elm$core$Maybe$map,
+									function (formFloat) {
+										return _Utils_cmp(formFloat, givenFloat) > 0;
+									},
+									$elm$core$String$toFloat(formValue)));
+						} else {
+							return _Utils_cmp(formValue, givenValue) > 0;
+						}
 					},
 					A2(
 						$elm$core$Maybe$withDefault,

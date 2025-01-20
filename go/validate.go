@@ -560,6 +560,24 @@ func isVisibilityRuleSatisfied(rule VisibilityRule, values url.Values) bool {
 			conditionMet = fieldValue == condition.Comparison.Value
 		case "StringContains":
 			conditionMet = strings.Contains(fieldValue, condition.Comparison.Value)
+		case "EndsWith":
+			conditionMet = strings.HasSuffix(fieldValue, condition.Comparison.Value)
+		case "GreaterThan":
+			// Try to parse comparison value as float64
+			comparisonValue, comparisonErr := strconv.ParseFloat(condition.Comparison.Value, 64)
+			if comparisonErr == nil {
+				// If comparison value is float, try to compare as float
+				fieldFloat, fieldErr := strconv.ParseFloat(fieldValue, 64)
+				if fieldErr == nil {
+					conditionMet = fieldFloat > comparisonValue
+				} else {
+					// If field value is not float but comparison value is, compare as strings
+					conditionMet = fieldValue > condition.Comparison.Value
+				}
+			} else {
+				// If comparison value is not float, compare as strings
+				conditionMet = fieldValue > condition.Comparison.Value
+			}
 		}
 
 		if rule.Type == "HideWhen" {

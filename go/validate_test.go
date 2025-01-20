@@ -989,6 +989,172 @@ func TestVisibilityRules(t *testing.T) {
 			},
 			expectedError: nil,
 		},
+		{
+			name: "ShowWhen rule with GreaterThan numeric - visible and filled - should pass",
+			formFields: `[
+				{
+					"label": "Score",
+					"name": "score",
+					"presence": "Required",
+					"type": {
+						"type": "ShortText",
+						"inputType": "text"
+					}
+				},
+				{
+					"label": "High Score Message",
+					"name": "high_score_msg",
+					"presence": "Required",
+					"type": {
+						"type": "ShortText",
+						"inputType": "text"
+					},
+					"visibilityRule": [
+						{
+							"type": "ShowWhen",
+							"conditions": [
+								{
+									"field": "score",
+									"comparison": {
+										"type": "GreaterThan",
+										"value": "100"
+									}
+								}
+							]
+						}
+					]
+				}
+			]`,
+			values: url.Values{
+				"score":          []string{"150"},
+				"high_score_msg": []string{"Great job!"},
+			},
+			expectedError: nil,
+		},
+		{
+			name: "ShowWhen rule with GreaterThan numeric - not visible - should pass",
+			formFields: `[
+				{
+					"label": "Score",
+					"name": "score",
+					"presence": "Required",
+					"type": {
+						"type": "ShortText",
+						"inputType": "text"
+					}
+				},
+				{
+					"label": "High Score Message",
+					"name": "high_score_msg",
+					"presence": "Required",
+					"type": {
+						"type": "ShortText",
+						"inputType": "text"
+					},
+					"visibilityRule": [
+						{
+							"type": "ShowWhen",
+							"conditions": [
+								{
+									"field": "score",
+									"comparison": {
+										"type": "GreaterThan",
+										"value": "100"
+									}
+								}
+							]
+						}
+					]
+				}
+			]`,
+			values: url.Values{
+				"score": []string{"50"},
+			},
+			expectedError: nil,
+		},
+		{
+			name: "ShowWhen rule with GreaterThan string - visible and filled - should pass",
+			formFields: `[
+				{
+					"label": "Name",
+					"name": "name",
+					"presence": "Required",
+					"type": {
+						"type": "ShortText",
+						"inputType": "text"
+					}
+				},
+				{
+					"label": "Message",
+					"name": "message",
+					"presence": "Required",
+					"type": {
+						"type": "ShortText",
+						"inputType": "text"
+					},
+					"visibilityRule": [
+						{
+							"type": "ShowWhen",
+							"conditions": [
+								{
+									"field": "name",
+									"comparison": {
+										"type": "GreaterThan",
+										"value": "abc"
+									}
+								}
+							]
+						}
+					]
+				}
+			]`,
+			values: url.Values{
+				"name":    []string{"xyz"},
+				"message": []string{"Name is after abc"},
+			},
+			expectedError: nil,
+		},
+		{
+			name: "ShowWhen rule with GreaterThan string - not visible - should pass",
+			formFields: `[
+				{
+					"label": "Name",
+					"name": "name",
+					"presence": "Required",
+					"type": {
+						"type": "ShortText",
+						"inputType": "text"
+					}
+				},
+				{
+					"label": "Message",
+					"name": "message",
+					"presence": "Required",
+					"type": {
+						"type": "ShortText",
+						"inputType": "text"
+					},
+					"visibilityRule": [
+						{
+							"type": "ShowWhen",
+							"conditions": [
+								{
+									"field": "name",
+									"comparison": {
+										"type": "GreaterThan",
+										"value": "xyz"
+									}
+								}
+							]
+						}
+					]
+				}
+			]`,
+			values: url.Values{
+				"name": []string{"abc"},
+			},
+			expectedError: nil,
+		},
 	}
 
 	for _, tt := range scenarios {

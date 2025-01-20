@@ -10930,6 +10930,9 @@ var $author$project$Main$EndsWith = function (a) {
 var $author$project$Main$Equals = function (a) {
 	return {$: 'Equals', a: a};
 };
+var $author$project$Main$GreaterThan = function (a) {
+	return {$: 'GreaterThan', a: a};
+};
 var $author$project$Main$StringContains = function (a) {
 	return {$: 'StringContains', a: a};
 };
@@ -10952,6 +10955,11 @@ var $author$project$Main$decodeComparison = A2(
 					$elm_community$json_extra$Json$Decode$Extra$andMap,
 					A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$string),
 					$elm$json$Json$Decode$succeed($author$project$Main$EndsWith));
+			case 'GreaterThan':
+				return A2(
+					$elm_community$json_extra$Json$Decode$Extra$andMap,
+					A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$string),
+					$elm$json$Json$Decode$succeed($author$project$Main$GreaterThan));
 			default:
 				return $elm$json$Json$Decode$fail('Unknown comparison type: ' + str);
 		}
@@ -11452,7 +11460,7 @@ var $author$project$Main$encodeComparison = function (comparison) {
 						'value',
 						$elm$json$Json$Encode$string(value))
 					]));
-		default:
+		case 'EndsWith':
 			var value = comparison.a;
 			return $elm$json$Json$Encode$object(
 				_List_fromArray(
@@ -11460,6 +11468,18 @@ var $author$project$Main$encodeComparison = function (comparison) {
 						_Utils_Tuple2(
 						'type',
 						$elm$json$Json$Encode$string('EndsWith')),
+						_Utils_Tuple2(
+						'value',
+						$elm$json$Json$Encode$string(value))
+					]));
+		default:
+			var value = comparison.a;
+			return $elm$json$Json$Encode$object(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'type',
+						$elm$json$Json$Encode$string('GreaterThan')),
 						_Utils_Tuple2(
 						'value',
 						$elm$json$Json$Encode$string(value))
@@ -12387,6 +12407,9 @@ var $author$project$Main$updateComparison = F2(
 					case 'StringContains':
 						var str = comparison.a;
 						return $author$project$Main$Equals(str);
+					case 'EndsWith':
+						var str = comparison.a;
+						return $author$project$Main$Equals(str);
 					default:
 						var str = comparison.a;
 						return $author$project$Main$Equals(str);
@@ -12397,6 +12420,9 @@ var $author$project$Main$updateComparison = F2(
 						var str = comparison.a;
 						return $author$project$Main$StringContains(str);
 					case 'StringContains':
+						var str = comparison.a;
+						return $author$project$Main$StringContains(str);
+					case 'EndsWith':
 						var str = comparison.a;
 						return $author$project$Main$StringContains(str);
 					default:
@@ -12411,9 +12437,27 @@ var $author$project$Main$updateComparison = F2(
 					case 'StringContains':
 						var str = comparison.a;
 						return $author$project$Main$EndsWith(str);
+					case 'EndsWith':
+						var str = comparison.a;
+						return $author$project$Main$EndsWith(str);
 					default:
 						var str = comparison.a;
 						return $author$project$Main$EndsWith(str);
+				}
+			case 'GreaterThan':
+				switch (comparison.$) {
+					case 'Equals':
+						var str = comparison.a;
+						return $author$project$Main$GreaterThan(str);
+					case 'StringContains':
+						var str = comparison.a;
+						return $author$project$Main$GreaterThan(str);
+					case 'EndsWith':
+						var str = comparison.a;
+						return $author$project$Main$GreaterThan(str);
+					default:
+						var str = comparison.a;
+						return $author$project$Main$GreaterThan(str);
 				}
 			default:
 				return comparison;
@@ -12435,8 +12479,10 @@ var $author$project$Main$updateComparisonValue = F2(
 				return $author$project$Main$Equals(newValue);
 			case 'StringContains':
 				return $author$project$Main$StringContains(newValue);
-			default:
+			case 'EndsWith':
 				return $author$project$Main$EndsWith(newValue);
+			default:
+				return $author$project$Main$GreaterThan(newValue);
 		}
 	});
 var $author$project$Main$updateConditions = F3(
@@ -14685,8 +14731,14 @@ var $author$project$Main$isComparingWith = F2(
 				} else {
 					return false;
 				}
-			default:
+			case 'EndsWith':
 				if (given.$ === 'EndsWith') {
+					return true;
+				} else {
+					return false;
+				}
+			default:
+				if (given.$ === 'GreaterThan') {
 					return true;
 				} else {
 					return false;
@@ -15015,6 +15067,9 @@ var $author$project$Main$visibilityRuleSection = F4(
 													case 'StringContains':
 														var v = rule.b.a;
 														return v;
+													case 'EndsWith':
+														var v = rule.b.a;
+														return v;
 													default:
 														var v = rule.b.a;
 														return v;
@@ -15054,6 +15109,13 @@ var $author$project$Main$visibilityRuleSection = F4(
 										A2(
 											$author$project$Main$isComparingWith,
 											$author$project$Main$EndsWith('something'),
+											$author$project$Main$comparisonOf(rule))),
+										_Utils_Tuple3(
+										'GreaterThan',
+										'Greater than',
+										A2(
+											$author$project$Main$isComparingWith,
+											$author$project$Main$GreaterThan('something'),
 											$author$project$Main$comparisonOf(rule)))
 									]),
 								selectAttrs: _List_fromArray(
@@ -15729,37 +15791,59 @@ var $elm$core$List$all = F2(
 			list);
 	});
 var $elm$core$String$endsWith = _String_endsWith;
+var $elm$core$String$toFloat = _String_toFloat;
 var $author$project$Main$evaluateCondition = F2(
 	function (trackedFormValues, condition) {
 		var fieldName = condition.a;
 		var comparison = condition.b;
 		switch (comparison.$) {
 			case 'Equals':
-				var value = comparison.a;
+				var givenValue = comparison.a;
 				return A2(
 					$elm$core$List$member,
-					value,
+					givenValue,
 					A2(
 						$elm$core$Maybe$withDefault,
 						_List_Nil,
 						A2($elm$core$Dict$get, fieldName, trackedFormValues)));
 			case 'StringContains':
-				var value = comparison.a;
+				var givenValue = comparison.a;
 				return A2(
 					$elm$core$List$any,
-					function (fieldValue) {
-						return A2($elm$core$String$contains, value, fieldValue);
-					},
+					$elm$core$String$contains(givenValue),
+					A2(
+						$elm$core$Maybe$withDefault,
+						_List_Nil,
+						A2($elm$core$Dict$get, fieldName, trackedFormValues)));
+			case 'EndsWith':
+				var givenValue = comparison.a;
+				return A2(
+					$elm$core$List$any,
+					$elm$core$String$endsWith(givenValue),
 					A2(
 						$elm$core$Maybe$withDefault,
 						_List_Nil,
 						A2($elm$core$Dict$get, fieldName, trackedFormValues)));
 			default:
-				var value = comparison.a;
+				var givenValue = comparison.a;
 				return A2(
 					$elm$core$List$any,
-					function (fieldValue) {
-						return A2($elm$core$String$endsWith, value, fieldValue);
+					function (formValue) {
+						var _v2 = $elm$core$String$toFloat(givenValue);
+						if (_v2.$ === 'Just') {
+							var givenFloat = _v2.a;
+							return A2(
+								$elm$core$Maybe$withDefault,
+								false,
+								A2(
+									$elm$core$Maybe$map,
+									function (formFloat) {
+										return _Utils_cmp(formFloat, givenFloat) > 0;
+									},
+									$elm$core$String$toFloat(formValue)));
+						} else {
+							return _Utils_cmp(formValue, givenValue) > 0;
+						}
 					},
 					A2(
 						$elm$core$Maybe$withDefault,
@@ -15913,7 +15997,7 @@ var $author$project$Main$view = function (model) {
 var $author$project$Main$main = $elm$browser$Browser$element(
 	{init: $author$project$Main$init, subscriptions: $author$project$Main$subscriptions, update: $author$project$Main$update, view: $author$project$Main$view});
 /*
-_Platform_export({'Main':{'init':$author$project$Main$main($elm$json$Json$Decode$value)({"versions":{"elm":"0.19.1"},"types":{"message":"Main.Msg","aliases":{"Main.Droppable":{"args":[],"type":"( Basics.Int, Maybe.Maybe Main.FormField )"},"Main.FormField":{"args":[],"type":"{ label : String.String, name : Maybe.Maybe String.String, presence : Main.Presence, description : Main.AttributeOptional String.String, type_ : Main.InputField, visibilityRule : List.List Main.VisibilityRule }"},"Main.Choice":{"args":[],"type":"{ label : String.String, value : String.String }"},"Main.CustomElement":{"args":[],"type":"{ inputType : String.String, inputTag : String.String, attributes : Dict.Dict String.String String.String, multiple : Main.AttributeOptional Basics.Bool, maxlength : Main.AttributeOptional Basics.Int, datalist : Main.AttributeOptional (List.List Main.Choice) }"}},"unions":{"Main.Msg":{"args":[],"tags":{"NoOp":[],"OnPortIncoming":["Json.Encode.Value"],"AddFormField":["Main.InputField"],"DeleteFormField":["Basics.Int"],"MoveFormFieldUp":["Basics.Int"],"MoveFormFieldDown":["Basics.Int"],"OnFormField":["Main.FormFieldMsg","Basics.Int","String.String"],"SetEditorAnimate":["Maybe.Maybe ( Basics.Int, Main.Animate )"],"SelectField":["Maybe.Maybe Basics.Int"],"DragStart":["Basics.Int"],"DragStartNew":["Main.FormField"],"DragEnd":[],"DragOver":["Maybe.Maybe Main.Droppable"],"Drop":["Maybe.Maybe Basics.Int"],"DoSleepDo":["Basics.Float","List.List Main.Msg"],"OnFormValuesUpdated":["String.String","String.String"]}},"Main.Animate":{"args":[],"tags":{"AnimateYellowFade":[],"AnimateFadeOut":[]}},"Main.AttributeOptional":{"args":["a"],"tags":{"AttributeNotNeeded":["Maybe.Maybe a"],"AttributeInvalid":["String.String"],"AttributeGiven":["a"]}},"Basics.Float":{"args":[],"tags":{"Float":[]}},"Main.FormFieldMsg":{"args":[],"tags":{"OnLabelInput":[],"OnDescriptionInput":[],"OnDescriptionToggle":["Basics.Bool"],"OnRequiredInput":["Basics.Bool"],"OnChoicesInput":[],"OnMultipleToggle":["Basics.Bool"],"OnMaxLengthToggle":["Basics.Bool"],"OnMaxLengthInput":[],"OnDatalistToggle":["Basics.Bool"],"OnDatalistInput":[],"OnVisibilityRuleTypeInput":["Basics.Int","String.String"],"OnVisibilityConditionTypeInput":["Basics.Int","Basics.Int","String.String"],"OnVisibilityConditionFieldInput":["Basics.Int","Basics.Int","String.String"],"OnVisibilityConditionValueInput":["Basics.Int","Basics.Int","String.String"],"OnAddVisibilityRule":[],"OnVisibilityConditionDuplicate":["Basics.Int"]}},"Main.InputField":{"args":[],"tags":{"ShortText":["Main.CustomElement"],"LongText":["Main.AttributeOptional Basics.Int"],"Dropdown":["List.List Main.Choice"],"ChooseOne":["List.List Main.Choice"],"ChooseMultiple":["List.List Main.Choice"]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"List.List":{"args":["a"],"tags":{}},"Maybe.Maybe":{"args":["a"],"tags":{"Just":["a"],"Nothing":[]}},"Main.Presence":{"args":[],"tags":{"Required":[],"Optional":[],"System":[]}},"String.String":{"args":[],"tags":{"String":[]}},"Json.Encode.Value":{"args":[],"tags":{"Value":[]}},"Main.VisibilityRule":{"args":[],"tags":{"ShowWhen":["List.List Main.Condition"],"HideWhen":["List.List Main.Condition"]}},"Basics.Bool":{"args":[],"tags":{"True":[],"False":[]}},"Main.Condition":{"args":[],"tags":{"Field":["String.String","Main.Comparison"]}},"Dict.Dict":{"args":["k","v"],"tags":{"RBNode_elm_builtin":["Dict.NColor","k","v","Dict.Dict k v","Dict.Dict k v"],"RBEmpty_elm_builtin":[]}},"Main.Comparison":{"args":[],"tags":{"Equals":["String.String"],"StringContains":["String.String"],"EndsWith":["String.String"]}},"Dict.NColor":{"args":[],"tags":{"Red":[],"Black":[]}}}}})}});}(this));
+_Platform_export({'Main':{'init':$author$project$Main$main($elm$json$Json$Decode$value)({"versions":{"elm":"0.19.1"},"types":{"message":"Main.Msg","aliases":{"Main.Droppable":{"args":[],"type":"( Basics.Int, Maybe.Maybe Main.FormField )"},"Main.FormField":{"args":[],"type":"{ label : String.String, name : Maybe.Maybe String.String, presence : Main.Presence, description : Main.AttributeOptional String.String, type_ : Main.InputField, visibilityRule : List.List Main.VisibilityRule }"},"Main.Choice":{"args":[],"type":"{ label : String.String, value : String.String }"},"Main.CustomElement":{"args":[],"type":"{ inputType : String.String, inputTag : String.String, attributes : Dict.Dict String.String String.String, multiple : Main.AttributeOptional Basics.Bool, maxlength : Main.AttributeOptional Basics.Int, datalist : Main.AttributeOptional (List.List Main.Choice) }"}},"unions":{"Main.Msg":{"args":[],"tags":{"NoOp":[],"OnPortIncoming":["Json.Encode.Value"],"AddFormField":["Main.InputField"],"DeleteFormField":["Basics.Int"],"MoveFormFieldUp":["Basics.Int"],"MoveFormFieldDown":["Basics.Int"],"OnFormField":["Main.FormFieldMsg","Basics.Int","String.String"],"SetEditorAnimate":["Maybe.Maybe ( Basics.Int, Main.Animate )"],"SelectField":["Maybe.Maybe Basics.Int"],"DragStart":["Basics.Int"],"DragStartNew":["Main.FormField"],"DragEnd":[],"DragOver":["Maybe.Maybe Main.Droppable"],"Drop":["Maybe.Maybe Basics.Int"],"DoSleepDo":["Basics.Float","List.List Main.Msg"],"OnFormValuesUpdated":["String.String","String.String"]}},"Main.Animate":{"args":[],"tags":{"AnimateYellowFade":[],"AnimateFadeOut":[]}},"Main.AttributeOptional":{"args":["a"],"tags":{"AttributeNotNeeded":["Maybe.Maybe a"],"AttributeInvalid":["String.String"],"AttributeGiven":["a"]}},"Basics.Float":{"args":[],"tags":{"Float":[]}},"Main.FormFieldMsg":{"args":[],"tags":{"OnLabelInput":[],"OnDescriptionInput":[],"OnDescriptionToggle":["Basics.Bool"],"OnRequiredInput":["Basics.Bool"],"OnChoicesInput":[],"OnMultipleToggle":["Basics.Bool"],"OnMaxLengthToggle":["Basics.Bool"],"OnMaxLengthInput":[],"OnDatalistToggle":["Basics.Bool"],"OnDatalistInput":[],"OnVisibilityRuleTypeInput":["Basics.Int","String.String"],"OnVisibilityConditionTypeInput":["Basics.Int","Basics.Int","String.String"],"OnVisibilityConditionFieldInput":["Basics.Int","Basics.Int","String.String"],"OnVisibilityConditionValueInput":["Basics.Int","Basics.Int","String.String"],"OnAddVisibilityRule":[],"OnVisibilityConditionDuplicate":["Basics.Int"]}},"Main.InputField":{"args":[],"tags":{"ShortText":["Main.CustomElement"],"LongText":["Main.AttributeOptional Basics.Int"],"Dropdown":["List.List Main.Choice"],"ChooseOne":["List.List Main.Choice"],"ChooseMultiple":["List.List Main.Choice"]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"List.List":{"args":["a"],"tags":{}},"Maybe.Maybe":{"args":["a"],"tags":{"Just":["a"],"Nothing":[]}},"Main.Presence":{"args":[],"tags":{"Required":[],"Optional":[],"System":[]}},"String.String":{"args":[],"tags":{"String":[]}},"Json.Encode.Value":{"args":[],"tags":{"Value":[]}},"Main.VisibilityRule":{"args":[],"tags":{"ShowWhen":["List.List Main.Condition"],"HideWhen":["List.List Main.Condition"]}},"Basics.Bool":{"args":[],"tags":{"True":[],"False":[]}},"Main.Condition":{"args":[],"tags":{"Field":["String.String","Main.Comparison"]}},"Dict.Dict":{"args":["k","v"],"tags":{"RBNode_elm_builtin":["Dict.NColor","k","v","Dict.Dict k v","Dict.Dict k v"],"RBEmpty_elm_builtin":[]}},"Main.Comparison":{"args":[],"tags":{"Equals":["String.String"],"StringContains":["String.String"],"EndsWith":["String.String"],"GreaterThan":["String.String"]}},"Dict.NColor":{"args":[],"tags":{"Red":[],"Black":[]}}}}})}});}(this));
 */
-export const Elm = {'Main':{'init':$author$project$Main$main($elm$json$Json$Decode$value)({"versions":{"elm":"0.19.1"},"types":{"message":"Main.Msg","aliases":{"Main.Droppable":{"args":[],"type":"( Basics.Int, Maybe.Maybe Main.FormField )"},"Main.FormField":{"args":[],"type":"{ label : String.String, name : Maybe.Maybe String.String, presence : Main.Presence, description : Main.AttributeOptional String.String, type_ : Main.InputField, visibilityRule : List.List Main.VisibilityRule }"},"Main.Choice":{"args":[],"type":"{ label : String.String, value : String.String }"},"Main.CustomElement":{"args":[],"type":"{ inputType : String.String, inputTag : String.String, attributes : Dict.Dict String.String String.String, multiple : Main.AttributeOptional Basics.Bool, maxlength : Main.AttributeOptional Basics.Int, datalist : Main.AttributeOptional (List.List Main.Choice) }"}},"unions":{"Main.Msg":{"args":[],"tags":{"NoOp":[],"OnPortIncoming":["Json.Encode.Value"],"AddFormField":["Main.InputField"],"DeleteFormField":["Basics.Int"],"MoveFormFieldUp":["Basics.Int"],"MoveFormFieldDown":["Basics.Int"],"OnFormField":["Main.FormFieldMsg","Basics.Int","String.String"],"SetEditorAnimate":["Maybe.Maybe ( Basics.Int, Main.Animate )"],"SelectField":["Maybe.Maybe Basics.Int"],"DragStart":["Basics.Int"],"DragStartNew":["Main.FormField"],"DragEnd":[],"DragOver":["Maybe.Maybe Main.Droppable"],"Drop":["Maybe.Maybe Basics.Int"],"DoSleepDo":["Basics.Float","List.List Main.Msg"],"OnFormValuesUpdated":["String.String","String.String"]}},"Main.Animate":{"args":[],"tags":{"AnimateYellowFade":[],"AnimateFadeOut":[]}},"Main.AttributeOptional":{"args":["a"],"tags":{"AttributeNotNeeded":["Maybe.Maybe a"],"AttributeInvalid":["String.String"],"AttributeGiven":["a"]}},"Basics.Float":{"args":[],"tags":{"Float":[]}},"Main.FormFieldMsg":{"args":[],"tags":{"OnLabelInput":[],"OnDescriptionInput":[],"OnDescriptionToggle":["Basics.Bool"],"OnRequiredInput":["Basics.Bool"],"OnChoicesInput":[],"OnMultipleToggle":["Basics.Bool"],"OnMaxLengthToggle":["Basics.Bool"],"OnMaxLengthInput":[],"OnDatalistToggle":["Basics.Bool"],"OnDatalistInput":[],"OnVisibilityRuleTypeInput":["Basics.Int","String.String"],"OnVisibilityConditionTypeInput":["Basics.Int","Basics.Int","String.String"],"OnVisibilityConditionFieldInput":["Basics.Int","Basics.Int","String.String"],"OnVisibilityConditionValueInput":["Basics.Int","Basics.Int","String.String"],"OnAddVisibilityRule":[],"OnVisibilityConditionDuplicate":["Basics.Int"]}},"Main.InputField":{"args":[],"tags":{"ShortText":["Main.CustomElement"],"LongText":["Main.AttributeOptional Basics.Int"],"Dropdown":["List.List Main.Choice"],"ChooseOne":["List.List Main.Choice"],"ChooseMultiple":["List.List Main.Choice"]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"List.List":{"args":["a"],"tags":{}},"Maybe.Maybe":{"args":["a"],"tags":{"Just":["a"],"Nothing":[]}},"Main.Presence":{"args":[],"tags":{"Required":[],"Optional":[],"System":[]}},"String.String":{"args":[],"tags":{"String":[]}},"Json.Encode.Value":{"args":[],"tags":{"Value":[]}},"Main.VisibilityRule":{"args":[],"tags":{"ShowWhen":["List.List Main.Condition"],"HideWhen":["List.List Main.Condition"]}},"Basics.Bool":{"args":[],"tags":{"True":[],"False":[]}},"Main.Condition":{"args":[],"tags":{"Field":["String.String","Main.Comparison"]}},"Dict.Dict":{"args":["k","v"],"tags":{"RBNode_elm_builtin":["Dict.NColor","k","v","Dict.Dict k v","Dict.Dict k v"],"RBEmpty_elm_builtin":[]}},"Main.Comparison":{"args":[],"tags":{"Equals":["String.String"],"StringContains":["String.String"],"EndsWith":["String.String"]}},"Dict.NColor":{"args":[],"tags":{"Red":[],"Black":[]}}}}})}};
+export const Elm = {'Main':{'init':$author$project$Main$main($elm$json$Json$Decode$value)({"versions":{"elm":"0.19.1"},"types":{"message":"Main.Msg","aliases":{"Main.Droppable":{"args":[],"type":"( Basics.Int, Maybe.Maybe Main.FormField )"},"Main.FormField":{"args":[],"type":"{ label : String.String, name : Maybe.Maybe String.String, presence : Main.Presence, description : Main.AttributeOptional String.String, type_ : Main.InputField, visibilityRule : List.List Main.VisibilityRule }"},"Main.Choice":{"args":[],"type":"{ label : String.String, value : String.String }"},"Main.CustomElement":{"args":[],"type":"{ inputType : String.String, inputTag : String.String, attributes : Dict.Dict String.String String.String, multiple : Main.AttributeOptional Basics.Bool, maxlength : Main.AttributeOptional Basics.Int, datalist : Main.AttributeOptional (List.List Main.Choice) }"}},"unions":{"Main.Msg":{"args":[],"tags":{"NoOp":[],"OnPortIncoming":["Json.Encode.Value"],"AddFormField":["Main.InputField"],"DeleteFormField":["Basics.Int"],"MoveFormFieldUp":["Basics.Int"],"MoveFormFieldDown":["Basics.Int"],"OnFormField":["Main.FormFieldMsg","Basics.Int","String.String"],"SetEditorAnimate":["Maybe.Maybe ( Basics.Int, Main.Animate )"],"SelectField":["Maybe.Maybe Basics.Int"],"DragStart":["Basics.Int"],"DragStartNew":["Main.FormField"],"DragEnd":[],"DragOver":["Maybe.Maybe Main.Droppable"],"Drop":["Maybe.Maybe Basics.Int"],"DoSleepDo":["Basics.Float","List.List Main.Msg"],"OnFormValuesUpdated":["String.String","String.String"]}},"Main.Animate":{"args":[],"tags":{"AnimateYellowFade":[],"AnimateFadeOut":[]}},"Main.AttributeOptional":{"args":["a"],"tags":{"AttributeNotNeeded":["Maybe.Maybe a"],"AttributeInvalid":["String.String"],"AttributeGiven":["a"]}},"Basics.Float":{"args":[],"tags":{"Float":[]}},"Main.FormFieldMsg":{"args":[],"tags":{"OnLabelInput":[],"OnDescriptionInput":[],"OnDescriptionToggle":["Basics.Bool"],"OnRequiredInput":["Basics.Bool"],"OnChoicesInput":[],"OnMultipleToggle":["Basics.Bool"],"OnMaxLengthToggle":["Basics.Bool"],"OnMaxLengthInput":[],"OnDatalistToggle":["Basics.Bool"],"OnDatalistInput":[],"OnVisibilityRuleTypeInput":["Basics.Int","String.String"],"OnVisibilityConditionTypeInput":["Basics.Int","Basics.Int","String.String"],"OnVisibilityConditionFieldInput":["Basics.Int","Basics.Int","String.String"],"OnVisibilityConditionValueInput":["Basics.Int","Basics.Int","String.String"],"OnAddVisibilityRule":[],"OnVisibilityConditionDuplicate":["Basics.Int"]}},"Main.InputField":{"args":[],"tags":{"ShortText":["Main.CustomElement"],"LongText":["Main.AttributeOptional Basics.Int"],"Dropdown":["List.List Main.Choice"],"ChooseOne":["List.List Main.Choice"],"ChooseMultiple":["List.List Main.Choice"]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"List.List":{"args":["a"],"tags":{}},"Maybe.Maybe":{"args":["a"],"tags":{"Just":["a"],"Nothing":[]}},"Main.Presence":{"args":[],"tags":{"Required":[],"Optional":[],"System":[]}},"String.String":{"args":[],"tags":{"String":[]}},"Json.Encode.Value":{"args":[],"tags":{"Value":[]}},"Main.VisibilityRule":{"args":[],"tags":{"ShowWhen":["List.List Main.Condition"],"HideWhen":["List.List Main.Condition"]}},"Basics.Bool":{"args":[],"tags":{"True":[],"False":[]}},"Main.Condition":{"args":[],"tags":{"Field":["String.String","Main.Comparison"]}},"Dict.Dict":{"args":["k","v"],"tags":{"RBNode_elm_builtin":["Dict.NColor","k","v","Dict.Dict k v","Dict.Dict k v"],"RBEmpty_elm_builtin":[]}},"Main.Comparison":{"args":[],"tags":{"Equals":["String.String"],"StringContains":["String.String"],"EndsWith":["String.String"],"GreaterThan":["String.String"]}},"Dict.NColor":{"args":[],"tags":{"Red":[],"Black":[]}}}}})}};
   

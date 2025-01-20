@@ -1,7 +1,7 @@
 SHELL = /bin/bash -u -e -o pipefail
 export PATH := node_modules/.bin:$(PATH)
 
-build: css compile test test-playwright
+build: css compile test test-go test-playwright
 
 diff:
 	git diff -bw -- ':!dist'

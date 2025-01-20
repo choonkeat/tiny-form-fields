@@ -43,6 +43,7 @@ Add support for conditional visibility where each field can specify when it shou
               | StringContains String    -- substring match
               | ChoiceIncludes String    -- choice includes value
               | EndsWith String          -- string ends with value
+              | GreaterThan String       -- numeric comparison if possible, string otherwise
           ```
         - Update decoder/encoder
         - Nothing else
@@ -56,7 +57,17 @@ Add support for conditional visibility where each field can specify when it shou
         - Wire up field selection event
         - Update model when field is selected
         - Nothing else
-- [x] Support common operators (equals, contains, choice includes, ends with)
+- [x] Support common operators (equals, contains, choice includes, ends with, greater than)
+    - Equals: exact match
+    - Contains: substring match
+    - Choice Includes: value is in selected choices
+    - Ends With: string ends with value
+    - Greater Than: 
+        - If comparison value is numeric (e.g., "123"):
+            - Compare as numbers if field value is also numeric
+            - Otherwise compare as strings
+        - If comparison value is not numeric (e.g., "abc"):
+            - Always compare as strings
 - [x] Support multiple conditions with AND/OR logic
     - Added support for multiple visibility rules
     - Each rule can have multiple conditions

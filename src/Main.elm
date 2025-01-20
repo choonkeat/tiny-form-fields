@@ -159,6 +159,7 @@ type Comparison
     = Equals String
     | StringContains String
     | EndsWith String
+    | GreaterThan String
 
 
 type Condition
@@ -1923,6 +1924,7 @@ visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
                         [ ( "Equals", "Equals", isComparingWith (Equals "something") (comparisonOf rule) )
                         , ( "StringContains", "Contains", isComparingWith (StringContains "something") (comparisonOf rule) )
                         , ( "EndsWith", "Ends with", isComparingWith (EndsWith "something") (comparisonOf rule) )
+                        , ( "GreaterThan", "Greater than", isComparingWith (GreaterThan "something") (comparisonOf rule) )
                         ]
                     , inputAttrs =
                         [ type_ "text"
@@ -1935,6 +1937,9 @@ visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
                                     v
 
                                 Field _ (EndsWith v) ->
+                                    v
+
+                                Field _ (GreaterThan v) ->
                                     v
                             )
                         , onInput (\str -> OnFormField (OnVisibilityConditionValueInput ruleIndex conditionIndex str) fieldIndex "")
@@ -2760,6 +2765,12 @@ encodeComparison comparison =
                 , ( "value", Json.Encode.string value )
                 ]
 
+        GreaterThan value ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "GreaterThan" )
+                , ( "value", Json.Encode.string value )
+                ]
+
 
 decodeFormFields : Json.Decode.Decoder (Array FormField)
 decodeFormFields =
@@ -3181,6 +3192,10 @@ decodeComparison =
                         Json.Decode.succeed EndsWith
                             |> andMap (Json.Decode.field "value" Json.Decode.string)
 
+                    "GreaterThan" ->
+                        Json.Decode.succeed GreaterThan
+                            |> andMap (Json.Decode.field "value" Json.Decode.string)
+
                     _ ->
                         Json.Decode.fail ("Unknown comparison type: " ++ str)
             )
@@ -3191,25 +3206,36 @@ evaluateCondition trackedFormValues condition =
     case condition of
         Field fieldName comparison ->
             case comparison of
-                Equals value ->
+                Equals givenValue ->
                     Dict.get fieldName trackedFormValues
                         |> Maybe.withDefault []
-                        |> List.member value
+                        |> List.member givenValue
 
-                StringContains value ->
+                StringContains givenValue ->
+                    Dict.get fieldName trackedFormValues
+                        |> Maybe.withDefault []
+                        |> List.any (String.contains givenValue)
+
+                EndsWith givenValue ->
+                    Dict.get fieldName trackedFormValues
+                        |> Maybe.withDefault []
+                        |> List.any (String.endsWith givenValue)
+
+                GreaterThan givenValue ->
                     Dict.get fieldName trackedFormValues
                         |> Maybe.withDefault []
                         |> List.any
-                            (\fieldValue ->
-                                String.contains value fieldValue
-                            )
+                            (\formValue ->
+                                case String.toFloat givenValue of
+                                    Just givenFloat ->
+                                        -- If value is float, try to compare as float
+                                        String.toFloat formValue
+                                            |> Maybe.map (\formFloat -> formFloat > givenFloat)
+                                            |> Maybe.withDefault False
 
-                EndsWith value ->
-                    Dict.get fieldName trackedFormValues
-                        |> Maybe.withDefault []
-                        |> List.any
-                            (\fieldValue ->
-                                String.endsWith value fieldValue
+                                    Nothing ->
+                                        -- If value is not float, compare as strings
+                                        formValue > givenValue
                             )
 
 
@@ -3284,6 +3310,14 @@ isComparingWith expected given =
                 _ ->
                     False
 
+        GreaterThan _ ->
+            case given of
+                GreaterThan _ ->
+                    True
+
+                _ ->
+                    False
+
 
 
 {- Helper to update a comparison -}
@@ -3303,6 +3337,9 @@ updateComparison comparisonType comparison =
                 EndsWith str ->
                     Equals str
 
+                GreaterThan str ->
+                    Equals str
+
         "StringContains" ->
             case comparison of
                 Equals str ->
@@ -3312,6 +3349,9 @@ updateComparison comparisonType comparison =
                     StringContains str
 
                 EndsWith str ->
+                    StringContains str
+
+                GreaterThan str ->
                     StringContains str
 
         "EndsWith" ->
@@ -3324,6 +3364,23 @@ updateComparison comparisonType comparison =
 
                 EndsWith str ->
                     EndsWith str
+
+                GreaterThan str ->
+                    EndsWith str
+
+        "GreaterThan" ->
+            case comparison of
+                Equals str ->
+                    GreaterThan str
+
+                StringContains str ->
+                    GreaterThan str
+
+                EndsWith str ->
+                    GreaterThan str
+
+                GreaterThan str ->
+                    GreaterThan str
 
         _ ->
             comparison
@@ -3340,6 +3397,9 @@ updateComparisonValue newValue comparison =
 
         EndsWith _ ->
             EndsWith newValue
+
+        GreaterThan _ ->
+            GreaterThan newValue
 
 
 

@@ -16,7 +16,7 @@ export interface VisibilityRule {
 }
 
 export interface Comparison {
-    type: "Equals" | "StringContains" | "EndsWith";
+    type: "Equals" | "StringContains" | "EndsWith" | "GreaterThan";
     value: string;
 }
 
