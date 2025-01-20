@@ -419,12 +419,12 @@ type FormFieldMsg
     | OnVisibilityConditionDuplicate Int
 
 
-otherQuestionTitles : Array FormField -> Int -> List String
+otherQuestionTitles : Array FormField -> Int -> List { label : String, name : Maybe String }
 otherQuestionTitles formFields currentIndex =
     Array.toList formFields
         |> List.indexedMap (\i f -> ( i, f ))
         |> List.filter (\( i, _ ) -> i /= currentIndex)
-        |> List.map (\( _, f ) -> f.label)
+        |> List.map (\( _, f ) -> { label = f.label, name = f.name })
 
 
 getPreviousFieldLabel : Int -> Array FormField -> String
@@ -1374,7 +1374,7 @@ maybeMaxLengthOf formField =
             Nothing
 
 
-fieldNameOf : FormField -> String
+fieldNameOf : { a | label : String, name : Maybe String } -> String
 fieldNameOf formField =
     Maybe.withDefault formField.label formField.name
 
@@ -1896,18 +1896,22 @@ visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
                         ]
                         (option [ value "" ] [ text " - " ]
                             :: List.map
-                                (\title ->
+                                (\field ->
+                                    let
+                                        fieldName =
+                                            fieldNameOf field
+                                    in
                                     option
-                                        [ value title
+                                        [ value fieldName
                                         , selected
-                                            (title
+                                            (fieldName
                                                 == (case rule of
-                                                        Field fieldName _ ->
-                                                            fieldName
+                                                        Field givenName _ ->
+                                                            givenName
                                                    )
                                             )
                                         ]
-                                        [ text (Json.Encode.encode 0 (Json.Encode.string title)) ]
+                                        [ text (Json.Encode.encode 0 (Json.Encode.string field.label)) ]
                                 )
                                 (otherQuestionTitles formFields fieldIndex)
                         )
