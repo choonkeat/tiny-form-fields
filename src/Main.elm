@@ -2010,10 +2010,11 @@ viewFormFieldBuilder shortTextTypeList index totalLength formFields formField =
 
         patternAttr =
             if isDuplicateLabel then
+                -- always invalid
                 [ Attr.pattern "^$" ]
 
             else
-                []
+                [ Attr.pattern ".*" ]
 
         configureMultipleCheckbox =
             div [ class "tff-field-group" ]

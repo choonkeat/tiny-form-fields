@@ -15332,7 +15332,10 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 		var patternAttr = isDuplicateLabel ? _List_fromArray(
 			[
 				$elm$html$Html$Attributes$pattern('^$')
-			]) : _List_Nil;
+			]) : _List_fromArray(
+			[
+				$elm$html$Html$Attributes$pattern('.*')
+			]);
 		var idSuffix = $elm$core$String$fromInt(index);
 		var deleteFieldButton = A2(
 			$elm$html$Html$button,
