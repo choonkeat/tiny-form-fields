@@ -615,3 +615,560 @@ func TestInvalidFormValues(t *testing.T) {
 		})
 	}
 }
+
+func TestVisibilityRules(t *testing.T) {
+	scenarios := []struct {
+		name          string
+		formFields    string
+		values        url.Values
+		expectedError error
+	}{
+		{
+			name: "ShowWhen rule - visible and filled - should pass",
+			formFields: `[
+				{
+					"label": "Color",
+					"name": "color",
+					"presence": "Required",
+					"type": {
+						"type": "Dropdown",
+						"choices": ["Red", "Blue"]
+					}
+				},
+				{
+					"label": "Why Red?",
+					"name": "why_red",
+					"presence": "Required",
+					"type": {
+						"type": "ShortText",
+						"inputType": "text"
+					},
+					"visibilityRule": [
+						{
+							"type": "ShowWhen",
+							"conditions": [
+								{
+									"field": "color",
+									"comparison": {
+										"type": "Equals",
+										"value": "Red"
+									}
+								}
+							]
+						}
+					]
+				}
+			]`,
+			values: url.Values{
+				"color":   []string{"Red"},
+				"why_red": []string{"Because I like it"},
+			},
+			expectedError: nil,
+		},
+		{
+			name: "ShowWhen rule - visible but empty - should fail",
+			formFields: `[
+				{
+					"label": "Color",
+					"name": "color",
+					"presence": "Required",
+					"type": {
+						"type": "Dropdown",
+						"choices": ["Red", "Blue"]
+					}
+				},
+				{
+					"label": "Why Red?",
+					"name": "why_red",
+					"presence": "Required",
+					"type": {
+						"type": "ShortText",
+						"inputType": "text"
+					},
+					"visibilityRule": [
+						{
+							"type": "ShowWhen",
+							"conditions": [
+								{
+									"field": "color",
+									"comparison": {
+										"type": "Equals",
+										"value": "Red"
+									}
+								}
+							]
+						}
+					]
+				}
+			]`,
+			values: url.Values{
+				"color": []string{"Red"},
+			},
+			expectedError: ErrRequiredFieldMissing,
+		},
+		{
+			name: "ShowWhen rule - hidden and empty - should pass",
+			formFields: `[
+				{
+					"label": "Color",
+					"name": "color",
+					"presence": "Required",
+					"type": {
+						"type": "Dropdown",
+						"choices": ["Red", "Blue"]
+					}
+				},
+				{
+					"label": "Why Red?",
+					"name": "why_red",
+					"presence": "Required",
+					"type": {
+						"type": "ShortText",
+						"inputType": "text"
+					},
+					"visibilityRule": [
+						{
+							"type": "ShowWhen",
+							"conditions": [
+								{
+									"field": "color",
+									"comparison": {
+										"type": "Equals",
+										"value": "Red"
+									}
+								}
+							]
+						}
+					]
+				}
+			]`,
+			values: url.Values{
+				"color": []string{"Blue"},
+			},
+			expectedError: nil,
+		},
+		{
+			name: "HideWhen rule - visible and filled - should pass",
+			formFields: `[
+				{
+					"label": "Has Comments",
+					"name": "has_comments",
+					"presence": "Required",
+					"type": {
+						"type": "ChooseOne",
+						"choices": ["Yes", "No"]
+					}
+				},
+				{
+					"label": "Comments",
+					"name": "comments",
+					"presence": "Required",
+					"type": {
+						"type": "LongText",
+						"maxLength": 1000
+					},
+					"visibilityRule": [
+						{
+							"type": "HideWhen",
+							"conditions": [
+								{
+									"field": "has_comments",
+									"comparison": {
+										"type": "Equals",
+										"value": "No"
+									}
+								}
+							]
+						}
+					]
+				}
+			]`,
+			values: url.Values{
+				"has_comments": []string{"Yes"},
+				"comments":     []string{"These are my comments"},
+			},
+			expectedError: nil,
+		},
+		{
+			name: "HideWhen rule - visible but empty - should fail",
+			formFields: `[
+				{
+					"label": "Has Comments",
+					"name": "has_comments",
+					"presence": "Required",
+					"type": {
+						"type": "ChooseOne",
+						"choices": ["Yes", "No"]
+					}
+				},
+				{
+					"label": "Comments",
+					"name": "comments",
+					"presence": "Required",
+					"type": {
+						"type": "LongText",
+						"maxLength": 1000
+					},
+					"visibilityRule": [
+						{
+							"type": "HideWhen",
+							"conditions": [
+								{
+									"field": "has_comments",
+									"comparison": {
+										"type": "Equals",
+										"value": "No"
+									}
+								}
+							]
+						}
+					]
+				}
+			]`,
+			values: url.Values{
+				"has_comments": []string{"Yes"},
+			},
+			expectedError: ErrRequiredFieldMissing,
+		},
+		{
+			name: "HideWhen rule - hidden and empty - should pass",
+			formFields: `[
+				{
+					"label": "Has Comments",
+					"name": "has_comments",
+					"presence": "Required",
+					"type": {
+						"type": "ChooseOne",
+						"choices": ["Yes", "No"]
+					}
+				},
+				{
+					"label": "Comments",
+					"name": "comments",
+					"presence": "Required",
+					"type": {
+						"type": "LongText",
+						"maxLength": 1000
+					},
+					"visibilityRule": [
+						{
+							"type": "HideWhen",
+							"conditions": [
+								{
+									"field": "has_comments",
+									"comparison": {
+										"type": "Equals",
+										"value": "No"
+									}
+								}
+							]
+						}
+					]
+				}
+			]`,
+			values: url.Values{
+				"has_comments": []string{"No"},
+			},
+			expectedError: nil,
+		},
+		{
+			name: "StringContains - visible and filled - should pass",
+			formFields: `[
+				{
+					"label": "Description",
+					"name": "description",
+					"type": {
+						"type": "LongText"
+					}
+				},
+				{
+					"label": "Urgent Note",
+					"name": "urgent_note",
+					"presence": "Required",
+					"type": {
+						"type": "ShortText",
+						"inputType": "text"
+					},
+					"visibilityRule": [
+						{
+							"type": "ShowWhen",
+							"conditions": [
+								{
+									"field": "description",
+									"comparison": {
+										"type": "StringContains",
+										"value": "urgent"
+									}
+								}
+							]
+						}
+					]
+				}
+			]`,
+			values: url.Values{
+				"description": []string{"This is an urgent matter"},
+				"urgent_note": []string{"Handle ASAP"},
+			},
+			expectedError: nil,
+		},
+		{
+			name: "StringContains - visible but empty - should fail",
+			formFields: `[
+				{
+					"label": "Description",
+					"name": "description",
+					"type": {
+						"type": "LongText"
+					}
+				},
+				{
+					"label": "Urgent Note",
+					"name": "urgent_note",
+					"presence": "Required",
+					"type": {
+						"type": "ShortText",
+						"inputType": "text"
+					},
+					"visibilityRule": [
+						{
+							"type": "ShowWhen",
+							"conditions": [
+								{
+									"field": "description",
+									"comparison": {
+										"type": "StringContains",
+										"value": "urgent"
+									}
+								}
+							]
+						}
+					]
+				}
+			]`,
+			values: url.Values{
+				"description": []string{"This is an urgent matter"},
+			},
+			expectedError: ErrRequiredFieldMissing,
+		},
+		{
+			name: "StringContains - hidden and empty - should pass",
+			formFields: `[
+				{
+					"label": "Description",
+					"name": "description",
+					"type": {
+						"type": "LongText"
+					}
+				},
+				{
+					"label": "Urgent Note",
+					"name": "urgent_note",
+					"presence": "Required",
+					"type": {
+						"type": "ShortText",
+						"inputType": "text"
+					},
+					"visibilityRule": [
+						{
+							"type": "ShowWhen",
+							"conditions": [
+								{
+									"field": "description",
+									"comparison": {
+										"type": "StringContains",
+										"value": "urgent"
+									}
+								}
+							]
+						}
+					]
+				}
+			]`,
+			values: url.Values{
+				"description": []string{"This is a normal matter"},
+			},
+			expectedError: nil,
+		},
+		{
+			name: "ShowWhen rule with GreaterThan numeric - visible and filled - should pass",
+			formFields: `[
+				{
+					"label": "Score",
+					"name": "score",
+					"presence": "Required",
+					"type": {
+						"type": "ShortText",
+						"inputType": "text"
+					}
+				},
+				{
+					"label": "High Score Message",
+					"name": "high_score_msg",
+					"presence": "Required",
+					"type": {
+						"type": "ShortText",
+						"inputType": "text"
+					},
+					"visibilityRule": [
+						{
+							"type": "ShowWhen",
+							"conditions": [
+								{
+									"field": "score",
+									"comparison": {
+										"type": "GreaterThan",
+										"value": "100"
+									}
+								}
+							]
+						}
+					]
+				}
+			]`,
+			values: url.Values{
+				"score":          []string{"150"},
+				"high_score_msg": []string{"Great job!"},
+			},
+			expectedError: nil,
+		},
+		{
+			name: "ShowWhen rule with GreaterThan numeric - not visible - should pass",
+			formFields: `[
+				{
+					"label": "Score",
+					"name": "score",
+					"presence": "Required",
+					"type": {
+						"type": "ShortText",
+						"inputType": "text"
+					}
+				},
+				{
+					"label": "High Score Message",
+					"name": "high_score_msg",
+					"presence": "Required",
+					"type": {
+						"type": "ShortText",
+						"inputType": "text"
+					},
+					"visibilityRule": [
+						{
+							"type": "ShowWhen",
+							"conditions": [
+								{
+									"field": "score",
+									"comparison": {
+										"type": "GreaterThan",
+										"value": "100"
+									}
+								}
+							]
+						}
+					]
+				}
+			]`,
+			values: url.Values{
+				"score": []string{"50"},
+			},
+			expectedError: nil,
+		},
+		{
+			name: "ShowWhen rule with GreaterThan string - visible and filled - should pass",
+			formFields: `[
+				{
+					"label": "Name",
+					"name": "name",
+					"presence": "Required",
+					"type": {
+						"type": "ShortText",
+						"inputType": "text"
+					}
+				},
+				{
+					"label": "Message",
+					"name": "message",
+					"presence": "Required",
+					"type": {
+						"type": "ShortText",
+						"inputType": "text"
+					},
+					"visibilityRule": [
+						{
+							"type": "ShowWhen",
+							"conditions": [
+								{
+									"field": "name",
+									"comparison": {
+										"type": "GreaterThan",
+										"value": "abc"
+									}
+								}
+							]
+						}
+					]
+				}
+			]`,
+			values: url.Values{
+				"name":    []string{"xyz"},
+				"message": []string{"Name is after abc"},
+			},
+			expectedError: nil,
+		},
+		{
+			name: "ShowWhen rule with GreaterThan string - not visible - should pass",
+			formFields: `[
+				{
+					"label": "Name",
+					"name": "name",
+					"presence": "Required",
+					"type": {
+						"type": "ShortText",
+						"inputType": "text"
+					}
+				},
+				{
+					"label": "Message",
+					"name": "message",
+					"presence": "Required",
+					"type": {
+						"type": "ShortText",
+						"inputType": "text"
+					},
+					"visibilityRule": [
+						{
+							"type": "ShowWhen",
+							"conditions": [
+								{
+									"field": "name",
+									"comparison": {
+										"type": "GreaterThan",
+										"value": "xyz"
+									}
+								}
+							]
+						}
+					]
+				}
+			]`,
+			values: url.Values{
+				"name": []string{"abc"},
+			},
+			expectedError: nil,
+		},
+	}
+
+	for _, tt := range scenarios {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidFormValues([]byte(tt.formFields), tt.values)
+			if tt.expectedError == nil {
+				if err != nil {
+					t.Errorf("Expected no error, got: %v", err)
+				}
+			} else {
+				if !errors.Is(err, tt.expectedError) {
+					t.Errorf("Expected error %v, got: %v", tt.expectedError, err)
+				}
+			}
+		})
+	}
+}

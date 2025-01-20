@@ -784,11 +784,11 @@ function _Debug_crash_UNUSED(identifier, fact1, fact2, fact3, fact4)
 
 function _Debug_regionToString(region)
 {
-	if (region.a$.ax === region.bf.ax)
+	if (region.a1.ay === region.bi.ay)
 	{
-		return 'on line ' + region.a$.ax;
+		return 'on line ' + region.a1.ay;
 	}
-	return 'on lines ' + region.a$.ax + ' through ' + region.bf.ax;
+	return 'on lines ' + region.a1.ay + ' through ' + region.bi.ay;
 }
 
 
@@ -1857,9 +1857,9 @@ var _Platform_worker = F4(function(impl, flagDecoder, debugMetadata, args)
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.cr,
-		impl.cS,
-		impl.cO,
+		impl.cx,
+		impl.cX,
+		impl.cT,
 		function() { return function() {} }
 	);
 });
@@ -2719,9 +2719,9 @@ var _VirtualDom_mapEventTuple = F2(function(func, tuple)
 var _VirtualDom_mapEventRecord = F2(function(func, record)
 {
 	return {
-		X: func(record.X),
-		a0: record.a0,
-		aZ: record.aZ
+		Z: func(record.Z),
+		a2: record.a2,
+		a$: record.a$
 	}
 });
 
@@ -2989,11 +2989,11 @@ function _VirtualDom_makeCallback(eventNode, initialHandler)
 		// 3 = Custom
 
 		var value = result.a;
-		var message = !tag ? value : tag < 3 ? value.a : value.X;
-		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.a0;
+		var message = !tag ? value : tag < 3 ? value.a : value.Z;
+		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.a2;
 		var currentEventNode = (
 			stopPropagation && event.stopPropagation(),
-			(tag == 2 ? value.b : tag == 3 && value.aZ) && event.preventDefault(),
+			(tag == 2 ? value.b : tag == 3 && value.a$) && event.preventDefault(),
 			eventNode
 		);
 		var tagger;
@@ -3943,11 +3943,11 @@ var _Browser_element = _Debugger_element || F4(function(impl, flagDecoder, debug
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.cr,
-		impl.cS,
-		impl.cO,
+		impl.cx,
+		impl.cX,
+		impl.cT,
 		function(sendToApp, initialModel) {
-			var view = impl.cT;
+			var view = impl.cY;
 			/**/
 			var domNode = args['node'];
 			//*/
@@ -3979,12 +3979,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.cr,
-		impl.cS,
-		impl.cO,
+		impl.cx,
+		impl.cX,
+		impl.cT,
 		function(sendToApp, initialModel) {
-			var divertHrefToApp = impl.a_ && impl.a_(sendToApp)
-			var view = impl.cT;
+			var divertHrefToApp = impl.a0 && impl.a0(sendToApp)
+			var view = impl.cY;
 			var title = _VirtualDom_doc.title;
 			var bodyNode = _VirtualDom_doc.body;
 			var currNode = _VirtualDom_virtualize(bodyNode);
@@ -3992,12 +3992,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 			{
 				_VirtualDom_divertHrefToApp = divertHrefToApp;
 				var doc = view(model);
-				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.b9);
+				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.cg);
 				var patches = _VirtualDom_diff(currNode, nextNode);
 				bodyNode = _VirtualDom_applyPatches(bodyNode, currNode, patches, sendToApp);
 				currNode = nextNode;
 				_VirtualDom_divertHrefToApp = 0;
-				(title !== doc.cR) && (_VirtualDom_doc.title = title = doc.cR);
+				(title !== doc.cW) && (_VirtualDom_doc.title = title = doc.cW);
 			});
 		}
 	);
@@ -4053,12 +4053,12 @@ function _Browser_makeAnimator(model, draw)
 
 function _Browser_application(impl)
 {
-	var onUrlChange = impl.cF;
-	var onUrlRequest = impl.cG;
+	var onUrlChange = impl.cL;
+	var onUrlRequest = impl.cM;
 	var key = function() { key.a(onUrlChange(_Browser_getUrl())); };
 
 	return _Browser_document({
-		a_: function(sendToApp)
+		a0: function(sendToApp)
 		{
 			key.a = sendToApp;
 			_Browser_window.addEventListener('popstate', key);
@@ -4074,9 +4074,9 @@ function _Browser_application(impl)
 					var next = $elm$url$Url$fromString(href).a;
 					sendToApp(onUrlRequest(
 						(next
-							&& curr.bK === next.bK
-							&& curr.bq === next.bq
-							&& curr.bG.a === next.bG.a
+							&& curr.bP === next.bP
+							&& curr.bt === next.bt
+							&& curr.bL.a === next.bL.a
 						)
 							? $elm$browser$Browser$Internal(next)
 							: $elm$browser$Browser$External(href)
@@ -4084,13 +4084,13 @@ function _Browser_application(impl)
 				}
 			});
 		},
-		cr: function(flags)
+		cx: function(flags)
 		{
-			return A3(impl.cr, flags, _Browser_getUrl(), key);
+			return A3(impl.cx, flags, _Browser_getUrl(), key);
 		},
-		cT: impl.cT,
-		cS: impl.cS,
-		cO: impl.cO
+		cY: impl.cY,
+		cX: impl.cX,
+		cT: impl.cT
 	});
 }
 
@@ -4156,17 +4156,17 @@ var _Browser_decodeEvent = F2(function(decoder, event)
 function _Browser_visibilityInfo()
 {
 	return (typeof _VirtualDom_doc.hidden !== 'undefined')
-		? { co: 'hidden', cc: 'visibilitychange' }
+		? { cu: 'hidden', cj: 'visibilitychange' }
 		:
 	(typeof _VirtualDom_doc.mozHidden !== 'undefined')
-		? { co: 'mozHidden', cc: 'mozvisibilitychange' }
+		? { cu: 'mozHidden', cj: 'mozvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.msHidden !== 'undefined')
-		? { co: 'msHidden', cc: 'msvisibilitychange' }
+		? { cu: 'msHidden', cj: 'msvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.webkitHidden !== 'undefined')
-		? { co: 'webkitHidden', cc: 'webkitvisibilitychange' }
-		: { co: 'hidden', cc: 'visibilitychange' };
+		? { cu: 'webkitHidden', cj: 'webkitvisibilitychange' }
+		: { cu: 'hidden', cj: 'visibilitychange' };
 }
 
 
@@ -4247,12 +4247,12 @@ var _Browser_call = F2(function(functionName, id)
 function _Browser_getViewport()
 {
 	return {
-		bR: _Browser_getScene(),
-		b$: {
-			b2: _Browser_window.pageXOffset,
-			b3: _Browser_window.pageYOffset,
-			b1: _Browser_doc.documentElement.clientWidth,
-			bo: _Browser_doc.documentElement.clientHeight
+		bW: _Browser_getScene(),
+		b6: {
+			b9: _Browser_window.pageXOffset,
+			ca: _Browser_window.pageYOffset,
+			b8: _Browser_doc.documentElement.clientWidth,
+			br: _Browser_doc.documentElement.clientHeight
 		}
 	};
 }
@@ -4262,8 +4262,8 @@ function _Browser_getScene()
 	var body = _Browser_doc.body;
 	var elem = _Browser_doc.documentElement;
 	return {
-		b1: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
-		bo: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
+		b8: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
+		br: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
 	};
 }
 
@@ -4286,15 +4286,15 @@ function _Browser_getViewportOf(id)
 	return _Browser_withNode(id, function(node)
 	{
 		return {
-			bR: {
-				b1: node.scrollWidth,
-				bo: node.scrollHeight
+			bW: {
+				b8: node.scrollWidth,
+				br: node.scrollHeight
 			},
-			b$: {
-				b2: node.scrollLeft,
-				b3: node.scrollTop,
-				b1: node.clientWidth,
-				bo: node.clientHeight
+			b6: {
+				b9: node.scrollLeft,
+				ca: node.scrollTop,
+				b8: node.clientWidth,
+				br: node.clientHeight
 			}
 		};
 	});
@@ -4324,18 +4324,18 @@ function _Browser_getElement(id)
 		var x = _Browser_window.pageXOffset;
 		var y = _Browser_window.pageYOffset;
 		return {
-			bR: _Browser_getScene(),
-			b$: {
-				b2: x,
-				b3: y,
-				b1: _Browser_doc.documentElement.clientWidth,
-				bo: _Browser_doc.documentElement.clientHeight
+			bW: _Browser_getScene(),
+			b6: {
+				b9: x,
+				ca: y,
+				b8: _Browser_doc.documentElement.clientWidth,
+				br: _Browser_doc.documentElement.clientHeight
 			},
-			ci: {
-				b2: x + rect.left,
-				b3: y + rect.top,
-				b1: rect.width,
-				bo: rect.height
+			co: {
+				b9: x + rect.left,
+				ca: y + rect.top,
+				b8: rect.width,
+				br: rect.height
 			}
 		};
 	});
@@ -4813,25 +4813,25 @@ var $elm$core$Array$treeFromBuilder = F2(
 	});
 var $elm$core$Array$builderToArray = F2(
 	function (reverseNodeList, builder) {
-		if (!builder.n) {
+		if (!builder.p) {
 			return A4(
 				$elm$core$Array$Array_elm_builtin,
-				$elm$core$Elm$JsArray$length(builder.r),
+				$elm$core$Elm$JsArray$length(builder.t),
 				$elm$core$Array$shiftStep,
 				$elm$core$Elm$JsArray$empty,
-				builder.r);
+				builder.t);
 		} else {
-			var treeLen = builder.n * $elm$core$Array$branchFactor;
+			var treeLen = builder.p * $elm$core$Array$branchFactor;
 			var depth = $elm$core$Basics$floor(
 				A2($elm$core$Basics$logBase, $elm$core$Array$branchFactor, treeLen - 1));
-			var correctNodeList = reverseNodeList ? $elm$core$List$reverse(builder.s) : builder.s;
-			var tree = A2($elm$core$Array$treeFromBuilder, correctNodeList, builder.n);
+			var correctNodeList = reverseNodeList ? $elm$core$List$reverse(builder.u) : builder.u;
+			var tree = A2($elm$core$Array$treeFromBuilder, correctNodeList, builder.p);
 			return A4(
 				$elm$core$Array$Array_elm_builtin,
-				$elm$core$Elm$JsArray$length(builder.r) + treeLen,
+				$elm$core$Elm$JsArray$length(builder.t) + treeLen,
 				A2($elm$core$Basics$max, 5, depth * $elm$core$Array$shiftStep),
 				tree,
-				builder.r);
+				builder.t);
 		}
 	});
 var $elm$core$Basics$idiv = _Basics_idiv;
@@ -4844,7 +4844,7 @@ var $elm$core$Array$initializeHelp = F5(
 				return A2(
 					$elm$core$Array$builderToArray,
 					false,
-					{s: nodeList, n: (len / $elm$core$Array$branchFactor) | 0, r: tail});
+					{u: nodeList, p: (len / $elm$core$Array$branchFactor) | 0, t: tail});
 			} else {
 				var leaf = $elm$core$Array$Leaf(
 					A3($elm$core$Elm$JsArray$initialize, $elm$core$Array$branchFactor, fromIndex, fn));
@@ -4911,7 +4911,7 @@ var $elm$url$Url$Http = 0;
 var $elm$url$Url$Https = 1;
 var $elm$url$Url$Url = F6(
 	function (protocol, host, port_, path, query, fragment) {
-		return {bk: fragment, bq: host, bE: path, bG: port_, bK: protocol, bL: query};
+		return {bn: fragment, bt: host, bJ: path, bL: port_, bP: protocol, bQ: query};
 	});
 var $elm$core$String$contains = _String_contains;
 var $elm$core$String$length = _String_length;
@@ -5204,12 +5204,12 @@ var $author$project$Main$PortOutgoingSetupCloseDropdown = function (a) {
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $author$project$Main$Config = F4(
 	function (viewMode, formFields, formValues, shortTextTypeList) {
-		return {f: formFields, M: formValues, _: shortTextTypeList, R: viewMode};
+		return {d: formFields, aU: formValues, ab: shortTextTypeList, S: viewMode};
 	});
 var $elm_community$json_extra$Json$Decode$Extra$andMap = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
-var $author$project$Main$FormField = F5(
-	function (label, name, presence, description, type_) {
-		return {L: description, h: label, az: name, t: presence, g: type_};
+var $author$project$Main$FormField = F6(
+	function (label, name, presence, description, type_, visibilityRule) {
+		return {N: description, g: label, aA: name, v: presence, f: type_, l: visibilityRule};
 	});
 var $author$project$Main$AttributeNotNeeded = function (a) {
 	return {$: 0, a: a};
@@ -5302,30 +5302,30 @@ var $author$project$Main$choiceFromString = function (s) {
 	if (_v0.b) {
 		if (!_v0.b.b) {
 			var value = _v0.a;
-			return {h: value, u: value};
+			return {g: value, m: value};
 		} else {
 			if (!_v0.b.b.b) {
 				var value = _v0.a;
 				var _v1 = _v0.b;
 				var label = _v1.a;
-				return {h: label, u: value};
+				return {g: label, m: value};
 			} else {
 				var value = _v0.a;
 				var labels = _v0.b;
 				return {
-					h: A2($elm$core$String$join, $author$project$Main$choiceDelimiter, labels),
-					u: value
+					g: A2($elm$core$String$join, $author$project$Main$choiceDelimiter, labels),
+					m: value
 				};
 			}
 		}
 	} else {
-		return {h: s, u: s};
+		return {g: s, m: s};
 	}
 };
 var $author$project$Main$decodeChoice = A2($elm$json$Json$Decode$map, $author$project$Main$choiceFromString, $elm$json$Json$Decode$string);
 var $author$project$Main$RawCustomElement = F3(
 	function (inputType, inputTag, attributes) {
-		return {p: attributes, I: inputTag, x: inputType};
+		return {r: attributes, K: inputTag, y: inputType};
 	});
 var $author$project$Main$defaultInputTag = 'input';
 var $elm$core$Dict$RBEmpty_elm_builtin = {$: -2};
@@ -5525,15 +5525,15 @@ var $elm$core$Basics$not = _Basics_not;
 var $elm$core$String$trim = _String_trim;
 var $author$project$Main$fromRawCustomElement = function (ele) {
 	return {
-		p: A2(
+		r: A2(
 			$elm$core$Dict$filter,
 			F2(
 				function (k, v) {
 					return !((k === 'list') && A2($elm$core$String$contains, '\n', v));
 				}),
-			ele.p),
-		U: function () {
-			var _v0 = A2($elm$core$Dict$get, 'list', ele.p);
+			ele.r),
+		W: function () {
+			var _v0 = A2($elm$core$Dict$get, 'list', ele.r);
 			if (!_v0.$) {
 				var s = _v0.a;
 				var _v1 = A2(
@@ -5555,10 +5555,10 @@ var $author$project$Main$fromRawCustomElement = function (ele) {
 				return $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing);
 			}
 		}(),
-		I: ele.I,
-		x: ele.x,
-		W: function () {
-			var _v2 = A2($elm$core$Dict$get, 'maxlength', ele.p);
+		K: ele.K,
+		y: ele.y,
+		Y: function () {
+			var _v2 = A2($elm$core$Dict$get, 'maxlength', ele.r);
 			if (!_v2.$) {
 				if (_v2.a === '') {
 					return $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing);
@@ -5576,8 +5576,8 @@ var $author$project$Main$fromRawCustomElement = function (ele) {
 				return $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing);
 			}
 		}(),
-		ay: function () {
-			var _v4 = A2($elm$core$Dict$get, 'multiple', ele.p);
+		az: function () {
+			var _v4 = A2($elm$core$Dict$get, 'multiple', ele.r);
 			if (!_v4.$) {
 				switch (_v4.a) {
 					case '':
@@ -5743,27 +5743,155 @@ var $author$project$Main$decodeRequired = A2(
 		return b ? 0 : 1;
 	},
 	A2($elm$json$Json$Decode$field, 'required', $elm$json$Json$Decode$bool));
-var $author$project$Main$decodeFormField = A2(
-	$elm_community$json_extra$Json$Decode$Extra$andMap,
-	A2($elm$json$Json$Decode$field, 'type', $author$project$Main$decodeInputField),
-	A2(
-		$elm_community$json_extra$Json$Decode$Extra$andMap,
-		$author$project$Main$decodeFormFieldDescription,
-		A2(
-			$elm_community$json_extra$Json$Decode$Extra$andMap,
-			$elm$json$Json$Decode$oneOf(
-				_List_fromArray(
-					[
-						A2($elm$json$Json$Decode$field, 'presence', $author$project$Main$decodePresence),
-						$author$project$Main$decodeRequired
-					])),
-			A2(
+var $author$project$Main$HideWhen = function (a) {
+	return {$: 1, a: a};
+};
+var $author$project$Main$ShowWhen = function (a) {
+	return {$: 0, a: a};
+};
+var $author$project$Main$Field = F2(
+	function (a, b) {
+		return {$: 0, a: a, b: b};
+	});
+var $author$project$Main$EndsWith = function (a) {
+	return {$: 2, a: a};
+};
+var $author$project$Main$Equals = function (a) {
+	return {$: 0, a: a};
+};
+var $author$project$Main$GreaterThan = function (a) {
+	return {$: 3, a: a};
+};
+var $author$project$Main$StringContains = function (a) {
+	return {$: 1, a: a};
+};
+var $author$project$Main$decodeComparison = A2(
+	$elm$json$Json$Decode$andThen,
+	function (str) {
+		switch (str) {
+			case 'Equals':
+				return A2(
+					$elm_community$json_extra$Json$Decode$Extra$andMap,
+					A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$string),
+					$elm$json$Json$Decode$succeed($author$project$Main$Equals));
+			case 'StringContains':
+				return A2(
+					$elm_community$json_extra$Json$Decode$Extra$andMap,
+					A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$string),
+					$elm$json$Json$Decode$succeed($author$project$Main$StringContains));
+			case 'EndsWith':
+				return A2(
+					$elm_community$json_extra$Json$Decode$Extra$andMap,
+					A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$string),
+					$elm$json$Json$Decode$succeed($author$project$Main$EndsWith));
+			case 'GreaterThan':
+				return A2(
+					$elm_community$json_extra$Json$Decode$Extra$andMap,
+					A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$string),
+					$elm$json$Json$Decode$succeed($author$project$Main$GreaterThan));
+			default:
+				return $elm$json$Json$Decode$fail('Unknown comparison type: ' + str);
+		}
+	},
+	A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string));
+var $author$project$Main$decodeCondition = A2(
+	$elm$json$Json$Decode$andThen,
+	function (str) {
+		if (str === 'Field') {
+			return A2(
 				$elm_community$json_extra$Json$Decode$Extra$andMap,
-				$author$project$Main$decodeFormFieldMaybeName,
+				A2($elm$json$Json$Decode$field, 'comparison', $author$project$Main$decodeComparison),
 				A2(
 					$elm_community$json_extra$Json$Decode$Extra$andMap,
-					A2($elm$json$Json$Decode$field, 'label', $elm$json$Json$Decode$string),
-					$elm$json$Json$Decode$succeed($author$project$Main$FormField))))));
+					A2($elm$json$Json$Decode$field, 'fieldName', $elm$json$Json$Decode$string),
+					$elm$json$Json$Decode$succeed($author$project$Main$Field)));
+		} else {
+			return $elm$json$Json$Decode$fail('Unknown condition type: ' + str);
+		}
+	},
+	A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string));
+var $author$project$Main$decodeVisibilityRule = A2(
+	$elm$json$Json$Decode$andThen,
+	function (str) {
+		switch (str) {
+			case 'ShowWhen':
+				return A2(
+					$elm_community$json_extra$Json$Decode$Extra$andMap,
+					A2(
+						$elm$json$Json$Decode$field,
+						'conditions',
+						$elm$json$Json$Decode$list($author$project$Main$decodeCondition)),
+					$elm$json$Json$Decode$succeed($author$project$Main$ShowWhen));
+			case 'HideWhen':
+				return A2(
+					$elm_community$json_extra$Json$Decode$Extra$andMap,
+					A2(
+						$elm$json$Json$Decode$field,
+						'conditions',
+						$elm$json$Json$Decode$list($author$project$Main$decodeCondition)),
+					$elm$json$Json$Decode$succeed($author$project$Main$HideWhen));
+			default:
+				return $elm$json$Json$Decode$fail('Unknown visibility rule: ' + str);
+		}
+	},
+	A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string));
+var $elm$core$Maybe$andThen = F2(
+	function (callback, maybeValue) {
+		if (!maybeValue.$) {
+			var value = maybeValue.a;
+			return callback(value);
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $elm$json$Json$Decode$nullable = function (decoder) {
+	return $elm$json$Json$Decode$oneOf(
+		_List_fromArray(
+			[
+				$elm$json$Json$Decode$null($elm$core$Maybe$Nothing),
+				A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, decoder)
+			]));
+};
+var $elm_community$json_extra$Json$Decode$Extra$optionalNullableField = F2(
+	function (fieldName, decoder) {
+		return A2(
+			$elm$json$Json$Decode$map,
+			$elm$core$Maybe$andThen($elm$core$Basics$identity),
+			A2(
+				$elm_community$json_extra$Json$Decode$Extra$optionalField,
+				fieldName,
+				$elm$json$Json$Decode$nullable(decoder)));
+	});
+var $author$project$Main$decodeFormField = A2(
+	$elm_community$json_extra$Json$Decode$Extra$andMap,
+	A2(
+		$elm$json$Json$Decode$map,
+		$elm$core$Maybe$withDefault(_List_Nil),
+		A2(
+			$elm_community$json_extra$Json$Decode$Extra$optionalNullableField,
+			'visibilityRule',
+			$elm$json$Json$Decode$list($author$project$Main$decodeVisibilityRule))),
+	A2(
+		$elm_community$json_extra$Json$Decode$Extra$andMap,
+		A2($elm$json$Json$Decode$field, 'type', $author$project$Main$decodeInputField),
+		A2(
+			$elm_community$json_extra$Json$Decode$Extra$andMap,
+			$author$project$Main$decodeFormFieldDescription,
+			A2(
+				$elm_community$json_extra$Json$Decode$Extra$andMap,
+				$elm$json$Json$Decode$oneOf(
+					_List_fromArray(
+						[
+							A2($elm$json$Json$Decode$field, 'presence', $author$project$Main$decodePresence),
+							$author$project$Main$decodeRequired
+						])),
+				A2(
+					$elm_community$json_extra$Json$Decode$Extra$andMap,
+					$author$project$Main$decodeFormFieldMaybeName,
+					A2(
+						$elm_community$json_extra$Json$Decode$Extra$andMap,
+						A2($elm$json$Json$Decode$field, 'label', $elm$json$Json$Decode$string),
+						$elm$json$Json$Decode$succeed($author$project$Main$FormField)))))));
 var $elm$core$Array$fromListHelp = F3(
 	function (list, nodeList, nodeListSize) {
 		fromListHelp:
@@ -5777,7 +5905,7 @@ var $elm$core$Array$fromListHelp = F3(
 				return A2(
 					$elm$core$Array$builderToArray,
 					true,
-					{s: nodeList, n: nodeListSize, r: jsArray});
+					{u: nodeList, p: nodeListSize, t: jsArray});
 			} else {
 				var $temp$list = remainingItems,
 					$temp$nodeList = A2(
@@ -5861,7 +5989,7 @@ var $author$project$Main$decodeShortTextTypeList = function () {
 				var inputTag = _v1.a;
 				var attributes = _v1.b;
 				return $author$project$Main$fromRawCustomElement(
-					{p: attributes, I: inputTag, x: inputType});
+					{r: attributes, K: inputTag, y: inputType});
 			},
 			$elm$core$Dict$toList(dict));
 	};
@@ -5889,7 +6017,7 @@ var $author$project$Main$viewModeFromString = function (str) {
 		case 'Editor':
 			return $elm$core$Maybe$Just(
 				$author$project$Main$Editor(
-					{ao: $elm$core$Maybe$Nothing}));
+					{ap: $elm$core$Maybe$Nothing}));
 		case 'CollectData':
 			return $elm$core$Maybe$Just($author$project$Main$CollectData);
 		default:
@@ -5901,33 +6029,6 @@ var $author$project$Main$decodeViewMode = A2(
 	$elm_community$json_extra$Json$Decode$Extra$fromMaybe('Invalid viewMode: Editor | Preview | CollectData'),
 	A2($elm$json$Json$Decode$map, $author$project$Main$viewModeFromString, $elm$json$Json$Decode$string));
 var $elm$json$Json$Encode$null = _Json_encodeNull;
-var $elm$core$Maybe$andThen = F2(
-	function (callback, maybeValue) {
-		if (!maybeValue.$) {
-			var value = maybeValue.a;
-			return callback(value);
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
-var $elm$json$Json$Decode$nullable = function (decoder) {
-	return $elm$json$Json$Decode$oneOf(
-		_List_fromArray(
-			[
-				$elm$json$Json$Decode$null($elm$core$Maybe$Nothing),
-				A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, decoder)
-			]));
-};
-var $elm_community$json_extra$Json$Decode$Extra$optionalNullableField = F2(
-	function (fieldName, decoder) {
-		return A2(
-			$elm$json$Json$Decode$map,
-			$elm$core$Maybe$andThen($elm$core$Basics$identity),
-			A2(
-				$elm_community$json_extra$Json$Decode$Extra$optionalField,
-				fieldName,
-				$elm$json$Json$Decode$nullable(decoder)));
-	});
 var $author$project$Main$decodeConfig = A2(
 	$elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(
@@ -5937,13 +6038,13 @@ var $author$project$Main$decodeConfig = A2(
 				[
 					$author$project$Main$fromRawCustomElement(
 					{
-						p: $elm$core$Dict$fromList(
+						r: $elm$core$Dict$fromList(
 							_List_fromArray(
 								[
 									_Utils_Tuple2('type', 'text')
 								])),
-						I: $author$project$Main$defaultInputTag,
-						x: 'Text'
+						K: $author$project$Main$defaultInputTag,
+						y: 'Single-line free text'
 					})
 				])),
 		A2($elm_community$json_extra$Json$Decode$Extra$optionalNullableField, 'shortTextTypeList', $author$project$Main$decodeShortTextTypeList)),
@@ -5965,9 +6066,21 @@ var $author$project$Main$decodeConfig = A2(
 					$elm$json$Json$Decode$map,
 					$elm$core$Maybe$withDefault(
 						$author$project$Main$Editor(
-							{ao: $elm$core$Maybe$Nothing})),
+							{ap: $elm$core$Maybe$Nothing})),
 					A2($elm_community$json_extra$Json$Decode$Extra$optionalNullableField, 'viewMode', $author$project$Main$decodeViewMode)),
 				$elm$json$Json$Decode$succeed($author$project$Main$Config)))));
+var $elm$core$List$singleton = function (value) {
+	return _List_fromArray(
+		[value]);
+};
+var $author$project$Main$decodeListOrSingleton = function (decoder) {
+	return $elm$json$Json$Decode$oneOf(
+		_List_fromArray(
+			[
+				$elm$json$Json$Decode$list(decoder),
+				A2($elm$json$Json$Decode$map, $elm$core$List$singleton, decoder)
+			]));
+};
 var $author$project$Main$encodeAttributeOptional = F2(
 	function (encodeValue, attributeOptional) {
 		switch (attributeOptional.$) {
@@ -5981,9 +6094,9 @@ var $author$project$Main$encodeAttributeOptional = F2(
 		}
 	});
 var $author$project$Main$choiceToString = function (choice) {
-	return _Utils_eq(choice.h, choice.u) ? choice.h : _Utils_ap(
-		choice.u,
-		_Utils_ap($author$project$Main$choiceDelimiter, choice.h));
+	return _Utils_eq(choice.g, choice.m) ? choice.g : _Utils_ap(
+		choice.m,
+		_Utils_ap($author$project$Main$choiceDelimiter, choice.g));
 };
 var $elm$json$Json$Encode$string = _Json_wrap;
 var $author$project$Main$encodeChoice = function (choice) {
@@ -6012,17 +6125,17 @@ var $elm$json$Json$Encode$object = function (pairs) {
 			pairs));
 };
 var $author$project$Main$encodePairsFromRawCustomElements = function (customElement) {
-	var inputTagAttrs = _Utils_eq(customElement.I, $author$project$Main$defaultInputTag) ? _List_Nil : _List_fromArray(
+	var inputTagAttrs = _Utils_eq(customElement.K, $author$project$Main$defaultInputTag) ? _List_Nil : _List_fromArray(
 		[
 			_Utils_Tuple2(
 			'inputTag',
-			$elm$json$Json$Encode$string(customElement.I))
+			$elm$json$Json$Encode$string(customElement.K))
 		]);
 	var encodedAttrs = function () {
 		var _v0 = A2(
 			$elm$core$List$map,
 			$elm$core$Tuple$mapSecond($elm$json$Json$Encode$string),
-			$elm$core$Dict$toList(customElement.p));
+			$elm$core$Dict$toList(customElement.r));
 		if (!_v0.b) {
 			return _List_Nil;
 		} else {
@@ -6039,13 +6152,13 @@ var $author$project$Main$encodePairsFromRawCustomElements = function (customElem
 		$elm$core$List$cons,
 		_Utils_Tuple2(
 			'inputType',
-			$elm$json$Json$Encode$string(customElement.x)),
+			$elm$json$Json$Encode$string(customElement.y)),
 		_Utils_ap(inputTagAttrs, encodedAttrs));
 };
 var $elm$core$Basics$neq = _Utils_notEqual;
 var $author$project$Main$toRawCustomElement = function (ele) {
 	var addMultipleIfGiven = function (dict) {
-		var _v3 = ele.ay;
+		var _v3 = ele.az;
 		if (_v3.$ === 2) {
 			if (_v3.a) {
 				return A3($elm$core$Dict$insert, 'multiple', 'true', dict);
@@ -6063,7 +6176,7 @@ var $author$project$Main$toRawCustomElement = function (ele) {
 		}
 	};
 	var addMaxLengthIfGiven = function (dict) {
-		var _v1 = ele.W;
+		var _v1 = ele.Y;
 		if (_v1.$ === 2) {
 			var _int = _v1.a;
 			return A3(
@@ -6082,7 +6195,7 @@ var $author$project$Main$toRawCustomElement = function (ele) {
 		}
 	};
 	var addDatalistIfGiven = function (dict) {
-		var _v0 = ele.U;
+		var _v0 = ele.W;
 		switch (_v0.$) {
 			case 2:
 				var list = _v0.a;
@@ -6101,11 +6214,11 @@ var $author$project$Main$toRawCustomElement = function (ele) {
 		}
 	};
 	return {
-		p: addDatalistIfGiven(
+		r: addDatalistIfGiven(
 			addMultipleIfGiven(
-				addMaxLengthIfGiven(ele.p))),
-		I: ele.I,
-		x: ele.x
+				addMaxLengthIfGiven(ele.r))),
+		K: ele.K,
+		y: ele.y
 	};
 };
 var $author$project$Main$encodePairsFromCustomElement = function (customElement) {
@@ -6172,7 +6285,7 @@ var $author$project$Main$encodeInputField = function (inputField) {
 							A2(
 								$elm$core$List$filter,
 								function (_v1) {
-									var value = _v1.u;
+									var value = _v1.m;
 									return $elm$core$String$trim(value) !== '';
 								},
 								choices)))
@@ -6193,7 +6306,7 @@ var $author$project$Main$encodeInputField = function (inputField) {
 							A2(
 								$elm$core$List$filter,
 								function (_v2) {
-									var value = _v2.u;
+									var value = _v2.m;
 									return $elm$core$String$trim(value) !== '';
 								},
 								choices)))
@@ -6214,7 +6327,7 @@ var $author$project$Main$encodeInputField = function (inputField) {
 							A2(
 								$elm$core$List$filter,
 								function (_v3) {
-									var value = _v3.u;
+									var value = _v3.m;
 									return $elm$core$String$trim(value) !== '';
 								},
 								choices)))
@@ -6229,6 +6342,102 @@ var $author$project$Main$encodePresence = function (presence) {
 			return $elm$json$Json$Encode$string('Optional');
 		default:
 			return $elm$json$Json$Encode$string('System');
+	}
+};
+var $author$project$Main$encodeComparison = function (comparison) {
+	switch (comparison.$) {
+		case 0:
+			var value = comparison.a;
+			return $elm$json$Json$Encode$object(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'type',
+						$elm$json$Json$Encode$string('Equals')),
+						_Utils_Tuple2(
+						'value',
+						$elm$json$Json$Encode$string(value))
+					]));
+		case 1:
+			var value = comparison.a;
+			return $elm$json$Json$Encode$object(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'type',
+						$elm$json$Json$Encode$string('StringContains')),
+						_Utils_Tuple2(
+						'value',
+						$elm$json$Json$Encode$string(value))
+					]));
+		case 2:
+			var value = comparison.a;
+			return $elm$json$Json$Encode$object(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'type',
+						$elm$json$Json$Encode$string('EndsWith')),
+						_Utils_Tuple2(
+						'value',
+						$elm$json$Json$Encode$string(value))
+					]));
+		default:
+			var value = comparison.a;
+			return $elm$json$Json$Encode$object(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'type',
+						$elm$json$Json$Encode$string('GreaterThan')),
+						_Utils_Tuple2(
+						'value',
+						$elm$json$Json$Encode$string(value))
+					]));
+	}
+};
+var $author$project$Main$encodeCondition = function (condition) {
+	var fieldName = condition.a;
+	var comparison = condition.b;
+	return $elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'type',
+				$elm$json$Json$Encode$string('Field')),
+				_Utils_Tuple2(
+				'fieldName',
+				$elm$json$Json$Encode$string(fieldName)),
+				_Utils_Tuple2(
+				'comparison',
+				$author$project$Main$encodeComparison(comparison))
+			]));
+};
+var $author$project$Main$encodeVisibilityRule = function (rule) {
+	if (!rule.$) {
+		var conditions = rule.a;
+		return $elm$json$Json$Encode$object(
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					'type',
+					$elm$json$Json$Encode$string('ShowWhen')),
+					_Utils_Tuple2(
+					'conditions',
+					A2($elm$json$Json$Encode$list, $author$project$Main$encodeCondition, conditions))
+				]));
+	} else {
+		var conditions = rule.a;
+		return $elm$json$Json$Encode$object(
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					'type',
+					$elm$json$Json$Encode$string('HideWhen')),
+					_Utils_Tuple2(
+					'conditions',
+					A2($elm$json$Json$Encode$list, $author$project$Main$encodeCondition, conditions))
+				]));
 	}
 };
 var $author$project$Main$encodeFormFields = function (formFields) {
@@ -6249,11 +6458,11 @@ var $author$project$Main$encodeFormFields = function (formFields) {
 							[
 								_Utils_Tuple2(
 								'label',
-								$elm$json$Json$Encode$string(formField.h)),
+								$elm$json$Json$Encode$string(formField.g)),
 								_Utils_Tuple2(
 								'name',
 								function () {
-									var _v0 = formField.az;
+									var _v0 = formField.aA;
 									if (!_v0.$) {
 										var name = _v0.a;
 										return $elm$json$Json$Encode$string(name);
@@ -6263,13 +6472,16 @@ var $author$project$Main$encodeFormFields = function (formFields) {
 								}()),
 								_Utils_Tuple2(
 								'presence',
-								$author$project$Main$encodePresence(formField.t)),
+								$author$project$Main$encodePresence(formField.v)),
 								_Utils_Tuple2(
 								'description',
-								A2($author$project$Main$encodeAttributeOptional, $elm$json$Json$Encode$string, formField.L)),
+								A2($author$project$Main$encodeAttributeOptional, $elm$json$Json$Encode$string, formField.N)),
 								_Utils_Tuple2(
 								'type',
-								$author$project$Main$encodeInputField(formField.g))
+								$author$project$Main$encodeInputField(formField.f)),
+								_Utils_Tuple2(
+								'visibilityRule',
+								A2($elm$json$Json$Encode$list, $author$project$Main$encodeVisibilityRule, formField.l))
 							])));
 			},
 			$elm$core$Array$toList(formFields)));
@@ -6306,32 +6518,98 @@ var $author$project$Main$encodePortIncomingValue = function (value) {
 	}
 };
 var $author$project$Main$encodePortOutgoingValue = function (value) {
-	if (!value.$) {
-		var formFields = value.a;
-		return $elm$json$Json$Encode$object(
-			_List_fromArray(
-				[
-					_Utils_Tuple2(
-					'type',
-					$elm$json$Json$Encode$string('formFields')),
-					_Utils_Tuple2(
-					'formFields',
-					$author$project$Main$encodeFormFields(formFields))
-				]));
-	} else {
-		var incomingValue = value.a;
-		return $elm$json$Json$Encode$object(
-			_List_fromArray(
-				[
-					_Utils_Tuple2(
-					'type',
-					$elm$json$Json$Encode$string('setupCloseDropdown')),
-					_Utils_Tuple2(
-					'value',
-					$author$project$Main$encodePortIncomingValue(incomingValue))
-				]));
+	switch (value.$) {
+		case 0:
+			var formFields = value.a;
+			return $elm$json$Json$Encode$object(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'type',
+						$elm$json$Json$Encode$string('formFields')),
+						_Utils_Tuple2(
+						'formFields',
+						$author$project$Main$encodeFormFields(formFields))
+					]));
+		case 1:
+			var incomingValue = value.a;
+			return $elm$json$Json$Encode$object(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'type',
+						$elm$json$Json$Encode$string('setupCloseDropdown')),
+						_Utils_Tuple2(
+						'value',
+						$author$project$Main$encodePortIncomingValue(incomingValue))
+					]));
+		default:
+			var formValues = value.a;
+			return $elm$json$Json$Encode$object(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'type',
+						$elm$json$Json$Encode$string('formValues')),
+						_Utils_Tuple2('value', formValues)
+					]));
 	}
 };
+var $author$project$Main$fieldNameOf = function (formField) {
+	return A2($elm$core$Maybe$withDefault, formField.g, formField.aA);
+};
+var $elm$core$Array$filter = F2(
+	function (isGood, array) {
+		return $elm$core$Array$fromList(
+			A3(
+				$elm$core$Array$foldr,
+				F2(
+					function (x, xs) {
+						return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
+					}),
+				_List_Nil,
+				array));
+	});
+var $elm$core$Array$isEmpty = function (_v0) {
+	var len = _v0.a;
+	return !len;
+};
+var $elm$core$List$isEmpty = function (xs) {
+	if (!xs.b) {
+		return true;
+	} else {
+		return false;
+	}
+};
+var $elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (!maybe.$) {
+			var value = maybe.a;
+			return $elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $elm$core$Result$toMaybe = function (result) {
+	if (!result.$) {
+		var v = result.a;
+		return $elm$core$Maybe$Just(v);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $author$project$Main$maybeDecode = F3(
+	function (key, decoder, jsonValue) {
+		return A2(
+			$elm$core$Maybe$andThen,
+			$elm$core$Basics$identity,
+			$elm$core$Result$toMaybe(
+				A2(
+					$elm$json$Json$Decode$decodeValue,
+					A2($elm_community$json_extra$Json$Decode$Extra$optionalField, key, decoder),
+					jsonValue)));
+	});
 var $elm$core$List$any = F2(
 	function (isOkay, list) {
 		any:
@@ -6369,13 +6647,13 @@ var $author$project$Main$init = function (flags) {
 		[
 			$author$project$Main$fromRawCustomElement(
 			{
-				p: $elm$core$Dict$fromList(
+				r: $elm$core$Dict$fromList(
 					_List_fromArray(
 						[
 							_Utils_Tuple2('type', 'text')
 						])),
-				I: $author$project$Main$defaultInputTag,
-				x: 'Single-line free text'
+				K: $author$project$Main$defaultInputTag,
+				y: 'Single-line free text'
 			})
 		]);
 	var defaultShortTextTypeListWithout = function (shortTextTypeList) {
@@ -6389,33 +6667,70 @@ var $author$project$Main$init = function (flags) {
 	var _v0 = A2($elm$json$Json$Decode$decodeValue, $author$project$Main$decodeConfig, flags);
 	if (!_v0.$) {
 		var config = _v0.a;
+		var initialTrackedFormValues = $elm$core$Dict$fromList(
+			A2(
+				$elm$core$List$map,
+				function (field) {
+					var fieldName = $author$project$Main$fieldNameOf(field);
+					var _v1 = field.f;
+					if (_v1.$ === 4) {
+						return _Utils_Tuple2(
+							fieldName,
+							A2(
+								$elm$core$Maybe$withDefault,
+								_List_Nil,
+								A3(
+									$author$project$Main$maybeDecode,
+									fieldName,
+									$author$project$Main$decodeListOrSingleton($elm$json$Json$Decode$string),
+									config.aU)));
+					} else {
+						return _Utils_Tuple2(
+							fieldName,
+							A2(
+								$elm$core$Maybe$withDefault,
+								_List_Nil,
+								A2(
+									$elm$core$Maybe$map,
+									$elm$core$List$singleton,
+									A3($author$project$Main$maybeDecode, fieldName, $elm$json$Json$Decode$string, config.aU))));
+					}
+				},
+				$elm$core$Array$toList(config.d)));
 		var effectiveShortTextTypeList = _Utils_ap(
-			defaultShortTextTypeListWithout(config._),
-			config._);
+			defaultShortTextTypeListWithout(config.ab),
+			config.ab);
 		return _Utils_Tuple2(
 			{
-				l: $elm$core$Maybe$Nothing,
+				n: $elm$core$Maybe$Nothing,
 				aG: 0,
-				f: config.f,
-				M: config.M,
+				d: config.d,
 				aJ: $elm$core$Maybe$Nothing,
-				A: $elm$core$Maybe$Nothing,
-				Z: $elm$core$Dict$fromList(
+				aL: !$elm$core$Array$isEmpty(
+					A2(
+						$elm$core$Array$filter,
+						function (f) {
+							return !$elm$core$List$isEmpty(f.l);
+						},
+						config.d)),
+				B: $elm$core$Maybe$Nothing,
+				aa: $elm$core$Dict$fromList(
 					A2(
 						$elm$core$List$map,
 						function (customElement) {
-							return _Utils_Tuple2(customElement.x, customElement);
+							return _Utils_Tuple2(customElement.y, customElement);
 						},
 						effectiveShortTextTypeList)),
-				_: effectiveShortTextTypeList,
-				R: config.R
+				ab: effectiveShortTextTypeList,
+				C: initialTrackedFormValues,
+				S: config.S
 			},
 			$elm$core$Platform$Cmd$batch(
 				_List_fromArray(
 					[
 						$author$project$Main$outgoing(
 						$author$project$Main$encodePortOutgoingValue(
-							$author$project$Main$PortOutgoingFormFields(config.f))),
+							$author$project$Main$PortOutgoingFormFields(config.d))),
 						$author$project$Main$outgoing(
 						$author$project$Main$encodePortOutgoingValue(
 							$author$project$Main$PortOutgoingSetupCloseDropdown($author$project$Main$PortIncomingCloseDropdown)))
@@ -6424,17 +6739,18 @@ var $author$project$Main$init = function (flags) {
 		var err = _v0.a;
 		return _Utils_Tuple2(
 			{
-				l: $elm$core$Maybe$Nothing,
+				n: $elm$core$Maybe$Nothing,
 				aG: 0,
-				f: $elm$core$Array$empty,
-				M: $elm$json$Json$Encode$null,
+				d: $elm$core$Array$empty,
 				aJ: $elm$core$Maybe$Just(
 					$elm$json$Json$Decode$errorToString(err)),
-				A: $elm$core$Maybe$Nothing,
-				Z: $elm$core$Dict$empty,
-				_: _List_Nil,
-				R: $author$project$Main$Editor(
-					{ao: $elm$core$Maybe$Nothing})
+				aL: false,
+				B: $elm$core$Maybe$Nothing,
+				aa: $elm$core$Dict$empty,
+				ab: _List_Nil,
+				C: $elm$core$Dict$empty,
+				S: $author$project$Main$Editor(
+					{ap: $elm$core$Maybe$Nothing})
 			},
 			$elm$core$Platform$Cmd$none);
 	}
@@ -6459,6 +6775,9 @@ var $author$project$Main$DragNew = function (a) {
 };
 var $author$project$Main$Drop = function (a) {
 	return {$: 13, a: a};
+};
+var $author$project$Main$PortOutgoingFormValues = function (a) {
+	return {$: 2, a: a};
 };
 var $author$project$Main$SetEditorAnimate = function (a) {
 	return {$: 7, a: a};
@@ -6496,6 +6815,31 @@ var $author$project$Main$decodePortIncomingValue = A2(
 		}
 	},
 	A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string));
+var $elm$json$Json$Encode$dict = F3(
+	function (toKey, toValue, dictionary) {
+		return _Json_wrap(
+			A3(
+				$elm$core$Dict$foldl,
+				F3(
+					function (key, value, obj) {
+						return A3(
+							_Json_addField,
+							toKey(key),
+							toValue(value),
+							obj);
+					}),
+				_Json_emptyObject(0),
+				dictionary));
+	});
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
 var $elm$core$Elm$JsArray$foldl = _JsArray_foldl;
 var $elm$core$Elm$JsArray$indexedMap = _JsArray_indexedMap;
 var $elm$core$Bitwise$shiftLeftBy = _Bitwise_shiftLeftBy;
@@ -6509,9 +6853,9 @@ var $elm$core$Array$indexedMap = F2(
 		var tree = _v0.c;
 		var tail = _v0.d;
 		var initialBuilder = {
-			s: _List_Nil,
-			n: 0,
-			r: A3(
+			u: _List_Nil,
+			p: 0,
+			t: A3(
 				$elm$core$Elm$JsArray$indexedMap,
 				func,
 				$elm$core$Array$tailIndex(len),
@@ -6524,13 +6868,13 @@ var $elm$core$Array$indexedMap = F2(
 					return A3($elm$core$Elm$JsArray$foldl, helper, builder, subTree);
 				} else {
 					var leaf = node.a;
-					var offset = builder.n * $elm$core$Array$branchFactor;
+					var offset = builder.p * $elm$core$Array$branchFactor;
 					var mappedLeaf = $elm$core$Array$Leaf(
 						A3($elm$core$Elm$JsArray$indexedMap, func, offset, leaf));
 					return {
-						s: A2($elm$core$List$cons, mappedLeaf, builder.s),
-						n: builder.n + 1,
-						r: builder.r
+						u: A2($elm$core$List$cons, mappedLeaf, builder.u),
+						p: builder.p + 1,
+						t: builder.t
 					};
 				}
 			});
@@ -6543,16 +6887,6 @@ var $elm$core$Array$length = function (_v0) {
 	var len = _v0.a;
 	return len;
 };
-var $elm$core$Maybe$map = F2(
-	function (f, maybe) {
-		if (!maybe.$) {
-			var value = maybe.a;
-			return $elm$core$Maybe$Just(
-				f(value));
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
 var $author$project$Main$mustBeOptional = function (inputField) {
 	switch (inputField.$) {
 		case 0:
@@ -6763,15 +7097,15 @@ var $elm_community$list_extra$List$Extra$splitAt = F2(
 	});
 var $author$project$Main$onDropped = F2(
 	function (targetIndex, model) {
-		var _v0 = model.l;
+		var _v0 = model.n;
 		if (!_v0.$) {
 			if (!_v0.a.$) {
 				var dragIndex = _v0.a.a.aT;
-				var dropIndex = _v0.a.a.B;
+				var dropIndex = _v0.a.a.D;
 				if (targetIndex.$ === 1) {
 					return _Utils_update(
 						model,
-						{l: $elm$core$Maybe$Nothing});
+						{n: $elm$core$Maybe$Nothing});
 				} else {
 					var index = targetIndex.a;
 					if (!dropIndex.$) {
@@ -6780,11 +7114,11 @@ var $author$project$Main$onDropped = F2(
 						if (_Utils_eq(dragIndex, index) || (!_Utils_eq(index, dropTargetIndex))) {
 							return _Utils_update(
 								model,
-								{l: $elm$core$Maybe$Nothing});
+								{n: $elm$core$Maybe$Nothing});
 						} else {
 							var newFormFields = $elm$core$Array$fromList(
 								function (list) {
-									var draggedField = A2($elm$core$Array$get, dragIndex, model.f);
+									var draggedField = A2($elm$core$Array$get, dragIndex, model.d);
 									var _v5 = A2($elm_community$list_extra$List$Extra$splitAt, index, list);
 									var before = _v5.a;
 									var after = _v5.b;
@@ -6814,24 +7148,24 @@ var $author$project$Main$onDropped = F2(
 											A2(
 												$elm$core$List$indexedMap,
 												$elm$core$Tuple$pair,
-												$elm$core$Array$toList(model.f))))));
+												$elm$core$Array$toList(model.d))))));
 							return _Utils_update(
 								model,
-								{l: $elm$core$Maybe$Nothing, f: newFormFields});
+								{n: $elm$core$Maybe$Nothing, d: newFormFields});
 						}
 					} else {
 						return _Utils_update(
 							model,
-							{l: $elm$core$Maybe$Nothing});
+							{n: $elm$core$Maybe$Nothing});
 					}
 				}
 			} else {
-				var field = _v0.a.a.bi;
-				var dropIndex = _v0.a.a.B;
+				var field = _v0.a.a.bl;
+				var dropIndex = _v0.a.a.D;
 				if (targetIndex.$ === 1) {
 					return _Utils_update(
 						model,
-						{l: $elm$core$Maybe$Nothing});
+						{n: $elm$core$Maybe$Nothing});
 				} else {
 					var index = targetIndex.a;
 					if (!dropIndex.$) {
@@ -6840,7 +7174,7 @@ var $author$project$Main$onDropped = F2(
 						if (!_Utils_eq(index, dropTargetIndex)) {
 							return _Utils_update(
 								model,
-								{l: $elm$core$Maybe$Nothing});
+								{n: $elm$core$Maybe$Nothing});
 						} else {
 							var newFormFields = $elm$core$Array$fromList(
 								function (list) {
@@ -6854,22 +7188,22 @@ var $author$project$Main$onDropped = F2(
 												[field]),
 											after));
 								}(
-									$elm$core$Array$toList(model.f)));
+									$elm$core$Array$toList(model.d)));
 							return _Utils_update(
 								model,
-								{l: $elm$core$Maybe$Nothing, f: newFormFields});
+								{n: $elm$core$Maybe$Nothing, d: newFormFields});
 						}
 					} else {
 						return _Utils_update(
 							model,
-							{l: $elm$core$Maybe$Nothing});
+							{n: $elm$core$Maybe$Nothing});
 					}
 				}
 			}
 		} else {
 			return _Utils_update(
 				model,
-				{l: $elm$core$Maybe$Nothing});
+				{n: $elm$core$Maybe$Nothing});
 		}
 	});
 var $elm$core$Elm$JsArray$push = _JsArray_push;
@@ -6955,7 +7289,7 @@ var $elm$core$Process$sleep = _Process_sleep;
 var $author$project$Main$stringFromInputField = function (inputField) {
 	switch (inputField.$) {
 		case 0:
-			var inputType = inputField.a.x;
+			var inputType = inputField.a.y;
 			return inputType;
 		case 1:
 			return 'Multi-line description';
@@ -7054,40 +7388,68 @@ var $author$project$Main$updateDragged = F2(
 			var targetField = _v1.b;
 			if (!dragged.$) {
 				var details = dragged.a;
-				var _v3 = details.B;
+				var _v3 = details.D;
 				if (!_v3.$) {
 					var _v4 = _v3.a;
 					var existingField = _v4.b;
 					return _Utils_eq(existingField, targetField) ? dragged : $author$project$Main$DragExisting(
 						_Utils_update(
 							details,
-							{B: maybeDroppable}));
+							{D: maybeDroppable}));
 				} else {
 					return $author$project$Main$DragExisting(
 						_Utils_update(
 							details,
-							{B: maybeDroppable}));
+							{D: maybeDroppable}));
 				}
 			} else {
 				var details = dragged.a;
-				var _v5 = details.B;
+				var _v5 = details.D;
 				if (!_v5.$) {
 					var _v6 = _v5.a;
 					var existingField = _v6.b;
 					return _Utils_eq(existingField, targetField) ? dragged : $author$project$Main$DragNew(
 						_Utils_update(
 							details,
-							{B: maybeDroppable}));
+							{D: maybeDroppable}));
 				} else {
 					return $author$project$Main$DragNew(
 						_Utils_update(
 							details,
-							{B: maybeDroppable}));
+							{D: maybeDroppable}));
 				}
 			}
 		}
 	});
+var $author$project$Main$getPreviousFieldLabel = F2(
+	function (index, formFields) {
+		return (index > 0) ? A2(
+			$elm$core$Maybe$withDefault,
+			'',
+			A2(
+				$elm$core$Maybe$map,
+				function ($) {
+					return $.g;
+				},
+				A2($elm$core$Array$get, index - 1, formFields))) : '';
+	});
 var $elm$core$String$lines = _String_lines;
+var $elm_community$list_extra$List$Extra$removeAt = F2(
+	function (index, l) {
+		if (index < 0) {
+			return l;
+		} else {
+			var _v0 = A2($elm$core$List$drop, index, l);
+			if (!_v0.b) {
+				return l;
+			} else {
+				var rest = _v0.b;
+				return _Utils_ap(
+					A2($elm$core$List$take, index, l),
+					rest);
+			}
+		}
+	});
 var $author$project$Main$toggleAttributeOptional = F2(
 	function (toggle, attributeOptional) {
 		switch (attributeOptional.$) {
@@ -7107,39 +7469,178 @@ var $author$project$Main$toggleAttributeOptional = F2(
 					$elm$core$Maybe$Just(a));
 		}
 	});
-var $author$project$Main$updateFormField = F3(
-	function (msg, string, formField) {
+var $author$project$Main$updateComparison = F2(
+	function (comparisonType, comparison) {
+		switch (comparisonType) {
+			case 'Equals':
+				switch (comparison.$) {
+					case 0:
+						var str = comparison.a;
+						return $author$project$Main$Equals(str);
+					case 1:
+						var str = comparison.a;
+						return $author$project$Main$Equals(str);
+					case 2:
+						var str = comparison.a;
+						return $author$project$Main$Equals(str);
+					default:
+						var str = comparison.a;
+						return $author$project$Main$Equals(str);
+				}
+			case 'StringContains':
+				switch (comparison.$) {
+					case 0:
+						var str = comparison.a;
+						return $author$project$Main$StringContains(str);
+					case 1:
+						var str = comparison.a;
+						return $author$project$Main$StringContains(str);
+					case 2:
+						var str = comparison.a;
+						return $author$project$Main$StringContains(str);
+					default:
+						var str = comparison.a;
+						return $author$project$Main$StringContains(str);
+				}
+			case 'EndsWith':
+				switch (comparison.$) {
+					case 0:
+						var str = comparison.a;
+						return $author$project$Main$EndsWith(str);
+					case 1:
+						var str = comparison.a;
+						return $author$project$Main$EndsWith(str);
+					case 2:
+						var str = comparison.a;
+						return $author$project$Main$EndsWith(str);
+					default:
+						var str = comparison.a;
+						return $author$project$Main$EndsWith(str);
+				}
+			case 'GreaterThan':
+				switch (comparison.$) {
+					case 0:
+						var str = comparison.a;
+						return $author$project$Main$GreaterThan(str);
+					case 1:
+						var str = comparison.a;
+						return $author$project$Main$GreaterThan(str);
+					case 2:
+						var str = comparison.a;
+						return $author$project$Main$GreaterThan(str);
+					default:
+						var str = comparison.a;
+						return $author$project$Main$GreaterThan(str);
+				}
+			default:
+				return comparison;
+		}
+	});
+var $author$project$Main$updateComparisonInCondition = F2(
+	function (updater, condition) {
+		var fieldName = condition.a;
+		var comparison = condition.b;
+		return A2(
+			$author$project$Main$Field,
+			fieldName,
+			updater(comparison));
+	});
+var $author$project$Main$updateComparisonValue = F2(
+	function (newValue, comparison) {
+		switch (comparison.$) {
+			case 0:
+				return $author$project$Main$Equals(newValue);
+			case 1:
+				return $author$project$Main$StringContains(newValue);
+			case 2:
+				return $author$project$Main$EndsWith(newValue);
+			default:
+				return $author$project$Main$GreaterThan(newValue);
+		}
+	});
+var $author$project$Main$updateConditions = F3(
+	function (conditionIndex, updater, conditions) {
+		return A2(
+			$elm$core$List$indexedMap,
+			F2(
+				function (i, condition) {
+					return _Utils_eq(i, conditionIndex) ? updater(condition) : condition;
+				}),
+			conditions);
+	});
+var $author$project$Main$updateConditionsInRule = F2(
+	function (updater, rule) {
+		if (!rule.$) {
+			var conditions = rule.a;
+			return $author$project$Main$ShowWhen(
+				updater(conditions));
+		} else {
+			var conditions = rule.a;
+			return $author$project$Main$HideWhen(
+				updater(conditions));
+		}
+	});
+var $author$project$Main$updateFieldnameInCondition = F2(
+	function (updater, condition) {
+		var fieldName = condition.a;
+		var comparison = condition.b;
+		return A2(
+			$author$project$Main$Field,
+			updater(fieldName),
+			comparison);
+	});
+var $author$project$Main$updateVisibilityRuleAt = F3(
+	function (targetIndex, updater, rules) {
+		return A2(
+			$elm$core$List$indexedMap,
+			F2(
+				function (i, rule) {
+					return _Utils_eq(i, targetIndex) ? updater(rule) : rule;
+				}),
+			rules);
+	});
+var $author$project$Main$visibilityRuleCondition = function (rule) {
+	if (!rule.$) {
+		var conditions = rule.a;
+		return conditions;
+	} else {
+		var conditions = rule.a;
+		return conditions;
+	}
+};
+var $author$project$Main$updateFormField = F5(
+	function (msg, fieldIndex, string, formFields, formField) {
 		switch (msg.$) {
 			case 0:
 				return _Utils_update(
 					formField,
-					{h: string});
+					{g: string});
 			case 1:
 				return (string === '') ? _Utils_update(
 					formField,
 					{
-						L: $author$project$Main$AttributeInvalid('')
+						N: $author$project$Main$AttributeInvalid('')
 					}) : _Utils_update(
 					formField,
 					{
-						L: $author$project$Main$AttributeGiven(string)
+						N: $author$project$Main$AttributeGiven(string)
 					});
 			case 2:
 				var bool = msg.a;
 				return _Utils_update(
 					formField,
 					{
-						L: A2($author$project$Main$toggleAttributeOptional, bool, formField.L)
+						N: A2($author$project$Main$toggleAttributeOptional, bool, formField.N)
 					});
 			case 3:
 				var bool = msg.a;
 				return bool ? _Utils_update(
 					formField,
-					{t: 0}) : _Utils_update(
+					{v: 0}) : _Utils_update(
 					formField,
-					{t: 1});
+					{v: 1});
 			case 4:
-				var _v1 = formField.g;
+				var _v1 = formField.f;
 				switch (_v1.$) {
 					case 0:
 						return formField;
@@ -7149,7 +7650,7 @@ var $author$project$Main$updateFormField = F3(
 						return _Utils_update(
 							formField,
 							{
-								g: $author$project$Main$Dropdown(
+								f: $author$project$Main$Dropdown(
 									A2(
 										$elm$core$List$map,
 										$author$project$Main$choiceFromString,
@@ -7159,7 +7660,7 @@ var $author$project$Main$updateFormField = F3(
 						return _Utils_update(
 							formField,
 							{
-								g: $author$project$Main$ChooseOne(
+								f: $author$project$Main$ChooseOne(
 									A2(
 										$elm$core$List$map,
 										$author$project$Main$choiceFromString,
@@ -7169,7 +7670,7 @@ var $author$project$Main$updateFormField = F3(
 						return _Utils_update(
 							formField,
 							{
-								g: $author$project$Main$ChooseMultiple(
+								f: $author$project$Main$ChooseMultiple(
 									A2(
 										$elm$core$List$map,
 										$author$project$Main$choiceFromString,
@@ -7178,19 +7679,19 @@ var $author$project$Main$updateFormField = F3(
 				}
 			case 5:
 				var bool = msg.a;
-				var _v2 = formField.g;
+				var _v2 = formField.f;
 				switch (_v2.$) {
 					case 0:
 						var customElement = _v2.a;
 						var newCustomElement = _Utils_update(
 							customElement,
 							{
-								ay: $author$project$Main$AttributeGiven(bool)
+								az: $author$project$Main$AttributeGiven(bool)
 							});
 						return _Utils_update(
 							formField,
 							{
-								g: $author$project$Main$ShortText(newCustomElement)
+								f: $author$project$Main$ShortText(newCustomElement)
 							});
 					case 1:
 						return formField;
@@ -7203,26 +7704,26 @@ var $author$project$Main$updateFormField = F3(
 				}
 			case 6:
 				var bool = msg.a;
-				var _v3 = formField.g;
+				var _v3 = formField.f;
 				switch (_v3.$) {
 					case 0:
 						var customElement = _v3.a;
 						var newCustomElement = _Utils_update(
 							customElement,
 							{
-								W: A2($author$project$Main$toggleAttributeOptional, bool, customElement.W)
+								Y: A2($author$project$Main$toggleAttributeOptional, bool, customElement.Y)
 							});
 						return _Utils_update(
 							formField,
 							{
-								g: $author$project$Main$ShortText(newCustomElement)
+								f: $author$project$Main$ShortText(newCustomElement)
 							});
 					case 1:
 						var maxlength = _v3.a;
 						return _Utils_update(
 							formField,
 							{
-								g: $author$project$Main$LongText(
+								f: $author$project$Main$LongText(
 									A2($author$project$Main$toggleAttributeOptional, bool, maxlength))
 							});
 					case 2:
@@ -7233,14 +7734,14 @@ var $author$project$Main$updateFormField = F3(
 						return formField;
 				}
 			case 7:
-				var _v4 = formField.g;
+				var _v4 = formField.f;
 				switch (_v4.$) {
 					case 0:
 						var customElement = _v4.a;
 						var newCustomElement = _Utils_update(
 							customElement,
 							{
-								W: function () {
+								Y: function () {
 									var _v5 = $elm$core$String$toInt(string);
 									if (!_v5.$) {
 										var i = _v5.a;
@@ -7253,7 +7754,7 @@ var $author$project$Main$updateFormField = F3(
 						return _Utils_update(
 							formField,
 							{
-								g: $author$project$Main$ShortText(newCustomElement)
+								f: $author$project$Main$ShortText(newCustomElement)
 							});
 					case 1:
 						var newMaxlength = function () {
@@ -7268,7 +7769,7 @@ var $author$project$Main$updateFormField = F3(
 						return _Utils_update(
 							formField,
 							{
-								g: $author$project$Main$LongText(newMaxlength)
+								f: $author$project$Main$LongText(newMaxlength)
 							});
 					case 2:
 						return formField;
@@ -7279,19 +7780,19 @@ var $author$project$Main$updateFormField = F3(
 				}
 			case 8:
 				var bool = msg.a;
-				var _v7 = formField.g;
+				var _v7 = formField.f;
 				switch (_v7.$) {
 					case 0:
 						var customElement = _v7.a;
 						var newCustomElement = _Utils_update(
 							customElement,
 							{
-								U: A2($author$project$Main$toggleAttributeOptional, bool, customElement.U)
+								W: A2($author$project$Main$toggleAttributeOptional, bool, customElement.W)
 							});
 						return _Utils_update(
 							formField,
 							{
-								g: $author$project$Main$ShortText(newCustomElement)
+								f: $author$project$Main$ShortText(newCustomElement)
 							});
 					case 1:
 						return formField;
@@ -7302,15 +7803,15 @@ var $author$project$Main$updateFormField = F3(
 					default:
 						return formField;
 				}
-			default:
-				var _v8 = formField.g;
+			case 9:
+				var _v8 = formField.f;
 				switch (_v8.$) {
 					case 0:
 						var customElement = _v8.a;
 						var newCustomElement = _Utils_update(
 							customElement,
 							{
-								U: function () {
+								W: function () {
 									var _v9 = A2($elm$core$String$split, '\n', string);
 									if (!_v9.b) {
 										return $author$project$Main$AttributeInvalid(string);
@@ -7328,7 +7829,7 @@ var $author$project$Main$updateFormField = F3(
 						return _Utils_update(
 							formField,
 							{
-								g: $author$project$Main$ShortText(newCustomElement)
+								f: $author$project$Main$ShortText(newCustomElement)
 							});
 					case 1:
 						return formField;
@@ -7339,11 +7840,173 @@ var $author$project$Main$updateFormField = F3(
 					default:
 						return formField;
 				}
+			case 10:
+				if (msg.b === '') {
+					var ruleIndex = msg.a;
+					return _Utils_update(
+						formField,
+						{
+							l: A2($elm_community$list_extra$List$Extra$removeAt, ruleIndex, formField.l)
+						});
+				} else {
+					var ruleIndex = msg.a;
+					var str = msg.b;
+					return _Utils_update(
+						formField,
+						{
+							l: A3(
+								$author$project$Main$updateVisibilityRuleAt,
+								ruleIndex,
+								function (rule) {
+									switch (str) {
+										case 'ShowWhen':
+											return $author$project$Main$ShowWhen(
+												$author$project$Main$visibilityRuleCondition(rule));
+										case 'HideWhen':
+											return $author$project$Main$HideWhen(
+												$author$project$Main$visibilityRuleCondition(rule));
+										default:
+											return rule;
+									}
+								},
+								formField.l)
+						});
+				}
+			case 11:
+				var ruleIndex = msg.a;
+				var conditionIndex = msg.b;
+				var str = msg.c;
+				return _Utils_update(
+					formField,
+					{
+						l: A3(
+							$author$project$Main$updateVisibilityRuleAt,
+							ruleIndex,
+							$author$project$Main$updateConditionsInRule(
+								A2(
+									$author$project$Main$updateConditions,
+									conditionIndex,
+									$author$project$Main$updateComparisonInCondition(
+										$author$project$Main$updateComparison(str)))),
+							formField.l)
+					});
+			case 12:
+				if (msg.c === '') {
+					var ruleIndex = msg.a;
+					var conditionIndex = msg.b;
+					return _Utils_update(
+						formField,
+						{
+							l: A3(
+								$author$project$Main$updateVisibilityRuleAt,
+								ruleIndex,
+								$author$project$Main$updateConditionsInRule(
+									$elm_community$list_extra$List$Extra$removeAt(conditionIndex)),
+								formField.l)
+						});
+				} else {
+					var ruleIndex = msg.a;
+					var conditionIndex = msg.b;
+					var newFieldName = msg.c;
+					return _Utils_update(
+						formField,
+						{
+							l: A3(
+								$author$project$Main$updateVisibilityRuleAt,
+								ruleIndex,
+								$author$project$Main$updateConditionsInRule(
+									A2(
+										$author$project$Main$updateConditions,
+										conditionIndex,
+										$author$project$Main$updateFieldnameInCondition(
+											$elm$core$Basics$always(newFieldName)))),
+								formField.l)
+						});
+				}
+			case 13:
+				var ruleIndex = msg.a;
+				var conditionIndex = msg.b;
+				var newValue = msg.c;
+				return _Utils_update(
+					formField,
+					{
+						l: A3(
+							$author$project$Main$updateVisibilityRuleAt,
+							ruleIndex,
+							$author$project$Main$updateConditionsInRule(
+								A2(
+									$author$project$Main$updateConditions,
+									conditionIndex,
+									$author$project$Main$updateComparisonInCondition(
+										$author$project$Main$updateComparisonValue(newValue)))),
+							formField.l)
+					});
+			case 14:
+				return _Utils_update(
+					formField,
+					{
+						l: _Utils_ap(
+							formField.l,
+							_List_fromArray(
+								[
+									$author$project$Main$ShowWhen(
+									_List_fromArray(
+										[
+											A2(
+											$author$project$Main$Field,
+											A2($author$project$Main$getPreviousFieldLabel, fieldIndex, formFields),
+											$author$project$Main$Equals(''))
+										]))
+								]))
+					});
+			default:
+				var ruleIndex = msg.a;
+				var newCondition = function (conditions) {
+					var _v12 = $elm$core$List$reverse(conditions);
+					if (_v12.b) {
+						var last = _v12.a;
+						return last;
+					} else {
+						return A2(
+							$author$project$Main$Field,
+							A2($author$project$Main$getPreviousFieldLabel, fieldIndex, formFields),
+							$author$project$Main$Equals(''));
+					}
+				};
+				return _Utils_update(
+					formField,
+					{
+						l: A3(
+							$author$project$Main$updateVisibilityRuleAt,
+							ruleIndex,
+							function (rule) {
+								if (!rule.$) {
+									var conditions = rule.a;
+									return $author$project$Main$ShowWhen(
+										_Utils_ap(
+											conditions,
+											_List_fromArray(
+												[
+													newCondition(conditions)
+												])));
+								} else {
+									var conditions = rule.a;
+									return $author$project$Main$HideWhen(
+										_Utils_ap(
+											conditions,
+											_List_fromArray(
+												[
+													newCondition(conditions)
+												])));
+								}
+							},
+							formField.l)
+					});
 		}
 	});
 var $author$project$Main$when = F2(
 	function (bool, condition) {
-		return bool ? condition.aP : condition.aI;
+		return bool ? condition.aQ : condition.aI;
 	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
@@ -7361,7 +8024,7 @@ var $author$project$Main$update = F2(
 							return _Utils_Tuple2(
 								_Utils_update(
 									model,
-									{R: viewMode}),
+									{S: viewMode}),
 								$elm$core$Platform$Cmd$none);
 						} else {
 							var _v2 = _v1.a;
@@ -7377,21 +8040,22 @@ var $author$project$Main$update = F2(
 				case 2:
 					var fieldType = msg.a;
 					var newFormField = {
-						L: $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing),
-						h: $author$project$Main$stringFromInputField(fieldType) + ' question',
-						az: $elm$core$Maybe$Nothing,
-						t: A2(
+						N: $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing),
+						g: $author$project$Main$stringFromInputField(fieldType) + ' question',
+						aA: $elm$core$Maybe$Nothing,
+						v: A2(
 							$author$project$Main$when,
 							$author$project$Main$mustBeOptional(fieldType),
-							{aI: 0, aP: 1}),
-						g: fieldType
+							{aI: 0, aQ: 1}),
+						f: fieldType,
+						l: _List_Nil
 					};
-					var newFormFields = A2($elm$core$Array$push, newFormField, model.f);
+					var newFormFields = A2($elm$core$Array$push, newFormField, model.d);
 					var newIndex = $elm$core$Array$length(newFormFields) - 1;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
-							{f: newFormFields}),
+							{d: newFormFields}),
 						$elm$core$Platform$Cmd$batch(
 							_List_fromArray(
 								[
@@ -7414,7 +8078,7 @@ var $author$project$Main$update = F2(
 												]))))
 								])));
 				case 3:
-					var index = msg.a;
+					var fieldIndex = msg.a;
 					var newFormFields = $elm$core$Array$fromList(
 						A2(
 							$elm$core$List$map,
@@ -7423,57 +8087,57 @@ var $author$project$Main$update = F2(
 								$elm$core$List$filter,
 								function (_v3) {
 									var i = _v3.a;
-									return !_Utils_eq(i, index);
+									return !_Utils_eq(i, fieldIndex);
 								},
-								$elm$core$Array$toIndexedList(model.f))));
+								$elm$core$Array$toIndexedList(model.d))));
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
-							{f: newFormFields, A: $elm$core$Maybe$Nothing}),
+							{d: newFormFields, B: $elm$core$Maybe$Nothing}),
 						$author$project$Main$outgoing(
 							$author$project$Main$encodePortOutgoingValue(
 								$author$project$Main$PortOutgoingFormFields(newFormFields))));
 				case 4:
-					var index = msg.a;
-					var newFormFields = A3($author$project$Main$swapArrayIndex, index, index - 1, model.f);
+					var fieldIndex = msg.a;
+					var newFormFields = A3($author$project$Main$swapArrayIndex, fieldIndex, fieldIndex - 1, model.d);
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
 							{
-								f: newFormFields,
-								A: $elm$core$Maybe$Just(index - 1)
+								d: newFormFields,
+								B: $elm$core$Maybe$Just(fieldIndex - 1)
 							}),
 						$author$project$Main$outgoing(
 							$author$project$Main$encodePortOutgoingValue(
 								$author$project$Main$PortOutgoingFormFields(newFormFields))));
 				case 5:
-					var index = msg.a;
-					var newFormFields = A3($author$project$Main$swapArrayIndex, index, index + 1, model.f);
+					var fieldIndex = msg.a;
+					var newFormFields = A3($author$project$Main$swapArrayIndex, fieldIndex, fieldIndex + 1, model.d);
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
 							{
-								f: newFormFields,
-								A: $elm$core$Maybe$Just(index + 1)
+								d: newFormFields,
+								B: $elm$core$Maybe$Just(fieldIndex + 1)
 							}),
 						$author$project$Main$outgoing(
 							$author$project$Main$encodePortOutgoingValue(
 								$author$project$Main$PortOutgoingFormFields(newFormFields))));
 				case 6:
 					var fmsg = msg.a;
-					var index = msg.b;
+					var fieldIndex = msg.b;
 					var string = msg.c;
 					var newFormFields = A2(
 						$elm$core$Array$indexedMap,
 						F2(
 							function (i, formField) {
-								return _Utils_eq(i, index) ? A3($author$project$Main$updateFormField, fmsg, string, formField) : formField;
+								return _Utils_eq(i, fieldIndex) ? A5($author$project$Main$updateFormField, fmsg, fieldIndex, string, model.d, formField) : formField;
 							}),
-						model.f);
+						model.d);
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
-							{f: newFormFields}),
+							{d: newFormFields}),
 						$author$project$Main$outgoing(
 							$author$project$Main$encodePortOutgoingValue(
 								$author$project$Main$PortOutgoingFormFields(newFormFields))));
@@ -7483,13 +8147,13 @@ var $author$project$Main$update = F2(
 						_Utils_update(
 							model,
 							{
-								R: $author$project$Main$Editor(
-									{ao: maybeAnimate})
+								S: $author$project$Main$Editor(
+									{ap: maybeAnimate})
 							}),
 						$elm$core$Platform$Cmd$none);
 				case 8:
-					var index = msg.a;
-					var _v4 = _Utils_Tuple2(model.A, index);
+					var fieldIndex = msg.a;
+					var _v4 = _Utils_Tuple2(model.B, fieldIndex);
 					if ((!_v4.a.$) && (_v4.b.$ === 1)) {
 						var prevIndex = _v4.a.a;
 						var _v5 = _v4.b;
@@ -7497,10 +8161,10 @@ var $author$project$Main$update = F2(
 							_Utils_update(
 								model,
 								{
-									A: $elm$core$Maybe$Nothing,
-									R: $author$project$Main$Editor(
+									B: $elm$core$Maybe$Nothing,
+									S: $author$project$Main$Editor(
 										{
-											ao: $elm$core$Maybe$Just(
+											ap: $elm$core$Maybe$Just(
 												_Utils_Tuple2(prevIndex, 0))
 										})
 								}),
@@ -7509,41 +8173,41 @@ var $author$project$Main$update = F2(
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
-								{A: index}),
+								{B: fieldIndex}),
 							$elm$core$Platform$Cmd$none);
 					}
 				case 9:
-					var index = msg.a;
+					var fieldIndex = msg.a;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
 							{
-								l: $elm$core$Maybe$Just(
+								n: $elm$core$Maybe$Just(
 									$author$project$Main$DragExisting(
-										{aT: index, B: $elm$core$Maybe$Nothing})),
-								A: $elm$core$Maybe$Nothing
+										{aT: fieldIndex, D: $elm$core$Maybe$Nothing})),
+								B: $elm$core$Maybe$Nothing
 							}),
 						$elm$core$Platform$Cmd$none);
 				case 10:
-					var field = msg.a;
+					var fieldIndex = msg.a;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
 							{
-								l: $elm$core$Maybe$Just(
+								n: $elm$core$Maybe$Just(
 									$author$project$Main$DragNew(
 										{
-											B: $elm$core$Maybe$Just(
+											D: $elm$core$Maybe$Just(
 												_Utils_Tuple2(0, $elm$core$Maybe$Nothing)),
-											bi: field
+											bl: fieldIndex
 										}))
 							}),
 						$elm$core$Platform$Cmd$none);
 				case 11:
-					var _v6 = model.l;
+					var _v6 = model.n;
 					if (!_v6.$) {
 						if (!_v6.a.$) {
-							var dropIndex = _v6.a.a.B;
+							var dropIndex = _v6.a.a.D;
 							var $temp$msg = $author$project$Main$Drop(
 								A2($elm$core$Maybe$map, $elm$core$Tuple$first, dropIndex)),
 								$temp$model = model;
@@ -7551,7 +8215,7 @@ var $author$project$Main$update = F2(
 							model = $temp$model;
 							continue update;
 						} else {
-							var dropIndex = _v6.a.a.B;
+							var dropIndex = _v6.a.a.D;
 							var $temp$msg = $author$project$Main$Drop(
 								A2($elm$core$Maybe$map, $elm$core$Tuple$first, dropIndex)),
 								$temp$model = model;
@@ -7563,7 +8227,7 @@ var $author$project$Main$update = F2(
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
-								{l: $elm$core$Maybe$Nothing}),
+								{n: $elm$core$Maybe$Nothing}),
 							$elm$core$Platform$Cmd$none);
 					}
 				case 12:
@@ -7572,21 +8236,21 @@ var $author$project$Main$update = F2(
 						_Utils_update(
 							model,
 							{
-								l: A2(
+								n: A2(
 									$elm$core$Maybe$map,
 									$author$project$Main$updateDragged(maybeDroppable),
-									model.l)
+									model.n)
 							}),
 						$elm$core$Platform$Cmd$none);
 				case 13:
-					var targetIndex = msg.a;
-					var newModel = A2($author$project$Main$onDropped, targetIndex, model);
+					var targetFieldIndex = msg.a;
+					var newModel = A2($author$project$Main$onDropped, targetFieldIndex, model);
 					return _Utils_Tuple2(
 						newModel,
-						(!_Utils_eq(newModel.f, model.f)) ? $author$project$Main$outgoing(
+						(!_Utils_eq(newModel.d, model.d)) ? $author$project$Main$outgoing(
 							$author$project$Main$encodePortOutgoingValue(
-								$author$project$Main$PortOutgoingFormFields(newModel.f))) : $elm$core$Platform$Cmd$none);
-				default:
+								$author$project$Main$PortOutgoingFormFields(newModel.d))) : $elm$core$Platform$Cmd$none);
+				case 14:
 					if (!msg.b.b) {
 						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 					} else {
@@ -7610,6 +8274,63 @@ var $author$project$Main$update = F2(
 										$elm$core$Process$sleep(duration))
 									])));
 					}
+				default:
+					var fieldName = msg.a;
+					var value = msg.b;
+					var formField = $elm$core$List$head(
+						A2(
+							$elm$core$List$filter,
+							function (f) {
+								return _Utils_eq(
+									$author$project$Main$fieldNameOf(f),
+									fieldName);
+							},
+							$elm$core$Array$toList(model.d)));
+					var currentValues = A2(
+						$elm$core$Maybe$withDefault,
+						_List_Nil,
+						A2($elm$core$Dict$get, fieldName, model.C));
+					var newValues = function () {
+						if (!formField.$) {
+							var field = formField.a;
+							var _v11 = field.f;
+							if (_v11.$ === 4) {
+								return A2($elm$core$List$member, value, currentValues) ? A2(
+									$elm$core$List$filter,
+									$elm$core$Basics$neq(value),
+									currentValues) : A2($elm$core$List$cons, value, currentValues);
+							} else {
+								return _List_fromArray(
+									[value]);
+							}
+						} else {
+							return _List_fromArray(
+								[value]);
+						}
+					}();
+					var newTrackedFormValues = A3($elm$core$Dict$insert, fieldName, newValues, model.C);
+					var formValues = A3(
+						$elm$json$Json$Encode$dict,
+						$elm$core$Basics$identity,
+						$elm$core$Basics$identity,
+						$elm$core$Dict$fromList(
+							A2(
+								$elm$core$List$map,
+								function (_v9) {
+									var key = _v9.a;
+									var values = _v9.b;
+									return _Utils_Tuple2(
+										key,
+										A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, values));
+								},
+								$elm$core$Dict$toList(newTrackedFormValues))));
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{C: newTrackedFormValues}),
+						$author$project$Main$outgoing(
+							$author$project$Main$encodePortOutgoingValue(
+								$author$project$Main$PortOutgoingFormValues(formValues))));
 			}
 		}
 	});
@@ -7692,7 +8413,7 @@ var $author$project$Main$fieldsWithPlaceholder = F2(
 		} else {
 			if (!dragged.a.$) {
 				var dragIndex = dragged.a.a.aT;
-				var dropIndex = dragged.a.a.B;
+				var dropIndex = dragged.a.a.D;
 				if (dropIndex.$ === 1) {
 					return A2($elm$core$List$map, $elm$core$Maybe$Just, fields);
 				} else {
@@ -7724,7 +8445,7 @@ var $author$project$Main$fieldsWithPlaceholder = F2(
 							]));
 				}
 			} else {
-				var dropIndex = dragged.a.a.B;
+				var dropIndex = dragged.a.a.D;
 				if (dropIndex.$ === 1) {
 					return A2($elm$core$List$map, $elm$core$Maybe$Just, fields);
 				} else {
@@ -7860,10 +8581,10 @@ var $elm$html$Html$Events$stopPropagationOn = F2(
 var $elm$html$Html$Attributes$for = $elm$html$Html$Attributes$stringProperty('htmlFor');
 var $elm$html$Html$label = _VirtualDom_node('label');
 var $author$project$Main$maybeMaxLengthOf = function (formField) {
-	var _v0 = formField.g;
+	var _v0 = formField.f;
 	switch (_v0.$) {
 		case 0:
-			var maxlength = _v0.a.W;
+			var maxlength = _v0.a.Y;
 			switch (maxlength.$) {
 				case 2:
 					var i = maxlength.a;
@@ -7936,10 +8657,14 @@ var $author$project$Main$attributesFromTuple = function (_v0) {
 };
 var $elm$html$Html$Attributes$checked = $elm$html$Html$Attributes$boolProperty('checked');
 var $elm$html$Html$datalist = _VirtualDom_node('datalist');
-var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty('disabled');
-var $author$project$Main$fieldNameOf = function (formField) {
-	return A2($elm$core$Maybe$withDefault, formField.h, formField.az);
+var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
+var $author$project$Main$defaultSelected = function (bool) {
+	return $elm$html$Html$Attributes$selected(bool);
 };
+var $author$project$Main$defaultValue = function (str) {
+	return $elm$html$Html$Attributes$value(str);
+};
+var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty('disabled');
 var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
 var $elm$html$Html$Attributes$maxlength = function (n) {
 	return A2(
@@ -7947,25 +8672,6 @@ var $elm$html$Html$Attributes$maxlength = function (n) {
 		'maxlength',
 		$elm$core$String$fromInt(n));
 };
-var $elm$core$Result$toMaybe = function (result) {
-	if (!result.$) {
-		var v = result.a;
-		return $elm$core$Maybe$Just(v);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
-var $author$project$Main$maybeDecode = F3(
-	function (key, decoder, jsonValue) {
-		return A2(
-			$elm$core$Maybe$andThen,
-			$elm$core$Basics$identity,
-			$elm$core$Result$toMaybe(
-				A2(
-					$elm$json$Json$Decode$decodeValue,
-					A2($elm_community$json_extra$Json$Decode$Extra$optionalField, key, decoder),
-					jsonValue)));
-	});
 var $elm$virtual_dom$VirtualDom$node = function (tag) {
 	return _VirtualDom_node(
 		_VirtualDom_noScript(tag));
@@ -7983,9 +8689,11 @@ var $author$project$Main$selectArrowDown = A2(
 	$elm$svg$Svg$svg,
 	_List_fromArray(
 		[
+			$elm$svg$Svg$Attributes$class('tff-selectarrow-icon'),
 			$elm$svg$Svg$Attributes$viewBox('0 0 16 16'),
 			$elm$svg$Svg$Attributes$fill('currentColor'),
-			A2($elm$html$Html$Attributes$attribute, 'aria-hidden', 'true')
+			A2($elm$html$Html$Attributes$attribute, 'aria-hidden', 'true'),
+			A2($elm$html$Html$Attributes$attribute, 'data-slot', 'icon')
 		]),
 	_List_fromArray(
 		[
@@ -7999,11 +8707,6 @@ var $author$project$Main$selectArrowDown = A2(
 				]),
 			_List_Nil)
 		]));
-var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
-var $elm$core$List$singleton = function (value) {
-	return _List_fromArray(
-		[value]);
-};
 var $elm$html$Html$Attributes$tabindex = function (n) {
 	return A2(
 		_VirtualDom_attribute,
@@ -8012,14 +8715,11 @@ var $elm$html$Html$Attributes$tabindex = function (n) {
 };
 var $elm$html$Html$textarea = _VirtualDom_node('textarea');
 var $author$project$Main$viewFormFieldOptionsPreview = F3(
-	function (_v0, fieldID, formField) {
-		var formValues = _v0.M;
-		var customAttrs = _v0.aR;
-		var shortTextTypeDict = _v0.Z;
+	function (config, fieldID, formField) {
 		var fieldName = $author$project$Main$fieldNameOf(formField);
 		var chosenForYou = function (choices) {
-			var _v5 = formField.t;
-			switch (_v5) {
+			var _v4 = formField.v;
+			switch (_v4) {
 				case 1:
 					return false;
 				case 0:
@@ -8028,10 +8728,10 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 					return $elm$core$List$length(choices) === 1;
 			}
 		};
-		var _v1 = formField.g;
-		switch (_v1.$) {
+		var _v0 = formField.f;
+		switch (_v0.$) {
 			case 0:
-				var customElement = _v1.a;
+				var customElement = _v0.a;
 				var extraAttrs = A2(
 					$elm$core$List$filterMap,
 					$elm$core$Basics$identity,
@@ -8040,21 +8740,24 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 						A2(
 							$elm$core$Maybe$map,
 							function (s) {
-								return $elm$html$Html$Attributes$value(s);
+								return $author$project$Main$defaultValue(s);
 							},
-							A3($author$project$Main$maybeDecode, fieldName, $elm$json$Json$Decode$string, formValues)),
+							A2(
+								$elm$core$Maybe$andThen,
+								$elm$core$List$head,
+								A2($elm$core$Dict$get, fieldName, config.C))),
 						A2(
 							$elm$core$List$map,
 							$author$project$Main$attributesFromTuple,
-							$elm$core$Dict$toList(customElement.p))));
-				var extraAttrKeys = $elm$core$Dict$keys(customElement.p);
+							$elm$core$Dict$toList(customElement.r))));
+				var extraAttrKeys = $elm$core$Dict$keys(customElement.r);
 				var shortTextAttrs = A2(
 					$elm$core$List$filterMap,
 					$author$project$Main$attributesFromTuple,
 					A2(
 						$elm$core$List$filter,
-						function (_v4) {
-							var k = _v4.a;
+						function (_v3) {
+							var k = _v3.a;
 							return !A2($elm$core$List$member, k, extraAttrKeys);
 						},
 						$elm$core$Dict$toList(
@@ -8064,14 +8767,14 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 								A2(
 									$elm$core$Maybe$map,
 									function ($) {
-										return $.p;
+										return $.r;
 									},
-									A2($elm$core$Dict$get, customElement.x, shortTextTypeDict))))));
-				var _v2 = function () {
-					var _v3 = customElement.U;
-					switch (_v3.$) {
+									A2($elm$core$Dict$get, customElement.y, config.aa))))));
+				var _v1 = function () {
+					var _v2 = customElement.W;
+					switch (_v2.$) {
 						case 2:
-							var list = _v3.a;
+							var list = _v2.a;
 							return _Utils_Tuple2(
 								_List_fromArray(
 									[
@@ -8090,11 +8793,11 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 												$elm$html$Html$option,
 												_List_fromArray(
 													[
-														$elm$html$Html$Attributes$value(choice.u)
+														$elm$html$Html$Attributes$value(choice.m)
 													]),
 												_List_fromArray(
 													[
-														$elm$html$Html$text(choice.h)
+														$elm$html$Html$text(choice.g)
 													]));
 										},
 										list)));
@@ -8108,8 +8811,8 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 								$elm$html$Html$text(''));
 					}
 				}();
-				var dataListAttrs = _v2.a;
-				var dataListElement = _v2.b;
+				var dataListAttrs = _v1.a;
+				var dataListElement = _v1.b;
 				return A2(
 					$elm$html$Html$div,
 					_List_Nil,
@@ -8117,7 +8820,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 						[
 							A3(
 							$elm$html$Html$node,
-							customElement.I,
+							customElement.K,
 							_Utils_ap(
 								_List_fromArray(
 									[
@@ -8125,13 +8828,17 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 										$elm$html$Html$Attributes$name(fieldName),
 										$elm$html$Html$Attributes$id(fieldID),
 										$elm$html$Html$Attributes$required(
-										$author$project$Main$requiredData(formField.t))
+										$author$project$Main$requiredData(formField.v))
 									]),
 								_Utils_ap(
 									dataListAttrs,
 									_Utils_ap(
 										shortTextAttrs,
-										_Utils_ap(extraAttrs, customAttrs)))),
+										_Utils_ap(
+											extraAttrs,
+											_Utils_ap(
+												config.T,
+												config.aq(fieldName)))))),
 							_List_Nil),
 							dataListElement
 						]));
@@ -8152,7 +8859,10 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 							function (s) {
 								return $elm$html$Html$Attributes$value(s);
 							},
-							A3($author$project$Main$maybeDecode, fieldName, $elm$json$Json$Decode$string, formValues))
+							A2(
+								$elm$core$Maybe$andThen,
+								$elm$core$List$head,
+								A2($elm$core$Dict$get, fieldName, config.C)))
 						]));
 				return A2(
 					$elm$html$Html$textarea,
@@ -8163,14 +8873,24 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 								$elm$html$Html$Attributes$name(fieldName),
 								$elm$html$Html$Attributes$id(fieldID),
 								$elm$html$Html$Attributes$required(
-								$author$project$Main$requiredData(formField.t)),
+								$author$project$Main$requiredData(formField.v)),
 								$elm$html$Html$Attributes$placeholder(' ')
 							]),
-						_Utils_ap(extraAttrs, customAttrs)),
+						_Utils_ap(
+							extraAttrs,
+							_Utils_ap(
+								config.T,
+								config.aq(fieldName)))),
 					_List_Nil);
 			case 2:
-				var choices = _v1.a;
-				var valueString = A3($author$project$Main$maybeDecode, fieldName, $elm$json$Json$Decode$string, formValues);
+				var choices = _v0.a;
+				var valueString = A2(
+					$elm$core$Maybe$withDefault,
+					'',
+					A2(
+						$elm$core$Maybe$andThen,
+						$elm$core$List$head,
+						A2($elm$core$Dict$get, fieldName, config.C)));
 				return A2(
 					$elm$html$Html$div,
 					_List_fromArray(
@@ -8182,16 +8902,18 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 							$author$project$Main$selectArrowDown,
 							A2(
 							$elm$html$Html$select,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$name(fieldName),
-									$elm$html$Html$Attributes$id(fieldID),
-									A2(
-									$elm$core$List$member,
-									A2($elm$html$Html$Attributes$attribute, 'disabled', 'disabled'),
-									customAttrs) ? $elm$html$Html$Attributes$class('tff-select-disabled') : $elm$html$Html$Attributes$required(
-									$author$project$Main$requiredData(formField.t))
-								]),
+							_Utils_ap(
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$name(fieldName),
+										$elm$html$Html$Attributes$id(fieldID),
+										A2(
+										$elm$core$List$member,
+										A2($elm$html$Html$Attributes$attribute, 'disabled', 'disabled'),
+										config.T) ? $elm$html$Html$Attributes$class('tff-select-disabled') : $elm$html$Html$Attributes$required(
+										$author$project$Main$requiredData(formField.v))
+									]),
+								config.aq(fieldName)),
 							A2(
 								$elm$core$List$cons,
 								A2(
@@ -8200,11 +8922,11 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 										_List_fromArray(
 											[
 												$elm$html$Html$Attributes$disabled(true),
-												$elm$html$Html$Attributes$selected(
-												_Utils_eq(valueString, $elm$core$Maybe$Nothing) && (!chosenForYou(choices))),
+												$author$project$Main$defaultSelected(
+												(valueString === '') && (!chosenForYou(choices))),
 												A2($elm$html$Html$Attributes$attribute, 'value', '')
 											]),
-										customAttrs),
+										config.T),
 									_List_fromArray(
 										[
 											$elm$html$Html$text('-- Select an option --')
@@ -8216,24 +8938,28 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 											$elm$html$Html$option,
 											A2(
 												$elm$core$List$cons,
-												$elm$html$Html$Attributes$value(choice.u),
+												$elm$html$Html$Attributes$value(choice.m),
 												A2(
 													$elm$core$List$cons,
-													$elm$html$Html$Attributes$selected(
-														_Utils_eq(
-															valueString,
-															$elm$core$Maybe$Just(choice.u)) || chosenForYou(choices)),
-													customAttrs)),
+													$author$project$Main$defaultSelected(
+														_Utils_eq(valueString, choice.m) || chosenForYou(choices)),
+													config.T)),
 											_List_fromArray(
 												[
-													$elm$html$Html$text(choice.h)
+													$elm$html$Html$text(choice.g)
 												]));
 									},
 									choices)))
 						]));
 			case 3:
-				var choices = _v1.a;
-				var valueString = A3($author$project$Main$maybeDecode, fieldName, $elm$json$Json$Decode$string, formValues);
+				var choices = _v0.a;
+				var valueString = A2(
+					$elm$core$Maybe$withDefault,
+					'',
+					A2(
+						$elm$core$Maybe$andThen,
+						$elm$core$List$head,
+						A2($elm$core$Dict$get, fieldName, config.C)));
 				return A2(
 					$elm$html$Html$div,
 					_List_fromArray(
@@ -8275,41 +9001,29 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 																	$elm$html$Html$Attributes$type_('radio'),
 																	$elm$html$Html$Attributes$tabindex(0),
 																	$elm$html$Html$Attributes$name(fieldName),
-																	$elm$html$Html$Attributes$value(choice.u),
+																	$elm$html$Html$Attributes$value(choice.m),
 																	$elm$html$Html$Attributes$checked(
-																	_Utils_eq(
-																		valueString,
-																		$elm$core$Maybe$Just(choice.u)) || chosenForYou(choices)),
+																	_Utils_eq(valueString, choice.m) || chosenForYou(choices)),
 																	$elm$html$Html$Attributes$required(
-																	$author$project$Main$requiredData(formField.t))
+																	$author$project$Main$requiredData(formField.v))
 																]),
-															customAttrs),
+															_Utils_ap(
+																config.T,
+																config.aq(fieldName))),
 														_List_Nil),
 														$elm$html$Html$text(' '),
-														$elm$html$Html$text(choice.h)
+														$elm$html$Html$text(choice.g)
 													]))
 											]));
 								},
 								choices))
 						]));
 			default:
-				var choices = _v1.a;
-				var decodeListOrSingleton = function (decoder) {
-					return $elm$json$Json$Decode$oneOf(
-						_List_fromArray(
-							[
-								$elm$json$Json$Decode$list(decoder),
-								A2($elm$json$Json$Decode$map, $elm$core$List$singleton, decoder)
-							]));
-				};
+				var choices = _v0.a;
 				var values = A2(
 					$elm$core$Maybe$withDefault,
 					_List_Nil,
-					A3(
-						$author$project$Main$maybeDecode,
-						fieldName,
-						decodeListOrSingleton($elm$json$Json$Decode$string),
-						formValues));
+					A2($elm$core$Dict$get, fieldName, config.C));
 				return A2(
 					$elm$html$Html$div,
 					_List_fromArray(
@@ -8351,14 +9065,16 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 																	$elm$html$Html$Attributes$type_('checkbox'),
 																	$elm$html$Html$Attributes$tabindex(0),
 																	$elm$html$Html$Attributes$name(fieldName),
-																	$elm$html$Html$Attributes$value(choice.u),
+																	$elm$html$Html$Attributes$value(choice.m),
 																	$elm$html$Html$Attributes$checked(
-																	A2($elm$core$List$member, choice.u, values) || chosenForYou(choices))
+																	A2($elm$core$List$member, choice.m, values) || chosenForYou(choices))
 																]),
-															customAttrs),
+															_Utils_ap(
+																config.T,
+																A2(config.a_, fieldName, choice))),
 														_List_Nil),
 														$elm$html$Html$text(' '),
-														$elm$html$Html$text(choice.h)
+														$elm$html$Html$text(choice.g)
 													]))
 											]));
 								},
@@ -8381,8 +9097,8 @@ var $author$project$Main$viewFormFieldPreview = F3(
 							$elm$html$Html$Attributes$class(
 							'tff-field-group' + A2(
 								$author$project$Main$when,
-								$author$project$Main$requiredData(formField.t),
-								{aI: '', aP: ' tff-required'}))
+								$author$project$Main$requiredData(formField.v),
+								{aI: '', aQ: ' tff-required'}))
 						]),
 					_List_fromArray(
 						[
@@ -8395,9 +9111,9 @@ var $author$project$Main$viewFormFieldPreview = F3(
 								]),
 							_List_fromArray(
 								[
-									$elm$html$Html$text(formField.h),
+									$elm$html$Html$text(formField.g),
 									function () {
-									var _v0 = formField.t;
+									var _v0 = formField.v;
 									switch (_v0) {
 										case 0:
 											return $elm$html$Html$text('');
@@ -8419,7 +9135,7 @@ var $author$project$Main$viewFormFieldPreview = F3(
 								[
 									$elm$html$Html$text(
 									function () {
-										var _v1 = formField.L;
+										var _v1 = formField.N;
 										switch (_v1.$) {
 											case 0:
 												return '';
@@ -8478,7 +9194,7 @@ var $author$project$Main$renderFormField = F4(
 						A2(
 						$elm$html$Html$Attributes$attribute,
 						'data-input-field',
-						$author$project$Main$stringFromInputField(formField.g)),
+						$author$project$Main$stringFromInputField(formField.f)),
 						A2(
 						$elm$html$Html$Events$preventDefaultOn,
 						'dragover',
@@ -8542,7 +9258,7 @@ var $author$project$Main$renderFormField = F4(
 										$elm$html$Html$Attributes$attribute,
 										'data-selected',
 										_Utils_eq(
-											model.A,
+											model.B,
 											$elm$core$Maybe$Just(index)) ? 'true' : 'false'),
 										A2($elm$html$Html$Attributes$attribute, 'draggable', 'true'),
 										A2(
@@ -8568,12 +9284,20 @@ var $author$project$Main$renderFormField = F4(
 										A3(
 										$author$project$Main$viewFormFieldPreview,
 										{
-											aR: _List_fromArray(
+											T: _List_fromArray(
 												[
 													A2($elm$html$Html$Attributes$attribute, 'disabled', 'disabled')
 												]),
-											M: model.M,
-											Z: model.Z
+											d: model.d,
+											a_: F2(
+												function (_v7, _v8) {
+													return _List_Nil;
+												}),
+											aq: function (_v9) {
+												return _List_Nil;
+											},
+											aa: model.aa,
+											C: model.C
 										},
 										index,
 										formField)
@@ -8613,14 +9337,15 @@ var $author$project$Main$viewAddQuestionsList = function (inputFields) {
 							$elm$json$Json$Decode$succeed(
 								$author$project$Main$DragStartNew(
 									{
-										L: $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing),
-										h: $author$project$Main$stringFromInputField(inputField) + ' question',
-										az: $elm$core$Maybe$Nothing,
-										t: A2(
+										N: $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing),
+										g: $author$project$Main$stringFromInputField(inputField) + ' question',
+										aA: $elm$core$Maybe$Nothing,
+										v: A2(
 											$author$project$Main$when,
 											$author$project$Main$mustBeOptional(inputField),
-											{aI: 0, aP: 1}),
-										g: inputField
+											{aI: 0, aQ: 1}),
+										f: inputField,
+										l: _List_Nil
 									}))),
 							A2(
 							$elm$html$Html$Events$on,
@@ -8664,7 +9389,7 @@ var $author$project$Main$OnRequiredInput = function (a) {
 var $author$project$Main$allowsTogglingMultiple = function (inputField) {
 	switch (inputField.$) {
 		case 0:
-			var attributes = inputField.a.p;
+			var attributes = inputField.a.r;
 			return A2(
 				$elm$core$List$member,
 				A2($elm$core$Dict$get, 'multiple', attributes),
@@ -8683,6 +9408,28 @@ var $author$project$Main$allowsTogglingMultiple = function (inputField) {
 			return false;
 	}
 };
+var $author$project$Main$hasDuplicateLabel = F3(
+	function (currentIndex, newLabel, formFields) {
+		return A2(
+			$elm$core$List$any,
+			function (_v1) {
+				var f = _v1.b;
+				return _Utils_eq(f.g, newLabel);
+			},
+			A2(
+				$elm$core$List$filter,
+				function (_v0) {
+					var i = _v0.a;
+					return !_Utils_eq(i, currentIndex);
+				},
+				A2(
+					$elm$core$List$indexedMap,
+					F2(
+						function (i, f) {
+							return _Utils_Tuple2(i, f);
+						}),
+					$elm$core$Array$toList(formFields))));
+	});
 var $elm$html$Html$Events$targetChecked = A2(
 	$elm$json$Json$Decode$at,
 	_List_fromArray(
@@ -8693,23 +9440,6 @@ var $elm$html$Html$Events$onCheck = function (tagger) {
 		$elm$html$Html$Events$on,
 		'change',
 		A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetChecked));
-};
-var $elm$html$Html$Events$alwaysStop = function (x) {
-	return _Utils_Tuple2(x, true);
-};
-var $elm$html$Html$Events$targetValue = A2(
-	$elm$json$Json$Decode$at,
-	_List_fromArray(
-		['target', 'value']),
-	$elm$json$Json$Decode$string);
-var $elm$html$Html$Events$onInput = function (tagger) {
-	return A2(
-		$elm$html$Html$Events$stopPropagationOn,
-		'input',
-		A2(
-			$elm$json$Json$Decode$map,
-			$elm$html$Html$Events$alwaysStop,
-			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
 };
 var $author$project$Main$inputAttributeOptional = F2(
 	function (options, attributeOptional) {
@@ -8738,11 +9468,11 @@ var $author$project$Main$inputAttributeOptional = F2(
 											$elm$html$Html$Attributes$type_('checkbox'),
 											$elm$html$Html$Attributes$tabindex(0),
 											$elm$html$Html$Attributes$checked(false),
-											$elm$html$Html$Events$onCheck(options.ae)
+											$elm$html$Html$Events$onCheck(options.ag)
 										]),
 									_List_Nil),
 									$elm$html$Html$text(' '),
-									$elm$html$Html$text(options.h)
+									$elm$html$Html$text(options.g)
 								]))
 						]));
 			case 1:
@@ -8770,23 +9500,14 @@ var $author$project$Main$inputAttributeOptional = F2(
 											$elm$html$Html$Attributes$type_('checkbox'),
 											$elm$html$Html$Attributes$tabindex(0),
 											$elm$html$Html$Attributes$checked(true),
-											$elm$html$Html$Events$onCheck(options.ae)
+											$elm$html$Html$Events$onCheck(options.ag)
 										]),
 									_List_Nil),
 									$elm$html$Html$text(' '),
-									$elm$html$Html$text(options.h)
+									$elm$html$Html$text(options.g)
 								])),
-							A2(
-							options.an,
-							_Utils_ap(
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$required(true),
-										$elm$html$Html$Events$onInput(options.ap),
-										$elm$html$Html$Attributes$value(str)
-									]),
-								options.ak),
-							_List_Nil)
+							options.ao(
+							$elm$core$Result$Err(str))
 						]));
 			default:
 				var a = attributeOptional.a;
@@ -8813,32 +9534,22 @@ var $author$project$Main$inputAttributeOptional = F2(
 											$elm$html$Html$Attributes$type_('checkbox'),
 											$elm$html$Html$Attributes$tabindex(0),
 											$elm$html$Html$Attributes$checked(true),
-											$elm$html$Html$Events$onCheck(options.ae)
+											$elm$html$Html$Events$onCheck(options.ag)
 										]),
 									_List_Nil),
 									$elm$html$Html$text(' '),
-									$elm$html$Html$text(options.h)
+									$elm$html$Html$text(options.g)
 								])),
-							A2(
-							options.an,
-							_Utils_ap(
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$required(true),
-										$elm$html$Html$Events$onInput(options.ap),
-										$elm$html$Html$Attributes$value(
-										options.aD(a))
-									]),
-								options.ak),
-							_List_Nil)
+							options.ao(
+							$elm$core$Result$Ok(a))
 						]));
 		}
 	});
 var $author$project$Main$maybeMultipleOf = function (formField) {
-	var _v0 = formField.g;
+	var _v0 = formField.f;
 	switch (_v0.$) {
 		case 0:
-			var multiple = _v0.a.ay;
+			var multiple = _v0.a.az;
 			switch (multiple.$) {
 				case 2:
 					var i = multiple.a;
@@ -8858,12 +9569,24 @@ var $author$project$Main$maybeMultipleOf = function (formField) {
 			return $elm$core$Maybe$Nothing;
 	}
 };
-var $elm$html$Html$Attributes$minlength = function (n) {
-	return A2(
-		_VirtualDom_attribute,
-		'minLength',
-		$elm$core$String$fromInt(n));
+var $elm$html$Html$Events$alwaysStop = function (x) {
+	return _Utils_Tuple2(x, true);
 };
+var $elm$html$Html$Events$targetValue = A2(
+	$elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'value']),
+	$elm$json$Json$Decode$string);
+var $elm$html$Html$Events$onInput = function (tagger) {
+	return A2(
+		$elm$html$Html$Events$stopPropagationOn,
+		'input',
+		A2(
+			$elm$json$Json$Decode$map,
+			$elm$html$Html$Events$alwaysStop,
+			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
+};
+var $elm$html$Html$Attributes$pattern = $elm$html$Html$Attributes$stringProperty('pattern');
 var $elm$html$Html$Attributes$title = $elm$html$Html$Attributes$stringProperty('title');
 var $elm$core$String$toLower = _String_toLower;
 var $author$project$Main$OnChoicesInput = {$: 4};
@@ -8875,21 +9598,13 @@ var $author$project$Main$OnMaxLengthInput = {$: 7};
 var $author$project$Main$OnMaxLengthToggle = function (a) {
 	return {$: 6, a: a};
 };
-var $elm$core$Basics$composeR = F3(
-	function (f, g, x) {
-		return g(
-			f(x));
-	});
-var $elm$core$List$head = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(x);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
 var $elm$html$Html$Attributes$min = $elm$html$Html$Attributes$stringProperty('min');
+var $elm$html$Html$Attributes$minlength = function (n) {
+	return A2(
+		_VirtualDom_attribute,
+		'minLength',
+		$elm$core$String$fromInt(n));
+};
 var $elm$html$Html$Attributes$readonly = $elm$html$Html$Attributes$boolProperty('readOnly');
 var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 	function (shortTextTypeList, index, formField) {
@@ -8927,8 +9642,8 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 								$elm$html$Html$Attributes$required(true),
 								$elm$html$Html$Attributes$readonly(
 								function () {
-									var _v3 = formField.t;
-									switch (_v3) {
+									var _v6 = formField.v;
+									switch (_v6) {
 										case 0:
 											return false;
 										case 1:
@@ -8946,7 +9661,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 						_List_Nil)
 					]));
 		};
-		var _v0 = formField.g;
+		var _v0 = formField.f;
 		switch (_v0.$) {
 			case 0:
 				var customElement = _v0.a;
@@ -8959,14 +9674,14 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 						A2(
 							$elm$core$Maybe$map,
 							function ($) {
-								return $.p;
+								return $.r;
 							},
 							$elm$core$List$head(
 								A2(
 									$elm$core$List$filter,
-									function (_v2) {
-										var inputType = _v2.x;
-										return _Utils_eq(inputType, customElement.x);
+									function (_v4) {
+										var inputType = _v4.y;
+										return _Utils_eq(inputType, customElement.y);
 									},
 									shortTextTypeList)))));
 				return _List_fromArray(
@@ -8976,25 +9691,39 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 							return A2(
 								$author$project$Main$inputAttributeOptional,
 								{
-									ak: _List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('tff-text-field'),
-											$elm$html$Html$Attributes$type_('number'),
-											$elm$html$Html$Attributes$min('1')
-										]),
-									an: $elm$html$Html$input,
-									h: 'Limit number of characters',
-									ae: function (b) {
+									ao: function (result) {
+										var valueString = function () {
+											if (!result.$) {
+												var i = result.a;
+												return $elm$core$String$fromInt(i);
+											} else {
+												var err = result.a;
+												return err;
+											}
+										}();
+										return A2(
+											$elm$html$Html$input,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('tff-text-field'),
+													$elm$html$Html$Attributes$type_('number'),
+													$elm$html$Html$Attributes$min('1'),
+													$elm$html$Html$Attributes$value(valueString),
+													$elm$html$Html$Events$onInput(
+													A2($author$project$Main$OnFormField, $author$project$Main$OnMaxLengthInput, index))
+												]),
+											_List_Nil);
+									},
+									g: 'Limit number of characters',
+									ag: function (b) {
 										return A3(
 											$author$project$Main$OnFormField,
 											$author$project$Main$OnMaxLengthToggle(b),
 											index,
 											'');
-									},
-									ap: A2($author$project$Main$OnFormField, $author$project$Main$OnMaxLengthInput, index),
-									aD: $elm$core$String$fromInt
+									}
 								},
-								customElement.W);
+								customElement.Y);
 						} else {
 							var i = maybeShortTextTypeMaxLength.a;
 							return A2(
@@ -9012,27 +9741,51 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 						A2(
 						$author$project$Main$inputAttributeOptional,
 						{
-							ak: _List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('tff-text-field'),
-									$elm$html$Html$Attributes$placeholder('Enter one suggestion per line')
-								]),
-							an: $elm$html$Html$textarea,
-							h: 'Suggested values',
-							ae: function (b) {
+							ao: function (result) {
+								if (!result.$) {
+									var a = result.a;
+									return A2(
+										$elm$html$Html$textarea,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$required(true),
+												$elm$html$Html$Attributes$class('tff-text-field'),
+												$elm$html$Html$Attributes$placeholder('Enter one suggestion per line'),
+												$elm$html$Html$Attributes$value(
+												A2(
+													$elm$core$String$join,
+													'\n',
+													A2($elm$core$List$map, $author$project$Main$choiceToString, a))),
+												$elm$html$Html$Events$onInput(
+												A2($author$project$Main$OnFormField, $author$project$Main$OnDatalistInput, index))
+											]),
+										_List_Nil);
+								} else {
+									var err = result.a;
+									return A2(
+										$elm$html$Html$textarea,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$required(true),
+												$elm$html$Html$Attributes$class('tff-text-field'),
+												$elm$html$Html$Attributes$placeholder('Enter one suggestion per line'),
+												$elm$html$Html$Attributes$value(err),
+												$elm$html$Html$Events$onInput(
+												A2($author$project$Main$OnFormField, $author$project$Main$OnDatalistInput, index))
+											]),
+										_List_Nil);
+								}
+							},
+							g: 'Suggested values',
+							ag: function (b) {
 								return A3(
 									$author$project$Main$OnFormField,
 									$author$project$Main$OnDatalistToggle(b),
 									index,
 									'');
-							},
-							ap: A2($author$project$Main$OnFormField, $author$project$Main$OnDatalistInput, index),
-							aD: A2(
-								$elm$core$Basics$composeR,
-								$elm$core$List$map($author$project$Main$choiceToString),
-								$elm$core$String$join('\n'))
+							}
 						},
-						customElement.U)
+						customElement.W)
 					]);
 			case 1:
 				var optionalMaxLength = _v0.a;
@@ -9041,23 +9794,46 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 						A2(
 						$author$project$Main$inputAttributeOptional,
 						{
-							ak: _List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('tff-text-field'),
-									$elm$html$Html$Attributes$type_('number'),
-									$elm$html$Html$Attributes$min('1')
-								]),
-							an: $elm$html$Html$input,
-							h: 'Limit number of characters',
-							ae: function (b) {
+							ao: function (result) {
+								if (!result.$) {
+									var i = result.a;
+									return A2(
+										$elm$html$Html$input,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('tff-text-field'),
+												$elm$html$Html$Attributes$type_('number'),
+												$elm$html$Html$Attributes$min('1'),
+												$elm$html$Html$Attributes$value(
+												$elm$core$String$fromInt(i)),
+												$elm$html$Html$Events$onInput(
+												A2($author$project$Main$OnFormField, $author$project$Main$OnMaxLengthInput, index))
+											]),
+										_List_Nil);
+								} else {
+									var err = result.a;
+									return A2(
+										$elm$html$Html$input,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('tff-text-field'),
+												$elm$html$Html$Attributes$type_('number'),
+												$elm$html$Html$Attributes$min('1'),
+												$elm$html$Html$Attributes$value(err),
+												$elm$html$Html$Events$onInput(
+												A2($author$project$Main$OnFormField, $author$project$Main$OnMaxLengthInput, index))
+											]),
+										_List_Nil);
+								}
+							},
+							g: 'Limit number of characters',
+							ag: function (b) {
 								return A3(
 									$author$project$Main$OnFormField,
 									$author$project$Main$OnMaxLengthToggle(b),
 									index,
 									'');
-							},
-							ap: A2($author$project$Main$OnFormField, $author$project$Main$OnMaxLengthInput, index),
-							aD: $elm$core$String$fromInt
+							}
 						},
 						optionalMaxLength)
 					]);
@@ -9081,8 +9857,668 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 					]);
 		}
 	});
-var $author$project$Main$viewFormFieldBuilder = F4(
-	function (shortTextTypeList, index, totalLength, formField) {
+var $author$project$Main$OnAddVisibilityRule = {$: 14};
+var $elm$core$List$intersperse = F2(
+	function (sep, xs) {
+		if (!xs.b) {
+			return _List_Nil;
+		} else {
+			var hd = xs.a;
+			var tl = xs.b;
+			var step = F2(
+				function (x, rest) {
+					return A2(
+						$elm$core$List$cons,
+						sep,
+						A2($elm$core$List$cons, x, rest));
+				});
+			var spersed = A3($elm$core$List$foldr, step, _List_Nil, tl);
+			return A2($elm$core$List$cons, hd, spersed);
+		}
+	});
+var $author$project$Main$OnVisibilityConditionDuplicate = function (a) {
+	return {$: 15, a: a};
+};
+var $author$project$Main$OnVisibilityConditionFieldInput = F3(
+	function (a, b, c) {
+		return {$: 12, a: a, b: b, c: c};
+	});
+var $author$project$Main$OnVisibilityConditionTypeInput = F3(
+	function (a, b, c) {
+		return {$: 11, a: a, b: b, c: c};
+	});
+var $author$project$Main$OnVisibilityConditionValueInput = F3(
+	function (a, b, c) {
+		return {$: 13, a: a, b: b, c: c};
+	});
+var $author$project$Main$OnVisibilityRuleTypeInput = F2(
+	function (a, b) {
+		return {$: 10, a: a, b: b};
+	});
+var $author$project$Main$comparisonOf = function (condition) {
+	var comparison = condition.b;
+	return comparison;
+};
+var $author$project$Main$isComparingWith = F2(
+	function (expected, given) {
+		switch (expected.$) {
+			case 0:
+				if (!given.$) {
+					return true;
+				} else {
+					return false;
+				}
+			case 1:
+				if (given.$ === 1) {
+					return true;
+				} else {
+					return false;
+				}
+			case 2:
+				if (given.$ === 2) {
+					return true;
+				} else {
+					return false;
+				}
+			default:
+				if (given.$ === 3) {
+					return true;
+				} else {
+					return false;
+				}
+		}
+	});
+var $author$project$Main$isHideWhen = function (rule) {
+	if (!rule.$) {
+		return false;
+	} else {
+		return true;
+	}
+};
+var $author$project$Main$isShowWhen = function (rule) {
+	if (!rule.$) {
+		return true;
+	} else {
+		return false;
+	}
+};
+var $author$project$Main$otherQuestionTitles = F2(
+	function (formFields, currentIndex) {
+		return A2(
+			$elm$core$List$map,
+			function (_v1) {
+				var f = _v1.b;
+				return f.g;
+			},
+			A2(
+				$elm$core$List$filter,
+				function (_v0) {
+					var i = _v0.a;
+					return !_Utils_eq(i, currentIndex);
+				},
+				A2(
+					$elm$core$List$indexedMap,
+					F2(
+						function (i, f) {
+							return _Utils_Tuple2(i, f);
+						}),
+					$elm$core$Array$toList(formFields))));
+	});
+var $author$project$Main$selectInputGroup = function (_v0) {
+	var selectAttrs = _v0.bY;
+	var options = _v0.bI;
+	var inputAttrs = _v0.bw;
+	var children = _v0.bc;
+	var calculatedAttrs = A2(
+		$elm$core$List$append,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('tff-selectinput-select')
+			]),
+		A2(
+			$elm$core$List$map,
+			function (_v3) {
+				var value = _v3.a;
+				return $elm$html$Html$Attributes$value(value);
+			},
+			A2(
+				$elm$core$List$filter,
+				function (_v2) {
+					var selected = _v2.c;
+					return selected;
+				},
+				options)));
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('tff-selectinput-wrapper')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('tff-selectinput-group')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('tff-selectinput-select-wrapper')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$select,
+								_Utils_ap(calculatedAttrs, selectAttrs),
+								A2(
+									$elm$core$List$map,
+									function (_v1) {
+										var value = _v1.a;
+										var label = _v1.b;
+										var selected = _v1.c;
+										return A2(
+											$elm$html$Html$option,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$value(value),
+													$elm$html$Html$Attributes$selected(selected)
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text(label)
+												]));
+									},
+									options)),
+								$author$project$Main$selectArrowDown
+							])),
+						A2(
+						$elm$html$Html$input,
+						A2(
+							$elm$core$List$cons,
+							$elm$html$Html$Attributes$class('tff-selectinput-input'),
+							inputAttrs),
+						children)
+					]))
+			]));
+};
+var $author$project$Main$visibilityRuleSection = F4(
+	function (fieldIndex, formFields, ruleIndex, visibilityRule) {
+		var ruleHtml = F2(
+			function (conditionIndex, rule) {
+				var selectedFieldName = function () {
+					var fieldName = rule.a;
+					return fieldName;
+				}();
+				var selectedField = $elm$core$List$head(
+					A2(
+						$elm$core$List$filter,
+						function (f) {
+							return _Utils_eq(
+								$author$project$Main$fieldNameOf(f),
+								selectedFieldName);
+						},
+						$elm$core$Array$toList(formFields)));
+				var datalistId = 'datalist-' + ($elm$core$String$fromInt(fieldIndex) + ('-' + ($elm$core$String$fromInt(ruleIndex) + ('-' + $elm$core$String$fromInt(conditionIndex)))));
+				var datalistElement = function () {
+					if (!selectedField.$) {
+						var field = selectedField.a;
+						var _v7 = field.f;
+						switch (_v7.$) {
+							case 2:
+								var choices = _v7.a;
+								return $elm$core$Maybe$Just(
+									A2(
+										$elm$html$Html$datalist,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$id(datalistId)
+											]),
+										A2(
+											$elm$core$List$map,
+											function (c) {
+												return A2(
+													$elm$html$Html$option,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$value(c.m)
+														]),
+													_List_Nil);
+											},
+											choices)));
+							case 3:
+								var choices = _v7.a;
+								return $elm$core$Maybe$Just(
+									A2(
+										$elm$html$Html$datalist,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$id(datalistId)
+											]),
+										A2(
+											$elm$core$List$map,
+											function (c) {
+												return A2(
+													$elm$html$Html$option,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$value(c.m)
+														]),
+													_List_Nil);
+											},
+											choices)));
+							case 4:
+								var choices = _v7.a;
+								return $elm$core$Maybe$Just(
+									A2(
+										$elm$html$Html$datalist,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$id(datalistId)
+											]),
+										A2(
+											$elm$core$List$map,
+											function (c) {
+												return A2(
+													$elm$html$Html$option,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$value(c.m)
+														]),
+													_List_Nil);
+											},
+											choices)));
+							default:
+								return $elm$core$Maybe$Nothing;
+						}
+					} else {
+						return $elm$core$Maybe$Nothing;
+					}
+				}();
+				var datalistAttr = function () {
+					if (!datalistElement.$) {
+						return _List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$attribute, 'list', datalistId)
+							]);
+					} else {
+						return _List_Nil;
+					}
+				}();
+				return A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('tff-field-group tff-field-rule-condition')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('tff-dropdown-group')
+								]),
+							_List_fromArray(
+								[
+									$author$project$Main$selectArrowDown,
+									A2(
+									$elm$html$Html$select,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('tff-text-field tff-question-title'),
+											$elm$html$Html$Attributes$required(true),
+											$elm$html$Html$Events$onInput(
+											function (str) {
+												return A3(
+													$author$project$Main$OnFormField,
+													A3($author$project$Main$OnVisibilityConditionFieldInput, ruleIndex, conditionIndex, str),
+													fieldIndex,
+													'');
+											}),
+											$elm$html$Html$Attributes$required(true),
+											$elm$html$Html$Attributes$value(
+											function () {
+												var fieldName = rule.a;
+												return fieldName;
+											}())
+										]),
+									A2(
+										$elm$core$List$cons,
+										A2(
+											$elm$html$Html$option,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$value('')
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text(' - ')
+												])),
+										A2(
+											$elm$core$List$map,
+											function (title) {
+												return A2(
+													$elm$html$Html$option,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$value(title),
+															$elm$html$Html$Attributes$selected(
+															_Utils_eq(
+																title,
+																function () {
+																	var fieldName = rule.a;
+																	return fieldName;
+																}()))
+														]),
+													_List_fromArray(
+														[
+															$elm$html$Html$text(
+															A2(
+																$elm$json$Json$Encode$encode,
+																0,
+																$elm$json$Json$Encode$string(title)))
+														]));
+											},
+											A2($author$project$Main$otherQuestionTitles, formFields, fieldIndex))))
+								])),
+							$author$project$Main$selectInputGroup(
+							{
+								bc: function () {
+									if (!datalistElement.$) {
+										var element = datalistElement.a;
+										return _List_fromArray(
+											[element]);
+									} else {
+										return _List_Nil;
+									}
+								}(),
+								bw: _Utils_ap(
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$type_('text'),
+											$elm$html$Html$Attributes$value(
+											function () {
+												switch (rule.b.$) {
+													case 0:
+														var v = rule.b.a;
+														return v;
+													case 1:
+														var v = rule.b.a;
+														return v;
+													case 2:
+														var v = rule.b.a;
+														return v;
+													default:
+														var v = rule.b.a;
+														return v;
+												}
+											}()),
+											$elm$html$Html$Events$onInput(
+											function (str) {
+												return A3(
+													$author$project$Main$OnFormField,
+													A3($author$project$Main$OnVisibilityConditionValueInput, ruleIndex, conditionIndex, str),
+													fieldIndex,
+													'');
+											}),
+											$elm$html$Html$Attributes$required(true),
+											$elm$html$Html$Attributes$class('tff-comparison-value')
+										]),
+									datalistAttr),
+								bI: _List_fromArray(
+									[
+										_Utils_Tuple3(
+										'Equals',
+										'Equals',
+										A2(
+											$author$project$Main$isComparingWith,
+											$author$project$Main$Equals('something'),
+											$author$project$Main$comparisonOf(rule))),
+										_Utils_Tuple3(
+										'StringContains',
+										'Contains',
+										A2(
+											$author$project$Main$isComparingWith,
+											$author$project$Main$StringContains('something'),
+											$author$project$Main$comparisonOf(rule))),
+										_Utils_Tuple3(
+										'EndsWith',
+										'Ends with',
+										A2(
+											$author$project$Main$isComparingWith,
+											$author$project$Main$EndsWith('something'),
+											$author$project$Main$comparisonOf(rule))),
+										_Utils_Tuple3(
+										'GreaterThan',
+										'Greater than',
+										A2(
+											$author$project$Main$isComparingWith,
+											$author$project$Main$GreaterThan('something'),
+											$author$project$Main$comparisonOf(rule)))
+									]),
+								bY: _List_fromArray(
+									[
+										$elm$html$Html$Events$onInput(
+										function (str) {
+											return A3(
+												$author$project$Main$OnFormField,
+												A3($author$project$Main$OnVisibilityConditionTypeInput, ruleIndex, conditionIndex, str),
+												fieldIndex,
+												'');
+										}),
+										$elm$html$Html$Attributes$class('tff-comparison-type')
+									])
+							})
+						]));
+			});
+		var rulesHtml = A2(
+			$elm$core$List$indexedMap,
+			ruleHtml,
+			$author$project$Main$visibilityRuleCondition(visibilityRule));
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('tff-field-rule')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('tff-field-group tff-field-rule-type')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('tff-dropdown-group')
+								]),
+							_List_fromArray(
+								[
+									$author$project$Main$selectArrowDown,
+									A2(
+									$elm$html$Html$select,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('tff-text-field tff-show-or-hide'),
+											$elm$html$Html$Events$onInput(
+											function (str) {
+												return A3(
+													$author$project$Main$OnFormField,
+													A2($author$project$Main$OnVisibilityRuleTypeInput, ruleIndex, str),
+													fieldIndex,
+													'');
+											}),
+											$elm$html$Html$Attributes$required(true),
+											$elm$html$Html$Attributes$value(
+											function () {
+												if (!visibilityRule.$) {
+													return 'ShowWhen';
+												} else {
+													return 'HideWhen';
+												}
+											}())
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$option,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$value('')
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text(' - ')
+												])),
+											A2(
+											$elm$html$Html$option,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$selected(
+													$author$project$Main$isShowWhen(visibilityRule)),
+													$elm$html$Html$Attributes$value('ShowWhen')
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text('Show this question when')
+												])),
+											A2(
+											$elm$html$Html$option,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$selected(
+													$author$project$Main$isHideWhen(visibilityRule)),
+													$elm$html$Html$Attributes$value('HideWhen')
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text('Hide this question when')
+												]))
+										]))
+								]))
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('tff-field-rule-conditions')
+						]),
+					_Utils_ap(
+						A2(
+							$elm$core$List$intersperse,
+							A2(
+								$elm$html$Html$label,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('tff-field-label')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('AND')
+									])),
+							rulesHtml),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$button,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('button'),
+										$elm$html$Html$Attributes$type_('button'),
+										$elm$html$Html$Events$onClick(
+										A3(
+											$author$project$Main$OnFormField,
+											$author$project$Main$OnVisibilityConditionDuplicate(ruleIndex),
+											fieldIndex,
+											''))
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Add condition')
+									]))
+							])))
+				]));
+	});
+var $author$project$Main$visibilityRulesSection = F3(
+	function (index, formFields, formField) {
+		return A2(
+			$elm$html$Html$div,
+			_List_Nil,
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$label,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('tff-field-label')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Field logic')
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_Nil,
+					A2(
+						$elm$core$List$intersperse,
+						A2(
+							$elm$html$Html$label,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('tff-field-label')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('OR')
+								])),
+						A2(
+							$elm$core$List$indexedMap,
+							A2($author$project$Main$visibilityRuleSection, index, formFields),
+							formField.l))),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('tff-button-group')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$button,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('button'),
+									$elm$html$Html$Attributes$type_('button'),
+									$elm$html$Html$Events$onClick(
+									A3($author$project$Main$OnFormField, $author$project$Main$OnAddVisibilityRule, index, ''))
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Add field logic')
+								]))
+						]))
+				]));
+	});
+var $author$project$Main$viewFormFieldBuilder = F5(
+	function (shortTextTypeList, index, totalLength, formFields, formField) {
+		var isDuplicateLabel = A3($author$project$Main$hasDuplicateLabel, index, formField.g, formFields);
+		var patternAttr = isDuplicateLabel ? _List_fromArray(
+			[
+				$elm$html$Html$Attributes$pattern('^$')
+			]) : _List_fromArray(
+			[
+				$elm$html$Html$Attributes$pattern('.*')
+			]);
 		var idSuffix = $elm$core$String$fromInt(index);
 		var deleteFieldButton = A2(
 			$elm$html$Html$button,
@@ -9133,7 +10569,7 @@ var $author$project$Main$viewFormFieldBuilder = F4(
 									$elm$html$Html$Attributes$type_('checkbox'),
 									$elm$html$Html$Attributes$tabindex(0),
 									$elm$html$Html$Attributes$checked(
-									$author$project$Main$requiredData(formField.t)),
+									$author$project$Main$requiredData(formField.v)),
 									$elm$html$Html$Events$onCheck(
 									function (b) {
 										return A3(
@@ -9189,7 +10625,7 @@ var $author$project$Main$viewFormFieldBuilder = F4(
 							$elm$html$Html$text(' '),
 							$elm$html$Html$text(
 							'Accept multiple ' + $elm$core$String$toLower(
-								$author$project$Main$stringFromInputField(formField.g)))
+								$author$project$Main$stringFromInputField(formField.f)))
 						]))
 				]));
 		var buildFieldClass = 'tff-build-field';
@@ -9220,29 +10656,39 @@ var $author$project$Main$viewFormFieldBuilder = F4(
 								_List_fromArray(
 									[
 										$elm$html$Html$text(
-										$author$project$Main$stringFromInputField(formField.g) + ' question title')
+										$author$project$Main$stringFromInputField(formField.f) + ' question title')
 									])),
 								A2(
 								$elm$html$Html$input,
+								_Utils_ap(
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$type_('text'),
+											$elm$html$Html$Attributes$id('label-' + idSuffix),
+											$elm$html$Html$Attributes$value(formField.g),
+											$elm$html$Html$Attributes$required(true),
+											$elm$html$Html$Events$onInput(
+											A2($author$project$Main$OnFormField, $author$project$Main$OnLabelInput, index)),
+											$elm$html$Html$Attributes$class('tff-text-field')
+										]),
+									patternAttr),
+								_List_Nil),
+								isDuplicateLabel ? A2(
+								$elm$html$Html$div,
 								_List_fromArray(
 									[
-										$elm$html$Html$Attributes$type_('text'),
-										$elm$html$Html$Attributes$id('label-' + idSuffix),
-										$elm$html$Html$Attributes$required(true),
-										$elm$html$Html$Attributes$minlength(1),
-										$elm$html$Html$Attributes$class('tff-text-field'),
-										$elm$html$Html$Attributes$placeholder('Label'),
-										$elm$html$Html$Attributes$value(formField.h),
-										$elm$html$Html$Events$onInput(
-										A2($author$project$Main$OnFormField, $author$project$Main$OnLabelInput, index))
+										$elm$html$Html$Attributes$class('tff-error-text')
 									]),
-								_List_Nil)
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Question titles must be unique in a form')
+									])) : $elm$html$Html$text('')
 							])),
 						function () {
-						if ($author$project$Main$mustBeOptional(formField.g)) {
+						if ($author$project$Main$mustBeOptional(formField.f)) {
 							return $elm$html$Html$text('');
 						} else {
-							var _v0 = formField.t;
+							var _v0 = formField.v;
 							switch (_v0) {
 								case 0:
 									return configureRequiredCheckbox;
@@ -9253,32 +10699,48 @@ var $author$project$Main$viewFormFieldBuilder = F4(
 							}
 						}
 					}(),
-						$author$project$Main$allowsTogglingMultiple(formField.g) ? configureMultipleCheckbox : $elm$html$Html$text(''),
+						$author$project$Main$allowsTogglingMultiple(formField.f) ? configureMultipleCheckbox : $elm$html$Html$text(''),
 						A2(
 						$author$project$Main$inputAttributeOptional,
 						{
-							ak: _List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('tff-text-field')
-								]),
-							an: $elm$html$Html$input,
-							h: 'Question description',
-							ae: function (b) {
+							ao: function (result) {
+								var valueString = function () {
+									if (!result.$) {
+										var a = result.a;
+										return a;
+									} else {
+										var err = result.a;
+										return err;
+									}
+								}();
+								return A2(
+									$elm$html$Html$input,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$required(true),
+											$elm$html$Html$Attributes$class('tff-text-field'),
+											$elm$html$Html$Attributes$value(valueString),
+											$elm$html$Html$Events$onInput(
+											A2($author$project$Main$OnFormField, $author$project$Main$OnDescriptionInput, index))
+										]),
+									_List_Nil);
+							},
+							g: 'Question description',
+							ag: function (b) {
 								return A3(
 									$author$project$Main$OnFormField,
 									$author$project$Main$OnDescriptionToggle(b),
 									index,
 									'');
-							},
-							ap: A2($author$project$Main$OnFormField, $author$project$Main$OnDescriptionInput, index),
-							aD: $elm$core$Basics$identity
+							}
 						},
-						formField.L)
+						formField.N)
 					]),
 				_Utils_ap(
 					A3($author$project$Main$viewFormFieldOptionsBuilder, shortTextTypeList, index, formField),
 					_List_fromArray(
 						[
+							A3($author$project$Main$visibilityRulesSection, index, formFields, formField),
 							A2(
 							$elm$html$Html$div,
 							_List_fromArray(
@@ -9325,8 +10787,8 @@ var $author$project$Main$viewFormFieldBuilder = F4(
 												]))
 										])),
 									function () {
-									var _v1 = formField.t;
-									switch (_v1) {
+									var _v2 = formField.v;
+									switch (_v2) {
 										case 0:
 											return deleteFieldButton;
 										case 1:
@@ -9345,7 +10807,7 @@ var $author$project$Main$viewRightPanel = function (modelData) {
 		A2(
 			$elm$core$List$cons,
 			'tff-right-panel',
-			(!_Utils_eq(modelData.A, $elm$core$Maybe$Nothing)) ? _List_fromArray(
+			(!_Utils_eq(modelData.B, $elm$core$Maybe$Nothing)) ? _List_fromArray(
 				['tff-panel-visible']) : _List_Nil));
 	return A2(
 		$elm$html$Html$div,
@@ -9393,17 +10855,18 @@ var $author$project$Main$viewRightPanel = function (modelData) {
 				_List_fromArray(
 					[
 						function () {
-						var _v0 = modelData.A;
+						var _v0 = modelData.B;
 						if (!_v0.$) {
 							var index = _v0.a;
-							var _v1 = A2($elm$core$Array$get, index, modelData.f);
+							var _v1 = A2($elm$core$Array$get, index, modelData.d);
 							if (!_v1.$) {
 								var formField = _v1.a;
-								return A4(
+								return A5(
 									$author$project$Main$viewFormFieldBuilder,
-									modelData._,
+									modelData.ab,
 									index,
-									$elm$core$Array$length(modelData.f),
+									$elm$core$Array$length(modelData.d),
+									modelData.d,
 									formField);
 							} else {
 								return $elm$html$Html$text('Select a field to edit its settings');
@@ -9419,14 +10882,14 @@ var $author$project$Main$viewFormBuilder = F2(
 	function (maybeAnimate, model) {
 		var maybeFieldsList = A2(
 			$author$project$Main$fieldsWithPlaceholder,
-			$elm$core$Array$toList(model.f),
-			model.l);
+			$elm$core$Array$toList(model.d),
+			model.n);
 		var extraOptions = A2(
 			$elm$core$List$map,
 			function (customElement) {
 				return $author$project$Main$ShortText(customElement);
 			},
-			model._);
+			model.ab);
 		return _List_fromArray(
 			[
 				A2(
@@ -9452,7 +10915,7 @@ var $author$project$Main$viewFormBuilder = F2(
 									[
 										_Utils_Tuple2(
 										'tff-panel-hidden',
-										!_Utils_eq(model.A, $elm$core$Maybe$Nothing))
+										!_Utils_eq(model.B, $elm$core$Maybe$Nothing))
 									]))
 							]),
 						_List_fromArray(
@@ -9480,7 +10943,7 @@ var $author$project$Main$viewFormBuilder = F2(
 									[
 										_Utils_Tuple2(
 										'tff-panel-hidden',
-										!_Utils_eq(model.A, $elm$core$Maybe$Nothing))
+										!_Utils_eq(model.B, $elm$core$Maybe$Nothing))
 									])),
 								$elm$html$Html$Events$onClick(
 								$author$project$Main$SelectField($elm$core$Maybe$Nothing))
@@ -9502,17 +10965,161 @@ var $author$project$Main$viewFormBuilder = F2(
 					]))
 			]);
 	});
+var $author$project$Main$OnFormValuesUpdated = F2(
+	function (a, b) {
+		return {$: 15, a: a, b: b};
+	});
+var $elm$core$Basics$composeL = F3(
+	function (g, f, x) {
+		return g(
+			f(x));
+	});
+var $elm$core$List$all = F2(
+	function (isOkay, list) {
+		return !A2(
+			$elm$core$List$any,
+			A2($elm$core$Basics$composeL, $elm$core$Basics$not, isOkay),
+			list);
+	});
+var $elm$core$String$endsWith = _String_endsWith;
+var $elm$core$String$toFloat = _String_toFloat;
+var $author$project$Main$evaluateCondition = F2(
+	function (trackedFormValues, condition) {
+		var fieldName = condition.a;
+		var comparison = condition.b;
+		switch (comparison.$) {
+			case 0:
+				var givenValue = comparison.a;
+				return A2(
+					$elm$core$List$member,
+					givenValue,
+					A2(
+						$elm$core$Maybe$withDefault,
+						_List_Nil,
+						A2($elm$core$Dict$get, fieldName, trackedFormValues)));
+			case 1:
+				var givenValue = comparison.a;
+				return A2(
+					$elm$core$List$any,
+					$elm$core$String$contains(givenValue),
+					A2(
+						$elm$core$Maybe$withDefault,
+						_List_Nil,
+						A2($elm$core$Dict$get, fieldName, trackedFormValues)));
+			case 2:
+				var givenValue = comparison.a;
+				return A2(
+					$elm$core$List$any,
+					$elm$core$String$endsWith(givenValue),
+					A2(
+						$elm$core$Maybe$withDefault,
+						_List_Nil,
+						A2($elm$core$Dict$get, fieldName, trackedFormValues)));
+			default:
+				var givenValue = comparison.a;
+				return A2(
+					$elm$core$List$any,
+					function (formValue) {
+						var _v2 = $elm$core$String$toFloat(givenValue);
+						if (!_v2.$) {
+							var givenFloat = _v2.a;
+							return A2(
+								$elm$core$Maybe$withDefault,
+								false,
+								A2(
+									$elm$core$Maybe$map,
+									function (formFloat) {
+										return _Utils_cmp(formFloat, givenFloat) > 0;
+									},
+									$elm$core$String$toFloat(formValue)));
+						} else {
+							return _Utils_cmp(formValue, givenValue) > 0;
+						}
+					},
+					A2(
+						$elm$core$Maybe$withDefault,
+						_List_Nil,
+						A2($elm$core$Dict$get, fieldName, trackedFormValues)));
+		}
+	});
+var $author$project$Main$isVisibilityRuleSatisfied = F2(
+	function (rules, trackedFormValues) {
+		return $elm$core$List$isEmpty(rules) || A2(
+			$elm$core$List$any,
+			function (rule) {
+				if (!rule.$) {
+					var conditions = rule.a;
+					return A2(
+						$elm$core$List$all,
+						$author$project$Main$evaluateCondition(trackedFormValues),
+						conditions);
+				} else {
+					var conditions = rule.a;
+					return !A2(
+						$elm$core$List$all,
+						$author$project$Main$evaluateCondition(trackedFormValues),
+						conditions);
+				}
+			},
+			rules);
+	});
 var $author$project$Main$viewFormPreview = F2(
 	function (customAttrs, _v0) {
-		var formFields = _v0.f;
-		var formValues = _v0.M;
-		var shortTextTypeDict = _v0.Z;
-		var config = {aR: customAttrs, M: formValues, Z: shortTextTypeDict};
+		var formFields = _v0.d;
+		var needsFormLogic = _v0.aL;
+		var trackedFormValues = _v0.C;
+		var shortTextTypeDict = _v0.aa;
+		var onInput = function (fieldName) {
+			return _List_fromArray(
+				[
+					A2(
+					$elm$html$Html$Events$on,
+					'input',
+					A2(
+						$elm$json$Json$Decode$map,
+						function (value) {
+							return A2($author$project$Main$OnFormValuesUpdated, fieldName, value);
+						},
+						A2(
+							$elm$json$Json$Decode$at,
+							_List_fromArray(
+								['target', 'value']),
+							$elm$json$Json$Decode$string)))
+				]);
+		};
+		var onChooseMany = F2(
+			function (fieldName, choice) {
+				return _List_fromArray(
+					[
+						$elm$html$Html$Events$onCheck(
+						function (_v4) {
+							return A2($author$project$Main$OnFormValuesUpdated, fieldName, choice.m);
+						})
+					]);
+			});
+		var config = {
+			T: customAttrs,
+			d: formFields,
+			a_: needsFormLogic ? onChooseMany : F2(
+				function (_v1, _v2) {
+					return _List_Nil;
+				}),
+			aq: needsFormLogic ? onInput : function (_v3) {
+				return _List_Nil;
+			},
+			aa: shortTextTypeDict,
+			C: trackedFormValues
+		};
 		return $elm$core$Array$toList(
 			A2(
 				$elm$core$Array$indexedMap,
 				$author$project$Main$viewFormFieldPreview(config),
-				formFields));
+				A2(
+					$elm$core$Array$filter,
+					function (formField) {
+						return A2($author$project$Main$isVisibilityRuleSatisfied, formField.l, trackedFormValues);
+					},
+					formFields)));
 	});
 var $author$project$Main$viewMain = function (model) {
 	return A2(
@@ -9520,10 +11127,10 @@ var $author$project$Main$viewMain = function (model) {
 		_List_fromArray(
 			[
 				$elm$html$Html$Attributes$class(
-				'tff tff-container tff-mode-' + $author$project$Main$stringFromViewMode(model.R))
+				'tff tff-container tff-mode-' + $author$project$Main$stringFromViewMode(model.S))
 			]),
 		function () {
-			var _v0 = model.R;
+			var _v0 = model.S;
 			if (!_v0.$) {
 				var editorAttr = _v0.a;
 				return A2(
@@ -9538,10 +11145,10 @@ var $author$project$Main$viewMain = function (model) {
 								A2(
 									$elm$json$Json$Encode$encode,
 									0,
-									$author$project$Main$encodeFormFields(model.f)))
+									$author$project$Main$encodeFormFields(model.d)))
 							]),
 						_List_Nil),
-					A2($author$project$Main$viewFormBuilder, editorAttr.ao, model));
+					A2($author$project$Main$viewFormBuilder, editorAttr.ap, model));
 			} else {
 				return A2($author$project$Main$viewFormPreview, _List_Nil, model);
 			}
@@ -9579,5 +11186,5 @@ var $author$project$Main$view = function (model) {
 	}
 };
 var $author$project$Main$main = $elm$browser$Browser$element(
-	{cr: $author$project$Main$init, cO: $author$project$Main$subscriptions, cS: $author$project$Main$update, cT: $author$project$Main$view});
+	{cx: $author$project$Main$init, cT: $author$project$Main$subscriptions, cX: $author$project$Main$update, cY: $author$project$Main$view});
 _Platform_export({'Main':{'init':$author$project$Main$main($elm$json$Json$Decode$value)(0)}});}(this));

@@ -1,3 +1,133 @@
-Always refer to README.md for guidance on code and documentation.
+Always refer to README.md for guidance on code, file organisation, and tasks.
 
-After we implement a feature, update README.md and the files in tasks/ where necessary.
+## Directories
+
+- `src/`: source code
+- `tests/`: test code
+- `tasks/`: task files
+- `dist/`: compiled code
+
+## Writing code
+
+### The smallest possible change
+
+For example, if a task requires "Add checkbox to toggle Show/Hide", many would implement it as:
+
+    1. Add a new field to the model
+    2. Add checkbox UI and wire up events
+    3. Implement the show/hide logic
+    4. Add styling/animations
+
+But that's actually too many changes at once! Instead, we should do it as:
+
+#### Iteration 1: Just the model
+    - Add boolean field to model
+    - Update decoder/encoder
+    - Nothing else
+
+#### Iteration 2: Just the UI presence
+    - Add checkbox element
+    - Wire up event handler
+    - Nothing else
+
+#### Iteration 3: Just the logic
+    - Implement show/hide logic
+    - Nothing else
+
+#### Iteration 4: Just the UX
+    - Add styling/animations
+    - Nothing else
+
+Each iteration above is "the smallest possible change". Never combine them into one iteration.
+
+### One iteration at a time
+
+1. Make only the smallest possible change at every iteration
+2. Run `make build` to confirm it didn't break anything
+    - if something broke, it means the change was incomplete; make the remaining changes instead of only fixing the error
+3. Only if that's successful, then ask for permission to make the next smallest change (repeat step 1 and 2)
+
+### Preserving Existing Code
+1. Never remove or modify existing code that isn't directly related to your task
+2. If you accidentally remove code, restore it immediately before proceeding
+3. If unsure whether code is related to your task, assume it isn't and leave it unchanged
+
+### Keeping Git Diff Clean
+1. Avoid unnecessary whitespace changes
+2. Don't reformat code unless it's part of your task
+3. Keep changes focused on the task at hand
+4. Run `make diff` to check for unnecessary changes
+
+### Elm Code Style
+1. Follow Elm's list formatting conventions:
+   - One item per line
+   - Each line starts with indentation
+   - Use comma-first style for lists
+   Example:
+   ```elm
+   [ firstItem
+   , secondItem
+   , thirdItem
+   ]
+   ```
+2. Keep parentheses balanced and properly indented
+3. Maintain consistent spacing around operators
+
+### Making Changes to Existing Files
+
+1. Always use view_file before editing to understand the full context
+2. Never edit a file by copying its entire content
+3. When adding new code:
+   - Add new code at the appropriate section (types with types, decoders with decoders)
+   - Keep existing code structure intact
+   - Use `{{ ... }}` to represent unchanged code
+   Example:
+   ```elm
+   {{ ... }}
+   type NewType
+       = NewConstructor
+   
+   {{ ... }}
+   decodeNewType =
+       Json.Decode.succeed NewConstructor
+   {{ ... }}
+   ```
+4. When modifying types:
+   - Add new constructors at the end of the type definition
+   - Keep all related functions (encoders, decoders, toString) together
+   - Update all pattern matches in the same edit
+   Example:
+   ```elm
+   {{ ... }}
+   type ExistingType
+       = ExistingConstructor1
+       | ExistingConstructor2
+       | NewConstructor  -- Add new constructors at the end
+   {{ ... }}
+   ```
+
+5. Before submitting changes:
+   - Run `make build` to catch missing functions
+   - If build fails, check the error for accidentally removed code
+   - Restore any accidentally removed code before proceeding
+
+### Temporary UI Elements
+
+1. Skip styling iterations for temporary UI elements that will be replaced
+2. Document temporary UI elements with a comment in the code
+3. Focus on functionality first, only add styling when the UI is final
+4. Keep temporary UI minimal but functional
+
+Example:
+If a task requires "Add dropdown for visibility rules":
+- ❌ Don't: Implement full styling for a temporary text display
+- ✅ Do: Use minimal HTML to show the current state
+- ✅ Do: Skip styling iteration if the UI will be replaced
+
+## Tasks
+
+- All code changes should correspond to a checkbox in tasks/
+- When a change is completed
+    - run `make build` to confirm it doesn't break anything
+    - update the checkbox in tasks/
+- If all checkboxes are checked, update tasks/README.md and rename the task file from TODO to DONE.

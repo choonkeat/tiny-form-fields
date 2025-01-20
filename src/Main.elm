@@ -1,13 +1,17 @@
 port module Main exposing
     ( AttributeOptional(..)
     , Choice
+    , Comparison(..)
+    , Condition(..)
     , Dragged(..)
     , FormField
+    , FormFieldMsg(..)
     , InputField(..)
     , Msg(..)
     , Presence(..)
     , RawCustomElement
     , ViewMode(..)
+    , VisibilityRule(..)
     , allInputField
     , decodeChoice
     , decodeCustomElement
@@ -19,19 +23,26 @@ port module Main exposing
     , encodeFormFields
     , encodeInputField
     , encodePairsFromCustomElement
+    , evaluateCondition
     , fieldsWithPlaceholder
     , fromRawCustomElement
+    , isVisibilityRuleSatisfied
     , main
     , onDropped
     , stringFromViewMode
+    , updateComparisonInCondition
+    , updateConditions
+    , updateConditionsInRule
+    , updateFieldnameInCondition
+    , updateFormField
     , viewModeFromString
     )
 
 import Array exposing (Array)
 import Browser
 import Dict exposing (Dict)
-import Html exposing (Html, button, div, h2, h3, input, label, option, pre, select, text, textarea)
-import Html.Attributes exposing (attribute, checked, class, classList, disabled, for, id, maxlength, minlength, name, placeholder, readonly, required, selected, tabindex, title, type_, value)
+import Html exposing (Html, button, div, h2, h3, input, label, option, pre, select, text, textarea, ul)
+import Html.Attributes as Attr exposing (attribute, checked, class, classList, disabled, for, id, maxlength, minlength, name, placeholder, readonly, required, selected, tabindex, title, type_, value)
 import Html.Events exposing (on, onCheck, onClick, onInput, preventDefaultOn, stopPropagationOn)
 import Json.Decode
 import Json.Decode.Extra exposing (andMap)
@@ -78,7 +89,8 @@ type alias Model =
     { viewMode : ViewMode
     , initError : Maybe String
     , formFields : Array FormField
-    , formValues : Json.Encode.Value
+    , needsFormLogic : Bool
+    , trackedFormValues : Dict String (List String)
 
     -- List because order matters
     , shortTextTypeList : List CustomElement
@@ -143,12 +155,49 @@ requiredData presence =
             True
 
 
+type Comparison
+    = Equals String
+    | StringContains String
+    | EndsWith String
+    | GreaterThan String
+
+
+type Condition
+    = Field String Comparison
+
+
+type VisibilityRule
+    = ShowWhen (List Condition)
+    | HideWhen (List Condition)
+
+
+isShowWhen : VisibilityRule -> Bool
+isShowWhen rule =
+    case rule of
+        ShowWhen _ ->
+            True
+
+        HideWhen _ ->
+            False
+
+
+isHideWhen : VisibilityRule -> Bool
+isHideWhen rule =
+    case rule of
+        ShowWhen _ ->
+            False
+
+        HideWhen _ ->
+            True
+
+
 type alias FormField =
     { label : String
     , name : Maybe String
     , presence : Presence
     , description : AttributeOptional String
     , type_ : InputField
+    , visibilityRule : List VisibilityRule
     }
 
 
@@ -192,11 +241,8 @@ toggleAttributeOptional toggle attributeOptional =
 
 inputAttributeOptional :
     { onCheck : Bool -> msg
-    , onInput : String -> msg
-    , toString : a -> String
     , label : String
-    , htmlNode : List (Html.Attribute msg) -> List (Html msg) -> Html msg
-    , attrs : List (Html.Attribute msg)
+    , htmlNode : Result String a -> Html msg
     }
     -> AttributeOptional a
     -> Html msg
@@ -232,7 +278,7 @@ inputAttributeOptional options attributeOptional =
                     , text " "
                     , text options.label
                     ]
-                , options.htmlNode ([ required True, onInput options.onInput, value str ] ++ options.attrs) []
+                , options.htmlNode (Err str)
                 ]
 
         AttributeGiven a ->
@@ -249,7 +295,7 @@ inputAttributeOptional options attributeOptional =
                     , text " "
                     , text options.label
                     ]
-                , options.htmlNode ([ required True, onInput options.onInput, value (options.toString a) ] ++ options.attrs) []
+                , options.htmlNode (Ok a)
                 ]
 
 
@@ -347,6 +393,7 @@ type Msg
     | DragOver (Maybe Droppable)
     | Drop (Maybe Int)
     | DoSleepDo Float (List Msg)
+    | OnFormValuesUpdated String String
 
 
 type alias Droppable =
@@ -364,6 +411,31 @@ type FormFieldMsg
     | OnMaxLengthInput
     | OnDatalistToggle Bool
     | OnDatalistInput
+    | OnVisibilityRuleTypeInput Int String
+    | OnVisibilityConditionTypeInput Int Int String
+    | OnVisibilityConditionFieldInput Int Int String
+    | OnVisibilityConditionValueInput Int Int String
+    | OnAddVisibilityRule
+    | OnVisibilityConditionDuplicate Int
+
+
+otherQuestionTitles : Array FormField -> Int -> List String
+otherQuestionTitles formFields currentIndex =
+    Array.toList formFields
+        |> List.indexedMap (\i f -> ( i, f ))
+        |> List.filter (\( i, _ ) -> i /= currentIndex)
+        |> List.map (\( _, f ) -> f.label)
+
+
+getPreviousFieldLabel : Int -> Array FormField -> String
+getPreviousFieldLabel index formFields =
+    if index > 0 then
+        Array.get (index - 1) formFields
+            |> Maybe.map .label
+            |> Maybe.withDefault ""
+
+    else
+        ""
 
 
 
@@ -393,11 +465,40 @@ init flags =
                 effectiveShortTextTypeList =
                     defaultShortTextTypeListWithout config.shortTextTypeList
                         ++ config.shortTextTypeList
+
+                initialTrackedFormValues =
+                    Array.toList config.formFields
+                        |> List.map
+                            (\field ->
+                                let
+                                    fieldName =
+                                        fieldNameOf field
+                                in
+                                case field.type_ of
+                                    ChooseMultiple _ ->
+                                        ( fieldName
+                                        , maybeDecode fieldName (decodeListOrSingleton Json.Decode.string) config.formValues
+                                            |> Maybe.withDefault []
+                                        )
+
+                                    _ ->
+                                        ( fieldName
+                                        , maybeDecode fieldName Json.Decode.string config.formValues
+                                            |> Maybe.map List.singleton
+                                            |> Maybe.withDefault []
+                                        )
+                            )
+                        |> Dict.fromList
             in
             ( { viewMode = config.viewMode
               , initError = Nothing
               , formFields = config.formFields
-              , formValues = config.formValues
+              , needsFormLogic =
+                    config.formFields
+                        |> Array.filter (\f -> not (List.isEmpty f.visibilityRule))
+                        |> Array.isEmpty
+                        |> not
+              , trackedFormValues = initialTrackedFormValues
               , shortTextTypeList = effectiveShortTextTypeList
               , shortTextTypeDict =
                     effectiveShortTextTypeList
@@ -421,7 +522,8 @@ init flags =
             ( { viewMode = Editor { maybeAnimate = Nothing }
               , initError = Just (Json.Decode.errorToString err)
               , formFields = Array.empty
-              , formValues = Json.Encode.null
+              , needsFormLogic = False
+              , trackedFormValues = Dict.empty
               , shortTextTypeList = []
               , shortTextTypeDict = Dict.empty
               , dropdownState = DropdownClosed
@@ -471,6 +573,7 @@ update msg model =
                     , presence = when (mustBeOptional fieldType) { true = Optional, false = Required }
                     , description = AttributeNotNeeded Nothing
                     , type_ = fieldType
+                    , visibilityRule = []
                     }
 
                 newFormFields =
@@ -493,11 +596,11 @@ update msg model =
                 ]
             )
 
-        DeleteFormField index ->
+        DeleteFormField fieldIndex ->
             let
                 newFormFields =
                     Array.toIndexedList model.formFields
-                        |> List.filter (\( i, _ ) -> i /= index)
+                        |> List.filter (\( i, _ ) -> i /= fieldIndex)
                         |> List.map Tuple.second
                         |> Array.fromList
             in
@@ -505,37 +608,37 @@ update msg model =
             , outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
             )
 
-        MoveFormFieldUp index ->
+        MoveFormFieldUp fieldIndex ->
             let
                 newFormFields =
-                    swapArrayIndex index (index - 1) model.formFields
+                    swapArrayIndex fieldIndex (fieldIndex - 1) model.formFields
             in
             ( { model
                 | formFields = newFormFields
-                , selectedFieldIndex = Just (index - 1)
+                , selectedFieldIndex = Just (fieldIndex - 1)
               }
             , outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
             )
 
-        MoveFormFieldDown index ->
+        MoveFormFieldDown fieldIndex ->
             let
                 newFormFields =
-                    swapArrayIndex index (index + 1) model.formFields
+                    swapArrayIndex fieldIndex (fieldIndex + 1) model.formFields
             in
             ( { model
                 | formFields = newFormFields
-                , selectedFieldIndex = Just (index + 1)
+                , selectedFieldIndex = Just (fieldIndex + 1)
               }
             , outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
             )
 
-        OnFormField fmsg index string ->
+        OnFormField fmsg fieldIndex string ->
             let
                 newFormFields =
                     Array.indexedMap
                         (\i formField ->
-                            if i == index then
-                                updateFormField fmsg string formField
+                            if i == fieldIndex then
+                                updateFormField fmsg fieldIndex string model.formFields formField
 
                             else
                                 formField
@@ -551,8 +654,8 @@ update msg model =
             , Cmd.none
             )
 
-        SelectField index ->
-            case ( model.selectedFieldIndex, index ) of
+        SelectField fieldIndex ->
+            case ( model.selectedFieldIndex, fieldIndex ) of
                 ( Just prevIndex, Nothing ) ->
                     ( { model
                         | selectedFieldIndex = Nothing
@@ -562,21 +665,21 @@ update msg model =
                     )
 
                 _ ->
-                    ( { model | selectedFieldIndex = index }
+                    ( { model | selectedFieldIndex = fieldIndex }
                     , Cmd.none
                     )
 
-        DragStart index ->
+        DragStart fieldIndex ->
             ( { model
-                | dragged = Just (DragExisting { dragIndex = index, dropIndex = Nothing }) -- use index as initial dropTargetIndex
+                | dragged = Just (DragExisting { dragIndex = fieldIndex, dropIndex = Nothing }) -- use index as initial dropTargetIndex
                 , selectedFieldIndex = Nothing
               }
             , Cmd.none
             )
 
-        DragStartNew field ->
+        DragStartNew fieldIndex ->
             ( { model
-                | dragged = Just (DragNew { field = field, dropIndex = Just ( 0, Nothing ) }) -- new field starts at index 0
+                | dragged = Just (DragNew { field = fieldIndex, dropIndex = Just ( 0, Nothing ) }) -- new field starts at index 0
               }
             , Cmd.none
             )
@@ -599,10 +702,10 @@ update msg model =
             , Cmd.none
             )
 
-        Drop targetIndex ->
+        Drop targetFieldIndex ->
             let
                 newModel =
-                    onDropped targetIndex model
+                    onDropped targetFieldIndex model
             in
             ( newModel
             , if newModel.formFields /= model.formFields then
@@ -630,9 +733,50 @@ update msg model =
                 ]
             )
 
+        OnFormValuesUpdated fieldName value ->
+            let
+                formField =
+                    Array.toList model.formFields
+                        |> List.filter (\f -> fieldNameOf f == fieldName)
+                        |> List.head
 
-updateFormField : FormFieldMsg -> String -> FormField -> FormField
-updateFormField msg string formField =
+                currentValues =
+                    Dict.get fieldName model.trackedFormValues
+                        |> Maybe.withDefault []
+
+                newValues =
+                    case formField of
+                        Just field ->
+                            case field.type_ of
+                                ChooseMultiple _ ->
+                                    if List.member value currentValues then
+                                        List.filter ((/=) value) currentValues
+
+                                    else
+                                        value :: currentValues
+
+                                _ ->
+                                    [ value ]
+
+                        Nothing ->
+                            [ value ]
+
+                newTrackedFormValues =
+                    Dict.insert fieldName newValues model.trackedFormValues
+
+                formValues =
+                    Dict.toList newTrackedFormValues
+                        |> List.map (\( key, values ) -> ( key, Json.Encode.list Json.Encode.string values ))
+                        |> Dict.fromList
+                        |> Json.Encode.dict identity identity
+            in
+            ( { model | trackedFormValues = newTrackedFormValues }
+            , outgoing (encodePortOutgoingValue (PortOutgoingFormValues formValues))
+            )
+
+
+updateFormField : FormFieldMsg -> Int -> String -> Array FormField -> FormField -> FormField
+updateFormField msg fieldIndex string formFields formField =
     case msg of
         OnLabelInput ->
             { formField | label = string }
@@ -804,6 +948,105 @@ updateFormField msg string formField =
                 ChooseMultiple _ ->
                     formField
 
+        OnVisibilityRuleTypeInput ruleIndex "" ->
+            { formField
+                | visibilityRule =
+                    formField.visibilityRule
+                        |> List.Extra.removeAt ruleIndex
+            }
+
+        OnVisibilityRuleTypeInput ruleIndex str ->
+            { formField
+                | visibilityRule =
+                    updateVisibilityRuleAt ruleIndex
+                        (\rule ->
+                            case str of
+                                "ShowWhen" ->
+                                    ShowWhen (visibilityRuleCondition rule)
+
+                                "HideWhen" ->
+                                    HideWhen (visibilityRuleCondition rule)
+
+                                _ ->
+                                    -- no change
+                                    rule
+                        )
+                        formField.visibilityRule
+            }
+
+        OnVisibilityConditionTypeInput ruleIndex conditionIndex str ->
+            { formField
+                | visibilityRule =
+                    updateVisibilityRuleAt ruleIndex
+                        (updateConditionsInRule
+                            (updateConditions conditionIndex
+                                (updateComparisonInCondition (updateComparison str))
+                            )
+                        )
+                        formField.visibilityRule
+            }
+
+        OnVisibilityConditionFieldInput ruleIndex conditionIndex "" ->
+            { formField
+                | visibilityRule =
+                    updateVisibilityRuleAt ruleIndex
+                        (updateConditionsInRule
+                            (List.Extra.removeAt conditionIndex)
+                        )
+                        formField.visibilityRule
+            }
+
+        OnVisibilityConditionFieldInput ruleIndex conditionIndex newFieldName ->
+            { formField
+                | visibilityRule =
+                    updateVisibilityRuleAt ruleIndex
+                        (updateConditionsInRule
+                            (updateConditions conditionIndex
+                                (updateFieldnameInCondition (always newFieldName))
+                            )
+                        )
+                        formField.visibilityRule
+            }
+
+        OnVisibilityConditionValueInput ruleIndex conditionIndex newValue ->
+            { formField
+                | visibilityRule =
+                    updateVisibilityRuleAt ruleIndex
+                        (updateConditionsInRule
+                            (updateConditions conditionIndex
+                                (updateComparisonInCondition (updateComparisonValue newValue))
+                            )
+                        )
+                        formField.visibilityRule
+            }
+
+        OnAddVisibilityRule ->
+            { formField | visibilityRule = formField.visibilityRule ++ [ ShowWhen [ Field (getPreviousFieldLabel fieldIndex formFields) (Equals "") ] ] }
+
+        OnVisibilityConditionDuplicate ruleIndex ->
+            let
+                newCondition conditions =
+                    case List.reverse conditions of
+                        last :: _ ->
+                            last
+
+                        [] ->
+                            Field (getPreviousFieldLabel fieldIndex formFields) (Equals "")
+            in
+            { formField
+                | visibilityRule =
+                    updateVisibilityRuleAt ruleIndex
+                        (\rule ->
+                            case rule of
+                                ShowWhen conditions ->
+                                    ShowWhen (conditions ++ [ newCondition conditions ])
+
+                                HideWhen conditions ->
+                                    HideWhen (conditions ++ [ newCondition conditions ])
+                        )
+                        formField.visibilityRule
+            }
+
 
 onDropped : Maybe Int -> { a | dragged : Maybe Dragged, formFields : Array FormField } -> { a | dragged : Maybe Dragged, formFields : Array FormField }
 onDropped targetIndex model =
@@ -966,16 +1209,43 @@ viewMain model =
         )
 
 
-viewFormPreview : List (Html.Attribute Msg) -> { a | formFields : Array FormField, formValues : Json.Encode.Value, shortTextTypeDict : Dict String CustomElement } -> List (Html Msg)
-viewFormPreview customAttrs { formFields, formValues, shortTextTypeDict } =
+viewFormPreview : List (Html.Attribute Msg) -> { a | formFields : Array FormField, needsFormLogic : Bool, trackedFormValues : Dict String (List String), shortTextTypeDict : Dict String CustomElement } -> List (Html Msg)
+viewFormPreview customAttrs { formFields, needsFormLogic, trackedFormValues, shortTextTypeDict } =
     let
+        onChooseMany fieldName choice =
+            [ onCheck (\_ -> OnFormValuesUpdated fieldName choice.value) ]
+
+        onInput fieldName =
+            [ on "input"
+                (Json.Decode.at [ "target", "value" ] Json.Decode.string
+                    |> Json.Decode.map (\value -> OnFormValuesUpdated fieldName value)
+                )
+            ]
+
         config =
             { customAttrs = customAttrs
-            , formValues = formValues
             , shortTextTypeDict = shortTextTypeDict
+            , formFields = formFields
+            , trackedFormValues = trackedFormValues
+            , onChooseMany =
+                if needsFormLogic then
+                    onChooseMany
+
+                else
+                    \_ _ -> []
+            , onInput =
+                if needsFormLogic then
+                    onInput
+
+                else
+                    \_ -> []
             }
     in
     formFields
+        |> Array.filter
+            (\formField ->
+                isVisibilityRuleSatisfied formField.visibilityRule trackedFormValues
+            )
         |> Array.indexedMap (viewFormFieldPreview config)
         |> Array.toList
 
@@ -989,7 +1259,17 @@ when bool condition =
         condition.false
 
 
-viewFormFieldPreview : { formValues : Json.Encode.Value, customAttrs : List (Html.Attribute Msg), shortTextTypeDict : Dict String CustomElement } -> Int -> FormField -> Html Msg
+viewFormFieldPreview :
+    { trackedFormValues : Dict String (List String)
+    , customAttrs : List (Html.Attribute Msg)
+    , onChooseMany : String -> Choice -> List (Html.Attribute Msg)
+    , onInput : String -> List (Html.Attribute Msg)
+    , shortTextTypeDict : Dict String CustomElement
+    , formFields : Array FormField
+    }
+    -> Int
+    -> FormField
+    -> Html Msg
 viewFormFieldPreview config index formField =
     let
         fieldID =
@@ -1106,7 +1386,7 @@ attributesFromTuple : ( String, String ) -> Maybe (Html.Attribute msg)
 attributesFromTuple ( k, v ) =
     case ( k, v ) of
         ( "multiple", "true" ) ->
-            Just (Html.Attributes.multiple True)
+            Just (Attr.multiple True)
 
         ( "multiple", "false" ) ->
             Nothing
@@ -1115,8 +1395,35 @@ attributesFromTuple ( k, v ) =
             Just (attribute k v)
 
 
-viewFormFieldOptionsPreview : { formValues : Json.Encode.Value, customAttrs : List (Html.Attribute Msg), shortTextTypeDict : Dict String CustomElement } -> String -> FormField -> Html Msg
-viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } fieldID formField =
+{-| This is a property <https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement>
+
+Not an html attribute <https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input>
+
+-}
+defaultValue : String -> Html.Attribute msg
+defaultValue str =
+    -- property "defaultValue" (Json.Encode.string str)
+    value str
+
+
+defaultSelected : Bool -> Html.Attribute msg
+defaultSelected bool =
+    -- property "defaultSelected" (Json.Encode.bool bool)
+    selected bool
+
+
+viewFormFieldOptionsPreview :
+    { trackedFormValues : Dict String (List String)
+    , customAttrs : List (Html.Attribute Msg)
+    , onChooseMany : String -> Choice -> List (Html.Attribute Msg)
+    , onInput : String -> List (Html.Attribute Msg)
+    , shortTextTypeDict : Dict String CustomElement
+    , formFields : Array FormField
+    }
+    -> String
+    -> FormField
+    -> Html Msg
+viewFormFieldOptionsPreview config fieldID formField =
     let
         fieldName =
             fieldNameOf formField
@@ -1161,7 +1468,7 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } field
                     Dict.keys customElement.attributes
 
                 shortTextAttrs =
-                    Dict.get customElement.inputType shortTextTypeDict
+                    Dict.get customElement.inputType config.shortTextTypeDict
                         |> Maybe.map .attributes
                         |> Maybe.withDefault Dict.empty
                         |> Dict.toList
@@ -1169,7 +1476,7 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } field
                         |> List.filterMap attributesFromTuple
 
                 extraAttrs =
-                    Maybe.map (\s -> value s) (maybeDecode fieldName Json.Decode.string formValues)
+                    Maybe.map (\s -> defaultValue s) (Dict.get fieldName config.trackedFormValues |> Maybe.andThen List.head)
                         :: List.map attributesFromTuple (Dict.toList customElement.attributes)
                         |> List.filterMap identity
             in
@@ -1183,7 +1490,8 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } field
                         ++ dataListAttrs
                         ++ shortTextAttrs
                         ++ extraAttrs
-                        ++ customAttrs
+                        ++ config.customAttrs
+                        ++ config.onInput fieldName
                     )
                     []
                 , dataListElement
@@ -1193,7 +1501,7 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } field
             let
                 extraAttrs =
                     [ Maybe.map (\maxLength -> maxlength maxLength) (maybeMaxLengthOf formField)
-                    , Maybe.map (\s -> value s) (maybeDecode fieldName Json.Decode.string formValues)
+                    , Maybe.map (\s -> value s) (Dict.get fieldName config.trackedFormValues |> Maybe.andThen List.head)
                     ]
                         |> List.filterMap identity
             in
@@ -1205,45 +1513,50 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } field
                  , placeholder " "
                  ]
                     ++ extraAttrs
-                    ++ customAttrs
+                    ++ config.customAttrs
+                    ++ config.onInput fieldName
                 )
                 []
 
         Dropdown choices ->
             let
                 valueString =
-                    maybeDecode fieldName Json.Decode.string formValues
+                    Dict.get fieldName config.trackedFormValues
+                        |> Maybe.andThen List.head
+                        |> Maybe.withDefault ""
             in
             div [ class "tff-dropdown-group" ]
                 [ selectArrowDown
                 , select
-                    [ name fieldName
-                    , id fieldID
+                    ([ name fieldName
+                     , id fieldID
 
-                    -- when we're disabling `<select>` we actually only
-                    -- want to disable the `<option>`s so user can see the options but cannot choose
-                    -- but if the `<select>` is required, then now we are in a bind
-                    -- so we cannot have `required` on the `<select>` if we're disabling it
-                    , if List.member (attribute "disabled" "disabled") customAttrs then
+                     -- when we're disabling `<select>` we actually only
+                     -- want to disable the `<option>`s so user can see the options but cannot choose
+                     -- but if the `<select>` is required, then now we are in a bind
+                     -- so we cannot have `required` on the `<select>` if we're disabling it
+                     , if List.member (attribute "disabled" "disabled") config.customAttrs then
                         class "tff-select-disabled"
 
-                      else
+                       else
                         required (requiredData formField.presence)
-                    ]
+                     ]
+                        ++ config.onInput fieldName
+                    )
                     (option
                         ([ disabled True
-                         , selected (valueString == Nothing && not (chosenForYou choices))
+                         , defaultSelected (valueString == "" && not (chosenForYou choices))
                          , attribute "value" ""
                          ]
-                            ++ customAttrs
+                            ++ config.customAttrs
                         )
                         [ text "-- Select an option --" ]
                         :: List.map
                             (\choice ->
                                 option
                                     (value choice.value
-                                        :: selected (valueString == Just choice.value || chosenForYou choices)
-                                        :: customAttrs
+                                        :: defaultSelected (valueString == choice.value || chosenForYou choices)
+                                        :: config.customAttrs
                                     )
                                     [ text choice.label ]
                             )
@@ -1254,7 +1567,9 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } field
         ChooseOne choices ->
             let
                 valueString =
-                    maybeDecode fieldName Json.Decode.string formValues
+                    Dict.get fieldName config.trackedFormValues
+                        |> Maybe.andThen List.head
+                        |> Maybe.withDefault ""
             in
             -- radio buttons
             div [ class "tff-chooseone-group" ]
@@ -1268,10 +1583,11 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } field
                                          , tabindex 0
                                          , name fieldName
                                          , value choice.value
-                                         , checked (valueString == Just choice.value || chosenForYou choices)
+                                         , checked (valueString == choice.value || chosenForYou choices)
                                          , required (requiredData formField.presence)
                                          ]
-                                            ++ customAttrs
+                                            ++ config.customAttrs
+                                            ++ config.onInput fieldName
                                         )
                                         []
                                     , text " "
@@ -1285,14 +1601,8 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } field
 
         ChooseMultiple choices ->
             let
-                decodeListOrSingleton decoder =
-                    Json.Decode.oneOf
-                        [ Json.Decode.list decoder
-                        , decoder |> Json.Decode.map List.singleton
-                        ]
-
                 values =
-                    maybeDecode fieldName (decodeListOrSingleton Json.Decode.string) formValues
+                    Dict.get fieldName config.trackedFormValues
                         |> Maybe.withDefault []
             in
             -- checkboxes
@@ -1309,7 +1619,8 @@ viewFormFieldOptionsPreview { formValues, customAttrs, shortTextTypeDict } field
                                          , value choice.value
                                          , checked (List.member choice.value values || chosenForYou choices)
                                          ]
-                                            ++ customAttrs
+                                            ++ config.customAttrs
+                                            ++ config.onChooseMany fieldName choice
                                         )
                                         []
                                     , text " "
@@ -1375,11 +1686,12 @@ renderFormField maybeAnimate model index maybeFormField =
                         ]
                         [ div [ class "tff-drag-handle" ] [ dragHandleIcon ]
                         , viewFormFieldPreview
-                            { customAttrs =
-                                [ attribute "disabled" "disabled"
-                                ]
-                            , formValues = model.formValues
+                            { customAttrs = [ attribute "disabled" "disabled" ]
+                            , formFields = model.formFields
+                            , onChooseMany = \_ _ -> []
+                            , onInput = \_ -> []
                             , shortTextTypeDict = model.shortTextTypeDict
+                            , trackedFormValues = model.trackedFormValues
                             }
                             index
                             formField
@@ -1490,9 +1802,11 @@ viewFormBuilder maybeAnimate model =
 selectArrowDown : Html msg
 selectArrowDown =
     svg
-        [ SvgAttr.viewBox "0 0 16 16"
+        [ SvgAttr.class "tff-selectarrow-icon"
+        , SvgAttr.viewBox "0 0 16 16"
         , SvgAttr.fill "currentColor"
-        , attribute "aria-hidden" "true"
+        , Attr.attribute "aria-hidden" "true"
+        , Attr.attribute "data-slot" "icon"
         ]
         [ path
             [ SvgAttr.fillRule "evenodd"
@@ -1503,14 +1817,204 @@ selectArrowDown =
         ]
 
 
-viewFormFieldBuilder : List CustomElement -> Int -> Int -> FormField -> Html Msg
-viewFormFieldBuilder shortTextTypeList index totalLength formField =
+visibilityRulesSection : Int -> Array FormField -> FormField -> Html Msg
+visibilityRulesSection index formFields formField =
+    div []
+        [ label [ class "tff-field-label" ]
+            [ text "Field logic" ]
+        , div []
+            (formField.visibilityRule
+                |> List.indexedMap (visibilityRuleSection index formFields)
+                |> List.intersperse (label [ class "tff-field-label" ] [ text "OR" ])
+            )
+        , div [ class "tff-button-group" ]
+            [ button
+                [ class "button"
+                , type_ "button"
+                , onClick (OnFormField OnAddVisibilityRule index "")
+                ]
+                [ text "Add field logic" ]
+            ]
+        ]
+
+
+visibilityRuleSection : Int -> Array FormField -> Int -> VisibilityRule -> Html Msg
+visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
+    let
+        ruleHtml conditionIndex rule =
+            let
+                selectedFieldName =
+                    case rule of
+                        Field fieldName _ ->
+                            fieldName
+
+                selectedField =
+                    Array.toList formFields
+                        |> List.filter (\f -> fieldNameOf f == selectedFieldName)
+                        |> List.head
+
+                datalistId =
+                    "datalist-" ++ String.fromInt fieldIndex ++ "-" ++ String.fromInt ruleIndex ++ "-" ++ String.fromInt conditionIndex
+
+                datalistElement =
+                    case selectedField of
+                        Just field ->
+                            case field.type_ of
+                                Dropdown choices ->
+                                    Just (Html.datalist [ id datalistId ] (List.map (\c -> Html.option [ value c.value ] []) choices))
+
+                                ChooseOne choices ->
+                                    Just (Html.datalist [ id datalistId ] (List.map (\c -> Html.option [ value c.value ] []) choices))
+
+                                ChooseMultiple choices ->
+                                    Just (Html.datalist [ id datalistId ] (List.map (\c -> Html.option [ value c.value ] []) choices))
+
+                                _ ->
+                                    Nothing
+
+                        Nothing ->
+                            Nothing
+
+                datalistAttr =
+                    case datalistElement of
+                        Just _ ->
+                            [ attribute "list" datalistId ]
+
+                        Nothing ->
+                            []
+            in
+            div [ class "tff-field-group tff-field-rule-condition" ]
+                [ div [ class "tff-dropdown-group" ]
+                    [ selectArrowDown
+                    , select
+                        [ class "tff-text-field tff-question-title"
+                        , required True
+                        , onInput (\str -> OnFormField (OnVisibilityConditionFieldInput ruleIndex conditionIndex str) fieldIndex "")
+                        , required True
+                        , value
+                            (case rule of
+                                Field fieldName _ ->
+                                    fieldName
+                            )
+                        ]
+                        (option [ value "" ] [ text " - " ]
+                            :: List.map
+                                (\title ->
+                                    option
+                                        [ value title
+                                        , selected
+                                            (title
+                                                == (case rule of
+                                                        Field fieldName _ ->
+                                                            fieldName
+                                                   )
+                                            )
+                                        ]
+                                        [ text (Json.Encode.encode 0 (Json.Encode.string title)) ]
+                                )
+                                (otherQuestionTitles formFields fieldIndex)
+                        )
+                    ]
+                , selectInputGroup
+                    { selectAttrs =
+                        [ onInput (\str -> OnFormField (OnVisibilityConditionTypeInput ruleIndex conditionIndex str) fieldIndex "")
+                        , class "tff-comparison-type"
+                        ]
+                    , options =
+                        [ ( "Equals", "Equals", isComparingWith (Equals "something") (comparisonOf rule) )
+                        , ( "StringContains", "Contains", isComparingWith (StringContains "something") (comparisonOf rule) )
+                        , ( "EndsWith", "Ends with", isComparingWith (EndsWith "something") (comparisonOf rule) )
+                        , ( "GreaterThan", "Greater than", isComparingWith (GreaterThan "something") (comparisonOf rule) )
+                        ]
+                    , inputAttrs =
+                        [ type_ "text"
+                        , value
+                            (case rule of
+                                Field _ (Equals v) ->
+                                    v
+
+                                Field _ (StringContains v) ->
+                                    v
+
+                                Field _ (EndsWith v) ->
+                                    v
+
+                                Field _ (GreaterThan v) ->
+                                    v
+                            )
+                        , onInput (\str -> OnFormField (OnVisibilityConditionValueInput ruleIndex conditionIndex str) fieldIndex "")
+                        , required True
+                        , class "tff-comparison-value"
+                        ]
+                            ++ datalistAttr
+                    , children =
+                        case datalistElement of
+                            Just element ->
+                                [ element ]
+
+                            Nothing ->
+                                []
+                    }
+                ]
+
+        rulesHtml =
+            List.indexedMap ruleHtml (visibilityRuleCondition visibilityRule)
+    in
+    div [ class "tff-field-rule" ]
+        [ div [ class "tff-field-group tff-field-rule-type" ]
+            [ div [ class "tff-dropdown-group" ]
+                [ selectArrowDown
+                , select
+                    [ class "tff-text-field tff-show-or-hide"
+                    , onInput (\str -> OnFormField (OnVisibilityRuleTypeInput ruleIndex str) fieldIndex "")
+                    , required True
+                    , value
+                        (case visibilityRule of
+                            ShowWhen _ ->
+                                "ShowWhen"
+
+                            HideWhen _ ->
+                                "HideWhen"
+                        )
+                    ]
+                    [ option [ value "" ] [ text " - " ]
+                    , option [ selected (isShowWhen visibilityRule), value "ShowWhen" ] [ text "Show this question when" ]
+                    , option [ selected (isHideWhen visibilityRule), value "HideWhen" ] [ text "Hide this question when" ]
+                    ]
+                ]
+            ]
+        , div [ class "tff-field-rule-conditions" ]
+            (List.intersperse (label [ class "tff-field-label" ] [ text "AND" ]) rulesHtml
+                ++ [ button
+                        [ class "button"
+                        , type_ "button"
+                        , onClick (OnFormField (OnVisibilityConditionDuplicate ruleIndex) fieldIndex "")
+                        ]
+                        [ text "Add condition" ]
+                   ]
+            )
+        ]
+
+
+viewFormFieldBuilder : List CustomElement -> Int -> Int -> Array FormField -> FormField -> Html Msg
+viewFormFieldBuilder shortTextTypeList index totalLength formFields formField =
     let
         buildFieldClass =
             "tff-build-field"
 
         idSuffix =
             String.fromInt index
+
+        isDuplicateLabel =
+            hasDuplicateLabel index formField.label formFields
+
+        patternAttr =
+            if isDuplicateLabel then
+                -- always invalid
+                [ Attr.pattern "^$" ]
+
+            else
+                [ Attr.pattern ".*" ]
 
         configureMultipleCheckbox =
             div [ class "tff-field-group" ]
@@ -1563,16 +2067,21 @@ viewFormFieldBuilder shortTextTypeList index totalLength formField =
         ([ div [ class "tff-field-group" ]
             [ label [ class "tff-field-label", for ("label-" ++ idSuffix) ] [ text (stringFromInputField formField.type_ ++ " question title") ]
             , input
-                [ type_ "text"
-                , id ("label-" ++ idSuffix)
-                , required True
-                , minlength 1
-                , class "tff-text-field"
-                , placeholder "Label"
-                , value formField.label
-                , onInput (OnFormField OnLabelInput index)
-                ]
+                ([ type_ "text"
+                 , id ("label-" ++ idSuffix)
+                 , value formField.label
+                 , required True
+                 , onInput (OnFormField OnLabelInput index)
+                 , class "tff-text-field"
+                 ]
+                    ++ patternAttr
+                )
                 []
+            , if isDuplicateLabel then
+                div [ class "tff-error-text" ] [ text "Question titles must be unique in a form" ]
+
+              else
+                text ""
             ]
          , if mustBeOptional formField.type_ then
             text ""
@@ -1594,16 +2103,31 @@ viewFormFieldBuilder shortTextTypeList index totalLength formField =
             text ""
          , inputAttributeOptional
             { onCheck = \b -> OnFormField (OnDescriptionToggle b) index ""
-            , onInput = OnFormField OnDescriptionInput index
             , label = "Question description"
-            , toString = identity
-            , htmlNode = Html.input
-            , attrs = [ class "tff-text-field" ]
+            , htmlNode =
+                \result ->
+                    let
+                        valueString =
+                            case result of
+                                Ok a ->
+                                    a
+
+                                Err err ->
+                                    err
+                    in
+                    Html.input
+                        [ required True
+                        , class "tff-text-field"
+                        , value valueString
+                        , onInput (OnFormField OnDescriptionInput index)
+                        ]
+                        []
             }
             formField.description
          ]
             ++ viewFormFieldOptionsBuilder shortTextTypeList index formField
-            ++ [ div [ class "tff-build-field-buttons" ]
+            ++ [ visibilityRulesSection index formFields formField
+               , div [ class "tff-build-field-buttons" ]
                     [ div [ class "tff-move" ]
                         [ if index == 0 then
                             text ""
@@ -1671,7 +2195,7 @@ viewRightPanel modelData =
                 Just index ->
                     case Array.get index modelData.formFields of
                         Just formField ->
-                            viewFormFieldBuilder modelData.shortTextTypeList index (Array.length modelData.formFields) formField
+                            viewFormFieldBuilder modelData.shortTextTypeList index (Array.length modelData.formFields) modelData.formFields formField
 
                         Nothing ->
                             text "Select a field to edit its settings"
@@ -1736,6 +2260,7 @@ viewAddQuestionsList inputFields =
                                 , presence = when (mustBeOptional inputField) { true = Optional, false = Required }
                                 , description = AttributeNotNeeded Nothing
                                 , type_ = inputField
+                                , visibilityRule = []
                                 }
                             )
                         )
@@ -1794,11 +2319,26 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
                 Nothing ->
                     inputAttributeOptional
                         { onCheck = \b -> OnFormField (OnMaxLengthToggle b) index ""
-                        , onInput = OnFormField OnMaxLengthInput index
                         , label = "Limit number of characters"
-                        , toString = String.fromInt
-                        , htmlNode = Html.input
-                        , attrs = [ class "tff-text-field", type_ "number", Html.Attributes.min "1" ]
+                        , htmlNode =
+                            \result ->
+                                let
+                                    valueString =
+                                        case result of
+                                            Ok i ->
+                                                String.fromInt i
+
+                                            Err err ->
+                                                err
+                                in
+                                Html.input
+                                    [ class "tff-text-field"
+                                    , type_ "number"
+                                    , Attr.min "1"
+                                    , value valueString
+                                    , onInput (OnFormField OnMaxLengthInput index)
+                                    ]
+                                    []
                         }
                         customElement.maxlength
 
@@ -1811,11 +2351,29 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
                         []
             , inputAttributeOptional
                 { onCheck = \b -> OnFormField (OnDatalistToggle b) index ""
-                , onInput = OnFormField OnDatalistInput index
                 , label = "Suggested values"
-                , toString = List.map choiceToString >> String.join "\n"
-                , htmlNode = Html.textarea
-                , attrs = [ class "tff-text-field", placeholder "Enter one suggestion per line" ]
+                , htmlNode =
+                    \result ->
+                        case result of
+                            Ok a ->
+                                Html.textarea
+                                    [ required True
+                                    , class "tff-text-field"
+                                    , placeholder "Enter one suggestion per line"
+                                    , value (List.map choiceToString a |> String.join "\n")
+                                    , onInput (OnFormField OnDatalistInput index)
+                                    ]
+                                    []
+
+                            Err err ->
+                                Html.textarea
+                                    [ required True
+                                    , class "tff-text-field"
+                                    , placeholder "Enter one suggestion per line"
+                                    , value err
+                                    , onInput (OnFormField OnDatalistInput index)
+                                    ]
+                                    []
                 }
                 customElement.datalist
             ]
@@ -1823,11 +2381,29 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
         LongText optionalMaxLength ->
             [ inputAttributeOptional
                 { onCheck = \b -> OnFormField (OnMaxLengthToggle b) index ""
-                , onInput = OnFormField OnMaxLengthInput index
                 , label = "Limit number of characters"
-                , toString = String.fromInt
-                , htmlNode = Html.input
-                , attrs = [ class "tff-text-field", type_ "number", Html.Attributes.min "1" ]
+                , htmlNode =
+                    \result ->
+                        case result of
+                            Ok i ->
+                                Html.input
+                                    [ class "tff-text-field"
+                                    , type_ "number"
+                                    , Attr.min "1"
+                                    , value (String.fromInt i)
+                                    , onInput (OnFormField OnMaxLengthInput index)
+                                    ]
+                                    []
+
+                            Err err ->
+                                Html.input
+                                    [ class "tff-text-field"
+                                    , type_ "number"
+                                    , Attr.min "1"
+                                    , value err
+                                    , onInput (OnFormField OnMaxLengthInput index)
+                                    ]
+                                    []
                 }
                 optionalMaxLength
             ]
@@ -1845,6 +2421,15 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
             ]
 
 
+hasDuplicateLabel : Int -> String -> Array FormField -> Bool
+hasDuplicateLabel currentIndex newLabel formFields =
+    formFields
+        |> Array.toList
+        |> List.indexedMap (\i f -> ( i, f ))
+        |> List.filter (\( i, _ ) -> i /= currentIndex)
+        |> List.any (\( _, f ) -> f.label == newLabel)
+
+
 
 -- PORT
 
@@ -1852,6 +2437,7 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
 type PortOutgoingValue
     = PortOutgoingFormFields (Array FormField)
     | PortOutgoingSetupCloseDropdown PortIncomingValue
+    | PortOutgoingFormValues Json.Encode.Value
 
 
 encodePortOutgoingValue : PortOutgoingValue -> Json.Encode.Value
@@ -1867,6 +2453,12 @@ encodePortOutgoingValue value =
             Json.Encode.object
                 [ ( "type", Json.Encode.string "setupCloseDropdown" )
                 , ( "value", encodePortIncomingValue incomingValue )
+                ]
+
+        PortOutgoingFormValues formValues ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "formValues" )
+                , ( "value", formValues )
                 ]
 
 
@@ -1919,6 +2511,14 @@ decodePortIncomingValue =
 
 
 --  ENCODERS DECODERS
+
+
+decodeListOrSingleton : Json.Decode.Decoder a -> Json.Decode.Decoder (List a)
+decodeListOrSingleton decoder =
+    Json.Decode.oneOf
+        [ Json.Decode.list decoder
+        , Json.Decode.map List.singleton decoder
+        ]
 
 
 defaultInputTag : String
@@ -1985,7 +2585,7 @@ decodeConfig =
                 |> Json.Decode.map
                     (Maybe.withDefault
                         [ fromRawCustomElement
-                            { inputType = "Text"
+                            { inputType = "Single-line free text"
                             , inputTag = defaultInputTag
                             , attributes = Dict.fromList [ ( "type", "text" ) ]
                             }
@@ -2110,12 +2710,67 @@ encodeFormFields formFields =
                      , ( "presence", encodePresence formField.presence )
                      , ( "description", encodeAttributeOptional Json.Encode.string formField.description )
                      , ( "type", encodeInputField formField.type_ )
+                     , ( "visibilityRule", Json.Encode.list encodeVisibilityRule formField.visibilityRule )
                      ]
-                        -- smaller output json than if we encoded `null` all the time
                         |> List.filter (\( _, v ) -> v /= Json.Encode.null)
                     )
             )
         |> Json.Encode.list identity
+
+
+encodeVisibilityRule : VisibilityRule -> Json.Encode.Value
+encodeVisibilityRule rule =
+    case rule of
+        ShowWhen conditions ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "ShowWhen" )
+                , ( "conditions", Json.Encode.list encodeCondition conditions )
+                ]
+
+        HideWhen conditions ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "HideWhen" )
+                , ( "conditions", Json.Encode.list encodeCondition conditions )
+                ]
+
+
+encodeCondition : Condition -> Json.Encode.Value
+encodeCondition condition =
+    case condition of
+        Field fieldName comparison ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "Field" )
+                , ( "fieldName", Json.Encode.string fieldName )
+                , ( "comparison", encodeComparison comparison )
+                ]
+
+
+encodeComparison : Comparison -> Json.Encode.Value
+encodeComparison comparison =
+    case comparison of
+        Equals value ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "Equals" )
+                , ( "value", Json.Encode.string value )
+                ]
+
+        StringContains value ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "StringContains" )
+                , ( "value", Json.Encode.string value )
+                ]
+
+        EndsWith value ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "EndsWith" )
+                , ( "value", Json.Encode.string value )
+                ]
+
+        GreaterThan value ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "GreaterThan" )
+                , ( "value", Json.Encode.string value )
+                ]
 
 
 decodeFormFields : Json.Decode.Decoder (Array FormField)
@@ -2132,6 +2787,10 @@ decodeFormField =
         |> andMap (Json.Decode.oneOf [ Json.Decode.field "presence" decodePresence, decodeRequired ])
         |> andMap decodeFormFieldDescription
         |> andMap (Json.Decode.field "type" decodeInputField)
+        |> andMap
+            (Json.Decode.Extra.optionalNullableField "visibilityRule" (Json.Decode.list decodeVisibilityRule)
+                |> Json.Decode.map (Maybe.withDefault [])
+            )
 
 
 decodeRequired : Json.Decode.Decoder Presence
@@ -2167,6 +2826,25 @@ decodeFormFieldDescription =
         , Json.Decode.field "description" (decodeAttributeOptional (Just "") Json.Decode.string)
         , Json.Decode.succeed (AttributeNotNeeded Nothing)
         ]
+
+
+decodeVisibilityRule : Json.Decode.Decoder VisibilityRule
+decodeVisibilityRule =
+    Json.Decode.field "type" Json.Decode.string
+        |> Json.Decode.andThen
+            (\str ->
+                case str of
+                    "ShowWhen" ->
+                        Json.Decode.succeed ShowWhen
+                            |> andMap (Json.Decode.field "conditions" (Json.Decode.list decodeCondition))
+
+                    "HideWhen" ->
+                        Json.Decode.succeed HideWhen
+                            |> andMap (Json.Decode.field "conditions" (Json.Decode.list decodeCondition))
+
+                    _ ->
+                        Json.Decode.fail ("Unknown visibility rule: " ++ str)
+            )
 
 
 decodeCustomElement : Json.Decode.Decoder CustomElement
@@ -2479,3 +3157,340 @@ dragOverDecoder index maybeFormField =
         ( DragOver (Just ( index, maybeFormField ))
         , True
         )
+
+
+decodeCondition : Json.Decode.Decoder Condition
+decodeCondition =
+    Json.Decode.field "type" Json.Decode.string
+        |> Json.Decode.andThen
+            (\str ->
+                case str of
+                    "Field" ->
+                        Json.Decode.succeed Field
+                            |> andMap (Json.Decode.field "fieldName" Json.Decode.string)
+                            |> andMap (Json.Decode.field "comparison" decodeComparison)
+
+                    _ ->
+                        Json.Decode.fail ("Unknown condition type: " ++ str)
+            )
+
+
+decodeComparison : Json.Decode.Decoder Comparison
+decodeComparison =
+    Json.Decode.field "type" Json.Decode.string
+        |> Json.Decode.andThen
+            (\str ->
+                case str of
+                    "Equals" ->
+                        Json.Decode.succeed Equals
+                            |> andMap (Json.Decode.field "value" Json.Decode.string)
+
+                    "StringContains" ->
+                        Json.Decode.succeed StringContains
+                            |> andMap (Json.Decode.field "value" Json.Decode.string)
+
+                    "EndsWith" ->
+                        Json.Decode.succeed EndsWith
+                            |> andMap (Json.Decode.field "value" Json.Decode.string)
+
+                    "GreaterThan" ->
+                        Json.Decode.succeed GreaterThan
+                            |> andMap (Json.Decode.field "value" Json.Decode.string)
+
+                    _ ->
+                        Json.Decode.fail ("Unknown comparison type: " ++ str)
+            )
+
+
+evaluateCondition : Dict String (List String) -> Condition -> Bool
+evaluateCondition trackedFormValues condition =
+    case condition of
+        Field fieldName comparison ->
+            case comparison of
+                Equals givenValue ->
+                    Dict.get fieldName trackedFormValues
+                        |> Maybe.withDefault []
+                        |> List.member givenValue
+
+                StringContains givenValue ->
+                    Dict.get fieldName trackedFormValues
+                        |> Maybe.withDefault []
+                        |> List.any (String.contains givenValue)
+
+                EndsWith givenValue ->
+                    Dict.get fieldName trackedFormValues
+                        |> Maybe.withDefault []
+                        |> List.any (String.endsWith givenValue)
+
+                GreaterThan givenValue ->
+                    Dict.get fieldName trackedFormValues
+                        |> Maybe.withDefault []
+                        |> List.any
+                            (\formValue ->
+                                case String.toFloat givenValue of
+                                    Just givenFloat ->
+                                        -- If value is float, try to compare as float
+                                        String.toFloat formValue
+                                            |> Maybe.map (\formFloat -> formFloat > givenFloat)
+                                            |> Maybe.withDefault False
+
+                                    Nothing ->
+                                        -- If value is not float, compare as strings
+                                        formValue > givenValue
+                            )
+
+
+isVisibilityRuleSatisfied : List VisibilityRule -> Dict String (List String) -> Bool
+isVisibilityRuleSatisfied rules trackedFormValues =
+    List.isEmpty rules
+        || List.any
+            (\rule ->
+                case rule of
+                    ShowWhen conditions ->
+                        List.all (evaluateCondition trackedFormValues) conditions
+
+                    HideWhen conditions ->
+                        not (List.all (evaluateCondition trackedFormValues) conditions)
+            )
+            rules
+
+
+
+{- Helper to get conditions from a rule -}
+
+
+visibilityRuleCondition : VisibilityRule -> List Condition
+visibilityRuleCondition rule =
+    case rule of
+        ShowWhen conditions ->
+            conditions
+
+        HideWhen conditions ->
+            conditions
+
+
+
+{- Helper to get conditions from a rule -}
+
+
+comparisonOf : Condition -> Comparison
+comparisonOf condition =
+    case condition of
+        Field _ comparison ->
+            comparison
+
+
+
+{- Helper to check if two comparisons are the same -}
+
+
+isComparingWith : Comparison -> Comparison -> Bool
+isComparingWith expected given =
+    case expected of
+        Equals _ ->
+            case given of
+                Equals _ ->
+                    True
+
+                _ ->
+                    False
+
+        StringContains _ ->
+            case given of
+                StringContains _ ->
+                    True
+
+                _ ->
+                    False
+
+        EndsWith _ ->
+            case given of
+                EndsWith _ ->
+                    True
+
+                _ ->
+                    False
+
+        GreaterThan _ ->
+            case given of
+                GreaterThan _ ->
+                    True
+
+                _ ->
+                    False
+
+
+
+{- Helper to update a comparison -}
+
+
+updateComparison : String -> Comparison -> Comparison
+updateComparison comparisonType comparison =
+    case comparisonType of
+        "Equals" ->
+            case comparison of
+                Equals str ->
+                    Equals str
+
+                StringContains str ->
+                    Equals str
+
+                EndsWith str ->
+                    Equals str
+
+                GreaterThan str ->
+                    Equals str
+
+        "StringContains" ->
+            case comparison of
+                Equals str ->
+                    StringContains str
+
+                StringContains str ->
+                    StringContains str
+
+                EndsWith str ->
+                    StringContains str
+
+                GreaterThan str ->
+                    StringContains str
+
+        "EndsWith" ->
+            case comparison of
+                Equals str ->
+                    EndsWith str
+
+                StringContains str ->
+                    EndsWith str
+
+                EndsWith str ->
+                    EndsWith str
+
+                GreaterThan str ->
+                    EndsWith str
+
+        "GreaterThan" ->
+            case comparison of
+                Equals str ->
+                    GreaterThan str
+
+                StringContains str ->
+                    GreaterThan str
+
+                EndsWith str ->
+                    GreaterThan str
+
+                GreaterThan str ->
+                    GreaterThan str
+
+        _ ->
+            comparison
+
+
+updateComparisonValue : String -> Comparison -> Comparison
+updateComparisonValue newValue comparison =
+    case comparison of
+        Equals _ ->
+            Equals newValue
+
+        StringContains _ ->
+            StringContains newValue
+
+        EndsWith _ ->
+            EndsWith newValue
+
+        GreaterThan _ ->
+            GreaterThan newValue
+
+
+
+{- VISIBILITY RULE HELPERS -}
+
+
+updateVisibilityRuleAt : Int -> (VisibilityRule -> VisibilityRule) -> List VisibilityRule -> List VisibilityRule
+updateVisibilityRuleAt targetIndex updater rules =
+    List.indexedMap
+        (\i rule ->
+            if i == targetIndex then
+                updater rule
+
+            else
+                rule
+        )
+        rules
+
+
+updateConditionsInRule : (List Condition -> List Condition) -> VisibilityRule -> VisibilityRule
+updateConditionsInRule updater rule =
+    case rule of
+        ShowWhen conditions ->
+            ShowWhen (updater conditions)
+
+        HideWhen conditions ->
+            HideWhen (updater conditions)
+
+
+updateConditions : Int -> (Condition -> Condition) -> List Condition -> List Condition
+updateConditions conditionIndex updater conditions =
+    List.indexedMap
+        (\i condition ->
+            if i == conditionIndex then
+                updater condition
+
+            else
+                condition
+        )
+        conditions
+
+
+updateFieldnameInCondition : (String -> String) -> Condition -> Condition
+updateFieldnameInCondition updater condition =
+    case condition of
+        Field fieldName comparison ->
+            Field (updater fieldName) comparison
+
+
+updateComparisonInCondition : (Comparison -> Comparison) -> Condition -> Condition
+updateComparisonInCondition updater condition =
+    case condition of
+        Field fieldName comparison ->
+            Field fieldName (updater comparison)
+
+
+
+-- UI HELPER
+
+
+selectInputGroup : { selectAttrs : List (Html.Attribute msg), options : List ( String, String, Bool ), inputAttrs : List (Html.Attribute msg), children : List (Html.Html msg) } -> Html msg
+selectInputGroup { selectAttrs, options, inputAttrs, children } =
+    let
+        calculatedAttrs =
+            List.filter (\( _, _, selected ) -> selected) options
+                |> List.map (\( value, _, _ ) -> Attr.value value)
+                |> List.append [ class "tff-selectinput-select" ]
+    in
+    div
+        [ Attr.class "tff-selectinput-wrapper"
+        ]
+        [ div
+            [ Attr.class "tff-selectinput-group"
+            ]
+            [ div
+                [ Attr.class "tff-selectinput-select-wrapper"
+                ]
+                [ select (calculatedAttrs ++ selectAttrs)
+                    (List.map
+                        (\( value, label, selected ) ->
+                            option
+                                [ Attr.value value
+                                , Attr.selected selected
+                                ]
+                                [ text label ]
+                        )
+                        options
+                    )
+                , selectArrowDown
+                ]
+            , input (class "tff-selectinput-input" :: inputAttrs) children
+            ]
+        ]

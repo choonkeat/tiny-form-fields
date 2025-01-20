@@ -13,9 +13,8 @@
     @apply whitespace-pre-wrap;
 }
 
-/* Base styles for text content */
-.tff-text-content {
-    @apply whitespace-pre-wrap;
+.tff-error-text {
+    @apply text-sm text-red-600 mt-1;
 }
 
 /* Settings panel styles */
@@ -38,6 +37,20 @@
 .tff-field-group {
     @apply relative;
     @apply mb-12;
+}
+
+.tff-field-rule {
+    @apply bg-white;
+    @apply p-2;
+    @apply rounded;
+    @apply border;
+    @apply border-gray-300;
+    @apply mb-4;
+}
+
+.tff-field-rule-conditions {
+    @apply pl-4;
+    @apply mb-2;
 }
 
 .tff-toggle-group {
@@ -171,7 +184,7 @@
     @apply space-x-2;
 }
 
-.tff-build-field-buttons button {
+.tff-settings-content button {
     @apply text-xs;
     @apply bg-gray-200;
     @apply hover:bg-gray-400;
@@ -182,7 +195,7 @@
 }
 
 .tff-build-field-buttons button.tff-delete {
-    @apply text-red-700;
+    @apply text-red-600;
 }
 
 .tff-dropdown-button {
@@ -211,11 +224,38 @@
     @apply hidden;
 }
 
+.tff-selectinput-wrapper {
+    @apply mt-2;
+}
+
+.tff-selectinput-group {
+    @apply flex items-center rounded-md bg-white outline outline-1 -outline-offset-1 outline-gray-300;
+    @apply has-[input:focus-within]:outline has-[input:focus-within]:outline-2 has-[input:focus-within]:-outline-offset-2 has-[input:focus-within]:outline-indigo-600;
+}
+
+.tff-selectinput-input {
+    @apply block min-w-0 grow py-1.5 pl-1 pr-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline focus:outline-0 sm:text-sm/6;
+}
+
+.tff-selectinput-select-wrapper {
+    @apply grid shrink-0 grid-cols-1 focus-within:relative;
+}
+
+.tff-selectinput-select {
+    @apply col-start-1 row-start-1 w-full appearance-none rounded-md py-1.5 pl-3 pr-7 text-base text-gray-500 placeholder:text-gray-400;
+    @apply focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6;
+}
+
+.tff-selectarrow-icon {
+    @apply pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4;
+}
+
 /* Animation keyframes */
 @keyframes fadeOut {
     0% {
         @apply opacity-100;
     }
+
     100% {
         @apply opacity-0;
     }
@@ -225,6 +265,7 @@
     0% {
         @apply opacity-0;
     }
+
     100% {
         @apply opacity-100;
     }
@@ -260,6 +301,7 @@
     @apply duration-200;
     @apply border;
     @apply border-white;
+    @apply cursor-pointer;
 }
 
 .tff-field-preview:hover {
@@ -324,25 +366,12 @@
     @apply bg-blue-50;
 }
 
-.tff-field-placeholder-above {
-    @apply -translate-y-full;
-}
-
-.tff-field-placeholder-below {
-    @apply translate-y-full;
-}
-
 /* Field wrapper and container layout */
 .tff-field-wrapper {
     @apply flex;
     @apply flex-col;
     @apply gap-0;
     @apply cursor-move;
-}
-
-/* Field preview and interaction styles */
-.tff-field-preview {
-    @apply cursor-pointer;
 }
 
 /* Base layout - Mobile first */
@@ -416,7 +445,7 @@
     }
 
     .tff-left-panel {
-        @apply w-64;
+        @apply w-80;
         @apply border-t-0;
         @apply border-r;
         @apply order-none;
@@ -437,7 +466,7 @@
     }
 
     .tff-right-panel {
-        @apply w-64;
+        @apply w-80;
         @apply absolute;
         @apply top-0;
         @apply left-0;
@@ -581,4 +610,13 @@
 
 .tff-fields-container {
     @apply min-h-[200px];
+}
+
+.tff-button {
+    @apply inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-semibold;
+    @apply shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2;
+}
+
+.tff-button-secondary {
+    @apply bg-white text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50;
 }
