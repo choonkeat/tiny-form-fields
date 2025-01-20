@@ -100,6 +100,7 @@ type alias Model =
     , dropdownState : DropdownState
     , selectedFieldIndex : Maybe Int
     , dragged : Maybe Dragged
+    , nextQuestionNumber : Int
     }
 
 
@@ -507,6 +508,7 @@ init flags =
               , dropdownState = DropdownClosed
               , selectedFieldIndex = Nothing
               , dragged = Nothing
+              , nextQuestionNumber = Array.length config.formFields + 1
               }
             , Cmd.batch
                 [ outgoing (encodePortOutgoingValue (PortOutgoingFormFields config.formFields))
@@ -529,6 +531,7 @@ init flags =
               , dropdownState = DropdownClosed
               , selectedFieldIndex = Nothing
               , dragged = Nothing
+              , nextQuestionNumber = 1
               }
             , Cmd.none
             )
@@ -568,7 +571,7 @@ update msg model =
             let
                 newFormField : FormField
                 newFormField =
-                    { label = stringFromInputField fieldType ++ " question"
+                    { label = stringFromInputField fieldType ++ " question " ++ String.fromInt model.nextQuestionNumber
                     , name = Nothing
                     , presence = when (mustBeOptional fieldType) { true = Optional, false = Required }
                     , description = AttributeNotNeeded Nothing
@@ -584,6 +587,7 @@ update msg model =
             in
             ( { model
                 | formFields = newFormFields
+                , nextQuestionNumber = model.nextQuestionNumber + 1
               }
             , Cmd.batch
                 [ outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
@@ -1048,7 +1052,7 @@ updateFormField msg fieldIndex string formFields formField =
             }
 
 
-onDropped : Maybe Int -> { a | dragged : Maybe Dragged, formFields : Array FormField } -> { a | dragged : Maybe Dragged, formFields : Array FormField }
+onDropped : Maybe Int -> { a | dragged : Maybe Dragged, formFields : Array FormField, nextQuestionNumber : Int } -> { a | dragged : Maybe Dragged, formFields : Array FormField, nextQuestionNumber : Int }
 onDropped targetIndex model =
     case model.dragged of
         Just (DragExisting { dragIndex, dropIndex }) ->
@@ -1133,6 +1137,7 @@ onDropped targetIndex model =
                                 { model
                                     | formFields = newFormFields
                                     , dragged = Nothing
+                                    , nextQuestionNumber = model.nextQuestionNumber + 1
                                 }
 
                         Nothing ->
@@ -1780,7 +1785,7 @@ viewFormBuilder maybeAnimate model =
             , classList [ ( "tff-panel-hidden", model.selectedFieldIndex /= Nothing ) ]
             ]
             [ h2 [ class "tff-panel-header" ] [ text "Add Form Field" ]
-            , viewAddQuestionsList (allInputField ++ extraOptions)
+            , viewAddQuestionsList model.nextQuestionNumber (allInputField ++ extraOptions)
             ]
         , div
             [ class "tff-center-panel"
@@ -2215,7 +2220,7 @@ dragHandleIcon =
     svg
         [ SvgAttr.viewBox "0 0 16 16"
         , SvgAttr.fill "currentColor"
-        , attribute "aria-hidden" "true"
+        , Attr.attribute "aria-hidden" "true"
         , SvgAttr.class "tff-drag-handle-icon"
         ]
         [ rect
@@ -2242,8 +2247,8 @@ dragHandleIcon =
         ]
 
 
-viewAddQuestionsList : List InputField -> Html Msg
-viewAddQuestionsList inputFields =
+viewAddQuestionsList : Int -> List InputField -> Html Msg
+viewAddQuestionsList nextQuestionNumber inputFields =
     div [ class "tff-field-list" ]
         (List.map
             (\inputField ->
@@ -2255,7 +2260,7 @@ viewAddQuestionsList inputFields =
                     , on "dragstart"
                         (Json.Decode.succeed
                             (DragStartNew
-                                { label = stringFromInputField inputField ++ " question"
+                                { label = stringFromInputField inputField ++ " question " ++ String.fromInt nextQuestionNumber
                                 , name = Nothing
                                 , presence = when (mustBeOptional inputField) { true = Optional, false = Required }
                                 , description = AttributeNotNeeded Nothing

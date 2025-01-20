@@ -156,16 +156,20 @@ suite =
                                     , field2
                                     , field3
                                     ]
+                            , nextQuestionNumber = 4
                             }
                     in
                     Main.onDropped (Just 0) model
-                        |> .formFields
-                        |> Array.toList
                         |> Expect.equal
-                            [ field2
-                            , field1
-                            , field3
-                            ]
+                            { model
+                                | dragged = Nothing
+                                , formFields =
+                                    Array.fromList
+                                        [ field2
+                                        , field1
+                                        , field3
+                                        ]
+                            }
             , test "dropping an existing field at index 2" <|
                 \_ ->
                     let
@@ -183,16 +187,20 @@ suite =
                                     , field2
                                     , field3
                                     ]
+                            , nextQuestionNumber = 4
                             }
                     in
                     Main.onDropped (Just 2) model
-                        |> .formFields
-                        |> Array.toList
                         |> Expect.equal
-                            [ field1
-                            , field3
-                            , field2
-                            ]
+                            { model
+                                | dragged = Nothing
+                                , formFields =
+                                    Array.fromList
+                                        [ field1
+                                        , field3
+                                        , field2
+                                        ]
+                            }
             , test "dropping a new field at index 2" <|
                 \_ ->
                     let
@@ -213,17 +221,22 @@ suite =
                                     , field2
                                     , field3
                                     ]
+                            , nextQuestionNumber = 4
                             }
                     in
                     Main.onDropped (Just 2) model
-                        |> .formFields
-                        |> Array.toList
                         |> Expect.equal
-                            [ field1
-                            , field2
-                            , newField
-                            , field3
-                            ]
+                            { model
+                                | dragged = Nothing
+                                , formFields =
+                                    Array.fromList
+                                        [ field1
+                                        , field2
+                                        , newField
+                                        , field3
+                                        ]
+                                , nextQuestionNumber = 5
+                            }
             , test "dropping outside valid area resets dragged state" <|
                 \_ ->
                     let
@@ -235,11 +248,14 @@ suite =
                                     , field2
                                     , field3
                                     ]
+                            , nextQuestionNumber = 4
                             }
                     in
                     Main.onDropped Nothing model
-                        |> .dragged
-                        |> Expect.equal Nothing
+                        |> Expect.equal
+                            { model
+                                | dragged = Nothing
+                            }
             , test "dropping on original position does not change fields" <|
                 \_ ->
                     let
@@ -251,16 +267,14 @@ suite =
                                     , field2
                                     , field3
                                     ]
+                            , nextQuestionNumber = 4
                             }
                     in
                     Main.onDropped (Just 1) model
-                        |> .formFields
-                        |> Array.toList
                         |> Expect.equal
-                            [ field1
-                            , field2
-                            , field3
-                            ]
+                            { model
+                                | dragged = Nothing
+                            }
             , test "dropping with no drag state does nothing" <|
                 \_ ->
                     let
@@ -272,16 +286,11 @@ suite =
                                     , field2
                                     , field3
                                     ]
+                            , nextQuestionNumber = 4
                             }
                     in
                     Main.onDropped (Just 1) model
-                        |> .formFields
-                        |> Array.toList
-                        |> Expect.equal
-                            [ field1
-                            , field2
-                            , field3
-                            ]
+                        |> Expect.equal model
             ]
         , describe "isVisibilityRuleSatisfied"
             [ test "empty rules list returns True" <|
