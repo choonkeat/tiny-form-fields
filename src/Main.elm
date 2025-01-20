@@ -97,7 +97,6 @@ type alias Model =
 
     -- Dict to lookup by `inputType`
     , shortTextTypeDict : Dict String CustomElement
-    , dropdownState : DropdownState
     , selectedFieldIndex : Maybe Int
     , dragged : Maybe Dragged
     , nextQuestionNumber : Int
@@ -420,19 +419,19 @@ type FormFieldMsg
     | OnVisibilityConditionDuplicate Int
 
 
-otherQuestionTitles : Array FormField -> Int -> List String
+otherQuestionTitles : Array FormField -> Int -> List { label : String, name : Maybe String }
 otherQuestionTitles formFields currentIndex =
     Array.toList formFields
         |> List.indexedMap (\i f -> ( i, f ))
         |> List.filter (\( i, _ ) -> i /= currentIndex)
-        |> List.map (\( _, f ) -> f.label)
+        |> List.map (\( _, f ) -> { label = f.label, name = f.name })
 
 
-getPreviousFieldLabel : Int -> Array FormField -> String
-getPreviousFieldLabel index formFields =
+getPreviousFieldNameOrLabel : Int -> Array FormField -> String
+getPreviousFieldNameOrLabel index formFields =
     if index > 0 then
         Array.get (index - 1) formFields
-            |> Maybe.map .label
+            |> Maybe.map fieldNameOf
             |> Maybe.withDefault ""
 
     else
@@ -505,18 +504,12 @@ init flags =
                     effectiveShortTextTypeList
                         |> List.map (\customElement -> ( customElement.inputType, customElement ))
                         |> Dict.fromList
-              , dropdownState = DropdownClosed
               , selectedFieldIndex = Nothing
               , dragged = Nothing
               , nextQuestionNumber = Array.length config.formFields + 1
               }
             , Cmd.batch
                 [ outgoing (encodePortOutgoingValue (PortOutgoingFormFields config.formFields))
-
-                -- js could've just done `document.body.addEventListener` and `app.ports.incoming.send` anyways
-                -- but we're sending out PortOutgoingSetupCloseDropdown to be surer that js would do it
-                -- also, we now dictate what `app.ports.incoming.send` sends back: PortIncomingCloseDropdown
-                , outgoing (encodePortOutgoingValue (PortOutgoingSetupCloseDropdown PortIncomingCloseDropdown))
                 ]
             )
 
@@ -528,7 +521,6 @@ init flags =
               , trackedFormValues = Dict.empty
               , shortTextTypeList = []
               , shortTextTypeDict = Dict.empty
-              , dropdownState = DropdownClosed
               , selectedFieldIndex = Nothing
               , dragged = Nothing
               , nextQuestionNumber = 1
@@ -554,15 +546,8 @@ update msg model =
 
         OnPortIncoming value ->
             case Json.Decode.decodeValue decodePortIncomingValue value of
-                Ok (PortIncomingViewMode viewMode) ->
-                    ( { model | viewMode = viewMode }
-                    , Cmd.none
-                    )
-
-                Ok PortIncomingCloseDropdown ->
-                    ( { model | dropdownState = DropdownClosed }
-                    , Cmd.none
-                    )
+                Ok PortIncomingValue ->
+                    ( model, Cmd.none )
 
                 Err _ ->
                     ( model, Cmd.none )
@@ -608,7 +593,10 @@ update msg model =
                         |> List.map Tuple.second
                         |> Array.fromList
             in
-            ( { model | formFields = newFormFields, selectedFieldIndex = Nothing }
+            ( { model
+                | formFields = newFormFields
+                , selectedFieldIndex = Nothing
+              }
             , outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
             )
 
@@ -649,7 +637,9 @@ update msg model =
                         )
                         model.formFields
             in
-            ( { model | formFields = newFormFields }
+            ( { model
+                | formFields = newFormFields
+              }
             , outgoing (encodePortOutgoingValue (PortOutgoingFormFields newFormFields))
             )
 
@@ -774,7 +764,9 @@ update msg model =
                         |> Dict.fromList
                         |> Json.Encode.dict identity identity
             in
-            ( { model | trackedFormValues = newTrackedFormValues }
+            ( { model
+                | trackedFormValues = newTrackedFormValues
+              }
             , outgoing (encodePortOutgoingValue (PortOutgoingFormValues formValues))
             )
 
@@ -1025,7 +1017,7 @@ updateFormField msg fieldIndex string formFields formField =
             }
 
         OnAddVisibilityRule ->
-            { formField | visibilityRule = formField.visibilityRule ++ [ ShowWhen [ Field (getPreviousFieldLabel fieldIndex formFields) (Equals "") ] ] }
+            { formField | visibilityRule = formField.visibilityRule ++ [ ShowWhen [ Field (getPreviousFieldNameOrLabel fieldIndex formFields) (Equals "") ] ] }
 
         OnVisibilityConditionDuplicate ruleIndex ->
             let
@@ -1035,7 +1027,7 @@ updateFormField msg fieldIndex string formFields formField =
                             last
 
                         [] ->
-                            Field (getPreviousFieldLabel fieldIndex formFields) (Equals "")
+                            Field (getPreviousFieldNameOrLabel fieldIndex formFields) (Equals "")
             in
             { formField
                 | visibilityRule =
@@ -1130,7 +1122,7 @@ onDropped targetIndex model =
                                                         ( before, after ) =
                                                             List.Extra.splitAt index list
                                                     in
-                                                    before ++ [ field ] ++ after
+                                                    before ++ (field :: after)
                                                )
                                             |> Array.fromList
                                 in
@@ -1217,14 +1209,15 @@ viewMain model =
 viewFormPreview : List (Html.Attribute Msg) -> { a | formFields : Array FormField, needsFormLogic : Bool, trackedFormValues : Dict String (List String), shortTextTypeDict : Dict String CustomElement } -> List (Html Msg)
 viewFormPreview customAttrs { formFields, needsFormLogic, trackedFormValues, shortTextTypeDict } =
     let
-        onChooseMany fieldName choice =
+        onChooseManyAttrs fieldName choice =
             [ onCheck (\_ -> OnFormValuesUpdated fieldName choice.value) ]
 
-        onInput fieldName =
-            [ on "input"
-                (Json.Decode.at [ "target", "value" ] Json.Decode.string
-                    |> Json.Decode.map (\value -> OnFormValuesUpdated fieldName value)
-                )
+        onInputAttrs fieldName =
+            [ on "input" (Json.Decode.map (OnFormValuesUpdated fieldName) Html.Events.targetValue)
+            ]
+
+        onChangeAttrs fieldName =
+            [ onChange (OnFormValuesUpdated fieldName)
             ]
 
         config =
@@ -1234,13 +1227,19 @@ viewFormPreview customAttrs { formFields, needsFormLogic, trackedFormValues, sho
             , trackedFormValues = trackedFormValues
             , onChooseMany =
                 if needsFormLogic then
-                    onChooseMany
+                    onChooseManyAttrs
 
                 else
                     \_ _ -> []
             , onInput =
                 if needsFormLogic then
-                    onInput
+                    onInputAttrs
+
+                else
+                    \_ -> []
+            , onChange =
+                if needsFormLogic then
+                    onChangeAttrs
 
                 else
                     \_ -> []
@@ -1269,6 +1268,7 @@ viewFormFieldPreview :
     , customAttrs : List (Html.Attribute Msg)
     , onChooseMany : String -> Choice -> List (Html.Attribute Msg)
     , onInput : String -> List (Html.Attribute Msg)
+    , onChange : String -> List (Html.Attribute Msg)
     , shortTextTypeDict : Dict String CustomElement
     , formFields : Array FormField
     }
@@ -1382,7 +1382,7 @@ maybeMaxLengthOf formField =
             Nothing
 
 
-fieldNameOf : FormField -> String
+fieldNameOf : { a | label : String, name : Maybe String } -> String
 fieldNameOf formField =
     Maybe.withDefault formField.label formField.name
 
@@ -1422,6 +1422,7 @@ viewFormFieldOptionsPreview :
     , customAttrs : List (Html.Attribute Msg)
     , onChooseMany : String -> Choice -> List (Html.Attribute Msg)
     , onInput : String -> List (Html.Attribute Msg)
+    , onChange : String -> List (Html.Attribute Msg)
     , shortTextTypeDict : Dict String CustomElement
     , formFields : Array FormField
     }
@@ -1546,7 +1547,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                        else
                         required (requiredData formField.presence)
                      ]
-                        ++ config.onInput fieldName
+                        ++ config.onChange fieldName
                     )
                     (option
                         ([ disabled True
@@ -1695,6 +1696,7 @@ renderFormField maybeAnimate model index maybeFormField =
                             , formFields = model.formFields
                             , onChooseMany = \_ _ -> []
                             , onInput = \_ -> []
+                            , onChange = \_ -> []
                             , shortTextTypeDict = model.shortTextTypeDict
                             , trackedFormValues = model.trackedFormValues
                             }
@@ -1894,7 +1896,7 @@ visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
                     , select
                         [ class "tff-text-field tff-question-title"
                         , required True
-                        , onInput (\str -> OnFormField (OnVisibilityConditionFieldInput ruleIndex conditionIndex str) fieldIndex "")
+                        , onChange (\str -> OnFormField (OnVisibilityConditionFieldInput ruleIndex conditionIndex str) fieldIndex "")
                         , required True
                         , value
                             (case rule of
@@ -1904,25 +1906,29 @@ visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
                         ]
                         (option [ value "" ] [ text " - " ]
                             :: List.map
-                                (\title ->
+                                (\field ->
+                                    let
+                                        fieldName =
+                                            fieldNameOf field
+                                    in
                                     option
-                                        [ value title
+                                        [ value fieldName
                                         , selected
-                                            (title
+                                            (fieldName
                                                 == (case rule of
-                                                        Field fieldName _ ->
-                                                            fieldName
+                                                        Field givenName _ ->
+                                                            givenName
                                                    )
                                             )
                                         ]
-                                        [ text (Json.Encode.encode 0 (Json.Encode.string title)) ]
+                                        [ text (Json.Encode.encode 0 (Json.Encode.string field.label)) ]
                                 )
                                 (otherQuestionTitles formFields fieldIndex)
                         )
                     ]
                 , selectInputGroup
                     { selectAttrs =
-                        [ onInput (\str -> OnFormField (OnVisibilityConditionTypeInput ruleIndex conditionIndex str) fieldIndex "")
+                        [ onChange (\str -> OnFormField (OnVisibilityConditionTypeInput ruleIndex conditionIndex str) fieldIndex "")
                         , class "tff-comparison-type"
                         ]
                     , options =
@@ -1971,7 +1977,7 @@ visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
                 [ selectArrowDown
                 , select
                     [ class "tff-text-field tff-show-or-hide"
-                    , onInput (\str -> OnFormField (OnVisibilityRuleTypeInput ruleIndex str) fieldIndex "")
+                    , onChange (\str -> OnFormField (OnVisibilityRuleTypeInput ruleIndex str) fieldIndex "")
                     , required True
                     , value
                         (case visibilityRule of
@@ -1999,6 +2005,11 @@ visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
                    ]
             )
         ]
+
+
+onChange : (String -> msg) -> Html.Attribute msg
+onChange msg =
+    on "change" (Json.Decode.map msg Html.Events.targetValue)
 
 
 viewFormFieldBuilder : List CustomElement -> Int -> Int -> Array FormField -> FormField -> Html Msg
@@ -2209,10 +2220,6 @@ viewRightPanel modelData =
                     text "Select a field to edit its settings"
             ]
         ]
-
-
-type DropdownState
-    = DropdownClosed
 
 
 dragHandleIcon : Html msg
@@ -2441,7 +2448,6 @@ hasDuplicateLabel currentIndex newLabel formFields =
 
 type PortOutgoingValue
     = PortOutgoingFormFields (Array FormField)
-    | PortOutgoingSetupCloseDropdown PortIncomingValue
     | PortOutgoingFormValues Json.Encode.Value
 
 
@@ -2454,37 +2460,15 @@ encodePortOutgoingValue value =
                 , ( "formFields", encodeFormFields formFields )
                 ]
 
-        PortOutgoingSetupCloseDropdown incomingValue ->
-            Json.Encode.object
-                [ ( "type", Json.Encode.string "setupCloseDropdown" )
-                , ( "value", encodePortIncomingValue incomingValue )
-                ]
-
         PortOutgoingFormValues formValues ->
             Json.Encode.object
                 [ ( "type", Json.Encode.string "formValues" )
-                , ( "value", formValues )
+                , ( "formValues", formValues )
                 ]
 
 
 type PortIncomingValue
-    = PortIncomingViewMode ViewMode
-    | PortIncomingCloseDropdown
-
-
-encodePortIncomingValue : PortIncomingValue -> Json.Encode.Value
-encodePortIncomingValue value =
-    case value of
-        PortIncomingViewMode viewMode ->
-            Json.Encode.object
-                [ ( "type", Json.Encode.string "viewMode" )
-                , ( "viewMode", Json.Encode.string (stringFromViewMode viewMode) )
-                ]
-
-        PortIncomingCloseDropdown ->
-            Json.Encode.object
-                [ ( "type", Json.Encode.string "closeDropdown" )
-                ]
+    = PortIncomingValue
 
 
 decodePortIncomingValue : Json.Decode.Decoder PortIncomingValue
@@ -2492,25 +2476,7 @@ decodePortIncomingValue =
     Json.Decode.field "type" Json.Decode.string
         |> Json.Decode.andThen
             (\type_ ->
-                case type_ of
-                    "viewMode" ->
-                        -- app.ports.incoming.send({ type: "viewMode", viewMode: "Preview" })
-                        Json.Decode.field "viewMode" Json.Decode.string
-                            |> Json.Decode.andThen
-                                (\viewModeString ->
-                                    case viewModeFromString viewModeString of
-                                        Just viewMode ->
-                                            Json.Decode.succeed (PortIncomingViewMode viewMode)
-
-                                        Nothing ->
-                                            Json.Decode.fail ("Unknown view mode: " ++ viewModeString)
-                                )
-
-                    "closeDropdown" ->
-                        Json.Decode.succeed PortIncomingCloseDropdown
-
-                    _ ->
-                        Json.Decode.fail ("Unknown port event type: " ++ type_)
+                Json.Decode.fail ("Unknown port event type: " ++ type_)
             )
 
 
