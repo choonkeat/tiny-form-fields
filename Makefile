@@ -1,6 +1,7 @@
 SHELL = /bin/bash -u -e -o pipefail
 export PATH := node_modules/.bin:$(PATH)
 
+build: ELM_MAKE_FLAGS=--optimize
 build: css compile test test-go test-playwright
 
 diff:
