@@ -873,7 +873,7 @@ suite =
                                 case t of
                                     Main.ShortText customElement ->
                                         Expect.equal
-                                            (Main.AttributeGiven [ { label = "option1", value = "option1" }, { label = "option2", value = "option2" } ])
+                                            (Main.AttributeGiven [ { label = "option1", value = "option1" }, { label = "option2", value = "option2" }, { label = "", value = "" } ])
                                             customElement.datalist
 
                                     _ ->
@@ -901,7 +901,7 @@ suite =
                                 case t of
                                     Main.ShortText customElement ->
                                         Expect.equal
-                                            (Main.AttributeGiven [ { label = "huh", value = "option1" }, { label = "option2", value = "option2" } ])
+                                            (Main.AttributeGiven [ { label = "huh", value = "option1" }, { label = "option2", value = "option2" }, { label = "", value = "" } ])
                                             customElement.datalist
 
                                     _ ->
