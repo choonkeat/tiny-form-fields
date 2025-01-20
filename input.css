@@ -17,11 +17,6 @@
     @apply text-sm text-red-600 mt-1;
 }
 
-/* Base styles for text content */
-.tff-text-content {
-    @apply whitespace-pre-wrap;
-}
-
 /* Settings panel styles */
 .tff-settings-content .tff-field-group,
 .tff-settings-content .tff-toggle-group {
@@ -255,10 +250,6 @@
     @apply pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4;
 }
 
-.tff-price-label {
-    @apply block text-sm/6 font-medium text-gray-900;
-}
-
 /* Animation keyframes */
 @keyframes fadeOut {
     0% {
@@ -310,6 +301,7 @@
     @apply duration-200;
     @apply border;
     @apply border-white;
+    @apply cursor-pointer;
 }
 
 .tff-field-preview:hover {
@@ -374,25 +366,12 @@
     @apply bg-blue-50;
 }
 
-.tff-field-placeholder-above {
-    @apply -translate-y-full;
-}
-
-.tff-field-placeholder-below {
-    @apply translate-y-full;
-}
-
 /* Field wrapper and container layout */
 .tff-field-wrapper {
     @apply flex;
     @apply flex-col;
     @apply gap-0;
     @apply cursor-move;
-}
-
-/* Field preview and interaction styles */
-.tff-field-preview {
-    @apply cursor-pointer;
 }
 
 /* Base layout - Mobile first */
