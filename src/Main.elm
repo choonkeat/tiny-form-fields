@@ -1122,7 +1122,7 @@ onDropped targetIndex model =
                                                         ( before, after ) =
                                                             List.Extra.splitAt index list
                                                     in
-                                                    before ++ [ field ] ++ after
+                                                    before ++ (field :: after)
                                                )
                                             |> Array.fromList
                                 in
@@ -1886,7 +1886,7 @@ visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
                     , select
                         [ class "tff-text-field tff-question-title"
                         , required True
-                        , onInput (\str -> OnFormField (OnVisibilityConditionFieldInput ruleIndex conditionIndex str) fieldIndex "")
+                        , onChange (\str -> OnFormField (OnVisibilityConditionFieldInput ruleIndex conditionIndex str) fieldIndex "")
                         , required True
                         , value
                             (case rule of
@@ -1914,7 +1914,7 @@ visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
                     ]
                 , selectInputGroup
                     { selectAttrs =
-                        [ onInput (\str -> OnFormField (OnVisibilityConditionTypeInput ruleIndex conditionIndex str) fieldIndex "")
+                        [ onChange (\str -> OnFormField (OnVisibilityConditionTypeInput ruleIndex conditionIndex str) fieldIndex "")
                         , class "tff-comparison-type"
                         ]
                     , options =
@@ -1963,7 +1963,7 @@ visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
                 [ selectArrowDown
                 , select
                     [ class "tff-text-field tff-show-or-hide"
-                    , onInput (\str -> OnFormField (OnVisibilityRuleTypeInput ruleIndex str) fieldIndex "")
+                    , onChange (\str -> OnFormField (OnVisibilityRuleTypeInput ruleIndex str) fieldIndex "")
                     , required True
                     , value
                         (case visibilityRule of
@@ -1991,6 +1991,11 @@ visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
                    ]
             )
         ]
+
+
+onChange : (String -> msg) -> Html.Attribute msg
+onChange msg =
+    on "change" (Json.Decode.map msg Html.Events.targetValue)
 
 
 viewFormFieldBuilder : List CustomElement -> Int -> Int -> Array FormField -> FormField -> Html Msg
