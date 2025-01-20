@@ -427,11 +427,11 @@ otherQuestionTitles formFields currentIndex =
         |> List.map (\( _, f ) -> { label = f.label, name = f.name })
 
 
-getPreviousFieldLabel : Int -> Array FormField -> String
-getPreviousFieldLabel index formFields =
+getPreviousFieldNameOrLabel : Int -> Array FormField -> String
+getPreviousFieldNameOrLabel index formFields =
     if index > 0 then
         Array.get (index - 1) formFields
-            |> Maybe.map .label
+            |> Maybe.map fieldNameOf
             |> Maybe.withDefault ""
 
     else
@@ -1017,7 +1017,7 @@ updateFormField msg fieldIndex string formFields formField =
             }
 
         OnAddVisibilityRule ->
-            { formField | visibilityRule = formField.visibilityRule ++ [ ShowWhen [ Field (getPreviousFieldLabel fieldIndex formFields) (Equals "") ] ] }
+            { formField | visibilityRule = formField.visibilityRule ++ [ ShowWhen [ Field (getPreviousFieldNameOrLabel fieldIndex formFields) (Equals "") ] ] }
 
         OnVisibilityConditionDuplicate ruleIndex ->
             let
@@ -1027,7 +1027,7 @@ updateFormField msg fieldIndex string formFields formField =
                             last
 
                         [] ->
-                            Field (getPreviousFieldLabel fieldIndex formFields) (Equals "")
+                            Field (getPreviousFieldNameOrLabel fieldIndex formFields) (Equals "")
             in
             { formField
                 | visibilityRule =
@@ -1209,14 +1209,15 @@ viewMain model =
 viewFormPreview : List (Html.Attribute Msg) -> { a | formFields : Array FormField, needsFormLogic : Bool, trackedFormValues : Dict String (List String), shortTextTypeDict : Dict String CustomElement } -> List (Html Msg)
 viewFormPreview customAttrs { formFields, needsFormLogic, trackedFormValues, shortTextTypeDict } =
     let
-        onChooseMany fieldName choice =
+        onChooseManyAttrs fieldName choice =
             [ onCheck (\_ -> OnFormValuesUpdated fieldName choice.value) ]
 
-        onInput fieldName =
-            [ on "input"
-                (Json.Decode.at [ "target", "value" ] Json.Decode.string
-                    |> Json.Decode.map (\value -> OnFormValuesUpdated fieldName value)
-                )
+        onInputAttrs fieldName =
+            [ on "input" (Json.Decode.map (OnFormValuesUpdated fieldName) Html.Events.targetValue)
+            ]
+
+        onChangeAttrs fieldName =
+            [ onChange (OnFormValuesUpdated fieldName)
             ]
 
         config =
@@ -1226,13 +1227,19 @@ viewFormPreview customAttrs { formFields, needsFormLogic, trackedFormValues, sho
             , trackedFormValues = trackedFormValues
             , onChooseMany =
                 if needsFormLogic then
-                    onChooseMany
+                    onChooseManyAttrs
 
                 else
                     \_ _ -> []
             , onInput =
                 if needsFormLogic then
-                    onInput
+                    onInputAttrs
+
+                else
+                    \_ -> []
+            , onChange =
+                if needsFormLogic then
+                    onChangeAttrs
 
                 else
                     \_ -> []
@@ -1261,6 +1268,7 @@ viewFormFieldPreview :
     , customAttrs : List (Html.Attribute Msg)
     , onChooseMany : String -> Choice -> List (Html.Attribute Msg)
     , onInput : String -> List (Html.Attribute Msg)
+    , onChange : String -> List (Html.Attribute Msg)
     , shortTextTypeDict : Dict String CustomElement
     , formFields : Array FormField
     }
@@ -1414,6 +1422,7 @@ viewFormFieldOptionsPreview :
     , customAttrs : List (Html.Attribute Msg)
     , onChooseMany : String -> Choice -> List (Html.Attribute Msg)
     , onInput : String -> List (Html.Attribute Msg)
+    , onChange : String -> List (Html.Attribute Msg)
     , shortTextTypeDict : Dict String CustomElement
     , formFields : Array FormField
     }
@@ -1538,7 +1547,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                        else
                         required (requiredData formField.presence)
                      ]
-                        ++ config.onInput fieldName
+                        ++ config.onChange fieldName
                     )
                     (option
                         ([ disabled True
@@ -1687,6 +1696,7 @@ renderFormField maybeAnimate model index maybeFormField =
                             , formFields = model.formFields
                             , onChooseMany = \_ _ -> []
                             , onInput = \_ -> []
+                            , onChange = \_ -> []
                             , shortTextTypeDict = model.shortTextTypeDict
                             , trackedFormValues = model.trackedFormValues
                             }
