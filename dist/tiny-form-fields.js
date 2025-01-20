@@ -5209,7 +5209,7 @@ var $author$project$Main$Config = F4(
 var $elm_community$json_extra$Json$Decode$Extra$andMap = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
 var $author$project$Main$FormField = F6(
 	function (label, name, presence, description, type_, visibilityRule) {
-		return {N: description, h: label, aA: name, v: presence, f: type_, l: visibilityRule};
+		return {N: description, g: label, aA: name, v: presence, f: type_, l: visibilityRule};
 	});
 var $author$project$Main$AttributeNotNeeded = function (a) {
 	return {$: 0, a: a};
@@ -5302,24 +5302,24 @@ var $author$project$Main$choiceFromString = function (s) {
 	if (_v0.b) {
 		if (!_v0.b.b) {
 			var value = _v0.a;
-			return {h: value, m: value};
+			return {g: value, m: value};
 		} else {
 			if (!_v0.b.b.b) {
 				var value = _v0.a;
 				var _v1 = _v0.b;
 				var label = _v1.a;
-				return {h: label, m: value};
+				return {g: label, m: value};
 			} else {
 				var value = _v0.a;
 				var labels = _v0.b;
 				return {
-					h: A2($elm$core$String$join, $author$project$Main$choiceDelimiter, labels),
+					g: A2($elm$core$String$join, $author$project$Main$choiceDelimiter, labels),
 					m: value
 				};
 			}
 		}
 	} else {
-		return {h: s, m: s};
+		return {g: s, m: s};
 	}
 };
 var $author$project$Main$decodeChoice = A2($elm$json$Json$Decode$map, $author$project$Main$choiceFromString, $elm$json$Json$Decode$string);
@@ -6086,9 +6086,9 @@ var $author$project$Main$encodeAttributeOptional = F2(
 		}
 	});
 var $author$project$Main$choiceToString = function (choice) {
-	return _Utils_eq(choice.h, choice.m) ? choice.h : _Utils_ap(
+	return _Utils_eq(choice.g, choice.m) ? choice.g : _Utils_ap(
 		choice.m,
-		_Utils_ap($author$project$Main$choiceDelimiter, choice.h));
+		_Utils_ap($author$project$Main$choiceDelimiter, choice.g));
 };
 var $elm$json$Json$Encode$string = _Json_wrap;
 var $author$project$Main$encodeChoice = function (choice) {
@@ -6438,7 +6438,7 @@ var $author$project$Main$encodeFormFields = function (formFields) {
 							[
 								_Utils_Tuple2(
 								'label',
-								$elm$json$Json$Encode$string(formField.h)),
+								$elm$json$Json$Encode$string(formField.g)),
 								_Utils_Tuple2(
 								'name',
 								function () {
@@ -6536,7 +6536,7 @@ var $author$project$Main$encodePortOutgoingValue = function (value) {
 	}
 };
 var $author$project$Main$fieldNameOf = function (formField) {
-	return A2($elm$core$Maybe$withDefault, formField.h, formField.aA);
+	return A2($elm$core$Maybe$withDefault, formField.g, formField.aA);
 };
 var $elm$core$Array$filter = F2(
 	function (isGood, array) {
@@ -7409,7 +7409,7 @@ var $author$project$Main$getPreviousFieldLabel = F2(
 			A2(
 				$elm$core$Maybe$map,
 				function ($) {
-					return $.h;
+					return $.g;
 				},
 				A2($elm$core$Array$get, index - 1, formFields))) : '';
 	});
@@ -7568,7 +7568,7 @@ var $author$project$Main$updateFormField = F5(
 			case 0:
 				return _Utils_update(
 					formField,
-					{h: string});
+					{g: string});
 			case 1:
 				return (string === '') ? _Utils_update(
 					formField,
@@ -7995,7 +7995,7 @@ var $author$project$Main$update = F2(
 					var fieldType = msg.a;
 					var newFormField = {
 						N: $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing),
-						h: $author$project$Main$stringFromInputField(fieldType) + ' question',
+						g: $author$project$Main$stringFromInputField(fieldType) + ' question',
 						aA: $elm$core$Maybe$Nothing,
 						v: A2(
 							$author$project$Main$when,
@@ -8751,7 +8751,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 													]),
 												_List_fromArray(
 													[
-														$elm$html$Html$text(choice.h)
+														$elm$html$Html$text(choice.g)
 													]));
 										},
 										list)));
@@ -8900,7 +8900,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 													config.T)),
 											_List_fromArray(
 												[
-													$elm$html$Html$text(choice.h)
+													$elm$html$Html$text(choice.g)
 												]));
 									},
 									choices)))
@@ -8966,7 +8966,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 																config.aq(fieldName))),
 														_List_Nil),
 														$elm$html$Html$text(' '),
-														$elm$html$Html$text(choice.h)
+														$elm$html$Html$text(choice.g)
 													]))
 											]));
 								},
@@ -9028,7 +9028,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 																A2(config.a_, fieldName, choice))),
 														_List_Nil),
 														$elm$html$Html$text(' '),
-														$elm$html$Html$text(choice.h)
+														$elm$html$Html$text(choice.g)
 													]))
 											]));
 								},
@@ -9065,7 +9065,7 @@ var $author$project$Main$viewFormFieldPreview = F3(
 								]),
 							_List_fromArray(
 								[
-									$elm$html$Html$text(formField.h),
+									$elm$html$Html$text(formField.g),
 									function () {
 									var _v0 = formField.v;
 									switch (_v0) {
@@ -9292,7 +9292,7 @@ var $author$project$Main$viewAddQuestionsList = function (inputFields) {
 								$author$project$Main$DragStartNew(
 									{
 										N: $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing),
-										h: $author$project$Main$stringFromInputField(inputField) + ' question',
+										g: $author$project$Main$stringFromInputField(inputField) + ' question',
 										aA: $elm$core$Maybe$Nothing,
 										v: A2(
 											$author$project$Main$when,
@@ -9362,6 +9362,28 @@ var $author$project$Main$allowsTogglingMultiple = function (inputField) {
 			return false;
 	}
 };
+var $author$project$Main$hasDuplicateLabel = F3(
+	function (currentIndex, newLabel, formFields) {
+		return A2(
+			$elm$core$List$any,
+			function (_v1) {
+				var f = _v1.b;
+				return _Utils_eq(f.g, newLabel);
+			},
+			A2(
+				$elm$core$List$filter,
+				function (_v0) {
+					var i = _v0.a;
+					return !_Utils_eq(i, currentIndex);
+				},
+				A2(
+					$elm$core$List$indexedMap,
+					F2(
+						function (i, f) {
+							return _Utils_Tuple2(i, f);
+						}),
+					$elm$core$Array$toList(formFields))));
+	});
 var $elm$html$Html$Events$targetChecked = A2(
 	$elm$json$Json$Decode$at,
 	_List_fromArray(
@@ -9404,7 +9426,7 @@ var $author$project$Main$inputAttributeOptional = F2(
 										]),
 									_List_Nil),
 									$elm$html$Html$text(' '),
-									$elm$html$Html$text(options.h)
+									$elm$html$Html$text(options.g)
 								]))
 						]));
 			case 1:
@@ -9436,7 +9458,7 @@ var $author$project$Main$inputAttributeOptional = F2(
 										]),
 									_List_Nil),
 									$elm$html$Html$text(' '),
-									$elm$html$Html$text(options.h)
+									$elm$html$Html$text(options.g)
 								])),
 							options.ao(
 							$elm$core$Result$Err(str))
@@ -9470,7 +9492,7 @@ var $author$project$Main$inputAttributeOptional = F2(
 										]),
 									_List_Nil),
 									$elm$html$Html$text(' '),
-									$elm$html$Html$text(options.h)
+									$elm$html$Html$text(options.g)
 								])),
 							options.ao(
 							$elm$core$Result$Ok(a))
@@ -9501,12 +9523,6 @@ var $author$project$Main$maybeMultipleOf = function (formField) {
 			return $elm$core$Maybe$Nothing;
 	}
 };
-var $elm$html$Html$Attributes$minlength = function (n) {
-	return A2(
-		_VirtualDom_attribute,
-		'minLength',
-		$elm$core$String$fromInt(n));
-};
 var $elm$html$Html$Events$alwaysStop = function (x) {
 	return _Utils_Tuple2(x, true);
 };
@@ -9524,6 +9540,7 @@ var $elm$html$Html$Events$onInput = function (tagger) {
 			$elm$html$Html$Events$alwaysStop,
 			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
 };
+var $elm$html$Html$Attributes$pattern = $elm$html$Html$Attributes$stringProperty('pattern');
 var $elm$html$Html$Attributes$title = $elm$html$Html$Attributes$stringProperty('title');
 var $elm$core$String$toLower = _String_toLower;
 var $author$project$Main$OnChoicesInput = {$: 4};
@@ -9536,6 +9553,12 @@ var $author$project$Main$OnMaxLengthToggle = function (a) {
 	return {$: 6, a: a};
 };
 var $elm$html$Html$Attributes$min = $elm$html$Html$Attributes$stringProperty('min');
+var $elm$html$Html$Attributes$minlength = function (n) {
+	return A2(
+		_VirtualDom_attribute,
+		'minLength',
+		$elm$core$String$fromInt(n));
+};
 var $elm$html$Html$Attributes$readonly = $elm$html$Html$Attributes$boolProperty('readOnly');
 var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 	function (shortTextTypeList, index, formField) {
@@ -9645,7 +9668,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 												]),
 											_List_Nil);
 									},
-									h: 'Limit number of characters',
+									g: 'Limit number of characters',
 									ag: function (b) {
 										return A3(
 											$author$project$Main$OnFormField,
@@ -9707,7 +9730,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 										_List_Nil);
 								}
 							},
-							h: 'Suggested values',
+							g: 'Suggested values',
 							ag: function (b) {
 								return A3(
 									$author$project$Main$OnFormField,
@@ -9757,7 +9780,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 										_List_Nil);
 								}
 							},
-							h: 'Limit number of characters',
+							g: 'Limit number of characters',
 							ag: function (b) {
 								return A3(
 									$author$project$Main$OnFormField,
@@ -9873,7 +9896,7 @@ var $author$project$Main$otherQuestionTitles = F2(
 			$elm$core$List$map,
 			function (_v1) {
 				var f = _v1.b;
-				return f.h;
+				return f.g;
 			},
 			A2(
 				$elm$core$List$filter,
@@ -10426,6 +10449,11 @@ var $author$project$Main$visibilityRulesSection = F3(
 	});
 var $author$project$Main$viewFormFieldBuilder = F5(
 	function (shortTextTypeList, index, totalLength, formFields, formField) {
+		var isDuplicateLabel = A3($author$project$Main$hasDuplicateLabel, index, formField.g, formFields);
+		var patternAttr = isDuplicateLabel ? _List_fromArray(
+			[
+				$elm$html$Html$Attributes$pattern('^$')
+			]) : _List_Nil;
 		var idSuffix = $elm$core$String$fromInt(index);
 		var deleteFieldButton = A2(
 			$elm$html$Html$button,
@@ -10567,19 +10595,29 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 									])),
 								A2(
 								$elm$html$Html$input,
+								_Utils_ap(
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$type_('text'),
+											$elm$html$Html$Attributes$id('label-' + idSuffix),
+											$elm$html$Html$Attributes$value(formField.g),
+											$elm$html$Html$Attributes$required(true),
+											$elm$html$Html$Events$onInput(
+											A2($author$project$Main$OnFormField, $author$project$Main$OnLabelInput, index)),
+											$elm$html$Html$Attributes$class('tff-text-field')
+										]),
+									patternAttr),
+								_List_Nil),
+								isDuplicateLabel ? A2(
+								$elm$html$Html$div,
 								_List_fromArray(
 									[
-										$elm$html$Html$Attributes$type_('text'),
-										$elm$html$Html$Attributes$id('label-' + idSuffix),
-										$elm$html$Html$Attributes$required(true),
-										$elm$html$Html$Attributes$minlength(1),
-										$elm$html$Html$Attributes$class('tff-text-field'),
-										$elm$html$Html$Attributes$placeholder('Label'),
-										$elm$html$Html$Attributes$value(formField.h),
-										$elm$html$Html$Events$onInput(
-										A2($author$project$Main$OnFormField, $author$project$Main$OnLabelInput, index))
+										$elm$html$Html$Attributes$class('tff-error-text')
 									]),
-								_List_Nil)
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Question titles must be unique in a form')
+									])) : $elm$html$Html$text('')
 							])),
 						function () {
 						if ($author$project$Main$mustBeOptional(formField.f)) {
@@ -10622,7 +10660,7 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 										]),
 									_List_Nil);
 							},
-							h: 'Question description',
+							g: 'Question description',
 							ag: function (b) {
 								return A3(
 									$author$project$Main$OnFormField,

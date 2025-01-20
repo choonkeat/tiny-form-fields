@@ -13,6 +13,10 @@
     @apply whitespace-pre-wrap;
 }
 
+.tff-error-text {
+    @apply text-sm text-red-600 mt-1;
+}
+
 /* Base styles for text content */
 .tff-text-content {
     @apply whitespace-pre-wrap;
@@ -196,7 +200,7 @@
 }
 
 .tff-build-field-buttons button.tff-delete {
-    @apply text-red-700;
+    @apply text-red-600;
 }
 
 .tff-dropdown-button {

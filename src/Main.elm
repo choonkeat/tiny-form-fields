@@ -2000,6 +2000,16 @@ viewFormFieldBuilder shortTextTypeList index totalLength formFields formField =
         idSuffix =
             String.fromInt index
 
+        isDuplicateLabel =
+            hasDuplicateLabel index formField.label formFields
+
+        patternAttr =
+            if isDuplicateLabel then
+                [ Attr.pattern "^$" ]
+
+            else
+                []
+
         configureMultipleCheckbox =
             div [ class "tff-field-group" ]
                 [ label [ class "tff-field-label", for ("multiple-" ++ idSuffix) ]
@@ -2051,16 +2061,21 @@ viewFormFieldBuilder shortTextTypeList index totalLength formFields formField =
         ([ div [ class "tff-field-group" ]
             [ label [ class "tff-field-label", for ("label-" ++ idSuffix) ] [ text (stringFromInputField formField.type_ ++ " question title") ]
             , input
-                [ type_ "text"
-                , id ("label-" ++ idSuffix)
-                , required True
-                , minlength 1
-                , class "tff-text-field"
-                , placeholder "Label"
-                , value formField.label
-                , onInput (OnFormField OnLabelInput index)
-                ]
+                ([ type_ "text"
+                 , id ("label-" ++ idSuffix)
+                 , value formField.label
+                 , required True
+                 , onInput (OnFormField OnLabelInput index)
+                 , class "tff-text-field"
+                 ]
+                    ++ patternAttr
+                )
                 []
+            , if isDuplicateLabel then
+                div [ class "tff-error-text" ] [ text "Question titles must be unique in a form" ]
+
+              else
+                text ""
             ]
          , if mustBeOptional formField.type_ then
             text ""
@@ -2398,6 +2413,15 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
         ChooseMultiple choices ->
             [ choicesTextarea choices
             ]
+
+
+hasDuplicateLabel : Int -> String -> Array FormField -> Bool
+hasDuplicateLabel currentIndex newLabel formFields =
+    formFields
+        |> Array.toList
+        |> List.indexedMap (\i f -> ( i, f ))
+        |> List.filter (\( i, _ ) -> i /= currentIndex)
+        |> List.any (\( _, f ) -> f.label == newLabel)
 
 
 

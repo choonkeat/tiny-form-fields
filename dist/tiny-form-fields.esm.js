@@ -14216,6 +14216,28 @@ var $author$project$Main$allowsTogglingMultiple = function (inputField) {
 			return false;
 	}
 };
+var $author$project$Main$hasDuplicateLabel = F3(
+	function (currentIndex, newLabel, formFields) {
+		return A2(
+			$elm$core$List$any,
+			function (_v1) {
+				var f = _v1.b;
+				return _Utils_eq(f.label, newLabel);
+			},
+			A2(
+				$elm$core$List$filter,
+				function (_v0) {
+					var i = _v0.a;
+					return !_Utils_eq(i, currentIndex);
+				},
+				A2(
+					$elm$core$List$indexedMap,
+					F2(
+						function (i, f) {
+							return _Utils_Tuple2(i, f);
+						}),
+					$elm$core$Array$toList(formFields))));
+	});
 var $elm$html$Html$Events$targetChecked = A2(
 	$elm$json$Json$Decode$at,
 	_List_fromArray(
@@ -14355,12 +14377,7 @@ var $author$project$Main$maybeMultipleOf = function (formField) {
 			return $elm$core$Maybe$Nothing;
 	}
 };
-var $elm$html$Html$Attributes$minlength = function (n) {
-	return A2(
-		_VirtualDom_attribute,
-		'minLength',
-		$elm$core$String$fromInt(n));
-};
+var $elm$html$Html$Attributes$pattern = $elm$html$Html$Attributes$stringProperty('pattern');
 var $elm$core$String$toLower = _String_toLower;
 var $author$project$Main$OnChoicesInput = {$: 'OnChoicesInput'};
 var $author$project$Main$OnDatalistInput = {$: 'OnDatalistInput'};
@@ -14370,6 +14387,12 @@ var $author$project$Main$OnDatalistToggle = function (a) {
 var $author$project$Main$OnMaxLengthInput = {$: 'OnMaxLengthInput'};
 var $author$project$Main$OnMaxLengthToggle = function (a) {
 	return {$: 'OnMaxLengthToggle', a: a};
+};
+var $elm$html$Html$Attributes$minlength = function (n) {
+	return A2(
+		_VirtualDom_attribute,
+		'minLength',
+		$elm$core$String$fromInt(n));
 };
 var $elm$html$Html$Attributes$readonly = $elm$html$Html$Attributes$boolProperty('readOnly');
 var $author$project$Main$viewFormFieldOptionsBuilder = F3(
@@ -15243,6 +15266,11 @@ var $author$project$Main$visibilityRulesSection = F3(
 	});
 var $author$project$Main$viewFormFieldBuilder = F5(
 	function (shortTextTypeList, index, totalLength, formFields, formField) {
+		var isDuplicateLabel = A3($author$project$Main$hasDuplicateLabel, index, formField.label, formFields);
+		var patternAttr = isDuplicateLabel ? _List_fromArray(
+			[
+				$elm$html$Html$Attributes$pattern('^$')
+			]) : _List_Nil;
 		var idSuffix = $elm$core$String$fromInt(index);
 		var deleteFieldButton = A2(
 			$elm$html$Html$button,
@@ -15384,19 +15412,29 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 									])),
 								A2(
 								$elm$html$Html$input,
+								_Utils_ap(
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$type_('text'),
+											$elm$html$Html$Attributes$id('label-' + idSuffix),
+											$elm$html$Html$Attributes$value(formField.label),
+											$elm$html$Html$Attributes$required(true),
+											$elm$html$Html$Events$onInput(
+											A2($author$project$Main$OnFormField, $author$project$Main$OnLabelInput, index)),
+											$elm$html$Html$Attributes$class('tff-text-field')
+										]),
+									patternAttr),
+								_List_Nil),
+								isDuplicateLabel ? A2(
+								$elm$html$Html$div,
 								_List_fromArray(
 									[
-										$elm$html$Html$Attributes$type_('text'),
-										$elm$html$Html$Attributes$id('label-' + idSuffix),
-										$elm$html$Html$Attributes$required(true),
-										$elm$html$Html$Attributes$minlength(1),
-										$elm$html$Html$Attributes$class('tff-text-field'),
-										$elm$html$Html$Attributes$placeholder('Label'),
-										$elm$html$Html$Attributes$value(formField.label),
-										$elm$html$Html$Events$onInput(
-										A2($author$project$Main$OnFormField, $author$project$Main$OnLabelInput, index))
+										$elm$html$Html$Attributes$class('tff-error-text')
 									]),
-								_List_Nil)
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Question titles must be unique in a form')
+									])) : $elm$html$Html$text('')
 							])),
 						function () {
 						if ($author$project$Main$mustBeOptional(formField.type_)) {
