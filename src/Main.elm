@@ -1022,6 +1022,7 @@ updateFormField msg fieldIndex string formFields formField =
                     case List.reverse conditions of
                         last :: _ ->
                             last
+                                |> updateComparisonInCondition (updateComparisonValue "")
 
                         [] ->
                             Field (getPreviousFieldNameOrLabel fieldIndex formFields) (Equals "")
