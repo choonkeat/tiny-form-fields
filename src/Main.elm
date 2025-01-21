@@ -1793,6 +1793,7 @@ viewFormBuilder maybeAnimate model =
             ]
             [ div
                 [ class "tff-fields-container"
+                , on "drop" (Json.Decode.succeed DragEnd)
 
                 -- , preventDefaultOn "drop" (Json.Decode.succeed ( Drop Nothing, True ))
                 ]
