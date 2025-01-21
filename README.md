@@ -32,6 +32,9 @@ A lightweight, customizable form builder and renderer written in Elm. Create dyn
   - Tested on Chrome, Firefox, Safari, and Edge
   - Consistent behavior for form controls across browsers
   - Optimized dropdown handling for Edge on Windows
+  - Built-in protection against browser extensions:
+    - Grammarly is automatically disabled for form fields
+    - Support for disabling Google Translate and Dark Reader
 
 ## Tasks
 
@@ -45,7 +48,15 @@ See the [tasks](tasks/) directory for planned features and improvements. Each ta
    <link rel="stylesheet" href="./dist/tiny-form-fields.min.css">
    ```
 
-2. Initialize the form builder in your HTML:
+2. Add meta tags to prevent browser extensions from interfering with form fields:
+   ```html
+   <!-- Disable Google Translate -->
+   <meta name="google" content="notranslate">
+   <!-- Disable Dark Reader -->
+   <meta name="darkreader-lock">
+   ```
+
+3. Initialize the form builder in your HTML:
    ```html
    <!-- Editor mode -->
    <div id="editor"></div>

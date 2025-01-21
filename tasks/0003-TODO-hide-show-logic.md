@@ -94,6 +94,10 @@ Add support for conditional visibility where each field can specify when it shou
 
 ### Browser Compatibility
 - [x] Ensure compatibility with major browsers (Chrome, Firefox, Safari, Edge)
+- [x] Handle browser extensions that may interfere with form fields
+    - [x] Disable Grammarly in textareas
+    - [x] Add meta tags to disable Google Translate
+    - [x] Add meta tag to disable Dark Reader
 
 ### Documentation & Testing
 - [ ] Update documentation with new feature
