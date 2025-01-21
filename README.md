@@ -28,6 +28,10 @@ A lightweight, customizable form builder and renderer written in Elm. Create dyn
 - Responsive design
 - Two modes: Editor (for building forms) and CollectData (for end users)
 - JSON import/export of form definitions
+- Cross-browser compatibility:
+  - Tested on Chrome, Firefox, Safari, and Edge
+  - Consistent behavior for form controls across browsers
+  - Optimized dropdown handling for Edge on Windows
 
 ## Tasks
 

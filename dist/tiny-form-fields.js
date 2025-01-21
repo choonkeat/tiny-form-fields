@@ -7754,7 +7754,7 @@ var $author$project$Main$updateFormField = F5(
 						return formField;
 				}
 			case 10:
-				if (msg.b === '') {
+				if (msg.b === '\n') {
 					var ruleIndex = msg.a;
 					return _Utils_update(
 						formField,
@@ -7804,7 +7804,7 @@ var $author$project$Main$updateFormField = F5(
 							formField.l)
 					});
 			case 12:
-				if (msg.c === '') {
+				if (msg.c === '\n') {
 					var ruleIndex = msg.a;
 					var conditionIndex = msg.b;
 					return _Utils_update(
@@ -9188,7 +9188,11 @@ var $author$project$Main$renderFormField = F4(
 										$elm$html$Html$Events$on,
 										'dragstart',
 										$elm$json$Json$Decode$succeed(
-											$author$project$Main$DragStart(index)))
+											$author$project$Main$DragStart(index))),
+										A2(
+										$elm$html$Html$Events$on,
+										'dragend',
+										$elm$json$Json$Decode$succeed($author$project$Main$DragEnd))
 									]),
 								_List_fromArray(
 									[
@@ -9269,7 +9273,11 @@ var $author$project$Main$viewAddQuestionsList = F2(
 												{aI: 0, aQ: 1}),
 											g: inputField,
 											l: _List_Nil
-										})))
+										}))),
+								A2(
+								$elm$html$Html$Events$on,
+								'dragend',
+								$elm$json$Json$Decode$succeed($author$project$Main$DragEnd))
 							]),
 						_List_fromArray(
 							[
@@ -10118,7 +10126,7 @@ var $author$project$Main$visibilityRuleSection = F4(
 											$elm$html$Html$option,
 											_List_fromArray(
 												[
-													$elm$html$Html$Attributes$value('')
+													$elm$html$Html$Attributes$value('\n')
 												]),
 											_List_fromArray(
 												[
@@ -10300,7 +10308,7 @@ var $author$project$Main$visibilityRuleSection = F4(
 											$elm$html$Html$option,
 											_List_fromArray(
 												[
-													$elm$html$Html$Attributes$value('')
+													$elm$html$Html$Attributes$value('\n')
 												]),
 											_List_fromArray(
 												[

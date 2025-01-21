@@ -740,6 +740,37 @@ suite =
                     |> Json.Encode.encode 0
                     |> Json.Decode.decodeString Main.decodeFormField
                     |> Expect.equal (Ok newField)
+        , test "removes visibility rule when newline value is received" <|
+            \_ ->
+                let
+                    formField =
+                        { field1
+                            | visibilityRule =
+                                [ Main.ShowWhen [ Main.Field "field2" (Main.Equals "value") ]
+                                ]
+                        }
+                in
+                Main.updateFormField (Main.OnVisibilityRuleTypeInput 0 "\n") 0 "" Array.empty formField
+                    |> .visibilityRule
+                    |> Expect.equal []
+        , test "removes visibility condition when newline value is received" <|
+            \_ ->
+                let
+                    formField =
+                        { field1
+                            | visibilityRule =
+                                [ Main.ShowWhen [ Main.Field "field2" (Main.Equals "value") ]
+                                , Main.ShowWhen [ Main.Field "field3" (Main.Equals "value") ]
+                                ]
+                        }
+                in
+                Main.updateFormField (Main.OnVisibilityConditionFieldInput 0 0 "\n") 0 "" Array.empty formField
+                    |> .visibilityRule
+                    |> List.map visibilityRuleCondition
+                    |> List.head
+                    |> Maybe.withDefault []
+                    |> List.length
+                    |> Expect.equal 0
         , describe "updateComparisonInCondition"
             [ test "updates comparison in Field condition" <|
                 \_ ->
@@ -909,6 +940,16 @@ suite =
                            )
             ]
         ]
+
+
+visibilityRuleCondition : Main.VisibilityRule -> List Main.Condition
+visibilityRuleCondition rule =
+    case rule of
+        Main.ShowWhen conditions ->
+            conditions
+
+        Main.HideWhen conditions ->
+            conditions
 
 
 viewModeFuzzer : Fuzzer Main.ViewMode

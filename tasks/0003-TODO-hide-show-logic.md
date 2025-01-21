@@ -84,10 +84,16 @@ Add support for conditional visibility where each field can specify when it shou
     - [x] Support Radio buttons field type  
     - [x] Support Checkboxes field type
     - [x] Support Single-line free text with contains comparison
+- [x] Fix browser compatibility issues
+    - [x] Fix empty value interpretation in dropdown options
+    - [x] Fix Edge browser compatibility on Windows
 - [ ] Handle dependent fields (fields that depend on hidden fields)
 - [ ] Skip validation for hidden required fields during form submission
 - [ ] Preserve values of hidden fields when they become visible again
 - [ ] Gracefully handle fields that become hidden during user input
+
+### Browser Compatibility
+- [x] Ensure compatibility with major browsers (Chrome, Firefox, Safari, Edge)
 
 ### Documentation & Testing
 - [ ] Update documentation with new feature

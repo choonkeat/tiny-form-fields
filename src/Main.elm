@@ -941,7 +941,7 @@ updateFormField msg fieldIndex string formFields formField =
                 ChooseMultiple _ ->
                     formField
 
-        OnVisibilityRuleTypeInput ruleIndex "" ->
+        OnVisibilityRuleTypeInput ruleIndex "\n" ->
             { formField
                 | visibilityRule =
                     formField.visibilityRule
@@ -979,7 +979,7 @@ updateFormField msg fieldIndex string formFields formField =
                         formField.visibilityRule
             }
 
-        OnVisibilityConditionFieldInput ruleIndex conditionIndex "" ->
+        OnVisibilityConditionFieldInput ruleIndex conditionIndex "\n" ->
             { formField
                 | visibilityRule =
                     updateVisibilityRuleAt ruleIndex
@@ -1903,7 +1903,7 @@ visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
                                     fieldName
                             )
                         ]
-                        (option [ value "" ] [ text " -- Remove this condition -- " ]
+                        (option [ value "\n" ] [ text " -- Remove this condition -- " ]
                             :: List.map
                                 (\field ->
                                     let
@@ -1987,7 +1987,7 @@ visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
                                 "HideWhen"
                         )
                     ]
-                    [ option [ value "" ] [ text " -- Remove this field logic -- " ]
+                    [ option [ value "\n" ] [ text " -- Remove this field logic -- " ]
                     , option [ selected (isShowWhen visibilityRule), value "ShowWhen" ] [ text "Show this question when" ]
                     , option [ selected (isHideWhen visibilityRule), value "HideWhen" ] [ text "Hide this question when" ]
                     ]
