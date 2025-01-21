@@ -41,7 +41,7 @@ port module Main exposing
 import Array exposing (Array)
 import Browser
 import Dict exposing (Dict)
-import Html exposing (Html, button, div, h2, h3, input, label, option, pre, select, text, textarea, ul)
+import Html exposing (Html, button, div, h2, h3, input, label, option, pre, select, text, ul)
 import Html.Attributes as Attr exposing (attribute, checked, class, classList, disabled, for, id, maxlength, minlength, name, placeholder, readonly, required, selected, tabindex, title, type_, value)
 import Html.Events exposing (on, onCheck, onClick, onInput, preventDefaultOn, stopPropagationOn)
 import Json.Decode
@@ -2365,7 +2365,7 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
                     \result ->
                         case result of
                             Ok a ->
-                                Html.textarea
+                                textarea
                                     [ required True
                                     , class "tff-text-field"
                                     , placeholder "Enter one suggestion per line"
@@ -2375,7 +2375,7 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
                                     []
 
                             Err err ->
-                                Html.textarea
+                                textarea
                                     [ required True
                                     , class "tff-text-field"
                                     , placeholder "Enter one suggestion per line"
@@ -3459,3 +3459,13 @@ selectInputGroup { selectAttrs, options, inputAttrs, children } =
             , input (class "tff-selectinput-input" :: inputAttrs) children
             ]
         ]
+
+
+textarea : List (Html.Attribute msg) -> List (Html.Html msg) -> Html msg
+textarea attrs children =
+    Html.textarea
+        (Attr.attribute "data-gramm_editor" "false"
+            :: Attr.attribute "data-enable-grammarly" "false"
+            :: attrs
+        )
+        children

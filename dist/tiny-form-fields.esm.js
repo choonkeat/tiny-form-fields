@@ -8629,6 +8629,19 @@ var $elm$html$Html$Attributes$tabindex = function (n) {
 		$elm$core$String$fromInt(n));
 };
 var $elm$html$Html$textarea = _VirtualDom_node('textarea');
+var $author$project$Main$textarea = F2(
+	function (attrs, children) {
+		return A2(
+			$elm$html$Html$textarea,
+			A2(
+				$elm$core$List$cons,
+				A2($elm$html$Html$Attributes$attribute, 'data-gramm_editor', 'false'),
+				A2(
+					$elm$core$List$cons,
+					A2($elm$html$Html$Attributes$attribute, 'data-enable-grammarly', 'false'),
+					attrs)),
+			children);
+	});
 var $author$project$Main$viewFormFieldOptionsPreview = F3(
 	function (config, fieldID, formField) {
 		var fieldName = $author$project$Main$fieldNameOf(formField);
@@ -8780,7 +8793,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 								A2($elm$core$Dict$get, fieldName, config.C)))
 						]));
 				return A2(
-					$elm$html$Html$textarea,
+					$author$project$Main$textarea,
 					_Utils_ap(
 						_List_fromArray(
 							[
@@ -9549,7 +9562,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 								$elm$html$Html$text('Choices')
 							])),
 						A2(
-						$elm$html$Html$textarea,
+						$author$project$Main$textarea,
 						_List_fromArray(
 							[
 								$elm$html$Html$Attributes$id('choices-' + idSuffix),
@@ -9664,7 +9677,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 								if (!result.$) {
 									var a = result.a;
 									return A2(
-										$elm$html$Html$textarea,
+										$author$project$Main$textarea,
 										_List_fromArray(
 											[
 												$elm$html$Html$Attributes$required(true),
@@ -9682,7 +9695,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 								} else {
 									var err = result.a;
 									return A2(
-										$elm$html$Html$textarea,
+										$author$project$Main$textarea,
 										_List_fromArray(
 											[
 												$elm$html$Html$Attributes$required(true),
