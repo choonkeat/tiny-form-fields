@@ -7886,7 +7886,10 @@ var $author$project$Main$updateFormField = F5(
 					var _v12 = $elm$core$List$reverse(conditions);
 					if (_v12.b) {
 						var last = _v12.a;
-						return last;
+						return A2(
+							$author$project$Main$updateComparisonInCondition,
+							$author$project$Main$updateComparisonValue(''),
+							last);
 					} else {
 						return A2(
 							$author$project$Main$Field,
@@ -8266,6 +8269,7 @@ var $author$project$Main$stringFromViewMode = function (viewMode) {
 };
 var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
 var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
+var $author$project$Main$DragEnd = {$: 11};
 var $author$project$Main$NoOp = {$: 0};
 var $author$project$Main$SelectField = function (a) {
 	return {$: 8, a: a};
@@ -8407,7 +8411,6 @@ var $elm$html$Html$Events$preventDefaultOn = F2(
 			event,
 			$elm$virtual_dom$VirtualDom$MayPreventDefault(decoder));
 	});
-var $author$project$Main$DragEnd = {$: 11};
 var $author$project$Main$DragStart = function (a) {
 	return {$: 9, a: a};
 };
@@ -9193,11 +9196,7 @@ var $author$project$Main$renderFormField = F4(
 										$elm$html$Html$Events$on,
 										'dragstart',
 										$elm$json$Json$Decode$succeed(
-											$author$project$Main$DragStart(index))),
-										A2(
-										$elm$html$Html$Events$on,
-										'dragend',
-										$elm$json$Json$Decode$succeed($author$project$Main$DragEnd))
+											$author$project$Main$DragStart(index)))
 									]),
 								_List_fromArray(
 									[
@@ -9278,11 +9277,7 @@ var $author$project$Main$viewAddQuestionsList = F2(
 												{aI: 0, aQ: 1}),
 											g: inputField,
 											l: _List_Nil
-										}))),
-								A2(
-								$elm$html$Html$Events$on,
-								'dragend',
-								$elm$json$Json$Decode$succeed($author$project$Main$DragEnd))
+										})))
 							]),
 						_List_fromArray(
 							[
@@ -10135,7 +10130,7 @@ var $author$project$Main$visibilityRuleSection = F4(
 												]),
 											_List_fromArray(
 												[
-													$elm$html$Html$text(' - ')
+													$elm$html$Html$text(' -- Remove this condition -- ')
 												])),
 										A2(
 											$elm$core$List$map,
@@ -10317,7 +10312,7 @@ var $author$project$Main$visibilityRuleSection = F4(
 												]),
 											_List_fromArray(
 												[
-													$elm$html$Html$text(' - ')
+													$elm$html$Html$text(' -- Remove this field logic -- ')
 												])),
 											A2(
 											$elm$html$Html$option,
@@ -10895,7 +10890,11 @@ var $author$project$Main$viewFormBuilder = F2(
 								$elm$html$Html$div,
 								_List_fromArray(
 									[
-										$elm$html$Html$Attributes$class('tff-fields-container')
+										$elm$html$Html$Attributes$class('tff-fields-container'),
+										A2(
+										$elm$html$Html$Events$on,
+										'drop',
+										$elm$json$Json$Decode$succeed($author$project$Main$DragEnd))
 									]),
 								A2(
 									$elm$core$List$indexedMap,

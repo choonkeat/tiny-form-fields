@@ -1903,7 +1903,7 @@ visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
                                     fieldName
                             )
                         ]
-                        (option [ value "" ] [ text " - " ]
+                        (option [ value "" ] [ text " -- Remove this condition -- " ]
                             :: List.map
                                 (\field ->
                                     let
@@ -1987,7 +1987,7 @@ visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
                                 "HideWhen"
                         )
                     ]
-                    [ option [ value "" ] [ text " - " ]
+                    [ option [ value "" ] [ text " -- Remove this field logic -- " ]
                     , option [ selected (isShowWhen visibilityRule), value "ShowWhen" ] [ text "Show this question when" ]
                     , option [ selected (isHideWhen visibilityRule), value "HideWhen" ] [ text "Hide this question when" ]
                     ]
