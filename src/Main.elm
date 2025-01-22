@@ -1643,6 +1643,7 @@ renderFormField maybeAnimate model index maybeFormField =
         Nothing ->
             div
                 [ class "tff-field-container"
+                , on "click" (Json.Decode.succeed DragEnd)
                 , preventDefaultOn "dragover" (dragOverDecoder index Nothing)
                 ]
                 [ div [ class "tff-field-placeholder" ] [] ]

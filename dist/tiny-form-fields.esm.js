@@ -9101,6 +9101,10 @@ var $author$project$Main$renderFormField = F4(
 					[
 						$elm$html$Html$Attributes$class('tff-field-container'),
 						A2(
+						$elm$html$Html$Events$on,
+						'click',
+						$elm$json$Json$Decode$succeed($author$project$Main$DragEnd)),
+						A2(
 						$elm$html$Html$Events$preventDefaultOn,
 						'dragover',
 						A2($author$project$Main$dragOverDecoder, index, $elm$core$Maybe$Nothing))
