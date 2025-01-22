@@ -7754,7 +7754,7 @@ var $author$project$Main$updateFormField = F5(
 						return formField;
 				}
 			case 10:
-				if (msg.b === '') {
+				if (msg.b === '\n') {
 					var ruleIndex = msg.a;
 					return _Utils_update(
 						formField,
@@ -7804,7 +7804,7 @@ var $author$project$Main$updateFormField = F5(
 							formField.l)
 					});
 			case 12:
-				if (msg.c === '') {
+				if (msg.c === '\n') {
 					var ruleIndex = msg.a;
 					var conditionIndex = msg.b;
 					return _Utils_update(
@@ -7878,7 +7878,10 @@ var $author$project$Main$updateFormField = F5(
 					var _v12 = $elm$core$List$reverse(conditions);
 					if (_v12.b) {
 						var last = _v12.a;
-						return last;
+						return A2(
+							$author$project$Main$updateComparisonInCondition,
+							$author$project$Main$updateComparisonValue(''),
+							last);
 					} else {
 						return A2(
 							$author$project$Main$Field,
@@ -8258,6 +8261,7 @@ var $author$project$Main$stringFromViewMode = function (viewMode) {
 };
 var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
 var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
+var $author$project$Main$DragEnd = {$: 11};
 var $author$project$Main$NoOp = {$: 0};
 var $author$project$Main$SelectField = function (a) {
 	return {$: 8, a: a};
@@ -8399,7 +8403,6 @@ var $elm$html$Html$Events$preventDefaultOn = F2(
 			event,
 			$elm$virtual_dom$VirtualDom$MayPreventDefault(decoder));
 	});
-var $author$project$Main$DragEnd = {$: 11};
 var $author$project$Main$DragStart = function (a) {
 	return {$: 9, a: a};
 };
@@ -8621,6 +8624,19 @@ var $elm$html$Html$Attributes$tabindex = function (n) {
 		$elm$core$String$fromInt(n));
 };
 var $elm$html$Html$textarea = _VirtualDom_node('textarea');
+var $author$project$Main$textarea = F2(
+	function (attrs, children) {
+		return A2(
+			$elm$html$Html$textarea,
+			A2(
+				$elm$core$List$cons,
+				A2($elm$html$Html$Attributes$attribute, 'data-gramm_editor', 'false'),
+				A2(
+					$elm$core$List$cons,
+					A2($elm$html$Html$Attributes$attribute, 'data-enable-grammarly', 'false'),
+					attrs)),
+			children);
+	});
 var $author$project$Main$viewFormFieldOptionsPreview = F3(
 	function (config, fieldID, formField) {
 		var fieldName = $author$project$Main$fieldNameOf(formField);
@@ -8772,7 +8788,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 								A2($elm$core$Dict$get, fieldName, config.C)))
 						]));
 				return A2(
-					$elm$html$Html$textarea,
+					$author$project$Main$textarea,
 					_Utils_ap(
 						_List_fromArray(
 							[
@@ -9076,6 +9092,10 @@ var $author$project$Main$renderFormField = F4(
 				_List_fromArray(
 					[
 						$elm$html$Html$Attributes$class('tff-field-container'),
+						A2(
+						$elm$html$Html$Events$on,
+						'click',
+						$elm$json$Json$Decode$succeed($author$project$Main$DragEnd)),
 						A2(
 						$elm$html$Html$Events$preventDefaultOn,
 						'dragover',
@@ -9541,7 +9561,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 								$elm$html$Html$text('Choices')
 							])),
 						A2(
-						$elm$html$Html$textarea,
+						$author$project$Main$textarea,
 						_List_fromArray(
 							[
 								$elm$html$Html$Attributes$id('choices-' + idSuffix),
@@ -9656,7 +9676,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 								if (!result.$) {
 									var a = result.a;
 									return A2(
-										$elm$html$Html$textarea,
+										$author$project$Main$textarea,
 										_List_fromArray(
 											[
 												$elm$html$Html$Attributes$required(true),
@@ -9674,7 +9694,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 								} else {
 									var err = result.a;
 									return A2(
-										$elm$html$Html$textarea,
+										$author$project$Main$textarea,
 										_List_fromArray(
 											[
 												$elm$html$Html$Attributes$required(true),
@@ -10110,11 +10130,11 @@ var $author$project$Main$visibilityRuleSection = F4(
 											$elm$html$Html$option,
 											_List_fromArray(
 												[
-													$elm$html$Html$Attributes$value('')
+													$elm$html$Html$Attributes$value('\n')
 												]),
 											_List_fromArray(
 												[
-													$elm$html$Html$text(' - ')
+													$elm$html$Html$text(' -- Remove this condition -- ')
 												])),
 										A2(
 											$elm$core$List$map,
@@ -10292,11 +10312,11 @@ var $author$project$Main$visibilityRuleSection = F4(
 											$elm$html$Html$option,
 											_List_fromArray(
 												[
-													$elm$html$Html$Attributes$value('')
+													$elm$html$Html$Attributes$value('\n')
 												]),
 											_List_fromArray(
 												[
-													$elm$html$Html$text(' - ')
+													$elm$html$Html$text(' -- Remove this field logic -- ')
 												])),
 											A2(
 											$elm$html$Html$option,
@@ -10874,7 +10894,11 @@ var $author$project$Main$viewFormBuilder = F2(
 								$elm$html$Html$div,
 								_List_fromArray(
 									[
-										$elm$html$Html$Attributes$class('tff-fields-container')
+										$elm$html$Html$Attributes$class('tff-fields-container'),
+										A2(
+										$elm$html$Html$Events$on,
+										'drop',
+										$elm$json$Json$Decode$succeed($author$project$Main$DragEnd))
 									]),
 								A2(
 									$elm$core$List$indexedMap,

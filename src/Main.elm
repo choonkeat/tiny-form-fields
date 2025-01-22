@@ -41,7 +41,7 @@ port module Main exposing
 import Array exposing (Array)
 import Browser
 import Dict exposing (Dict)
-import Html exposing (Html, button, div, h2, h3, input, label, option, pre, select, text, textarea, ul)
+import Html exposing (Html, button, div, h2, h3, input, label, option, pre, select, text, ul)
 import Html.Attributes as Attr exposing (attribute, checked, class, classList, disabled, for, id, maxlength, minlength, name, placeholder, readonly, required, selected, tabindex, title, type_, value)
 import Html.Events exposing (on, onCheck, onClick, onInput, preventDefaultOn, stopPropagationOn)
 import Json.Decode
@@ -941,7 +941,7 @@ updateFormField msg fieldIndex string formFields formField =
                 ChooseMultiple _ ->
                     formField
 
-        OnVisibilityRuleTypeInput ruleIndex "" ->
+        OnVisibilityRuleTypeInput ruleIndex "\n" ->
             { formField
                 | visibilityRule =
                     formField.visibilityRule
@@ -979,7 +979,7 @@ updateFormField msg fieldIndex string formFields formField =
                         formField.visibilityRule
             }
 
-        OnVisibilityConditionFieldInput ruleIndex conditionIndex "" ->
+        OnVisibilityConditionFieldInput ruleIndex conditionIndex "\n" ->
             { formField
                 | visibilityRule =
                     updateVisibilityRuleAt ruleIndex
@@ -1022,6 +1022,7 @@ updateFormField msg fieldIndex string formFields formField =
                     case List.reverse conditions of
                         last :: _ ->
                             last
+                                |> updateComparisonInCondition (updateComparisonValue "")
 
                         [] ->
                             Field (getPreviousFieldNameOrLabel fieldIndex formFields) (Equals "")
@@ -1642,6 +1643,7 @@ renderFormField maybeAnimate model index maybeFormField =
         Nothing ->
             div
                 [ class "tff-field-container"
+                , on "click" (Json.Decode.succeed DragEnd)
                 , preventDefaultOn "dragover" (dragOverDecoder index Nothing)
                 ]
                 [ div [ class "tff-field-placeholder" ] [] ]
@@ -1793,6 +1795,7 @@ viewFormBuilder maybeAnimate model =
             ]
             [ div
                 [ class "tff-fields-container"
+                , on "drop" (Json.Decode.succeed DragEnd)
 
                 -- , preventDefaultOn "drop" (Json.Decode.succeed ( Drop Nothing, True ))
                 ]
@@ -1901,7 +1904,7 @@ visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
                                     fieldName
                             )
                         ]
-                        (option [ value "" ] [ text " - " ]
+                        (option [ value "\n" ] [ text " -- Remove this condition -- " ]
                             :: List.map
                                 (\field ->
                                     let
@@ -1985,7 +1988,7 @@ visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
                                 "HideWhen"
                         )
                     ]
-                    [ option [ value "" ] [ text " - " ]
+                    [ option [ value "\n" ] [ text " -- Remove this field logic -- " ]
                     , option [ selected (isShowWhen visibilityRule), value "ShowWhen" ] [ text "Show this question when" ]
                     , option [ selected (isHideWhen visibilityRule), value "HideWhen" ] [ text "Hide this question when" ]
                     ]
@@ -2365,7 +2368,7 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
                     \result ->
                         case result of
                             Ok a ->
-                                Html.textarea
+                                textarea
                                     [ required True
                                     , class "tff-text-field"
                                     , placeholder "Enter one suggestion per line"
@@ -2375,7 +2378,7 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
                                     []
 
                             Err err ->
-                                Html.textarea
+                                textarea
                                     [ required True
                                     , class "tff-text-field"
                                     , placeholder "Enter one suggestion per line"
@@ -3459,3 +3462,13 @@ selectInputGroup { selectAttrs, options, inputAttrs, children } =
             , input (class "tff-selectinput-input" :: inputAttrs) children
             ]
         ]
+
+
+textarea : List (Html.Attribute msg) -> List (Html.Html msg) -> Html msg
+textarea attrs children =
+    Html.textarea
+        (Attr.attribute "data-gramm_editor" "false"
+            :: Attr.attribute "data-enable-grammarly" "false"
+            :: attrs
+        )
+        children
