@@ -560,6 +560,51 @@ suite =
                             ()
                 ]
             ]
+        , describe "list attribute handling"
+            [ test "fromRawCustomElement removes list attribute" <|
+                \_ ->
+                    let
+                        ele =
+                            { rawCustomElement
+                                | attributes = Dict.fromList [ ( "list", "some-id" ) ]
+                            }
+                    in
+                    Main.fromRawCustomElement ele
+                        |> .attributes
+                        |> Dict.get "list"
+                        |> Expect.equal Nothing
+            , test "datalist is preserved when given" <|
+                \_ ->
+                    let
+                        ele =
+                            { rawCustomElement
+                                | attributes = Dict.fromList [ ( "list", "1\n2" ) ]
+                            }
+
+                        customElement =
+                            Main.fromRawCustomElement ele
+                    in
+                    case customElement.datalist of
+                        Main.AttributeGiven list ->
+                            list
+                                |> List.map .value
+                                |> Expect.equal [ "1", "2" ]
+
+                        _ ->
+                            Expect.fail "Expected AttributeGiven but got something else"
+            , test "datalist is not needed by default" <|
+                \_ ->
+                    let
+                        customElement =
+                            Main.fromRawCustomElement rawCustomElement
+                    in
+                    case customElement.datalist of
+                        Main.AttributeNotNeeded _ ->
+                            Expect.pass
+
+                        _ ->
+                            Expect.fail "Expected AttributeNotNeeded but got something else"
+            ]
         , describe "dragOverDecoder"
             [ test "decodes dragover event with formfield" <|
                 \_ ->
@@ -645,7 +690,6 @@ suite =
                               , attributes =
                                     Dict.fromList
                                         [ ( "type", "text" )
-                                        , ( "list", "someid" )
                                         ]
                               , multiple = Main.AttributeNotNeeded Nothing
                               , maxlength = Main.AttributeNotNeeded Nothing
