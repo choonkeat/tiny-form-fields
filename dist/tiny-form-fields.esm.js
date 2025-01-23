@@ -5524,29 +5524,29 @@ var $elm$core$Dict$get = F2(
 			}
 		}
 	});
-var $elm$core$Basics$not = _Basics_not;
+var $elm$core$Basics$neq = _Utils_notEqual;
 var $elm$core$String$trim = _String_trim;
 var $author$project$Main$fromRawCustomElement = function (ele) {
 	return {
 		r: A2(
 			$elm$core$Dict$filter,
 			F2(
-				function (k, v) {
-					return !((k === 'list') && A2($elm$core$String$contains, '\n', v));
+				function (k, _v0) {
+					return k !== 'list';
 				}),
 			ele.r),
 		X: function () {
-			var _v0 = A2($elm$core$Dict$get, 'list', ele.r);
-			if (!_v0.$) {
-				var s = _v0.a;
-				var _v1 = A2(
+			var _v1 = A2($elm$core$Dict$get, 'list', ele.r);
+			if (!_v1.$) {
+				var s = _v1.a;
+				var _v2 = A2(
 					$elm$core$String$split,
 					'\n',
 					$elm$core$String$trim(s));
-				if (!_v1.b) {
+				if (!_v2.b) {
 					return $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing);
 				} else {
-					var list = _v1;
+					var list = _v2;
 					return $author$project$Main$AttributeGiven(
 						A2($elm$core$List$map, $author$project$Main$choiceFromString, list));
 				}
@@ -5557,15 +5557,15 @@ var $author$project$Main$fromRawCustomElement = function (ele) {
 		K: ele.K,
 		y: ele.y,
 		Z: function () {
-			var _v2 = A2($elm$core$Dict$get, 'maxlength', ele.r);
-			if (!_v2.$) {
-				if (_v2.a === '') {
+			var _v3 = A2($elm$core$Dict$get, 'maxlength', ele.r);
+			if (!_v3.$) {
+				if (_v3.a === '') {
 					return $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing);
 				} else {
-					var value = _v2.a;
-					var _v3 = $elm$core$String$toInt(value);
-					if (!_v3.$) {
-						var _int = _v3.a;
+					var value = _v3.a;
+					var _v4 = $elm$core$String$toInt(value);
+					if (!_v4.$) {
+						var _int = _v4.a;
 						return $author$project$Main$AttributeGiven(_int);
 					} else {
 						return $author$project$Main$AttributeInvalid(value);
@@ -5576,9 +5576,9 @@ var $author$project$Main$fromRawCustomElement = function (ele) {
 			}
 		}(),
 		aA: function () {
-			var _v4 = A2($elm$core$Dict$get, 'multiple', ele.r);
-			if (!_v4.$) {
-				switch (_v4.a) {
+			var _v5 = A2($elm$core$Dict$get, 'multiple', ele.r);
+			if (!_v5.$) {
+				switch (_v5.a) {
 					case '':
 						return $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing);
 					case 'true':
@@ -5586,7 +5586,7 @@ var $author$project$Main$fromRawCustomElement = function (ele) {
 					case 'false':
 						return $author$project$Main$AttributeGiven(false);
 					default:
-						var value = _v4.a;
+						var value = _v5.a;
 						return $author$project$Main$AttributeInvalid(value);
 				}
 			} else {
@@ -6154,7 +6154,6 @@ var $author$project$Main$encodePairsFromRawCustomElements = function (customElem
 			$elm$json$Json$Encode$string(customElement.y)),
 		_Utils_ap(inputTagAttrs, encodedAttrs));
 };
-var $elm$core$Basics$neq = _Utils_notEqual;
 var $author$project$Main$toRawCustomElement = function (ele) {
 	var addMultipleIfGiven = function (dict) {
 		var _v3 = ele.aA;
@@ -6600,6 +6599,7 @@ var $elm$core$List$member = F2(
 			xs);
 	});
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
+var $elm$core$Basics$not = _Basics_not;
 var $author$project$Main$outgoing = _Platform_outgoingPort('outgoing', $elm$core$Basics$identity);
 var $author$project$Main$init = function (flags) {
 	var defaultShortTextTypeList = _List_fromArray(

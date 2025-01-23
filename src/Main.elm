@@ -2988,8 +2988,7 @@ fromRawCustomElement ele =
     , inputType = ele.inputType
     , attributes =
         ele.attributes
-            -- list="some-id" is not a `datalist : AttributeOptional (List Choice)`, we keep it in `.attributes`
-            |> Dict.filter (\k v -> not (k == "list" && String.contains "\n" v))
+            |> Dict.filter (\k _ -> k /= "list")
     , multiple =
         case Dict.get "multiple" ele.attributes of
             Just "" ->
@@ -3064,11 +3063,9 @@ toRawCustomElement ele =
                     Dict.insert "list" (String.join "\n" (List.map choiceToString list)) dict
 
                 AttributeInvalid _ ->
-                    -- see `fromRawCustomElement`, keep the "list":"someid" we keep in `.attributes`
                     dict
 
                 AttributeNotNeeded _ ->
-                    -- see `fromRawCustomElement`, keep the "list":"someid" we keep in `.attributes`
                     dict
     in
     { inputTag = ele.inputTag
