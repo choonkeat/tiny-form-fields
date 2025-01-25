@@ -39,7 +39,7 @@ test('[Dropdown] visibility rules in preview mode', async ({ page }) => {
     // Switch to preview mode
     const page1Promise = page.waitForEvent("popup");
     await page
-        .getByRole("link", { name: "View sample Collect Data page" })
+        .getByRole("link", { name: "View form" })
         .click();
     const page1 = await page1Promise;
 
@@ -91,7 +91,7 @@ test('[Radio buttons] visibility rules in preview mode', async ({ page }) => {
     // Switch to preview mode
     const page1Promise = page.waitForEvent("popup");
     await page
-        .getByRole("link", { name: "View sample Collect Data page" })
+        .getByRole("link", { name: "View form" })
         .click();
     const page1 = await page1Promise;
 
@@ -160,7 +160,7 @@ test('[Checkboxes] visibility rules in preview mode', async ({ page }) => {
     // Switch to preview mode
     const page1Promise = page.waitForEvent("popup");
     await page
-        .getByRole("link", { name: "View sample Collect Data page" })
+        .getByRole("link", { name: "View form" })
         .click();
     const page1 = await page1Promise;
 
@@ -220,7 +220,7 @@ test('[Multi-line description] visibility rules with contains in preview mode', 
     // Switch to preview mode
     const page1Promise = page.waitForEvent("popup");
     await page
-        .getByRole("link", { name: "View sample Collect Data page" })
+        .getByRole("link", { name: "View form" })
         .click();
     const page1 = await page1Promise;
 
@@ -282,7 +282,7 @@ test('[Single-line free text] visibility rules with contains in preview mode', a
     // Switch to preview mode
     const page1Promise = page.waitForEvent("popup");
     await page
-        .getByRole("link", { name: "View sample Collect Data page" })
+        .getByRole("link", { name: "View form" })
         .click();
     const page1 = await page1Promise;
 
@@ -330,7 +330,7 @@ test('[Single-line free text] visibility rules with greater than in preview mode
     // Switch to preview mode
     const page1Promise = page.waitForEvent("popup");
     await page
-        .getByRole("link", { name: "View sample Collect Data page" })
+        .getByRole("link", { name: "View form" })
         .click();
     const page1 = await page1Promise;
 

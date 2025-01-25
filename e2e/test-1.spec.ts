@@ -62,7 +62,7 @@ test("test", async ({ page }) => {
 
   const page1Promise = page.waitForEvent("popup");
   await page
-    .getByRole("link", { name: "View sample Collect Data page" })
+    .getByRole("link", { name: "View form" })
     .click();
   const page1 = await page1Promise;
   for (const input of inputs) {
@@ -87,7 +87,7 @@ test("test", async ({ page }) => {
   }
 
   const responsePromise = page1.waitForResponse("https://httpbin.org/post", { timeout: 30000 });
-  await page1.getByRole("button", { name: "Test Submit" }).click();
+  await page1.getByRole("button", { name: "Submit" }).click();
   const response = await responsePromise;
 
   const responseBody = await response.json();
@@ -100,4 +100,43 @@ test("test", async ({ page }) => {
     return acc;
   }, {});
   expect(responseBody.form).toEqual(expectedData);
+});
+
+test("test with custom target URL", async ({ page }) => {
+  // Set a desktop viewport
+  await page.setViewportSize({ width: 2048, height: 800 });
+  await page.goto("http://localhost:8000/");
+
+  // Add a simple text field
+  const input = { link: "Single-line free text", label: "Test field", description: "test", maxlength: 20, value: "test value" };
+  await page.getByRole("link", { name: input.link }).click();
+  await page.getByLabel("Field label").click();
+  await page.keyboard.type(input.label);
+  await page.getByLabel("Field description").click();
+  await page.keyboard.type(input.description);
+  await page.locator(".tff-close-button").click();
+
+  // Change form target URL
+  const customUrl = "https://httpbin.org/post?123=abc";
+  await page.locator("#form_target_url").fill(customUrl);
+  await page.locator("#form_target_url").evaluate(e => e.blur());
+
+  // Switch to preview mode
+  const page1Promise = page.waitForEvent("popup");
+  await page
+    .getByRole("link", { name: "View form" })
+    .click();
+  const page1 = await page1Promise;
+
+  // Fill in the form
+  await page1.getByLabel(input.label).click();
+  await page1.keyboard.type(input.value);
+
+  // Submit and verify response URL
+  const responsePromise = page1.waitForResponse(customUrl, { timeout: 30000 });
+  await page1.getByRole("button", { name: "Submit" }).click();
+  const response = await responsePromise;
+
+  const responseBody = await response.json();
+  expect(responseBody.form).toEqual({ [input.label]: input.value });
 });
