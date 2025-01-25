@@ -58,23 +58,41 @@
       <div id="tiny-form-fields"></div>
       <!-- end render -->
     </div>
-    <div class="p-1 md:pl-5 my-8 md:w-3/5 ml-auto mr-auto">
-      <button type="submit" tabindex="0"
-        class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 mr-2 mb-2 rounded text-sm leading-4">
-        Test Submit
-      </button>
-      <a tabindex="0" id="view-sample-collect-data" href="#" target="_blank"
-        class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 mr-2 mb-2 rounded h-10 text-sm leading-4 hidden">
-        View sample Collect Data page
-      </a>
-      <a tabindex="0" id="reset-form" href="?"
-        class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 mr-2 mb-2 rounded h-10 text-sm leading-4 hidden">
-        Reset
-      </a>
-      <p>
-        <a class="text-xs gray-500 float-right" target="_blank"
+    <div class="p-1 md:p-3 md:w-11/12 my-8 ml-auto mr-auto bg-white min-h-full shadow">
+      <div class="mb-4" id="editor-mode-buttons">
+        <a tabindex="0" id="reset-form" href="?"
+          class="inline-block bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 mr-2 mb-2 rounded text-sm leading-4 float-left">
+          Reset
+        </a>
+        <div class="float-right">
+          <button type="submit" tabindex="0"
+            class="inline-block bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 mr-2 mb-2 rounded text-sm leading-4">
+            Submit form config
+          </button>
+          <a tabindex="0" id="view-sample-collect-data" href="#" target="_blank"
+            class="inline-block bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 mr-2 mb-2 rounded text-sm leading-4 hidden">
+            View form
+          </a>
+        </div>
+        <div class="clear-both"></div>
+      </div>
+      <div class="mb-4 hidden" id="collect-mode-buttons">
+        <button type="reset" tabindex="0"
+          class="inline-block bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 mr-2 mb-2 rounded text-sm leading-4 float-left">
+          Reset
+        </button>
+        <div class="float-right">
+          <button type="submit" tabindex="0"
+            class="inline-block bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 mr-2 mb-2 rounded text-sm leading-4">
+            Submit
+          </button>
+        </div>
+        <div class="clear-both"></div>
+      </div>
+      <div class="text-right">
+        <a class="text-xs text-gray-500" target="_blank"
           href="https://github.com/choonkeat/tiny-form-fields">github.com/choonkeat/tiny-form-fields</a>
-      </p>
+      </div>
     </div>
   </form>
 
@@ -88,6 +106,18 @@
       return acc
     }, {})
     hash['viewMode'] = hash['viewMode'] || "Editor" // "Editor" for form admins, "CollectData" for form users
+
+    // Show/hide buttons based on viewMode
+    const editorButtons = document.getElementById('editor-mode-buttons');
+    const collectButtons = document.getElementById('collect-mode-buttons');
+    if (hash['viewMode'] === 'Editor') {
+      editorButtons.classList.remove('hidden');
+      collectButtons.classList.add('hidden');
+    } else {
+      editorButtons.classList.add('hidden');
+      collectButtons.classList.remove('hidden');
+    }
+
     const flags = {
       viewMode: hash['viewMode'],
       formFields: hash['formFields'] ? JSON.parse(decodeURIComponent(hash['formFields'])) : null, // JSON representation of form fields
