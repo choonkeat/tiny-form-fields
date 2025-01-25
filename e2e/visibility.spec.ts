@@ -140,7 +140,7 @@ test('[Checkboxes] visibility rules in preview mode', async ({ page }) => {
         }]
     }]);
 
-    // Add "Why Banana?" text field that shows when "Banana" is selected
+    // Add "Why Apple and Banana?" text field that shows when "Apple" and "Banana" are selected
     await addField(page, 'Single-line free text', [{
         label: 'Single-line free text question title',
         value: 'Why Apple and Banana?',
@@ -151,7 +151,7 @@ test('[Checkboxes] visibility rules in preview mode', async ({ page }) => {
                 type: 'Equals',
                 value: 'Apple'
             }, {
-                type: 'EndsWith',
+                type: 'Equals',
                 value: 'Banana'
             }]
         }]
@@ -164,20 +164,32 @@ test('[Checkboxes] visibility rules in preview mode', async ({ page }) => {
         .click();
     const page1 = await page1Promise;
 
+    // Ensure all checkboxes are unchecked initially
+    const checkboxes = await page1.locator('input[type="checkbox"]').all();
+    for (const checkbox of checkboxes) {
+        if (await checkbox.isChecked()) {
+            await checkbox.click();
+        }
+    }
+    await page1.waitForTimeout(100);
+
     // Test Apple selection
     await page1.click('input[value="Apple"]');
+    await page1.waitForTimeout(100);
     await expect(page1.locator('text="Why Apple?"')).toBeVisible();
     await expect(page1.locator('text="Why Banana?"')).toHaveCount(0);
     await expect(page1.locator('text="Why Apple and Banana?"')).toHaveCount(0);
 
     // Test Banana selection  
     await page1.click('input[value="Banana"]');
-    await expect(page1.locator('text="Why Apple?"')).toBeVisible(); // Both should be visible since checkboxes allow multiple selections
+    await page1.waitForTimeout(100);
+    await expect(page1.locator('text="Why Apple?"')).toBeVisible(); // Apple is still checked
     await expect(page1.locator('text="Why Banana?"')).toBeVisible();
     await expect(page1.locator('text="Why Apple and Banana?"')).toBeVisible();
 
     // Uncheck Apple
     await page1.click('input[value="Apple"]');
+    await page1.waitForTimeout(100);
     await expect(page1.locator('text="Why Apple?"')).toHaveCount(0);
     await expect(page1.locator('text="Why Banana?"')).toBeVisible();
     await expect(page1.locator('text="Why Apple and Banana?"')).toHaveCount(0);

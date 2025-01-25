@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { addField } from "./test-utils";
 
 function randomOne(items) {
   return items[Math.floor((Math.random() * items.length))];
@@ -29,32 +30,7 @@ test("test", async ({ page }) => {
   ];
 
   for (const input of inputs) {
-    await page.getByRole("button", { name: input.link, exact: true }).click();
-    await page.waitForTimeout(600);
-    await expect(page.getByText(`${input.link} question title`)).toHaveCount(0);
-    await page.locator('.tff-field-container .tff-drag-handle-icon').last().click();
-    await page.waitForTimeout(600);
-    await page.getByText(`${input.link} question title`).click();
-    await page.keyboard.press("ControlOrMeta+a");
-    await page.keyboard.type(input.label);
-    if (input.description) {
-      await page.getByText('Question description').last().click();
-      await page.waitForTimeout(100);
-      await page.keyboard.press("Tab");
-      await page.keyboard.type(input.description);
-    }
-    if (input.maxlength) {
-      await page.getByText('Limit number of characters').last().click();
-      await page.waitForTimeout(100);
-      await page.keyboard.press("Tab");
-      await page.keyboard.type(input.maxlength.toString());
-    }
-    if (input.choices) {
-      await page.getByPlaceholder("Enter one choice per line").last().click();
-      await page.keyboard.press("ControlOrMeta+a");
-      await page.keyboard.type(input.choices.join("\n"));
-    }
-    await page.locator(".tff-close-button").click();
+    await addField(page, input.link, undefined, input);
   }
 
   await page.locator('.tff-close-button').click();
@@ -109,12 +85,7 @@ test("test with custom target URL", async ({ page }) => {
 
   // Add a simple text field
   const input = { link: "Single-line free text", label: "Test field", description: "test", maxlength: 20, value: "test value" };
-  await page.getByRole("link", { name: input.link }).click();
-  await page.getByLabel("Field label").click();
-  await page.keyboard.type(input.label);
-  await page.getByLabel("Field description").click();
-  await page.keyboard.type(input.description);
-  await page.locator(".tff-close-button").click();
+  await addField(page, input.link, undefined, input);
 
   // Change form target URL
   const customUrl = "https://httpbin.org/post?123=abc";
