@@ -58,23 +58,46 @@
       <div id="tiny-form-fields"></div>
       <!-- end render -->
     </div>
-    <div class="p-1 md:pl-5 my-8 md:w-3/5 ml-auto mr-auto">
-      <button type="submit" tabindex="0"
-        class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 mr-2 mb-2 rounded text-sm leading-4">
-        Test Submit
-      </button>
-      <a tabindex="0" id="view-sample-collect-data" href="#" target="_blank"
-        class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 mr-2 mb-2 rounded h-10 text-sm leading-4 hidden">
-        View sample Collect Data page
-      </a>
-      <a tabindex="0" id="reset-form" href="?"
-        class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 mr-2 mb-2 rounded h-10 text-sm leading-4 hidden">
-        Reset
-      </a>
-      <p>
-        <a class="text-xs gray-500 float-right" target="_blank"
-          href="https://github.com/choonkeat/tiny-form-fields">github.com/choonkeat/tiny-form-fields</a>
-      </p>
+    <div class="p-1 md:p-3 md:w-11/12 my-8 ml-auto mr-auto bg-white min-h-full shadow">
+      <div class="mb-4 tff-field-group tff-required" id="editor-url-input">
+        <label class="tff-field-label" for="form_target_url">Form target URL</label>
+        <div>
+          <input type="url" id="form_target_url" class="tff-text-field" required>
+        </div>
+        <div class="tff-field-description"></div>
+      </div>
+      <div id="editor-mode-buttons">
+        <a tabindex="0" id="reset-form" href="?"
+          class="inline-block bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-sm leading-4 float-left opacity-50 cursor-not-allowed"
+          title="You'll need to add a field to the form first" disabled>
+          Reset
+        </a>
+        <div class="float-right">
+          <button type="submit" tabindex="0"
+            class="inline-block bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-2 px-4 mr-2 rounded text-sm leading-4 border border-gray-300">
+            Submit form config
+          </button>
+          <a tabindex="0" id="view-sample-collect-data" href="#" target="_blank"
+            class="inline-block bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded text-sm leading-4 opacity-50 cursor-not-allowed"
+            title="You'll need to add a field to the form first" disabled>
+            View form
+          </a>
+        </div>
+        <div class="clear-both"></div>
+      </div>
+      <div class="hidden" id="collect-mode-buttons">
+        <div class="float-right">
+          <button type="submit" tabindex="0"
+            class="inline-block bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded text-sm leading-4">
+            Submit
+          </button>
+        </div>
+        <div class="clear-both"></div>
+      </div>
+    </div>
+    <div class="p-1 md:p-3 md:w-11/12 my-8 ml-auto mr-auto min-h-full text-right">
+      <a class="text-xs text-gray-500" target="_blank" href="https://github.com/choonkeat/tiny-form-fields">Built with
+        github.com/choonkeat/tiny-form-fields</a>
     </div>
   </form>
 
@@ -88,6 +111,77 @@
       return acc
     }, {})
     hash['viewMode'] = hash['viewMode'] || "Editor" // "Editor" for form admins, "CollectData" for form users
+    hash['_url'] = hash['_url'] ? decodeURIComponent(hash['_url']) : 'https://httpbin.org/post'
+
+    // Helper function to get current hash params
+    function getCurrentHashParams() {
+      return (window.location.hash.substring(1) || "").split("&").reduce((acc, item) => {
+        let [key, value] = item.split("=")
+        acc[key] = value
+        return acc
+      }, {})
+    }
+
+    // Helper function to update hash and sample link
+    function updateHashAndLink(formFields, viewMode, targetUrl) {
+      const newHash = `viewMode=${viewMode}&formFields=${encodeURIComponent(JSON.stringify(formFields))}&_url=${encodeURIComponent(targetUrl)}`;
+      window.location.hash = newHash;
+
+      // Always update form action to match current URL
+      document.querySelector('form').action = targetUrl;
+
+      if (viewMode === 'Editor') {
+        const ele = document.getElementById('view-sample-collect-data');
+        const resetBtn = document.getElementById('reset-form');
+        ele.href = `?#viewMode=CollectData&formFields=${encodeURIComponent(JSON.stringify(formFields))}&_url=${encodeURIComponent(targetUrl)}`;
+        if (formFields && formFields.length > 0) {
+          ele.classList.remove('opacity-50', 'cursor-not-allowed');
+          ele.removeAttribute('disabled');
+          ele.removeAttribute('title');
+          resetBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+          resetBtn.removeAttribute('disabled');
+          resetBtn.removeAttribute('title');
+        } else {
+          ele.classList.add('opacity-50', 'cursor-not-allowed');
+          ele.setAttribute('disabled', '');
+          ele.setAttribute('title', 'You\'ll need to add a field to the form first');
+          resetBtn.classList.add('opacity-50', 'cursor-not-allowed');
+          resetBtn.setAttribute('disabled', '');
+          resetBtn.setAttribute('title', 'You\'ll need to add a field to the form first');
+        }
+      }
+    }
+
+    // Set default URL and handle visibility
+    const urlInput = document.getElementById('editor-url-input');
+    const formTargetUrl = document.getElementById('form_target_url');
+    formTargetUrl.value = hash['_url'];
+    // Set initial form action
+    document.querySelector('form').action = hash['_url'];
+
+    if (hash['viewMode'] === 'Editor') {
+      urlInput.classList.remove('hidden');
+      // Update hash when URL changes
+      formTargetUrl.addEventListener('change', function () {
+        const currentHash = getCurrentHashParams();
+        const formFields = currentHash['formFields'] ? JSON.parse(decodeURIComponent(currentHash['formFields'])) : [];
+        updateHashAndLink(formFields, hash['viewMode'], this.value);
+      });
+    } else {
+      urlInput.parentNode.removeChild(urlInput);
+    }
+
+    // Show/hide buttons based on viewMode
+    const editorButtons = document.getElementById('editor-mode-buttons');
+    const collectButtons = document.getElementById('collect-mode-buttons');
+    if (hash['viewMode'] === 'Editor') {
+      editorButtons.classList.remove('hidden');
+      collectButtons.classList.add('hidden');
+    } else {
+      editorButtons.classList.add('hidden');
+      collectButtons.classList.remove('hidden');
+    }
+
     const flags = {
       viewMode: hash['viewMode'],
       formFields: hash['formFields'] ? JSON.parse(decodeURIComponent(hash['formFields'])) : null, // JSON representation of form fields
@@ -161,18 +255,8 @@
           case 'formFields':
             let formFields = event.formFields;
             console.log('formFields', JSON.stringify(formFields, null, 2));
-            const newHash = `viewMode=${hash['viewMode']}&formFields=${encodeURIComponent(JSON.stringify(formFields))}`
-            setTimeout(function () { window.location.hash = newHash; }, 0);
+            updateHashAndLink(formFields, hash['viewMode'], formTargetUrl.value);
             if (hash['viewMode'] === "CollectData") return
-
-            let ele = document.getElementById('view-sample-collect-data');
-            ele.href = `?#viewMode=CollectData&formFields=${encodeURIComponent(JSON.stringify(formFields))}`;
-            if (formFields && formFields.length > 0) {
-              ele.classList.remove('hidden');
-              document.getElementById('reset-form').classList.remove('hidden');
-            } else {
-              ele.classList.add('hidden');
-            }
             break;
           case 'formValues':
             console.log('formValues', JSON.stringify(event.formValues, null, 2));
