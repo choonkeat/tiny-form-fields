@@ -73,11 +73,12 @@
         </a>
         <div class="float-right">
           <button type="submit" tabindex="0"
-            class="inline-block bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 mr-2 mb-2 rounded text-sm leading-4">
+            class="inline-block bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-2 px-4 mr-2 mb-2 rounded text-sm leading-4 border border-gray-300">
             Submit form config
           </button>
           <a tabindex="0" id="view-sample-collect-data" href="#" target="_blank"
-            class="inline-block bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 mr-2 mb-2 rounded text-sm leading-4 hidden">
+            class="inline-block bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 mr-2 mb-2 rounded text-sm leading-4 opacity-50 cursor-not-allowed"
+            title="You'll need to add a field to the form first" disabled>
             View form
           </a>
         </div>
@@ -136,10 +137,13 @@
         const ele = document.getElementById('view-sample-collect-data');
         ele.href = `?#viewMode=CollectData&formFields=${encodeURIComponent(JSON.stringify(formFields))}&_url=${encodeURIComponent(targetUrl)}`;
         if (formFields && formFields.length > 0) {
-          ele.classList.remove('hidden');
+          ele.classList.remove('opacity-50', 'cursor-not-allowed');
+          ele.removeAttribute('disabled');
           document.getElementById('reset-form').classList.remove('hidden');
         } else {
-          ele.classList.add('hidden');
+          ele.classList.add('opacity-50', 'cursor-not-allowed');
+          ele.setAttribute('disabled', '');
+          document.getElementById('reset-form').classList.add('hidden');
         }
       }
     }
