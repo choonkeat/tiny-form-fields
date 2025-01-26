@@ -9637,6 +9637,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 											_List_fromArray(
 												[
 													$elm$html$Html$Attributes$class('tff-text-field'),
+													$elm$html$Html$Attributes$required(true),
 													$elm$html$Html$Attributes$type_('number'),
 													$elm$html$Html$Attributes$min('1'),
 													$elm$html$Html$Attributes$value(valueString),
@@ -9680,6 +9681,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 										_List_fromArray(
 											[
 												$elm$html$Html$Attributes$required(true),
+												$elm$html$Html$Attributes$pattern('.+'),
 												$elm$html$Html$Attributes$class('tff-text-field'),
 												$elm$html$Html$Attributes$placeholder('Enter one suggestion per line'),
 												$elm$html$Html$Attributes$value(
@@ -9698,6 +9700,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 										_List_fromArray(
 											[
 												$elm$html$Html$Attributes$required(true),
+												$elm$html$Html$Attributes$pattern('.+'),
 												$elm$html$Html$Attributes$class('tff-text-field'),
 												$elm$html$Html$Attributes$placeholder('Enter one suggestion per line'),
 												$elm$html$Html$Attributes$value(err),
@@ -9733,6 +9736,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 										_List_fromArray(
 											[
 												$elm$html$Html$Attributes$class('tff-text-field'),
+												$elm$html$Html$Attributes$required(true),
 												$elm$html$Html$Attributes$type_('number'),
 												$elm$html$Html$Attributes$min('1'),
 												$elm$html$Html$Attributes$value(
@@ -9748,6 +9752,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 										_List_fromArray(
 											[
 												$elm$html$Html$Attributes$class('tff-text-field'),
+												$elm$html$Html$Attributes$required(true),
 												$elm$html$Html$Attributes$type_('number'),
 												$elm$html$Html$Attributes$min('1'),
 												$elm$html$Html$Attributes$value(err),
@@ -10391,7 +10396,10 @@ var $author$project$Main$visibilityRulesSection = F3(
 	function (index, formFields, formField) {
 		return A2(
 			$elm$html$Html$div,
-			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('tff-toggle-group')
+				]),
 			_List_fromArray(
 				[
 					A2(

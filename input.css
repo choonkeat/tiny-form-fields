@@ -57,6 +57,9 @@
 	@apply mb-12;
 }
 
+.tff-field-group.tff-required select:invalid,
+.tff-field-group.tff-required textarea:invalid,
+.tff-toggle-group textarea:invalid,
 .tff-toggle-group input:not(:placeholder-shown):invalid,
 .tff-field-group input:not(:placeholder-shown):invalid {
 	border-color: red;
@@ -172,7 +175,7 @@
 .tff-build-field {
 	@apply grid;
 	@apply grid-rows-[auto_auto_1fr_auto];
-	@apply gap-2;
+	@apply gap-0;
 }
 
 .tff-build-field-buttons {

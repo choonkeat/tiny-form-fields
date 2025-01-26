@@ -42,7 +42,7 @@ import Array exposing (Array)
 import Browser
 import Dict exposing (Dict)
 import Html exposing (Html, button, div, h2, h3, input, label, option, pre, select, text, ul)
-import Html.Attributes as Attr exposing (attribute, checked, class, classList, disabled, for, id, maxlength, minlength, name, placeholder, readonly, required, selected, tabindex, title, type_, value)
+import Html.Attributes as Attr exposing (attribute, checked, class, classList, disabled, for, id, maxlength, minlength, name, pattern, placeholder, readonly, required, selected, tabindex, title, type_, value)
 import Html.Events exposing (on, onCheck, onClick, onInput, preventDefaultOn, stopPropagationOn)
 import Json.Decode
 import Json.Decode.Extra exposing (andMap)
@@ -1826,7 +1826,7 @@ selectArrowDown =
 
 visibilityRulesSection : Int -> Array FormField -> FormField -> Html Msg
 visibilityRulesSection index formFields formField =
-    div []
+    div [ class "tff-toggle-group" ]
         [ label [ class "tff-field-label" ]
             [ text "Field logic" ]
         , div []
@@ -2345,6 +2345,7 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
                                 in
                                 Html.input
                                     [ class "tff-text-field"
+                                    , required True
                                     , type_ "number"
                                     , Attr.min "1"
                                     , value valueString
@@ -2370,6 +2371,7 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
                             Ok a ->
                                 textarea
                                     [ required True
+                                    , pattern ".+"
                                     , class "tff-text-field"
                                     , placeholder "Enter one suggestion per line"
                                     , value (List.map choiceToString a |> String.join "\n")
@@ -2380,6 +2382,7 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
                             Err err ->
                                 textarea
                                     [ required True
+                                    , pattern ".+"
                                     , class "tff-text-field"
                                     , placeholder "Enter one suggestion per line"
                                     , value err
@@ -2400,6 +2403,7 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
                             Ok i ->
                                 Html.input
                                     [ class "tff-text-field"
+                                    , required True
                                     , type_ "number"
                                     , Attr.min "1"
                                     , value (String.fromInt i)
@@ -2410,6 +2414,7 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
                             Err err ->
                                 Html.input
                                     [ class "tff-text-field"
+                                    , required True
                                     , type_ "number"
                                     , Attr.min "1"
                                     , value err
