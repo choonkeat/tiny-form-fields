@@ -65,6 +65,23 @@
 	border-color: red;
 }
 
+.tff-radiobuttons-group .tff-field-label input[type='radio']:invalid {
+	-webkit-appearance: none;
+	height: 0.94em;
+	width: 0.94em;
+	box-shadow: none;
+	border: 1px solid red;
+	border-radius: 50%;
+	outline: none;
+}
+.tff-radiobuttons-group .tff-field-label input[type='radio']:invalid:before {
+	content: '';
+	display: block;
+	width: 100%;
+	height: 100%;
+	border-radius: 50%;
+}
+
 .tff-field-label {
 	@apply text-sm;
 	@apply text-gray-600;
