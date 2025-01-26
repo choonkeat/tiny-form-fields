@@ -59,3 +59,7 @@ stop-run:
 
 elm-review:
 	(yes | npx elm-review --fix-all) || npx elm-review
+
+format:
+	npx elm-format src/ tests/ --yes
+	npx prettier --write "index.html" "input.css" "e2e/**/*.ts"

@@ -1,0 +1,12 @@
+{
+  "formatOnSave": true,
+  "typescript": {
+    "formatter": "prettier"
+  },
+  "html": {
+    "formatter": "prettier"
+  },
+  "css": {
+    "formatter": "prettier"
+  }
+}

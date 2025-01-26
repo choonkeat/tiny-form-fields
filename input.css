@@ -4,619 +4,620 @@
 
 /* Error message styles */
 .tff-error h3 {
-    @apply font-bold;
-    @apply text-lg;
+	@apply font-bold;
+	@apply text-lg;
 }
 
 .tff-error pre {
-    @apply text-sm;
-    @apply whitespace-pre-wrap;
+	@apply text-sm;
+	@apply whitespace-pre-wrap;
 }
 
 .tff-error-text {
-    @apply text-sm text-red-600 mt-1;
+	@apply text-sm text-red-600 mt-1;
 }
 
 /* Settings panel styles */
 .tff-settings-content .tff-field-group,
 .tff-settings-content .tff-toggle-group {
-    @apply mb-4;
+	@apply mb-4;
 }
 
 .tff-center-panel .tff-field-group,
 .tff-center-panel .tff-toggle-group {
-    @apply mb-4;
+	@apply mb-4;
 }
 
 .tff-settings-content .tff-field-group:last-child,
 .tff-settings-content .tff-toggle-group:last-child {
-    @apply mb-4;
+	@apply mb-4;
 }
 
 /* Field group styles */
 .tff-field-group {
-    @apply relative;
-    @apply mb-12;
+	@apply relative;
+	@apply mb-12;
 }
 
 .tff-field-rule {
-    @apply bg-white;
-    @apply p-2;
-    @apply rounded;
-    @apply border;
-    @apply border-gray-300;
-    @apply mb-4;
+	@apply bg-white;
+	@apply p-2;
+	@apply rounded;
+	@apply border;
+	@apply border-gray-300;
+	@apply mb-4;
 }
 
 .tff-field-rule-conditions {
-    @apply pl-4;
-    @apply mb-2;
+	@apply pl-4;
+	@apply mb-2;
 }
 
 .tff-toggle-group {
-    @apply mb-12;
+	@apply mb-12;
 }
 
 .tff-toggle-group input:not(:placeholder-shown):invalid,
 .tff-field-group input:not(:placeholder-shown):invalid {
-    border-color: red;
+	border-color: red;
 }
 
 .tff-field-label {
-    @apply text-sm;
-    @apply text-gray-600;
-    @apply align-middle;
+	@apply text-sm;
+	@apply text-gray-600;
+	@apply align-middle;
 }
 
 .tff-field-description {
-    @apply mt-1;
-    @apply text-xs;
-    @apply text-gray-600;
+	@apply mt-1;
+	@apply text-xs;
+	@apply text-gray-600;
 }
 
 .tff-text-field {
-    @apply block;
-    @apply border;
-    @apply border-gray-300;
-    @apply p-2;
-    @apply w-full;
-    @apply rounded;
+	@apply block;
+	@apply border;
+	@apply border-gray-300;
+	@apply p-2;
+	@apply w-full;
+	@apply rounded;
 }
 
-.tff-text-field[type="color"] {
-    @apply max-w-10;
-    @apply h-10;
-    @apply p-1;
+.tff-text-field[type='color'] {
+	@apply max-w-10;
+	@apply h-10;
+	@apply p-1;
 }
 
-.tff-text-field[type="date"],
-.tff-text-field[type="time"],
-.tff-text-field[type="datetime-local"] {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    @apply bg-inherit;
+.tff-text-field[type='date'],
+.tff-text-field[type='time'],
+.tff-text-field[type='datetime-local'] {
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	@apply bg-inherit;
 }
 
 .tff-text-field::-webkit-date-value,
 .tff-text-field::-webkit-time-value,
 .tff-text-field::-webkit-date-and-time-value {
-    @apply min-h-6;
-    text-align: inherit;
+	@apply min-h-6;
+	text-align: inherit;
 }
 
 .tff-dropdown-group {
-    @apply grid;
+	@apply grid;
 }
 
 .tff-dropdown-group select {
-    @apply appearance-none;
-    @apply forced-colors:appearance-auto;
-    @apply border;
-    @apply row-start-1;
-    @apply col-start-1;
-    @apply bg-slate-50;
-    @apply hover:border-cyan-500;
-    @apply hover:bg-white;
-    @apply border-slate-300;
-    @apply text-slate-700;
-    @apply p-2;
-    @apply rounded;
+	@apply appearance-none;
+	@apply forced-colors:appearance-auto;
+	@apply border;
+	@apply row-start-1;
+	@apply col-start-1;
+	@apply bg-slate-50;
+	@apply hover:border-cyan-500;
+	@apply hover:bg-white;
+	@apply border-slate-300;
+	@apply text-slate-700;
+	@apply p-2;
+	@apply rounded;
 }
 
 .tff-dropdown-group select.tff-select-disabled {
-    @apply text-gray-300;
+	@apply text-gray-300;
 }
 
 .tff-dropdown-group svg {
-    @apply pointer-events-none;
-    @apply z-10;
-    @apply right-1;
-    @apply relative;
-    @apply col-start-1;
-    @apply row-start-1;
-    @apply h-4;
-    @apply w-4;
-    @apply mr-2;
-    @apply self-center;
-    @apply justify-self-end;
-    @apply forced-colors:hidden;
+	@apply pointer-events-none;
+	@apply z-10;
+	@apply right-1;
+	@apply relative;
+	@apply col-start-1;
+	@apply row-start-1;
+	@apply h-4;
+	@apply w-4;
+	@apply mr-2;
+	@apply self-center;
+	@apply justify-self-end;
+	@apply forced-colors:hidden;
 }
 
 .tff-choosemany-group,
 .tff-chooseone-group {
-    @apply grid;
+	@apply grid;
 }
 
 .tff-choosemany-group .tff-choosemany-checkboxes,
 .tff-chooseone-group .tff-chooseone-radiobuttons {
-    @apply grid;
-    @apply grid-cols-1;
-    @apply gap-2;
+	@apply grid;
+	@apply grid-cols-1;
+	@apply gap-2;
 }
 
 .tff-checkbox-group,
 .tff-radiobuttons-group {
-    @apply flex;
+	@apply flex;
 }
 
 .tff-checkbox-group .tff-field-label input,
 .tff-radiobuttons-group .tff-field-label input {
-    @apply border;
-    @apply border-gray-300;
-    @apply align-middle;
+	@apply border;
+	@apply border-gray-300;
+	@apply align-middle;
+	@apply mb-0.5;
 }
 
 .tff-build-field {
-    @apply grid;
-    @apply grid-rows-[auto_auto_1fr_auto];
-    @apply gap-2;
+	@apply grid;
+	@apply grid-rows-[auto_auto_1fr_auto];
+	@apply gap-2;
 }
 
 .tff-build-field-buttons {
-    @apply flex;
-    @apply justify-between;
-    @apply items-end;
-    @apply mb-16;
+	@apply flex;
+	@apply justify-between;
+	@apply items-end;
+	@apply mb-16;
 }
 
 .tff-build-field-buttons .tff-move {
-    @apply flex;
-    @apply space-x-2;
+	@apply flex;
+	@apply space-x-2;
 }
 
 .tff-settings-content button {
-    @apply text-xs;
-    @apply bg-gray-200;
-    @apply hover:bg-gray-400;
-    @apply text-gray-600;
-    @apply px-4;
-    @apply py-2;
-    @apply rounded;
+	@apply text-xs;
+	@apply bg-gray-200;
+	@apply hover:bg-gray-400;
+	@apply text-gray-600;
+	@apply px-4;
+	@apply py-2;
+	@apply rounded;
 }
 
 .tff-build-field-buttons button.tff-delete {
-    @apply text-red-600;
+	@apply text-red-600;
 }
 
 .tff-dropdown-button {
-    @apply text-white;
-    @apply bg-blue-500;
-    @apply hover:bg-blue-700;
-    @apply focus:ring-4;
-    @apply focus:outline-none;
-    @apply focus:ring-blue-300;
-    @apply font-medium;
-    @apply rounded-lg;
-    @apply text-sm;
-    @apply px-5;
-    @apply py-2.5;
-    @apply text-center;
-    @apply inline-flex;
-    @apply items-center;
+	@apply text-white;
+	@apply bg-blue-500;
+	@apply hover:bg-blue-700;
+	@apply focus:ring-4;
+	@apply focus:outline-none;
+	@apply focus:ring-blue-300;
+	@apply font-medium;
+	@apply rounded-lg;
+	@apply text-sm;
+	@apply px-5;
+	@apply py-2.5;
+	@apply text-center;
+	@apply inline-flex;
+	@apply items-center;
 }
 
 .tff-dropdown-open {
-    @apply block;
-    @apply absolute;
+	@apply block;
+	@apply absolute;
 }
 
 .tff-dropdown-closed {
-    @apply hidden;
+	@apply hidden;
 }
 
 .tff-selectinput-wrapper {
-    @apply mt-2;
+	@apply mt-2;
 }
 
 .tff-selectinput-group {
-    @apply flex items-center rounded-md bg-white outline outline-1 -outline-offset-1 outline-gray-300;
-    @apply has-[input:focus-within]:outline has-[input:focus-within]:outline-2 has-[input:focus-within]:-outline-offset-2 has-[input:focus-within]:outline-indigo-600;
+	@apply flex items-center rounded-md bg-white outline outline-1 -outline-offset-1 outline-gray-300;
+	@apply has-[input:focus-within]:outline has-[input:focus-within]:outline-2 has-[input:focus-within]:-outline-offset-2 has-[input:focus-within]:outline-indigo-600;
 }
 
 .tff-selectinput-input {
-    @apply block min-w-0 grow py-1.5 pl-1 pr-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline focus:outline-0 sm:text-sm/6;
+	@apply block min-w-0 grow py-1.5 pl-1 pr-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline focus:outline-0 sm:text-sm/6;
 }
 
 .tff-selectinput-select-wrapper {
-    @apply grid shrink-0 grid-cols-1 focus-within:relative;
+	@apply grid shrink-0 grid-cols-1 focus-within:relative;
 }
 
 .tff-selectinput-select {
-    @apply col-start-1 row-start-1 w-full appearance-none rounded-md py-1.5 pl-3 pr-7 text-base text-gray-500 placeholder:text-gray-400;
-    @apply focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6;
+	@apply col-start-1 row-start-1 w-full appearance-none rounded-md py-1.5 pl-3 pr-7 text-base text-gray-500 placeholder:text-gray-400;
+	@apply focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6;
 }
 
 .tff-selectarrow-icon {
-    @apply pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4;
+	@apply pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4;
 }
 
 /* Animation keyframes */
 @keyframes fadeOut {
-    0% {
-        @apply opacity-100;
-    }
+	0% {
+		@apply opacity-100;
+	}
 
-    100% {
-        @apply opacity-0;
-    }
+	100% {
+		@apply opacity-0;
+	}
 }
 
 @keyframes fadeIn {
-    0% {
-        @apply opacity-0;
-    }
+	0% {
+		@apply opacity-0;
+	}
 
-    100% {
-        @apply opacity-100;
-    }
+	100% {
+		@apply opacity-100;
+	}
 }
 
 @keyframes yellowFade {
-    0% {
-        @apply bg-blue-100;
-    }
+	0% {
+		@apply bg-blue-100;
+	}
 
-    100% {
-        @apply bg-transparent;
-    }
+	100% {
+		@apply bg-transparent;
+	}
 }
 
 .tff-animate-fadeOut {
-    animation: fadeOut 0.5s ease-in-out;
+	animation: fadeOut 0.5s ease-in-out;
 }
 
 .tff-animate-yellowFade {
-    animation: yellowFade 0.5s ease-in-out;
+	animation: yellowFade 0.5s ease-in-out;
 }
 
 /* Field preview states and interactions */
 .tff-field-preview {
-    @apply relative;
-    @apply bg-white;
-    @apply rounded-lg;
-    @apply p-4;
-    @apply mb-2;
-    @apply cursor-pointer;
-    @apply transition-all;
-    @apply duration-200;
-    @apply border;
-    @apply border-white;
-    @apply cursor-pointer;
+	@apply relative;
+	@apply bg-white;
+	@apply rounded-lg;
+	@apply p-4;
+	@apply mb-2;
+	@apply cursor-pointer;
+	@apply transition-all;
+	@apply duration-200;
+	@apply border;
+	@apply border-white;
+	@apply cursor-pointer;
 }
 
 .tff-field-preview:hover {
-    @apply border-gray-200;
-    @apply shadow-md;
+	@apply border-gray-200;
+	@apply shadow-md;
 }
 
-.tff-field-preview[data-selected="true"] {
-    @apply border-blue-500;
-    @apply shadow-md;
-    @apply bg-blue-50;
+.tff-field-preview[data-selected='true'] {
+	@apply border-blue-500;
+	@apply shadow-md;
+	@apply bg-blue-50;
 }
 
-.tff-field-preview[data-selected="true"] .tff-drag-handle {
-    @apply opacity-100;
+.tff-field-preview[data-selected='true'] .tff-drag-handle {
+	@apply opacity-100;
 }
 
-.tff-field-preview[data-selected="true"]:hover {
-    @apply border-blue-500;
+.tff-field-preview[data-selected='true']:hover {
+	@apply border-blue-500;
 }
 
-.tff-field-preview[data-dragging="true"] {
-    @apply opacity-50;
-    @apply shadow-md;
+.tff-field-preview[data-dragging='true'] {
+	@apply opacity-50;
+	@apply shadow-md;
 }
 
 .tff-drag-handle {
-    @apply absolute;
-    @apply top-0;
-    @apply left-1/2;
-    @apply -translate-x-1/2;
-    @apply cursor-move;
-    @apply flex;
-    @apply items-center;
-    @apply justify-center;
-    @apply w-6;
-    @apply mt-1;
-    @apply opacity-0;
-    @apply transition-opacity;
+	@apply absolute;
+	@apply top-0;
+	@apply left-1/2;
+	@apply -translate-x-1/2;
+	@apply cursor-move;
+	@apply flex;
+	@apply items-center;
+	@apply justify-center;
+	@apply w-6;
+	@apply mt-1;
+	@apply opacity-0;
+	@apply transition-opacity;
 }
 
 .tff-drag-handle-icon {
-    @apply w-4 h-4 text-gray-400;
+	@apply w-4 h-4 text-gray-400;
 }
 
 .tff-field-preview:hover .tff-drag-handle,
-.tff-field-preview[data-selected="true"] .tff-drag-handle {
-    @apply opacity-100;
+.tff-field-preview[data-selected='true'] .tff-drag-handle {
+	@apply opacity-100;
 }
 
 .tff-settings-content {
-    @apply overflow-y-auto;
-    @apply flex-grow;
+	@apply overflow-y-auto;
+	@apply flex-grow;
 }
 
 .tff-field-placeholder {
-    @apply h-32;
-    @apply border-2;
-    @apply border-dashed;
-    @apply border-blue-200;
-    @apply rounded-lg;
-    @apply bg-blue-50;
+	@apply h-32;
+	@apply border-2;
+	@apply border-dashed;
+	@apply border-blue-200;
+	@apply rounded-lg;
+	@apply bg-blue-50;
 }
 
 /* Field wrapper and container layout */
 .tff-field-wrapper {
-    @apply flex;
-    @apply flex-col;
-    @apply gap-0;
-    @apply cursor-move;
+	@apply flex;
+	@apply flex-col;
+	@apply gap-0;
+	@apply cursor-move;
 }
 
 /* Base layout - Mobile first */
 .tff-field-container {
-    @apply relative;
-    @apply min-h-[40px];
+	@apply relative;
+	@apply min-h-[40px];
 }
 
-.tff-field-preview>div:last-child {
-    @apply flex-grow;
+.tff-field-preview > div:last-child {
+	@apply flex-grow;
 }
 
 .tff-editor-layout {
-    @apply flex;
-    @apply flex-col;
-    @apply min-h-screen;
-    @apply bg-white;
-    @apply relative;
+	@apply flex;
+	@apply flex-col;
+	@apply min-h-screen;
+	@apply bg-white;
+	@apply relative;
 }
 
 .tff-center-panel {
-    @apply flex-grow;
-    @apply bg-white;
-    @apply p-4;
-    @apply w-full;
-    @apply min-h-[50vh];
-    @apply overflow-y-auto;
-    @apply order-1;
+	@apply flex-grow;
+	@apply bg-white;
+	@apply p-4;
+	@apply w-full;
+	@apply min-h-[50vh];
+	@apply overflow-y-auto;
+	@apply order-1;
 }
 
 .tff-left-panel {
-    @apply w-full;
-    @apply bg-gray-50;
-    @apply p-4;
-    @apply border-t;
-    @apply border-gray-200;
-    @apply order-2;
+	@apply w-full;
+	@apply bg-gray-50;
+	@apply p-4;
+	@apply border-t;
+	@apply border-gray-200;
+	@apply order-2;
 }
 
 .tff-right-panel {
-    @apply w-full;
-    @apply bg-gray-50;
-    @apply p-4;
-    @apply fixed;
-    @apply inset-0;
-    @apply z-50;
-    @apply transform;
-    @apply transition-transform;
-    @apply duration-300;
-    @apply translate-x-full;
+	@apply w-full;
+	@apply bg-gray-50;
+	@apply p-4;
+	@apply fixed;
+	@apply inset-0;
+	@apply z-50;
+	@apply transform;
+	@apply transition-transform;
+	@apply duration-300;
+	@apply translate-x-full;
 }
 
 .tff-right-panel.tff-panel-visible {
-    @apply translate-x-0;
+	@apply translate-x-0;
 }
 
 .tff-container {
-    container-type: inline-size;
+	container-type: inline-size;
 }
 
 .tff-container *:disabled {
-    cursor: not-allowed;
+	cursor: not-allowed;
 }
 
 @container (min-width: 640px) and (max-width: 1024px) {
-    .tff-editor-layout {
-        @apply flex-row;
-        @apply h-screen;
-        @apply overflow-hidden;
-        @apply relative;
-    }
+	.tff-editor-layout {
+		@apply flex-row;
+		@apply h-screen;
+		@apply overflow-hidden;
+		@apply relative;
+	}
 
-    .tff-left-panel {
-        @apply w-80;
-        @apply border-t-0;
-        @apply border-r;
-        @apply order-none;
-        @apply overflow-y-auto;
-        @apply relative;
-        @apply flex-shrink-0;
-        @apply transition-transform;
-        @apply duration-300;
-        @apply bg-gray-50;
-    }
+	.tff-left-panel {
+		@apply w-80;
+		@apply border-t-0;
+		@apply border-r;
+		@apply order-none;
+		@apply overflow-y-auto;
+		@apply relative;
+		@apply flex-shrink-0;
+		@apply transition-transform;
+		@apply duration-300;
+		@apply bg-gray-50;
+	}
 
-    .tff-center-panel {
-        @apply flex-1;
-        @apply order-none;
-        @apply overflow-y-auto;
-        @apply relative;
-        @apply min-w-0;
-    }
+	.tff-center-panel {
+		@apply flex-1;
+		@apply order-none;
+		@apply overflow-y-auto;
+		@apply relative;
+		@apply min-w-0;
+	}
 
-    .tff-right-panel {
-        @apply w-80;
-        @apply absolute;
-        @apply top-0;
-        @apply left-0;
-        @apply h-full;
-        @apply transform-none;
-        @apply order-none;
-        @apply overflow-y-auto;
-        @apply border-r;
-        @apply flex-shrink-0;
-        @apply transition-transform;
-        @apply duration-300;
-        @apply -translate-x-full;
-        @apply z-50;
-        @apply bg-gray-50;
-    }
+	.tff-right-panel {
+		@apply w-80;
+		@apply absolute;
+		@apply top-0;
+		@apply left-0;
+		@apply h-full;
+		@apply transform-none;
+		@apply order-none;
+		@apply overflow-y-auto;
+		@apply border-r;
+		@apply flex-shrink-0;
+		@apply transition-transform;
+		@apply duration-300;
+		@apply -translate-x-full;
+		@apply z-50;
+		@apply bg-gray-50;
+	}
 
-    .tff-right-panel.tff-panel-visible {
-        @apply translate-x-0;
-    }
+	.tff-right-panel.tff-panel-visible {
+		@apply translate-x-0;
+	}
 
-    .tff-right-panel.tff-panel-visible~.tff-left-panel {
-        @apply opacity-0;
-        @apply pointer-events-none;
-    }
+	.tff-right-panel.tff-panel-visible ~ .tff-left-panel {
+		@apply opacity-0;
+		@apply pointer-events-none;
+	}
 }
 
 @container (min-width: 1024px) {
-    .tff-editor-layout {
-        @apply flex-row;
-        @apply h-screen;
-        @apply overflow-hidden;
-    }
+	.tff-editor-layout {
+		@apply flex-row;
+		@apply h-screen;
+		@apply overflow-hidden;
+	}
 
-    .tff-left-panel {
-        @apply w-64;
-        @apply border-t-0;
-        @apply border-r;
-        @apply order-none;
-        @apply overflow-y-auto;
-        @apply relative;
-        @apply flex-shrink-0;
-    }
+	.tff-left-panel {
+		@apply w-64;
+		@apply border-t-0;
+		@apply border-r;
+		@apply order-none;
+		@apply overflow-y-auto;
+		@apply relative;
+		@apply flex-shrink-0;
+	}
 
-    .tff-center-panel {
-        @apply flex-1;
-        @apply order-none;
-        @apply overflow-y-auto;
-        @apply relative;
-        @apply min-w-0;
-    }
+	.tff-center-panel {
+		@apply flex-1;
+		@apply order-none;
+		@apply overflow-y-auto;
+		@apply relative;
+		@apply min-w-0;
+	}
 
-    .tff-right-panel {
-        @apply w-80;
-        @apply static;
-        @apply transform-none;
-        @apply translate-x-0;
-        @apply order-none;
-        @apply overflow-y-auto;
-        @apply border-l;
-        @apply flex-shrink-0;
-        @apply transition-[width];
-    }
+	.tff-right-panel {
+		@apply w-80;
+		@apply static;
+		@apply transform-none;
+		@apply translate-x-0;
+		@apply order-none;
+		@apply overflow-y-auto;
+		@apply border-l;
+		@apply flex-shrink-0;
+		@apply transition-[width];
+	}
 
-    .tff-right-panel:not(.tff-panel-visible) {
-        @apply w-0;
-        @apply border-l-0;
-        @apply p-0;
-        @apply overflow-hidden;
-    }
+	.tff-right-panel:not(.tff-panel-visible) {
+		@apply w-0;
+		@apply border-l-0;
+		@apply p-0;
+		@apply overflow-hidden;
+	}
 
-    .tff-panel-hidden {
-        @apply block;
-    }
+	.tff-panel-hidden {
+		@apply block;
+	}
 }
 
 .tff-panel-header {
-    @apply flex;
-    @apply justify-between;
-    @apply items-center;
-    @apply mb-4;
+	@apply flex;
+	@apply justify-between;
+	@apply items-center;
+	@apply mb-4;
 }
 
 .tff-close-button {
-    @apply text-gray-500;
-    @apply hover:text-gray-700;
-    @apply text-2xl;
-    @apply font-bold;
-    @apply p-2;
-    @apply -mr-2;
+	@apply text-gray-500;
+	@apply hover:text-gray-700;
+	@apply text-2xl;
+	@apply font-bold;
+	@apply p-2;
+	@apply -mr-2;
 }
 
 .tff-panel-header {
-    @apply font-bold;
-    @apply text-lg;
-    @apply px-4;
-    @apply py-3;
-    @apply border-b;
-    @apply border-gray-200;
-    @apply bg-white;
-    @apply flex;
-    @apply items-center;
-    @apply justify-between;
+	@apply font-bold;
+	@apply text-lg;
+	@apply px-4;
+	@apply py-3;
+	@apply border-b;
+	@apply border-gray-200;
+	@apply bg-white;
+	@apply flex;
+	@apply items-center;
+	@apply justify-between;
 }
 
 .tff-panel-header .tff-close-button {
-    @apply text-gray-500;
-    @apply hover:text-gray-700;
-    @apply text-xl;
-    @apply font-medium;
-    @apply ml-2;
+	@apply text-gray-500;
+	@apply hover:text-gray-700;
+	@apply text-xl;
+	@apply font-medium;
+	@apply ml-2;
 }
 
 .tff-field-list {
-    @apply overflow-y-auto;
+	@apply overflow-y-auto;
 }
 
-.tff-right-panel>div:last-child {
-    @apply overflow-y-auto;
+.tff-right-panel > div:last-child {
+	@apply overflow-y-auto;
 }
 
 .tff-center-panel {
-    @apply bg-white;
-    @apply p-4 pb-24;
-    @apply overflow-y-auto;
+	@apply bg-white;
+	@apply p-4 pb-24;
+	@apply overflow-y-auto;
 }
 
 .tff-field-list {
-    @apply space-y-2;
+	@apply space-y-2;
 }
 
 .tff-field-list-item {
-    @apply p-2;
-    @apply bg-white;
-    @apply rounded;
-    @apply shadow-sm;
-    @apply hover:shadow;
-    @apply cursor-pointer;
-    @apply border;
-    @apply border-gray-200;
+	@apply p-2;
+	@apply bg-white;
+	@apply rounded;
+	@apply shadow-sm;
+	@apply hover:shadow;
+	@apply cursor-pointer;
+	@apply border;
+	@apply border-gray-200;
 }
 
 .tff-fields-container {
-    @apply min-h-[200px];
+	@apply min-h-[200px];
 }
 
 .tff-button {
-    @apply inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-semibold;
-    @apply shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2;
+	@apply inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-semibold;
+	@apply shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2;
 }
 
 .tff-button-secondary {
-    @apply bg-white text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50;
+	@apply bg-white text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50;
 }
