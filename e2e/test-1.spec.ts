@@ -147,7 +147,7 @@ test('test', async ({ page }) => {
 			label: 'Normal url',
 			description: 'internet accessible',
 			maxlength: 100,
-			value: 'https://tiny-form-fields.netlify.app/#viewMode=Editor&formFields=%5B%5D',
+			value: 'https://example.com/?q=1',
 		},
 	];
 

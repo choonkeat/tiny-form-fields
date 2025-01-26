@@ -159,6 +159,8 @@
 	@apply flex;
 }
 
+.tff-field-group .tff-field-label input,
+.tff-toggle-group .tff-field-label input,
 .tff-checkbox-group .tff-field-label input,
 .tff-radiobuttons-group .tff-field-label input {
 	@apply border;
