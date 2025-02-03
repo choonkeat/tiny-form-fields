@@ -17,7 +17,8 @@
     "test:e2e": "make test-playwright",
     "test:e2e:ui": "make test-playwright-ui",
     "lint": "make elm-review",
-    "css": "make css"
+    "css": "make css",
+    "format": "prettier --write \"**/*.{ts,js,html,css,json}\" && elm-format src/ tests/ --yes"
   },
   "repository": {
     "type": "git",
@@ -41,9 +42,11 @@
     "@types/node": "^20.14.10",
     "elm": "^0.19.1-6",
     "elm-esm": "^1.1.4",
+    "elm-format": "^0.8.7",
     "elm-live": "^4.0.2",
     "elm-review": "^2.12.0",
     "elm-test": "^0.19.1-revision12",
+    "prettier": "^3.4.2",
     "tailwindcss": "^3.0.0"
   }
 }
