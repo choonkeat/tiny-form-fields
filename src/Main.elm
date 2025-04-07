@@ -308,14 +308,22 @@ type InputField
     | LongText (AttributeOptional Int)
     | Dropdown (List Choice)
     | ChooseOne (List Choice)
-    | ChooseMultiple (List Choice)
+    | ChooseMultiple
+        { choices : List Choice
+        , minRequired : Maybe Int
+        , maxAllowed : Maybe Int
+        }
 
 
 allInputField : List InputField
 allInputField =
     [ Dropdown (List.map choiceFromString [ "Red", "Orange", "Yellow", "Green", "Blue", "Indigo", "Violet" ])
     , ChooseOne (List.map choiceFromString [ "Yes", "No" ])
-    , ChooseMultiple (List.map choiceFromString [ "Apple", "Banana", "Cantaloupe", "Durian" ])
+    , ChooseMultiple
+        { choices = List.map choiceFromString [ "Apple", "Banana", "Cantaloupe", "Durian" ]
+        , minRequired = Nothing
+        , maxAllowed = Nothing
+        }
     , LongText (AttributeGiven 160)
     ]
 
@@ -838,7 +846,14 @@ updateFormField msg fieldIndex string formFields formField =
                     { formField | type_ = ChooseOne (List.map choiceFromString (String.lines string)) }
 
                 ChooseMultiple _ ->
-                    { formField | type_ = ChooseMultiple (List.map choiceFromString (String.lines string)) }
+                    { formField
+                        | type_ =
+                            ChooseMultiple
+                                { choices = List.map choiceFromString (String.lines string)
+                                , minRequired = Nothing
+                                , maxAllowed = Nothing
+                                }
+                    }
 
         OnMultipleToggle bool ->
             case formField.type_ of
@@ -1632,7 +1647,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                     )
                 ]
 
-        ChooseMultiple choices ->
+        ChooseMultiple { choices, minRequired, maxAllowed } ->
             let
                 values =
                     Dict.get fieldName config.trackedFormValues
@@ -1946,7 +1961,7 @@ visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
                                 ChooseOne choices ->
                                     Just (Html.datalist [ id datalistId ] (List.map (\c -> Html.option [ value c.value ] []) choices))
 
-                                ChooseMultiple choices ->
+                                ChooseMultiple { choices } ->
                                     Just (Html.datalist [ id datalistId ] (List.map (\c -> Html.option [ value c.value ] []) choices))
 
                                 _ ->
@@ -2506,7 +2521,7 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
             [ choicesTextarea choices
             ]
 
-        ChooseMultiple choices ->
+        ChooseMultiple { choices } ->
             [ choicesTextarea choices
             ]
 
@@ -2968,11 +2983,26 @@ encodeInputField inputField =
                 , ( "choices", Json.Encode.list encodeChoice (List.filter (\{ value } -> String.trim value /= "") choices) )
                 ]
 
-        ChooseMultiple choices ->
+        ChooseMultiple { choices, minRequired, maxAllowed } ->
             Json.Encode.object
-                [ ( "type", Json.Encode.string "ChooseMultiple" )
-                , ( "choices", Json.Encode.list encodeChoice (List.filter (\{ value } -> String.trim value /= "") choices) )
-                ]
+                ([ ( "type", Json.Encode.string "ChooseMultiple" )
+                 , ( "choices", Json.Encode.list encodeChoice (List.filter (\{ value } -> String.trim value /= "") choices) )
+                 ]
+                    ++ (case minRequired of
+                            Just min ->
+                                [ ( "minRequired", Json.Encode.int min ) ]
+
+                            Nothing ->
+                                []
+                       )
+                    ++ (case maxAllowed of
+                            Just max ->
+                                [ ( "maxAllowed", Json.Encode.int max ) ]
+
+                            Nothing ->
+                                []
+                       )
+                )
 
 
 decodeInputField : Json.Decode.Decoder InputField
@@ -2997,8 +3027,17 @@ decodeInputField =
                             |> Json.Decode.map ChooseOne
 
                     "ChooseMultiple" ->
-                        Json.Decode.field "choices" (Json.Decode.list decodeChoice)
-                            |> Json.Decode.map ChooseMultiple
+                        Json.Decode.succeed
+                            (\choices minRequired maxAllowed ->
+                                ChooseMultiple
+                                    { choices = choices
+                                    , minRequired = minRequired
+                                    , maxAllowed = maxAllowed
+                                    }
+                            )
+                            |> andMap (Json.Decode.field "choices" (Json.Decode.list decodeChoice))
+                            |> andMap (Json.Decode.maybe (Json.Decode.field "minRequired" Json.Decode.int))
+                            |> andMap (Json.Decode.maybe (Json.Decode.field "maxAllowed" Json.Decode.int))
 
                     _ ->
                         Json.Decode.fail ("Unknown input field type: " ++ type_)

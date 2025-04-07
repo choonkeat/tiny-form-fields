@@ -38,6 +38,8 @@ node_modules/.bin/elm-esm:
 run-ignore-error:
 	make run || echo shutdown test server
 
+test-all: test test-go test-playwright
+
 test:
 	npx elm-test
 
