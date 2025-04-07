@@ -425,6 +425,8 @@ type FormFieldMsg
     | OnVisibilityConditionValueInput Int Int String
     | OnAddVisibilityRule
     | OnVisibilityConditionDuplicate Int
+    | OnCheckboxMinRequiredInput String
+    | OnCheckboxMaxAllowedInput String
 
 
 otherQuestionTitles : Array FormField -> Int -> List { label : String, name : Maybe String }
@@ -831,6 +833,102 @@ updateFormField msg fieldIndex string formFields formField =
             else
                 { formField | presence = Optional }
 
+        OnCheckboxMinRequiredInput minStr ->
+            case formField.type_ of
+                ChooseMultiple settings ->
+                    let
+                        -- Parse the entered value or set to Nothing if empty
+                        newMinRequired =
+                            if String.isEmpty minStr then
+                                Nothing
+
+                            else
+                                String.toInt minStr
+
+                        -- Ensure min doesn't exceed max (if max exists)
+                        adjustedMinRequired =
+                            case ( newMinRequired, settings.maxAllowed ) of
+                                ( Just min, Just max ) ->
+                                    if min > max then
+                                        Just max
+                                        -- Cap min at max value
+
+                                    else
+                                        Just min
+
+                                ( minValue, _ ) ->
+                                    minValue
+
+                        -- Ensure min doesn't exceed number of choices
+                        finalMinRequired =
+                            case adjustedMinRequired of
+                                Just min ->
+                                    if min > List.length settings.choices then
+                                        Just (List.length settings.choices)
+
+                                    else
+                                        Just min
+
+                                Nothing ->
+                                    Nothing
+                    in
+                    { formField
+                        | type_ =
+                            ChooseMultiple
+                                { settings | minRequired = finalMinRequired }
+                    }
+
+                _ ->
+                    formField
+
+        OnCheckboxMaxAllowedInput maxStr ->
+            case formField.type_ of
+                ChooseMultiple settings ->
+                    let
+                        -- Parse the entered value or set to Nothing if empty
+                        newMaxAllowed =
+                            if String.isEmpty maxStr then
+                                Nothing
+
+                            else
+                                String.toInt maxStr
+
+                        -- Ensure max is not less than min (if min exists)
+                        adjustedMaxAllowed =
+                            case ( newMaxAllowed, settings.minRequired ) of
+                                ( Just max, Just min ) ->
+                                    if max < min then
+                                        Just min
+                                        -- Raise max to min value
+
+                                    else
+                                        Just max
+
+                                ( maxValue, _ ) ->
+                                    maxValue
+
+                        -- Ensure max doesn't exceed number of choices
+                        finalMaxAllowed =
+                            case adjustedMaxAllowed of
+                                Just max ->
+                                    if max > List.length settings.choices then
+                                        Just (List.length settings.choices)
+
+                                    else
+                                        Just max
+
+                                Nothing ->
+                                    Nothing
+                    in
+                    { formField
+                        | type_ =
+                            ChooseMultiple
+                                { settings | maxAllowed = finalMaxAllowed }
+                    }
+
+                _ ->
+                    formField
+
         OnChoicesInput ->
             case formField.type_ of
                 ShortText _ ->
@@ -845,13 +943,49 @@ updateFormField msg fieldIndex string formFields formField =
                 ChooseOne _ ->
                     { formField | type_ = ChooseOne (List.map choiceFromString (String.lines string)) }
 
-                ChooseMultiple _ ->
+                ChooseMultiple settings ->
+                    let
+                        newChoices = List.map choiceFromString (String.lines string)
+                        newChoicesCount = List.length newChoices
+                        
+                        -- Adjust minRequired if it exceeds new choices count
+                        newMinRequired =
+                            case settings.minRequired of
+                                Just min ->
+                                    if min > newChoicesCount then
+                                        -- Cap at the new number of choices
+                                        if newChoicesCount > 0 then
+                                            Just newChoicesCount
+                                        else
+                                            Nothing
+                                    else
+                                        Just min
+                                
+                                Nothing ->
+                                    Nothing
+                                    
+                        -- Adjust maxAllowed if it exceeds new choices count
+                        newMaxAllowed =
+                            case settings.maxAllowed of
+                                Just max ->
+                                    if max > newChoicesCount then
+                                        -- Cap at the new number of choices
+                                        if newChoicesCount > 0 then
+                                            Just newChoicesCount
+                                        else
+                                            Nothing
+                                    else
+                                        Just max
+                                
+                                Nothing ->
+                                    Nothing
+                    in
                     { formField
                         | type_ =
                             ChooseMultiple
-                                { choices = List.map choiceFromString (String.lines string)
-                                , minRequired = Nothing
-                                , maxAllowed = Nothing
+                                { choices = newChoices
+                                , minRequired = newMinRequired
+                                , maxAllowed = newMaxAllowed
                                 }
                     }
 
@@ -2521,8 +2655,42 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
             [ choicesTextarea choices
             ]
 
-        ChooseMultiple { choices } ->
+        ChooseMultiple { choices, minRequired, maxAllowed } ->
             [ choicesTextarea choices
+            , div [ class "tff-field-group" ]
+                [ label [ class "tff-field-label" ] [ text "Minimum required" ]
+                , input
+                    [ type_ "number"
+                    , class "tff-text-field"
+                    , value (minRequired |> Maybe.map String.fromInt |> Maybe.withDefault "")
+                    , Attr.min "0"
+
+                    -- Maximum value constraint: Either the maxAllowed value (if present) or the number of choices
+                    , maxAllowed
+                        |> Maybe.map (\max -> Attr.max (String.fromInt max))
+                        |> Maybe.withDefault (Attr.max (String.fromInt (List.length choices)))
+                    , onInput (\val -> OnFormField (OnCheckboxMinRequiredInput val) index "")
+                    ]
+                    []
+                ]
+            , div [ class "tff-field-group" ]
+                [ label [ class "tff-field-label" ] [ text "Maximum allowed" ]
+                , input
+                    [ type_ "number"
+                    , class "tff-text-field"
+                    , value (maxAllowed |> Maybe.map String.fromInt |> Maybe.withDefault "")
+
+                    -- Minimum value constraint: Either the minRequired value (if present) or 0
+                    , minRequired
+                        |> Maybe.map (\min -> Attr.min (String.fromInt min))
+                        |> Maybe.withDefault (Attr.min "0")
+
+                    -- Maximum should not exceed the number of available choices
+                    , Attr.max (String.fromInt (List.length choices))
+                    , onInput (\val -> OnFormField (OnCheckboxMaxAllowedInput val) index "")
+                    ]
+                    []
+                ]
             ]
 
 

@@ -12534,9 +12534,87 @@ var $author$project$Main$updateFormField = F5(
 					{presence: $author$project$Main$Required}) : _Utils_update(
 					formField,
 					{presence: $author$project$Main$Optional});
-			case 'OnChoicesInput':
+			case 'OnCheckboxMinRequiredInput':
+				var minStr = msg.a;
 				var _v1 = formField.type_;
-				switch (_v1.$) {
+				if (_v1.$ === 'ChooseMultiple') {
+					var settings = _v1.a;
+					var newMinRequired = $elm$core$String$isEmpty(minStr) ? $elm$core$Maybe$Nothing : $elm$core$String$toInt(minStr);
+					var adjustedMinRequired = function () {
+						var _v3 = _Utils_Tuple2(newMinRequired, settings.maxAllowed);
+						if ((_v3.a.$ === 'Just') && (_v3.b.$ === 'Just')) {
+							var min = _v3.a.a;
+							var max = _v3.b.a;
+							return (_Utils_cmp(min, max) > 0) ? $elm$core$Maybe$Just(max) : $elm$core$Maybe$Just(min);
+						} else {
+							var minValue = _v3.a;
+							return minValue;
+						}
+					}();
+					var finalMinRequired = function () {
+						if (adjustedMinRequired.$ === 'Just') {
+							var min = adjustedMinRequired.a;
+							return (_Utils_cmp(
+								min,
+								$elm$core$List$length(settings.choices)) > 0) ? $elm$core$Maybe$Just(
+								$elm$core$List$length(settings.choices)) : $elm$core$Maybe$Just(min);
+						} else {
+							return $elm$core$Maybe$Nothing;
+						}
+					}();
+					return _Utils_update(
+						formField,
+						{
+							type_: $author$project$Main$ChooseMultiple(
+								_Utils_update(
+									settings,
+									{minRequired: finalMinRequired}))
+						});
+				} else {
+					return formField;
+				}
+			case 'OnCheckboxMaxAllowedInput':
+				var maxStr = msg.a;
+				var _v4 = formField.type_;
+				if (_v4.$ === 'ChooseMultiple') {
+					var settings = _v4.a;
+					var newMaxAllowed = $elm$core$String$isEmpty(maxStr) ? $elm$core$Maybe$Nothing : $elm$core$String$toInt(maxStr);
+					var adjustedMaxAllowed = function () {
+						var _v6 = _Utils_Tuple2(newMaxAllowed, settings.minRequired);
+						if ((_v6.a.$ === 'Just') && (_v6.b.$ === 'Just')) {
+							var max = _v6.a.a;
+							var min = _v6.b.a;
+							return (_Utils_cmp(max, min) < 0) ? $elm$core$Maybe$Just(min) : $elm$core$Maybe$Just(max);
+						} else {
+							var maxValue = _v6.a;
+							return maxValue;
+						}
+					}();
+					var finalMaxAllowed = function () {
+						if (adjustedMaxAllowed.$ === 'Just') {
+							var max = adjustedMaxAllowed.a;
+							return (_Utils_cmp(
+								max,
+								$elm$core$List$length(settings.choices)) > 0) ? $elm$core$Maybe$Just(
+								$elm$core$List$length(settings.choices)) : $elm$core$Maybe$Just(max);
+						} else {
+							return $elm$core$Maybe$Nothing;
+						}
+					}();
+					return _Utils_update(
+						formField,
+						{
+							type_: $author$project$Main$ChooseMultiple(
+								_Utils_update(
+									settings,
+									{maxAllowed: finalMaxAllowed}))
+						});
+				} else {
+					return formField;
+				}
+			case 'OnChoicesInput':
+				var _v7 = formField.type_;
+				switch (_v7.$) {
 					case 'ShortText':
 						return formField;
 					case 'LongText':
@@ -12562,26 +12640,43 @@ var $author$project$Main$updateFormField = F5(
 										$elm$core$String$lines(string)))
 							});
 					default:
+						var settings = _v7.a;
+						var newChoices = A2(
+							$elm$core$List$map,
+							$author$project$Main$choiceFromString,
+							$elm$core$String$lines(string));
+						var newChoicesCount = $elm$core$List$length(newChoices);
+						var newMaxAllowed = function () {
+							var _v9 = settings.maxAllowed;
+							if (_v9.$ === 'Just') {
+								var max = _v9.a;
+								return (_Utils_cmp(max, newChoicesCount) > 0) ? ((newChoicesCount > 0) ? $elm$core$Maybe$Just(newChoicesCount) : $elm$core$Maybe$Nothing) : $elm$core$Maybe$Just(max);
+							} else {
+								return $elm$core$Maybe$Nothing;
+							}
+						}();
+						var newMinRequired = function () {
+							var _v8 = settings.minRequired;
+							if (_v8.$ === 'Just') {
+								var min = _v8.a;
+								return (_Utils_cmp(min, newChoicesCount) > 0) ? ((newChoicesCount > 0) ? $elm$core$Maybe$Just(newChoicesCount) : $elm$core$Maybe$Nothing) : $elm$core$Maybe$Just(min);
+							} else {
+								return $elm$core$Maybe$Nothing;
+							}
+						}();
 						return _Utils_update(
 							formField,
 							{
 								type_: $author$project$Main$ChooseMultiple(
-									{
-										choices: A2(
-											$elm$core$List$map,
-											$author$project$Main$choiceFromString,
-											$elm$core$String$lines(string)),
-										maxAllowed: $elm$core$Maybe$Nothing,
-										minRequired: $elm$core$Maybe$Nothing
-									})
+									{choices: newChoices, maxAllowed: newMaxAllowed, minRequired: newMinRequired})
 							});
 				}
 			case 'OnMultipleToggle':
 				var bool = msg.a;
-				var _v2 = formField.type_;
-				switch (_v2.$) {
+				var _v10 = formField.type_;
+				switch (_v10.$) {
 					case 'ShortText':
-						var customElement = _v2.a;
+						var customElement = _v10.a;
 						var newCustomElement = _Utils_update(
 							customElement,
 							{
@@ -12603,10 +12698,10 @@ var $author$project$Main$updateFormField = F5(
 				}
 			case 'OnMaxLengthToggle':
 				var bool = msg.a;
-				var _v3 = formField.type_;
-				switch (_v3.$) {
+				var _v11 = formField.type_;
+				switch (_v11.$) {
 					case 'ShortText':
-						var customElement = _v3.a;
+						var customElement = _v11.a;
 						var newCustomElement = _Utils_update(
 							customElement,
 							{
@@ -12618,7 +12713,7 @@ var $author$project$Main$updateFormField = F5(
 								type_: $author$project$Main$ShortText(newCustomElement)
 							});
 					case 'LongText':
-						var maxlength = _v3.a;
+						var maxlength = _v11.a;
 						return _Utils_update(
 							formField,
 							{
@@ -12633,17 +12728,17 @@ var $author$project$Main$updateFormField = F5(
 						return formField;
 				}
 			case 'OnMaxLengthInput':
-				var _v4 = formField.type_;
-				switch (_v4.$) {
+				var _v12 = formField.type_;
+				switch (_v12.$) {
 					case 'ShortText':
-						var customElement = _v4.a;
+						var customElement = _v12.a;
 						var newCustomElement = _Utils_update(
 							customElement,
 							{
 								maxlength: function () {
-									var _v5 = $elm$core$String$toInt(string);
-									if (_v5.$ === 'Just') {
-										var i = _v5.a;
+									var _v13 = $elm$core$String$toInt(string);
+									if (_v13.$ === 'Just') {
+										var i = _v13.a;
 										return $author$project$Main$AttributeGiven(i);
 									} else {
 										return $author$project$Main$AttributeInvalid(string);
@@ -12657,9 +12752,9 @@ var $author$project$Main$updateFormField = F5(
 							});
 					case 'LongText':
 						var newMaxlength = function () {
-							var _v6 = $elm$core$String$toInt(string);
-							if (_v6.$ === 'Just') {
-								var i = _v6.a;
+							var _v14 = $elm$core$String$toInt(string);
+							if (_v14.$ === 'Just') {
+								var i = _v14.a;
 								return $author$project$Main$AttributeGiven(i);
 							} else {
 								return $author$project$Main$AttributeInvalid(string);
@@ -12679,10 +12774,10 @@ var $author$project$Main$updateFormField = F5(
 				}
 			case 'OnDatalistToggle':
 				var bool = msg.a;
-				var _v7 = formField.type_;
-				switch (_v7.$) {
+				var _v15 = formField.type_;
+				switch (_v15.$) {
 					case 'ShortText':
-						var customElement = _v7.a;
+						var customElement = _v15.a;
 						var newCustomElement = _Utils_update(
 							customElement,
 							{
@@ -12703,19 +12798,19 @@ var $author$project$Main$updateFormField = F5(
 						return formField;
 				}
 			case 'OnDatalistInput':
-				var _v8 = formField.type_;
-				switch (_v8.$) {
+				var _v16 = formField.type_;
+				switch (_v16.$) {
 					case 'ShortText':
-						var customElement = _v8.a;
+						var customElement = _v16.a;
 						var newCustomElement = _Utils_update(
 							customElement,
 							{
 								datalist: function () {
-									var _v9 = A2($elm$core$String$split, '\n', string);
-									if (!_v9.b) {
+									var _v17 = A2($elm$core$String$split, '\n', string);
+									if (!_v17.b) {
 										return $author$project$Main$AttributeInvalid(string);
 									} else {
-										var list = _v9;
+										var list = _v17;
 										return $author$project$Main$AttributeGiven(
 											A2($elm$core$List$map, $author$project$Main$choiceFromString, list));
 									}
@@ -12857,9 +12952,9 @@ var $author$project$Main$updateFormField = F5(
 			default:
 				var ruleIndex = msg.a;
 				var newCondition = function (conditions) {
-					var _v12 = $elm$core$List$reverse(conditions);
-					if (_v12.b) {
-						var last = _v12.a;
+					var _v20 = $elm$core$List$reverse(conditions);
+					if (_v20.b) {
+						var last = _v20.a;
 						return A2(
 							$author$project$Main$updateComparisonInCondition,
 							$author$project$Main$updateComparisonValue(''),
@@ -14467,6 +14562,12 @@ var $author$project$Main$maybeMultipleOf = function (formField) {
 };
 var $elm$html$Html$Attributes$pattern = $elm$html$Html$Attributes$stringProperty('pattern');
 var $elm$core$String$toLower = _String_toLower;
+var $author$project$Main$OnCheckboxMaxAllowedInput = function (a) {
+	return {$: 'OnCheckboxMaxAllowedInput', a: a};
+};
+var $author$project$Main$OnCheckboxMinRequiredInput = function (a) {
+	return {$: 'OnCheckboxMinRequiredInput', a: a};
+};
 var $author$project$Main$OnChoicesInput = {$: 'OnChoicesInput'};
 var $author$project$Main$OnDatalistInput = {$: 'OnDatalistInput'};
 var $author$project$Main$OnDatalistToggle = function (a) {
@@ -14733,9 +14834,117 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 					]);
 			default:
 				var choices = _v0.a.choices;
+				var minRequired = _v0.a.minRequired;
+				var maxAllowed = _v0.a.maxAllowed;
 				return _List_fromArray(
 					[
-						choicesTextarea(choices)
+						choicesTextarea(choices),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('tff-field-group')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$label,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('tff-field-label')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Minimum required')
+									])),
+								A2(
+								$elm$html$Html$input,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$type_('number'),
+										$elm$html$Html$Attributes$class('tff-text-field'),
+										$elm$html$Html$Attributes$value(
+										A2(
+											$elm$core$Maybe$withDefault,
+											'',
+											A2($elm$core$Maybe$map, $elm$core$String$fromInt, minRequired))),
+										$elm$html$Html$Attributes$min('0'),
+										A2(
+										$elm$core$Maybe$withDefault,
+										$elm$html$Html$Attributes$max(
+											$elm$core$String$fromInt(
+												$elm$core$List$length(choices))),
+										A2(
+											$elm$core$Maybe$map,
+											function (max) {
+												return $elm$html$Html$Attributes$max(
+													$elm$core$String$fromInt(max));
+											},
+											maxAllowed)),
+										$elm$html$Html$Events$onInput(
+										function (val) {
+											return A3(
+												$author$project$Main$OnFormField,
+												$author$project$Main$OnCheckboxMinRequiredInput(val),
+												index,
+												'');
+										})
+									]),
+								_List_Nil)
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('tff-field-group')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$label,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('tff-field-label')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Maximum allowed')
+									])),
+								A2(
+								$elm$html$Html$input,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$type_('number'),
+										$elm$html$Html$Attributes$class('tff-text-field'),
+										$elm$html$Html$Attributes$value(
+										A2(
+											$elm$core$Maybe$withDefault,
+											'',
+											A2($elm$core$Maybe$map, $elm$core$String$fromInt, maxAllowed))),
+										A2(
+										$elm$core$Maybe$withDefault,
+										$elm$html$Html$Attributes$min('0'),
+										A2(
+											$elm$core$Maybe$map,
+											function (min) {
+												return $elm$html$Html$Attributes$min(
+													$elm$core$String$fromInt(min));
+											},
+											minRequired)),
+										$elm$html$Html$Attributes$max(
+										$elm$core$String$fromInt(
+											$elm$core$List$length(choices))),
+										$elm$html$Html$Events$onInput(
+										function (val) {
+											return A3(
+												$author$project$Main$OnFormField,
+												$author$project$Main$OnCheckboxMaxAllowedInput(val),
+												index,
+												'');
+										})
+									]),
+								_List_Nil)
+							]))
 					]);
 		}
 	});
@@ -16067,7 +16276,7 @@ var $author$project$Main$view = function (model) {
 var $author$project$Main$main = $elm$browser$Browser$element(
 	{init: $author$project$Main$init, subscriptions: $author$project$Main$subscriptions, update: $author$project$Main$update, view: $author$project$Main$view});
 /*
-_Platform_export({'Main':{'init':$author$project$Main$main($elm$json$Json$Decode$value)({"versions":{"elm":"0.19.1"},"types":{"message":"Main.Msg","aliases":{"Main.Droppable":{"args":[],"type":"( Basics.Int, Maybe.Maybe Main.FormField )"},"Main.FormField":{"args":[],"type":"{ label : String.String, name : Maybe.Maybe String.String, presence : Main.Presence, description : Main.AttributeOptional String.String, type_ : Main.InputField, visibilityRule : List.List Main.VisibilityRule }"},"Main.Choice":{"args":[],"type":"{ label : String.String, value : String.String }"},"Main.CustomElement":{"args":[],"type":"{ inputType : String.String, inputTag : String.String, attributes : Dict.Dict String.String String.String, multiple : Main.AttributeOptional Basics.Bool, maxlength : Main.AttributeOptional Basics.Int, datalist : Main.AttributeOptional (List.List Main.Choice) }"}},"unions":{"Main.Msg":{"args":[],"tags":{"NoOp":[],"OnPortIncoming":["Json.Encode.Value"],"AddFormField":["Main.InputField"],"DeleteFormField":["Basics.Int"],"MoveFormFieldUp":["Basics.Int"],"MoveFormFieldDown":["Basics.Int"],"OnFormField":["Main.FormFieldMsg","Basics.Int","String.String"],"SetEditorAnimate":["Maybe.Maybe ( Basics.Int, Main.Animate )"],"SelectField":["Maybe.Maybe Basics.Int"],"DragStart":["Basics.Int"],"DragStartNew":["Main.FormField"],"DragEnd":[],"DragOver":["Maybe.Maybe Main.Droppable"],"Drop":["Maybe.Maybe Basics.Int"],"DoSleepDo":["Basics.Float","List.List Main.Msg"],"OnFormValuesUpdated":["String.String","String.String"]}},"Main.Animate":{"args":[],"tags":{"AnimateYellowFade":[],"AnimateFadeOut":[]}},"Main.AttributeOptional":{"args":["a"],"tags":{"AttributeNotNeeded":["Maybe.Maybe a"],"AttributeInvalid":["String.String"],"AttributeGiven":["a"]}},"Basics.Float":{"args":[],"tags":{"Float":[]}},"Main.FormFieldMsg":{"args":[],"tags":{"OnLabelInput":[],"OnDescriptionInput":[],"OnDescriptionToggle":["Basics.Bool"],"OnRequiredInput":["Basics.Bool"],"OnChoicesInput":[],"OnMultipleToggle":["Basics.Bool"],"OnMaxLengthToggle":["Basics.Bool"],"OnMaxLengthInput":[],"OnDatalistToggle":["Basics.Bool"],"OnDatalistInput":[],"OnVisibilityRuleTypeInput":["Basics.Int","String.String"],"OnVisibilityConditionTypeInput":["Basics.Int","Basics.Int","String.String"],"OnVisibilityConditionFieldInput":["Basics.Int","Basics.Int","String.String"],"OnVisibilityConditionValueInput":["Basics.Int","Basics.Int","String.String"],"OnAddVisibilityRule":[],"OnVisibilityConditionDuplicate":["Basics.Int"]}},"Main.InputField":{"args":[],"tags":{"ShortText":["Main.CustomElement"],"LongText":["Main.AttributeOptional Basics.Int"],"Dropdown":["List.List Main.Choice"],"ChooseOne":["List.List Main.Choice"],"ChooseMultiple":["{ choices : List.List Main.Choice, minRequired : Maybe.Maybe Basics.Int, maxAllowed : Maybe.Maybe Basics.Int }"]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"List.List":{"args":["a"],"tags":{}},"Maybe.Maybe":{"args":["a"],"tags":{"Just":["a"],"Nothing":[]}},"Main.Presence":{"args":[],"tags":{"Required":[],"Optional":[],"System":[]}},"String.String":{"args":[],"tags":{"String":[]}},"Json.Encode.Value":{"args":[],"tags":{"Value":[]}},"Main.VisibilityRule":{"args":[],"tags":{"ShowWhen":["List.List Main.Condition"],"HideWhen":["List.List Main.Condition"]}},"Basics.Bool":{"args":[],"tags":{"True":[],"False":[]}},"Main.Condition":{"args":[],"tags":{"Field":["String.String","Main.Comparison"]}},"Dict.Dict":{"args":["k","v"],"tags":{"RBNode_elm_builtin":["Dict.NColor","k","v","Dict.Dict k v","Dict.Dict k v"],"RBEmpty_elm_builtin":[]}},"Main.Comparison":{"args":[],"tags":{"Equals":["String.String"],"StringContains":["String.String"],"EndsWith":["String.String"],"GreaterThan":["String.String"]}},"Dict.NColor":{"args":[],"tags":{"Red":[],"Black":[]}}}}})}});}(this));
+_Platform_export({'Main':{'init':$author$project$Main$main($elm$json$Json$Decode$value)({"versions":{"elm":"0.19.1"},"types":{"message":"Main.Msg","aliases":{"Main.Droppable":{"args":[],"type":"( Basics.Int, Maybe.Maybe Main.FormField )"},"Main.FormField":{"args":[],"type":"{ label : String.String, name : Maybe.Maybe String.String, presence : Main.Presence, description : Main.AttributeOptional String.String, type_ : Main.InputField, visibilityRule : List.List Main.VisibilityRule }"},"Main.Choice":{"args":[],"type":"{ label : String.String, value : String.String }"},"Main.CustomElement":{"args":[],"type":"{ inputType : String.String, inputTag : String.String, attributes : Dict.Dict String.String String.String, multiple : Main.AttributeOptional Basics.Bool, maxlength : Main.AttributeOptional Basics.Int, datalist : Main.AttributeOptional (List.List Main.Choice) }"}},"unions":{"Main.Msg":{"args":[],"tags":{"NoOp":[],"OnPortIncoming":["Json.Encode.Value"],"AddFormField":["Main.InputField"],"DeleteFormField":["Basics.Int"],"MoveFormFieldUp":["Basics.Int"],"MoveFormFieldDown":["Basics.Int"],"OnFormField":["Main.FormFieldMsg","Basics.Int","String.String"],"SetEditorAnimate":["Maybe.Maybe ( Basics.Int, Main.Animate )"],"SelectField":["Maybe.Maybe Basics.Int"],"DragStart":["Basics.Int"],"DragStartNew":["Main.FormField"],"DragEnd":[],"DragOver":["Maybe.Maybe Main.Droppable"],"Drop":["Maybe.Maybe Basics.Int"],"DoSleepDo":["Basics.Float","List.List Main.Msg"],"OnFormValuesUpdated":["String.String","String.String"]}},"Main.Animate":{"args":[],"tags":{"AnimateYellowFade":[],"AnimateFadeOut":[]}},"Main.AttributeOptional":{"args":["a"],"tags":{"AttributeNotNeeded":["Maybe.Maybe a"],"AttributeInvalid":["String.String"],"AttributeGiven":["a"]}},"Basics.Float":{"args":[],"tags":{"Float":[]}},"Main.FormFieldMsg":{"args":[],"tags":{"OnLabelInput":[],"OnDescriptionInput":[],"OnDescriptionToggle":["Basics.Bool"],"OnRequiredInput":["Basics.Bool"],"OnChoicesInput":[],"OnMultipleToggle":["Basics.Bool"],"OnMaxLengthToggle":["Basics.Bool"],"OnMaxLengthInput":[],"OnDatalistToggle":["Basics.Bool"],"OnDatalistInput":[],"OnVisibilityRuleTypeInput":["Basics.Int","String.String"],"OnVisibilityConditionTypeInput":["Basics.Int","Basics.Int","String.String"],"OnVisibilityConditionFieldInput":["Basics.Int","Basics.Int","String.String"],"OnVisibilityConditionValueInput":["Basics.Int","Basics.Int","String.String"],"OnAddVisibilityRule":[],"OnVisibilityConditionDuplicate":["Basics.Int"],"OnCheckboxMinRequiredInput":["String.String"],"OnCheckboxMaxAllowedInput":["String.String"]}},"Main.InputField":{"args":[],"tags":{"ShortText":["Main.CustomElement"],"LongText":["Main.AttributeOptional Basics.Int"],"Dropdown":["List.List Main.Choice"],"ChooseOne":["List.List Main.Choice"],"ChooseMultiple":["{ choices : List.List Main.Choice, minRequired : Maybe.Maybe Basics.Int, maxAllowed : Maybe.Maybe Basics.Int }"]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"List.List":{"args":["a"],"tags":{}},"Maybe.Maybe":{"args":["a"],"tags":{"Just":["a"],"Nothing":[]}},"Main.Presence":{"args":[],"tags":{"Required":[],"Optional":[],"System":[]}},"String.String":{"args":[],"tags":{"String":[]}},"Json.Encode.Value":{"args":[],"tags":{"Value":[]}},"Main.VisibilityRule":{"args":[],"tags":{"ShowWhen":["List.List Main.Condition"],"HideWhen":["List.List Main.Condition"]}},"Basics.Bool":{"args":[],"tags":{"True":[],"False":[]}},"Main.Condition":{"args":[],"tags":{"Field":["String.String","Main.Comparison"]}},"Dict.Dict":{"args":["k","v"],"tags":{"RBNode_elm_builtin":["Dict.NColor","k","v","Dict.Dict k v","Dict.Dict k v"],"RBEmpty_elm_builtin":[]}},"Main.Comparison":{"args":[],"tags":{"Equals":["String.String"],"StringContains":["String.String"],"EndsWith":["String.String"],"GreaterThan":["String.String"]}},"Dict.NColor":{"args":[],"tags":{"Red":[],"Black":[]}}}}})}});}(this));
 */
-export const Elm = {'Main':{'init':$author$project$Main$main($elm$json$Json$Decode$value)({"versions":{"elm":"0.19.1"},"types":{"message":"Main.Msg","aliases":{"Main.Droppable":{"args":[],"type":"( Basics.Int, Maybe.Maybe Main.FormField )"},"Main.FormField":{"args":[],"type":"{ label : String.String, name : Maybe.Maybe String.String, presence : Main.Presence, description : Main.AttributeOptional String.String, type_ : Main.InputField, visibilityRule : List.List Main.VisibilityRule }"},"Main.Choice":{"args":[],"type":"{ label : String.String, value : String.String }"},"Main.CustomElement":{"args":[],"type":"{ inputType : String.String, inputTag : String.String, attributes : Dict.Dict String.String String.String, multiple : Main.AttributeOptional Basics.Bool, maxlength : Main.AttributeOptional Basics.Int, datalist : Main.AttributeOptional (List.List Main.Choice) }"}},"unions":{"Main.Msg":{"args":[],"tags":{"NoOp":[],"OnPortIncoming":["Json.Encode.Value"],"AddFormField":["Main.InputField"],"DeleteFormField":["Basics.Int"],"MoveFormFieldUp":["Basics.Int"],"MoveFormFieldDown":["Basics.Int"],"OnFormField":["Main.FormFieldMsg","Basics.Int","String.String"],"SetEditorAnimate":["Maybe.Maybe ( Basics.Int, Main.Animate )"],"SelectField":["Maybe.Maybe Basics.Int"],"DragStart":["Basics.Int"],"DragStartNew":["Main.FormField"],"DragEnd":[],"DragOver":["Maybe.Maybe Main.Droppable"],"Drop":["Maybe.Maybe Basics.Int"],"DoSleepDo":["Basics.Float","List.List Main.Msg"],"OnFormValuesUpdated":["String.String","String.String"]}},"Main.Animate":{"args":[],"tags":{"AnimateYellowFade":[],"AnimateFadeOut":[]}},"Main.AttributeOptional":{"args":["a"],"tags":{"AttributeNotNeeded":["Maybe.Maybe a"],"AttributeInvalid":["String.String"],"AttributeGiven":["a"]}},"Basics.Float":{"args":[],"tags":{"Float":[]}},"Main.FormFieldMsg":{"args":[],"tags":{"OnLabelInput":[],"OnDescriptionInput":[],"OnDescriptionToggle":["Basics.Bool"],"OnRequiredInput":["Basics.Bool"],"OnChoicesInput":[],"OnMultipleToggle":["Basics.Bool"],"OnMaxLengthToggle":["Basics.Bool"],"OnMaxLengthInput":[],"OnDatalistToggle":["Basics.Bool"],"OnDatalistInput":[],"OnVisibilityRuleTypeInput":["Basics.Int","String.String"],"OnVisibilityConditionTypeInput":["Basics.Int","Basics.Int","String.String"],"OnVisibilityConditionFieldInput":["Basics.Int","Basics.Int","String.String"],"OnVisibilityConditionValueInput":["Basics.Int","Basics.Int","String.String"],"OnAddVisibilityRule":[],"OnVisibilityConditionDuplicate":["Basics.Int"]}},"Main.InputField":{"args":[],"tags":{"ShortText":["Main.CustomElement"],"LongText":["Main.AttributeOptional Basics.Int"],"Dropdown":["List.List Main.Choice"],"ChooseOne":["List.List Main.Choice"],"ChooseMultiple":["{ choices : List.List Main.Choice, minRequired : Maybe.Maybe Basics.Int, maxAllowed : Maybe.Maybe Basics.Int }"]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"List.List":{"args":["a"],"tags":{}},"Maybe.Maybe":{"args":["a"],"tags":{"Just":["a"],"Nothing":[]}},"Main.Presence":{"args":[],"tags":{"Required":[],"Optional":[],"System":[]}},"String.String":{"args":[],"tags":{"String":[]}},"Json.Encode.Value":{"args":[],"tags":{"Value":[]}},"Main.VisibilityRule":{"args":[],"tags":{"ShowWhen":["List.List Main.Condition"],"HideWhen":["List.List Main.Condition"]}},"Basics.Bool":{"args":[],"tags":{"True":[],"False":[]}},"Main.Condition":{"args":[],"tags":{"Field":["String.String","Main.Comparison"]}},"Dict.Dict":{"args":["k","v"],"tags":{"RBNode_elm_builtin":["Dict.NColor","k","v","Dict.Dict k v","Dict.Dict k v"],"RBEmpty_elm_builtin":[]}},"Main.Comparison":{"args":[],"tags":{"Equals":["String.String"],"StringContains":["String.String"],"EndsWith":["String.String"],"GreaterThan":["String.String"]}},"Dict.NColor":{"args":[],"tags":{"Red":[],"Black":[]}}}}})}};
+export const Elm = {'Main':{'init':$author$project$Main$main($elm$json$Json$Decode$value)({"versions":{"elm":"0.19.1"},"types":{"message":"Main.Msg","aliases":{"Main.Droppable":{"args":[],"type":"( Basics.Int, Maybe.Maybe Main.FormField )"},"Main.FormField":{"args":[],"type":"{ label : String.String, name : Maybe.Maybe String.String, presence : Main.Presence, description : Main.AttributeOptional String.String, type_ : Main.InputField, visibilityRule : List.List Main.VisibilityRule }"},"Main.Choice":{"args":[],"type":"{ label : String.String, value : String.String }"},"Main.CustomElement":{"args":[],"type":"{ inputType : String.String, inputTag : String.String, attributes : Dict.Dict String.String String.String, multiple : Main.AttributeOptional Basics.Bool, maxlength : Main.AttributeOptional Basics.Int, datalist : Main.AttributeOptional (List.List Main.Choice) }"}},"unions":{"Main.Msg":{"args":[],"tags":{"NoOp":[],"OnPortIncoming":["Json.Encode.Value"],"AddFormField":["Main.InputField"],"DeleteFormField":["Basics.Int"],"MoveFormFieldUp":["Basics.Int"],"MoveFormFieldDown":["Basics.Int"],"OnFormField":["Main.FormFieldMsg","Basics.Int","String.String"],"SetEditorAnimate":["Maybe.Maybe ( Basics.Int, Main.Animate )"],"SelectField":["Maybe.Maybe Basics.Int"],"DragStart":["Basics.Int"],"DragStartNew":["Main.FormField"],"DragEnd":[],"DragOver":["Maybe.Maybe Main.Droppable"],"Drop":["Maybe.Maybe Basics.Int"],"DoSleepDo":["Basics.Float","List.List Main.Msg"],"OnFormValuesUpdated":["String.String","String.String"]}},"Main.Animate":{"args":[],"tags":{"AnimateYellowFade":[],"AnimateFadeOut":[]}},"Main.AttributeOptional":{"args":["a"],"tags":{"AttributeNotNeeded":["Maybe.Maybe a"],"AttributeInvalid":["String.String"],"AttributeGiven":["a"]}},"Basics.Float":{"args":[],"tags":{"Float":[]}},"Main.FormFieldMsg":{"args":[],"tags":{"OnLabelInput":[],"OnDescriptionInput":[],"OnDescriptionToggle":["Basics.Bool"],"OnRequiredInput":["Basics.Bool"],"OnChoicesInput":[],"OnMultipleToggle":["Basics.Bool"],"OnMaxLengthToggle":["Basics.Bool"],"OnMaxLengthInput":[],"OnDatalistToggle":["Basics.Bool"],"OnDatalistInput":[],"OnVisibilityRuleTypeInput":["Basics.Int","String.String"],"OnVisibilityConditionTypeInput":["Basics.Int","Basics.Int","String.String"],"OnVisibilityConditionFieldInput":["Basics.Int","Basics.Int","String.String"],"OnVisibilityConditionValueInput":["Basics.Int","Basics.Int","String.String"],"OnAddVisibilityRule":[],"OnVisibilityConditionDuplicate":["Basics.Int"],"OnCheckboxMinRequiredInput":["String.String"],"OnCheckboxMaxAllowedInput":["String.String"]}},"Main.InputField":{"args":[],"tags":{"ShortText":["Main.CustomElement"],"LongText":["Main.AttributeOptional Basics.Int"],"Dropdown":["List.List Main.Choice"],"ChooseOne":["List.List Main.Choice"],"ChooseMultiple":["{ choices : List.List Main.Choice, minRequired : Maybe.Maybe Basics.Int, maxAllowed : Maybe.Maybe Basics.Int }"]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"List.List":{"args":["a"],"tags":{}},"Maybe.Maybe":{"args":["a"],"tags":{"Just":["a"],"Nothing":[]}},"Main.Presence":{"args":[],"tags":{"Required":[],"Optional":[],"System":[]}},"String.String":{"args":[],"tags":{"String":[]}},"Json.Encode.Value":{"args":[],"tags":{"Value":[]}},"Main.VisibilityRule":{"args":[],"tags":{"ShowWhen":["List.List Main.Condition"],"HideWhen":["List.List Main.Condition"]}},"Basics.Bool":{"args":[],"tags":{"True":[],"False":[]}},"Main.Condition":{"args":[],"tags":{"Field":["String.String","Main.Comparison"]}},"Dict.Dict":{"args":["k","v"],"tags":{"RBNode_elm_builtin":["Dict.NColor","k","v","Dict.Dict k v","Dict.Dict k v"],"RBEmpty_elm_builtin":[]}},"Main.Comparison":{"args":[],"tags":{"Equals":["String.String"],"StringContains":["String.String"],"EndsWith":["String.String"],"GreaterThan":["String.String"]}},"Dict.NColor":{"args":[],"tags":{"Red":[],"Black":[]}}}}})}};
   
