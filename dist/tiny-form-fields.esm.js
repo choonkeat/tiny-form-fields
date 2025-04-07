@@ -5212,7 +5212,7 @@ var $author$project$Main$Config = F4(
 var $elm_community$json_extra$Json$Decode$Extra$andMap = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
 var $author$project$Main$FormField = F6(
 	function (label, name, presence, description, type_, visibilityRule) {
-		return {N: description, f: label, ah: name, v: presence, g: type_, l: visibilityRule};
+		return {N: description, f: label, ah: name, v: presence, g: type_, j: visibilityRule};
 	});
 var $author$project$Main$AttributeNotNeeded = function (a) {
 	return {$: 0, a: a};
@@ -6479,7 +6479,7 @@ var $author$project$Main$encodeFormFields = function (formFields) {
 								$author$project$Main$encodeInputField(formField.g)),
 								_Utils_Tuple2(
 								'visibilityRule',
-								A2($elm$json$Json$Encode$list, $author$project$Main$encodeVisibilityRule, formField.l))
+								A2($elm$json$Json$Encode$list, $author$project$Main$encodeVisibilityRule, formField.j))
 							])));
 			},
 			$elm$core$Array$toList(formFields)));
@@ -6668,7 +6668,7 @@ var $author$project$Main$init = function (flags) {
 					A2(
 						$elm$core$Array$filter,
 						function (f) {
-							return !$elm$core$List$isEmpty(f.l);
+							return !$elm$core$List$isEmpty(f.j);
 						},
 						config.d)),
 				U: $elm$core$Array$length(config.d) + 1,
@@ -7767,7 +7767,7 @@ var $author$project$Main$updateFormField = F5(
 					return _Utils_update(
 						formField,
 						{
-							l: A2($elm_community$list_extra$List$Extra$removeAt, ruleIndex, formField.l)
+							j: A2($elm_community$list_extra$List$Extra$removeAt, ruleIndex, formField.j)
 						});
 				} else {
 					var ruleIndex = msg.a;
@@ -7775,7 +7775,7 @@ var $author$project$Main$updateFormField = F5(
 					return _Utils_update(
 						formField,
 						{
-							l: A3(
+							j: A3(
 								$author$project$Main$updateVisibilityRuleAt,
 								ruleIndex,
 								function (rule) {
@@ -7790,7 +7790,7 @@ var $author$project$Main$updateFormField = F5(
 											return rule;
 									}
 								},
-								formField.l)
+								formField.j)
 						});
 				}
 			case 11:
@@ -7800,7 +7800,7 @@ var $author$project$Main$updateFormField = F5(
 				return _Utils_update(
 					formField,
 					{
-						l: A3(
+						j: A3(
 							$author$project$Main$updateVisibilityRuleAt,
 							ruleIndex,
 							$author$project$Main$updateConditionsInRule(
@@ -7809,7 +7809,7 @@ var $author$project$Main$updateFormField = F5(
 									conditionIndex,
 									$author$project$Main$updateComparisonInCondition(
 										$author$project$Main$updateComparison(str)))),
-							formField.l)
+							formField.j)
 					});
 			case 12:
 				if (msg.c === '\n') {
@@ -7818,12 +7818,12 @@ var $author$project$Main$updateFormField = F5(
 					return _Utils_update(
 						formField,
 						{
-							l: A3(
+							j: A3(
 								$author$project$Main$updateVisibilityRuleAt,
 								ruleIndex,
 								$author$project$Main$updateConditionsInRule(
 									$elm_community$list_extra$List$Extra$removeAt(conditionIndex)),
-								formField.l)
+								formField.j)
 						});
 				} else {
 					var ruleIndex = msg.a;
@@ -7832,7 +7832,7 @@ var $author$project$Main$updateFormField = F5(
 					return _Utils_update(
 						formField,
 						{
-							l: A3(
+							j: A3(
 								$author$project$Main$updateVisibilityRuleAt,
 								ruleIndex,
 								$author$project$Main$updateConditionsInRule(
@@ -7841,7 +7841,7 @@ var $author$project$Main$updateFormField = F5(
 										conditionIndex,
 										$author$project$Main$updateFieldnameInCondition(
 											$elm$core$Basics$always(newFieldName)))),
-								formField.l)
+								formField.j)
 						});
 				}
 			case 13:
@@ -7851,7 +7851,7 @@ var $author$project$Main$updateFormField = F5(
 				return _Utils_update(
 					formField,
 					{
-						l: A3(
+						j: A3(
 							$author$project$Main$updateVisibilityRuleAt,
 							ruleIndex,
 							$author$project$Main$updateConditionsInRule(
@@ -7860,14 +7860,14 @@ var $author$project$Main$updateFormField = F5(
 									conditionIndex,
 									$author$project$Main$updateComparisonInCondition(
 										$author$project$Main$updateComparisonValue(newValue)))),
-							formField.l)
+							formField.j)
 					});
 			case 14:
 				return _Utils_update(
 					formField,
 					{
-						l: _Utils_ap(
-							formField.l,
+						j: _Utils_ap(
+							formField.j,
 							_List_fromArray(
 								[
 									$author$project$Main$ShowWhen(
@@ -7900,7 +7900,7 @@ var $author$project$Main$updateFormField = F5(
 				return _Utils_update(
 					formField,
 					{
-						l: A3(
+						j: A3(
 							$author$project$Main$updateVisibilityRuleAt,
 							ruleIndex,
 							function (rule) {
@@ -7924,7 +7924,7 @@ var $author$project$Main$updateFormField = F5(
 												])));
 								}
 							},
-							formField.l)
+							formField.j)
 					});
 		}
 	});
@@ -7959,7 +7959,7 @@ var $author$project$Main$update = F2(
 							$author$project$Main$mustBeOptional(fieldType),
 							{aI: 0, aQ: 1}),
 						g: fieldType,
-						l: _List_Nil
+						j: _List_Nil
 					};
 					var newFormFields = A2($elm$core$Array$push, newFormField, model.d);
 					var newIndex = $elm$core$Array$length(newFormFields) - 1;
@@ -8486,6 +8486,37 @@ var $author$project$Main$dragOverDecoder = F2(
 						_Utils_Tuple2(index, maybeFormField))),
 				true));
 	});
+var $author$project$Main$isConditionReferencingField = F2(
+	function (fieldName, condition) {
+		var conditionFieldName = condition.a;
+		return _Utils_eq(conditionFieldName, fieldName);
+	});
+var $author$project$Main$isFieldReferencedBy = F2(
+	function (fieldName, formFields) {
+		return A2(
+			$elm$core$List$any,
+			function (field) {
+				return A2(
+					$elm$core$List$any,
+					function (rule) {
+						if (!rule.$) {
+							var conditions = rule.a;
+							return A2(
+								$elm$core$List$any,
+								$author$project$Main$isConditionReferencingField(fieldName),
+								conditions);
+						} else {
+							var conditions = rule.a;
+							return A2(
+								$elm$core$List$any,
+								$author$project$Main$isConditionReferencingField(fieldName),
+								conditions);
+						}
+					},
+					field.j);
+			},
+			$elm$core$Array$toList(formFields));
+	});
 var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
 	return {$: 1, a: a};
 };
@@ -8496,6 +8527,7 @@ var $elm$html$Html$Events$stopPropagationOn = F2(
 			event,
 			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
 	});
+var $elm$html$Html$Attributes$title = $elm$html$Html$Attributes$stringProperty('title');
 var $elm$html$Html$Attributes$for = $elm$html$Html$Attributes$stringProperty('htmlFor');
 var $elm$html$Html$label = _VirtualDom_node('label');
 var $author$project$Main$maybeMaxLengthOf = function (formField) {
@@ -9216,6 +9248,25 @@ var $author$project$Main$renderFormField = F4(
 											]),
 										_List_fromArray(
 											[$author$project$Main$dragHandleIcon])),
+										function () {
+										var hasVisibilityRules = !$elm$core$List$isEmpty(formField.j);
+										var fieldName = $author$project$Main$fieldNameOf(formField);
+										var isReferenced = A2($author$project$Main$isFieldReferencedBy, fieldName, model.d);
+										return (hasVisibilityRules || isReferenced) ? A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class(
+													hasVisibilityRules ? 'tff-logic-indicator tff-logic-indicator-blue' : 'tff-logic-indicator tff-logic-indicator-gray'),
+													$elm$html$Html$Attributes$title(
+													(hasVisibilityRules && isReferenced) ? 'This field has visibility logic and other fields depend on it' : (hasVisibilityRules ? 'This field has visibility logic' : 'Other fields depend on this field\'s value'))
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text(
+													(hasVisibilityRules && isReferenced) ? 'Contains & affects logic' : (hasVisibilityRules ? 'Contains logic' : 'Affects logic'))
+												])) : $elm$html$Html$text('');
+									}(),
 										A3(
 										$author$project$Main$viewFormFieldPreview,
 										{
@@ -9284,7 +9335,7 @@ var $author$project$Main$viewAddQuestionsList = F2(
 												$author$project$Main$mustBeOptional(inputField),
 												{aI: 0, aQ: 1}),
 											g: inputField,
-											l: _List_Nil
+											j: _List_Nil
 										}))),
 								A2(
 								$elm$html$Html$Events$on,
@@ -9526,7 +9577,6 @@ var $elm$html$Html$Events$onInput = function (tagger) {
 			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
 };
 var $elm$html$Html$Attributes$pattern = $elm$html$Html$Attributes$stringProperty('pattern');
-var $elm$html$Html$Attributes$title = $elm$html$Html$Attributes$stringProperty('title');
 var $elm$core$String$toLower = _String_toLower;
 var $author$project$Main$OnChoicesInput = {$: 4};
 var $author$project$Main$OnDatalistInput = {$: 9};
@@ -10438,7 +10488,7 @@ var $author$project$Main$visibilityRulesSection = F3(
 						A2(
 							$elm$core$List$indexedMap,
 							A2($author$project$Main$visibilityRuleSection, index, formFields),
-							formField.l))),
+							formField.j))),
 					A2(
 					$elm$html$Html$div,
 					_List_fromArray(
@@ -11081,7 +11131,7 @@ var $author$project$Main$viewFormPreview = F2(
 				A2(
 					$elm$core$Array$filter,
 					function (formField) {
-						return A2($author$project$Main$isVisibilityRuleSatisfied, formField.l, trackedFormValues);
+						return A2($author$project$Main$isVisibilityRuleSatisfied, formField.j, trackedFormValues);
 					},
 					formFields)));
 	});

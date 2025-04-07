@@ -438,6 +438,35 @@ getPreviousFieldNameOrLabel index formFields =
         ""
 
 
+{-| Check if a field is referenced by any other field's visibility rules
+-}
+isFieldReferencedBy : String -> Array FormField -> Bool
+isFieldReferencedBy fieldName formFields =
+    Array.toList formFields
+        |> List.any
+            (\field ->
+                List.any
+                    (\rule ->
+                        case rule of
+                            ShowWhen conditions ->
+                                List.any (isConditionReferencingField fieldName) conditions
+
+                            HideWhen conditions ->
+                                List.any (isConditionReferencingField fieldName) conditions
+                    )
+                    field.visibilityRule
+            )
+
+
+{-| Check if a condition references the given field
+-}
+isConditionReferencingField : String -> Condition -> Bool
+isConditionReferencingField fieldName condition =
+    case condition of
+        Field conditionFieldName _ ->
+            conditionFieldName == fieldName
+
+
 
 -- INIT
 
@@ -1690,6 +1719,50 @@ renderFormField maybeAnimate model index maybeFormField =
                         , on "dragend" (Json.Decode.succeed DragEnd)
                         ]
                         [ div [ class "tff-drag-handle" ] [ dragHandleIcon ]
+                        , let
+                            hasVisibilityRules =
+                                not (List.isEmpty formField.visibilityRule)
+
+                            fieldName =
+                                fieldNameOf formField
+
+                            isReferenced =
+                                isFieldReferencedBy fieldName model.formFields
+                          in
+                          if hasVisibilityRules || isReferenced then
+                            div
+                                [ class
+                                    (if hasVisibilityRules then
+                                        "tff-logic-indicator tff-logic-indicator-blue"
+
+                                     else
+                                        "tff-logic-indicator tff-logic-indicator-gray"
+                                    )
+                                , title
+                                    (if hasVisibilityRules && isReferenced then
+                                        "This field has visibility logic and other fields depend on it"
+
+                                     else if hasVisibilityRules then
+                                        "This field has visibility logic"
+
+                                     else
+                                        "Other fields depend on this field's value"
+                                    )
+                                ]
+                                [ text
+                                    (if hasVisibilityRules && isReferenced then
+                                        "Contains & affects logic"
+
+                                     else if hasVisibilityRules then
+                                        "Contains logic"
+
+                                     else
+                                        "Affects logic"
+                                    )
+                                ]
+
+                          else
+                            text ""
                         , viewFormFieldPreview
                             { customAttrs = [ attribute "disabled" "disabled" ]
                             , formFields = model.formFields
