@@ -1851,10 +1851,11 @@ viewFormFieldOptionsPreview config fieldID formField =
                         [ div [ class "tff-validation-message" ]
                             [ text validationMessage ]
                         , input
-                            [ type_ "hidden"
+                            [ type_ "text"
                             , required True
                             , value ""
-                            , attribute "data-validation-field" fieldName
+                            , attribute "aria-hidden" "true"
+                            , attribute "style" "position: absolute; left: -9999px; height: 1px; width: 1px; overflow: hidden;"
                             ] []
                         ]
                     else

@@ -9200,10 +9200,11 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 						$elm$html$Html$input,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$type_('hidden'),
+								$elm$html$Html$Attributes$type_('text'),
 								$elm$html$Html$Attributes$required(true),
 								$elm$html$Html$Attributes$value(''),
-								A2($elm$html$Html$Attributes$attribute, 'data-validation-field', fieldName)
+								A2($elm$html$Html$Attributes$attribute, 'aria-hidden', 'true'),
+								A2($elm$html$Html$Attributes$attribute, 'style', 'position: absolute; left: -9999px; height: 1px; width: 1px; overflow: hidden;')
 							]),
 						_List_Nil)
 					]) : _List_Nil;
