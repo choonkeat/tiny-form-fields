@@ -1800,10 +1800,69 @@ viewFormFieldOptionsPreview config fieldID formField =
                 values =
                     Dict.get fieldName config.trackedFormValues
                         |> Maybe.withDefault []
+                
+                selectedCount = 
+                    List.length values
+                
+                -- Create validation messages when constraints aren't met
+                validationMessage =
+                    case ( minRequired, maxAllowed ) of
+                        ( Just min, Just max ) ->
+                            if selectedCount < min then
+                                "Please select at least " ++ String.fromInt min ++ " options"
+                            else if selectedCount > max then
+                                "Please select no more than " ++ String.fromInt max ++ " options"
+                            else
+                                ""
+                        
+                        ( Just min, Nothing ) ->
+                            if selectedCount < min then
+                                "Please select at least " ++ String.fromInt min ++ " options"
+                            else
+                                ""
+                        
+                        ( Nothing, Just max ) ->
+                            if selectedCount > max then
+                                "Please select no more than " ++ String.fromInt max ++ " options"
+                            else
+                                ""
+                        
+                        ( Nothing, Nothing ) ->
+                            ""
+                
+                -- Determine if validation is satisfied
+                isValid =
+                    case ( minRequired, maxAllowed ) of
+                        ( Just min, Just max ) ->
+                            selectedCount >= min && selectedCount <= max
+                        
+                        ( Just min, Nothing ) ->
+                            selectedCount >= min
+                        
+                        ( Nothing, Just max ) ->
+                            selectedCount <= max
+                        
+                        ( Nothing, Nothing ) ->
+                            True
+                
+                -- Add validation element for CollectData mode
+                validationElement =
+                    if (minRequired /= Nothing || maxAllowed /= Nothing) && not isValid then
+                        [ div [ class "tff-validation-message" ]
+                            [ text validationMessage ]
+                        , input
+                            [ type_ "hidden"
+                            , required True
+                            , value ""
+                            , attribute "data-validation-field" fieldName
+                            ] []
+                        ]
+                    else
+                        []
             in
             -- checkboxes
             div [ class "tff-choosemany-group" ]
-                [ div [ class "tff-choosemany-checkboxes" ]
+                ([ div [ class "tff-choosemany-checkboxes" ]
                     (List.map
                         (\choice ->
                             div [ class "tff-checkbox-group" ]
@@ -1826,7 +1885,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                         )
                         choices
                     )
-                ]
+                ] ++ validationElement)
 
 
 renderFormField : Maybe ( Int, Animate ) -> Model -> Int -> Maybe FormField -> Html Msg

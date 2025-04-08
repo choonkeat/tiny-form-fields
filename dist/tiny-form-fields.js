@@ -8827,8 +8827,8 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 	function (config, fieldID, formField) {
 		var fieldName = $author$project$Main$fieldNameOf(formField);
 		var chosenForYou = function (choices) {
-			var _v4 = formField.v;
-			switch (_v4) {
+			var _v14 = formField.v;
+			switch (_v14) {
 				case 1:
 					return false;
 				case 0:
@@ -9135,62 +9135,136 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 					$elm$core$Maybe$withDefault,
 					_List_Nil,
 					A2($elm$core$Dict$get, fieldName, config.C));
+				var selectedCount = $elm$core$List$length(values);
+				var validationMessage = function () {
+					var _v9 = _Utils_Tuple2(minRequired, maxAllowed);
+					if (!_v9.a.$) {
+						if (!_v9.b.$) {
+							var min = _v9.a.a;
+							var max = _v9.b.a;
+							return (_Utils_cmp(selectedCount, min) < 0) ? ('Please select at least ' + ($elm$core$String$fromInt(min) + ' options')) : ((_Utils_cmp(selectedCount, max) > 0) ? ('Please select no more than ' + ($elm$core$String$fromInt(max) + ' options')) : '');
+						} else {
+							var min = _v9.a.a;
+							var _v10 = _v9.b;
+							return (_Utils_cmp(selectedCount, min) < 0) ? ('Please select at least ' + ($elm$core$String$fromInt(min) + ' options')) : '';
+						}
+					} else {
+						if (!_v9.b.$) {
+							var _v11 = _v9.a;
+							var max = _v9.b.a;
+							return (_Utils_cmp(selectedCount, max) > 0) ? ('Please select no more than ' + ($elm$core$String$fromInt(max) + ' options')) : '';
+						} else {
+							var _v12 = _v9.a;
+							var _v13 = _v9.b;
+							return '';
+						}
+					}
+				}();
+				var isValid = function () {
+					var _v4 = _Utils_Tuple2(minRequired, maxAllowed);
+					if (!_v4.a.$) {
+						if (!_v4.b.$) {
+							var min = _v4.a.a;
+							var max = _v4.b.a;
+							return (_Utils_cmp(selectedCount, min) > -1) && (_Utils_cmp(selectedCount, max) < 1);
+						} else {
+							var min = _v4.a.a;
+							var _v5 = _v4.b;
+							return _Utils_cmp(selectedCount, min) > -1;
+						}
+					} else {
+						if (!_v4.b.$) {
+							var _v6 = _v4.a;
+							var max = _v4.b.a;
+							return _Utils_cmp(selectedCount, max) < 1;
+						} else {
+							var _v7 = _v4.a;
+							var _v8 = _v4.b;
+							return true;
+						}
+					}
+				}();
+				var validationElement = (((!_Utils_eq(minRequired, $elm$core$Maybe$Nothing)) || (!_Utils_eq(maxAllowed, $elm$core$Maybe$Nothing))) && (!isValid)) ? _List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('tff-validation-message')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text(validationMessage)
+							])),
+						A2(
+						$elm$html$Html$input,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$type_('hidden'),
+								$elm$html$Html$Attributes$required(true),
+								$elm$html$Html$Attributes$value(''),
+								A2($elm$html$Html$Attributes$attribute, 'data-validation-field', fieldName)
+							]),
+						_List_Nil)
+					]) : _List_Nil;
 				return A2(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
 							$elm$html$Html$Attributes$class('tff-choosemany-group')
 						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('tff-choosemany-checkboxes')
-								]),
-							A2(
-								$elm$core$List$map,
-								function (choice) {
-									return A2(
-										$elm$html$Html$div,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('tff-checkbox-group')
-											]),
-										_List_fromArray(
-											[
-												A2(
-												$elm$html$Html$label,
-												_List_fromArray(
-													[
-														$elm$html$Html$Attributes$class('tff-field-label')
-													]),
-												_List_fromArray(
-													[
-														A2(
-														$elm$html$Html$input,
-														_Utils_ap(
-															_List_fromArray(
-																[
-																	$elm$html$Html$Attributes$type_('checkbox'),
-																	$elm$html$Html$Attributes$tabindex(0),
-																	$elm$html$Html$Attributes$name(fieldName),
-																	$elm$html$Html$Attributes$value(choice.m),
-																	$elm$html$Html$Attributes$checked(
-																	A2($elm$core$List$member, choice.m, values) || chosenForYou(choices))
-																]),
+					_Utils_ap(
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('tff-choosemany-checkboxes')
+									]),
+								A2(
+									$elm$core$List$map,
+									function (choice) {
+										return A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('tff-checkbox-group')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$label,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('tff-field-label')
+														]),
+													_List_fromArray(
+														[
+															A2(
+															$elm$html$Html$input,
 															_Utils_ap(
-																config.V,
-																A2(config.a2, fieldName, choice))),
-														_List_Nil),
-														$elm$html$Html$text(' '),
-														$elm$html$Html$text(choice.g)
-													]))
-											]));
-								},
-								choices))
-						]));
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$type_('checkbox'),
+																		$elm$html$Html$Attributes$tabindex(0),
+																		$elm$html$Html$Attributes$name(fieldName),
+																		$elm$html$Html$Attributes$value(choice.m),
+																		$elm$html$Html$Attributes$checked(
+																		A2($elm$core$List$member, choice.m, values) || chosenForYou(choices))
+																	]),
+																_Utils_ap(
+																	config.V,
+																	A2(config.a2, fieldName, choice))),
+															_List_Nil),
+															$elm$html$Html$text(' '),
+															$elm$html$Html$text(choice.g)
+														]))
+												]));
+									},
+									choices))
+							]),
+						validationElement));
 		}
 	});
 var $author$project$Main$viewFormFieldPreview = F3(
