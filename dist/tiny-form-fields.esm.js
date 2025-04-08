@@ -16189,8 +16189,29 @@ var $author$project$Main$viewFormPreview = F2(
 				return _List_Nil;
 			},
 			onChooseMany: needsFormLogic ? onChooseManyAttrs : F2(
-				function (_v2, _v3) {
-					return _List_Nil;
+				function (fieldName, choice) {
+					var _v2 = $elm$core$List$head(
+						A2(
+							$elm$core$List$filter,
+							function (f) {
+								return _Utils_eq(
+									$author$project$Main$fieldNameOf(f),
+									fieldName);
+							},
+							$elm$core$Array$toList(formFields)));
+					if (_v2.$ === 'Just') {
+						var field = _v2.a;
+						var _v3 = field.type_;
+						if (_v3.$ === 'ChooseMultiple') {
+							var minRequired = _v3.a.minRequired;
+							var maxAllowed = _v3.a.maxAllowed;
+							return ((!_Utils_eq(minRequired, $elm$core$Maybe$Nothing)) || (!_Utils_eq(maxAllowed, $elm$core$Maybe$Nothing))) ? A2(onChooseManyAttrs, fieldName, choice) : _List_Nil;
+						} else {
+							return _List_Nil;
+						}
+					} else {
+						return _List_Nil;
+					}
 				}),
 			onInput: needsFormLogic ? onInputAttrs : function (_v4) {
 				return _List_Nil;

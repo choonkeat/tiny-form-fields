@@ -1404,9 +1404,23 @@ viewFormPreview customAttrs { formFields, needsFormLogic, trackedFormValues, sho
             , onChooseMany =
                 if needsFormLogic then
                     onChooseManyAttrs
-
                 else
-                    \_ _ -> []
+                    \fieldName choice ->
+                        -- Wire up event handlers in CollectData mode for fields with min/max constraints
+                        case Array.toList formFields
+                            |> List.filter (\f -> fieldNameOf f == fieldName)
+                            |> List.head of
+                                Just field ->
+                                    case field.type_ of
+                                        ChooseMultiple { minRequired, maxAllowed } ->
+                                            if minRequired /= Nothing || maxAllowed /= Nothing then
+                                                onChooseManyAttrs fieldName choice
+                                            else
+                                                []
+                                        _ ->
+                                            []
+                                Nothing ->
+                                    []
             , onInput =
                 if needsFormLogic then
                     onInputAttrs
