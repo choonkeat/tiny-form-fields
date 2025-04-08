@@ -46,8 +46,15 @@ test:
 ping-run:
 	wget --tries=90 --retry-connrefused -SO - http://localhost:8000
 
+# Usage: make test-playwright [PLAYWRIGHT_FILE=e2e/mytest.spec.ts]
+# If PLAYWRIGHT_FILE is specified, only that file will be tested
+# Otherwise, all tests will be run
 test-playwright:
-	npx playwright test --reporter=line
+	@if [ -z "$(PLAYWRIGHT_FILE)" ]; then \
+		npx playwright test --reporter=line; \
+	else \
+		npx playwright test "$(PLAYWRIGHT_FILE)" --reporter=line; \
+	fi
 	echo playwright pass
 
 test-playwright-ui:
