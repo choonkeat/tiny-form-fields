@@ -3,7 +3,7 @@ export PATH := node_modules/.bin:$(PATH)
 ELM_MAKE_FLAGS=--debug
 
 build: ELM_MAKE_FLAGS=--optimize
-build: css compile test test-go
+build: css format compile test test-go
 
 diff:
 	git diff -bw -- ':!dist'

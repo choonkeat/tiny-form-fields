@@ -32,48 +32,48 @@ export interface Comparison {
 }
 
 export async function clickCollectDataCheckbox(formPage, labelText, browserName = 'webkit') {
-  if (browserName === 'firefox') {
-    // For Firefox, locate the checkbox by value then click its parent element
-    const checkbox = formPage.locator(`input[type=checkbox][value="${labelText}"]`);
-    await checkbox.evaluate(node => node.parentElement.click());
-  } else {
-    // Use label-based selector for other browsers
-    await formPage.getByLabel(labelText, { exact: true }).click();
-  }
-  await formPage.waitForTimeout(200); // Consistent wait after checkbox interaction
+	if (browserName === 'firefox') {
+		// For Firefox, locate the checkbox by value then click its parent element
+		const checkbox = formPage.locator(`input[type=checkbox][value="${labelText}"]`);
+		await checkbox.evaluate((node) => node.parentElement.click());
+	} else {
+		// Use label-based selector for other browsers
+		await formPage.getByLabel(labelText, { exact: true }).click();
+	}
+	await formPage.waitForTimeout(200); // Consistent wait after checkbox interaction
 }
 
 export async function attemptSubmitWithExpectedFailure(formPage) {
-  await formPage.getByRole('button', { name: 'Submit' }).click();
-  await formPage.waitForTimeout(1000);
+	await formPage.getByRole('button', { name: 'Submit' }).click();
+	await formPage.waitForTimeout(1000);
 
-  // If validation works properly, the form won't navigate away
-  expect(formPage.url()).not.toBe('https://httpbin.org/post');
+	// If validation works properly, the form won't navigate away
+	expect(formPage.url()).not.toBe('https://httpbin.org/post');
 }
 
 export async function submitExpectingSuccess(formPage) {
-  // Prepare to intercept the form submission
-  const responsePromise = formPage.waitForResponse('https://httpbin.org/post', {
-    timeout: 30000,
-  });
+	// Prepare to intercept the form submission
+	const responsePromise = formPage.waitForResponse('https://httpbin.org/post', {
+		timeout: 30000,
+	});
 
-  await formPage.getByRole('button', { name: 'Submit' }).click();
-  const response = await responsePromise;
-  expect(response.ok()).toBeTruthy();
-  return response;
+	await formPage.getByRole('button', { name: 'Submit' }).click();
+	const response = await responsePromise;
+	expect(response.ok()).toBeTruthy();
+	return response;
 }
 
 export async function viewForm(page) {
-  // Set form target URL to ensure consistency
-  await page.locator('input#form_target_url').fill('https://httpbin.org/post');
+	// Set form target URL to ensure consistency
+	await page.locator('input#form_target_url').fill('https://httpbin.org/post');
 
-  // Open the form in a new window
-  const formPagePromise = page.waitForEvent('popup');
-  await page.getByRole('link', { name: 'View form' }).click();
-  const formPage = await formPagePromise;
-  await formPage.waitForLoadState('networkidle');
+	// Open the form in a new window
+	const formPagePromise = page.waitForEvent('popup');
+	await page.getByRole('link', { name: 'View form' }).click();
+	const formPage = await formPagePromise;
+	await formPage.waitForLoadState('networkidle');
 
-  return formPage;
+	return formPage;
 }
 
 export async function addField(
