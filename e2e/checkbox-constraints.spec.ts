@@ -114,8 +114,8 @@ test('only min constraint validation', async ({ page, browserName }) => {
   // Select only 1 checkbox - should fail validation
   await clickCollectDataCheckbox(formPage, 'Red', browserName);
 
-  // Check for validation message
-  await expect(formPage.locator('.tff-validation-message')).toBeVisible();
+  // Check for invalid checkbox styling instead of validation message
+  await expect(formPage.locator('.tff-invalid-checkbox')).toBeVisible();
 
   await attemptSubmitWithExpectedFailure(formPage);
 
@@ -163,8 +163,8 @@ test('only max constraint validation', async ({ page, browserName }) => {
   await clickCollectDataCheckbox(formPage, 'Cat', browserName);
   await clickCollectDataCheckbox(formPage, 'Bird', browserName);
 
-  // Check for validation message
-  await expect(formPage.locator('.tff-validation-message')).toBeVisible();
+  // Check for invalid checkbox styling instead of validation message
+  await expect(formPage.locator('.tff-invalid-checkbox')).toBeVisible();
 
   await attemptSubmitWithExpectedFailure(formPage);
 

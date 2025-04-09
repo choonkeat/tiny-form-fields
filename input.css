@@ -61,8 +61,28 @@
 .tff-field-group.tff-required textarea:invalid,
 .tff-toggle-group textarea:invalid,
 .tff-toggle-group input:not(:placeholder-shown):invalid,
-.tff-field-group input:not(:placeholder-shown):invalid {
+.tff-field-group input:not(:placeholder-shown):invalid,
+.tff-invalid-checkbox .tff-checkbox-group input[type='checkbox'] {
 	border-color: red;
+}
+
+.tff-invalid-checkbox .tff-checkbox-group input[type='checkbox'] {
+	appearance: none;
+	-webkit-appearance: none;
+	width: 16px;
+	height: 16px;
+	border: 2px solid red;
+	border-radius: 3px;
+	outline: none;
+	cursor: pointer;
+}
+
+.tff-invalid-checkbox .tff-checkbox-group input[type='checkbox']:checked {
+	background-color: #fff;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='red'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z'/%3E%3C/svg%3E");
+	background-size: 80%;
+	background-position: center;
+	background-repeat: no-repeat;
 }
 
 .tff-radiobuttons-group .tff-field-label input[type='radio']:invalid {
@@ -74,6 +94,7 @@
 	border-radius: 50%;
 	outline: none;
 }
+
 .tff-radiobuttons-group .tff-field-label input[type='radio']:invalid:before {
 	content: '';
 	display: block;
@@ -428,7 +449,7 @@
 	@apply min-h-[40px];
 }
 
-.tff-field-preview > div:last-child {
+.tff-field-preview>div:last-child {
 	@apply flex-grow;
 }
 
@@ -535,7 +556,7 @@
 		@apply translate-x-0;
 	}
 
-	.tff-right-panel.tff-panel-visible ~ .tff-left-panel {
+	.tff-right-panel.tff-panel-visible~.tff-left-panel {
 		@apply opacity-0;
 		@apply pointer-events-none;
 	}
@@ -631,7 +652,7 @@
 	@apply overflow-y-auto;
 }
 
-.tff-right-panel > div:last-child {
+.tff-right-panel>div:last-child {
 	@apply overflow-y-auto;
 }
 

@@ -1481,7 +1481,16 @@ viewFormFieldPreview config index formField =
                         text ""
 
                     Optional ->
-                        text " (optional)"
+                        -- Don't show (optional) for checkboxes with min/max constraints
+                        case formField.type_ of
+                            ChooseMultiple { minRequired, maxAllowed } ->
+                                if minRequired /= Nothing || maxAllowed /= Nothing then
+                                    text ""
+                                else
+                                    text " (optional)"
+                            
+                            _ -> 
+                                text " (optional)"
 
                     System ->
                         text ""
@@ -1805,30 +1814,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                     List.length values
                 
                 -- Create validation messages when constraints aren't met
-                validationMessage =
-                    case ( minRequired, maxAllowed ) of
-                        ( Just min, Just max ) ->
-                            if selectedCount < min then
-                                "Please select at least " ++ String.fromInt min ++ " options"
-                            else if selectedCount > max then
-                                "Please select no more than " ++ String.fromInt max ++ " options"
-                            else
-                                ""
-                        
-                        ( Just min, Nothing ) ->
-                            if selectedCount < min then
-                                "Please select at least " ++ String.fromInt min ++ " options"
-                            else
-                                ""
-                        
-                        ( Nothing, Just max ) ->
-                            if selectedCount > max then
-                                "Please select no more than " ++ String.fromInt max ++ " options"
-                            else
-                                ""
-                        
-                        ( Nothing, Nothing ) ->
-                            ""
+                -- Removed validationMessage since we're using CSS for validation indication
                 
                 -- Determine if validation is satisfied
                 isValid =
@@ -1845,12 +1831,10 @@ viewFormFieldOptionsPreview config fieldID formField =
                         ( Nothing, Nothing ) ->
                             True
                 
-                -- Add validation element for CollectData mode
+                -- Add validation element for CollectData mode (just the hidden input for validation)
                 validationElement =
                     if (minRequired /= Nothing || maxAllowed /= Nothing) && not isValid then
-                        [ div [ class "tff-validation-message" ]
-                            [ text validationMessage ]
-                        , input
+                        [ input
                             [ type_ "text"
                             , required True
                             , value ""
@@ -1862,8 +1846,8 @@ viewFormFieldOptionsPreview config fieldID formField =
                         []
             in
             -- checkboxes
-            div [ class "tff-choosemany-group" ]
-                ([ div [ class "tff-choosemany-checkboxes" ]
+            div [ class ("tff-choosemany-group" ++ if (minRequired /= Nothing || maxAllowed /= Nothing) && not isValid then " tff-invalid-checkbox" else "") ]
+                (div [ class "tff-choosemany-checkboxes" ]
                     (List.map
                         (\choice ->
                             div [ class "tff-checkbox-group" ]
@@ -1886,7 +1870,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                         )
                         choices
                     )
-                ] ++ validationElement)
+                    :: validationElement)
 
 
 renderFormField : Maybe ( Int, Animate ) -> Model -> Int -> Maybe FormField -> Html Msg
