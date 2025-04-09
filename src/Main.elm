@@ -1850,12 +1850,13 @@ viewFormFieldOptionsPreview config fieldID formField =
                 -- Add validation element for CollectData mode (just the hidden input for validation)
                 validationElement =
                     -- Only apply validation in CollectData mode, not in Editor mode
-                    if config.needsFormLogic && (minRequired /= Nothing || maxAllowed /= Nothing) && not isValid then
+                    if config.needsFormLogic && (minRequired /= Nothing || maxAllowed /= Nothing) then
                         [ input
-                            [ type_ "text"
+                            [ type_ "number"
                             , required True
-                            , value ""
-                            , attribute "aria-hidden" "true"
+                            , attribute "value" (String.fromInt selectedCount) -- raw value for browser only
+                            , Attr.min (Maybe.map String.fromInt minRequired |> Maybe.withDefault "")
+                            , Attr.max (Maybe.map String.fromInt maxAllowed |> Maybe.withDefault "")
                             , class "tff-visually-hidden"
                             ]
                             []

@@ -8770,12 +8770,14 @@ var $author$project$Main$defaultValue = function (str) {
 };
 var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty('disabled');
 var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
+var $elm$html$Html$Attributes$max = $elm$html$Html$Attributes$stringProperty('max');
 var $elm$html$Html$Attributes$maxlength = function (n) {
 	return A2(
 		_VirtualDom_attribute,
 		'maxlength',
 		$elm$core$String$fromInt(n));
 };
+var $elm$html$Html$Attributes$min = $elm$html$Html$Attributes$stringProperty('min');
 var $elm$virtual_dom$VirtualDom$node = function (tag) {
 	return _VirtualDom_node(
 		_VirtualDom_noScript(tag));
@@ -9144,6 +9146,32 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 					_List_Nil,
 					A2($elm$core$Dict$get, fieldName, config.C));
 				var selectedCount = $elm$core$List$length(values);
+				var validationElement = (config.ad && ((!_Utils_eq(minRequired, $elm$core$Maybe$Nothing)) || (!_Utils_eq(maxAllowed, $elm$core$Maybe$Nothing)))) ? _List_fromArray(
+					[
+						A2(
+						$elm$html$Html$input,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$type_('number'),
+								$elm$html$Html$Attributes$required(true),
+								A2(
+								$elm$html$Html$Attributes$attribute,
+								'value',
+								$elm$core$String$fromInt(selectedCount)),
+								$elm$html$Html$Attributes$min(
+								A2(
+									$elm$core$Maybe$withDefault,
+									'',
+									A2($elm$core$Maybe$map, $elm$core$String$fromInt, minRequired))),
+								$elm$html$Html$Attributes$max(
+								A2(
+									$elm$core$Maybe$withDefault,
+									'',
+									A2($elm$core$Maybe$map, $elm$core$String$fromInt, maxAllowed))),
+								$elm$html$Html$Attributes$class('tff-visually-hidden')
+							]),
+						_List_Nil)
+					]) : _List_Nil;
 				var isValid = function () {
 					var _v4 = _Utils_Tuple2(minRequired, maxAllowed);
 					if (!_v4.a.$) {
@@ -9168,20 +9196,6 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 						}
 					}
 				}();
-				var validationElement = (config.ad && (((!_Utils_eq(minRequired, $elm$core$Maybe$Nothing)) || (!_Utils_eq(maxAllowed, $elm$core$Maybe$Nothing))) && (!isValid))) ? _List_fromArray(
-					[
-						A2(
-						$elm$html$Html$input,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$type_('text'),
-								$elm$html$Html$Attributes$required(true),
-								$elm$html$Html$Attributes$value(''),
-								A2($elm$html$Html$Attributes$attribute, 'aria-hidden', 'true'),
-								$elm$html$Html$Attributes$class('tff-visually-hidden')
-							]),
-						_List_Nil)
-					]) : _List_Nil;
 				return A2(
 					$elm$html$Html$div,
 					_List_fromArray(
@@ -9799,8 +9813,6 @@ var $author$project$Main$OnMaxLengthInput = {$: 7};
 var $author$project$Main$OnMaxLengthToggle = function (a) {
 	return {$: 6, a: a};
 };
-var $elm$html$Html$Attributes$max = $elm$html$Html$Attributes$stringProperty('max');
-var $elm$html$Html$Attributes$min = $elm$html$Html$Attributes$stringProperty('min');
 var $elm$html$Html$Attributes$minlength = function (n) {
 	return A2(
 		_VirtualDom_attribute,
