@@ -945,9 +945,12 @@ updateFormField msg fieldIndex string formFields formField =
 
                 ChooseMultiple settings ->
                     let
-                        newChoices = List.map choiceFromString (String.lines string)
-                        newChoicesCount = List.length newChoices
-                        
+                        newChoices =
+                            List.map choiceFromString (String.lines string)
+
+                        newChoicesCount =
+                            List.length newChoices
+
                         -- Adjust minRequired if it exceeds new choices count
                         newMinRequired =
                             case settings.minRequired of
@@ -956,14 +959,16 @@ updateFormField msg fieldIndex string formFields formField =
                                         -- Cap at the new number of choices
                                         if newChoicesCount > 0 then
                                             Just newChoicesCount
+
                                         else
                                             Nothing
+
                                     else
                                         Just min
-                                
+
                                 Nothing ->
                                     Nothing
-                                    
+
                         -- Adjust maxAllowed if it exceeds new choices count
                         newMaxAllowed =
                             case settings.maxAllowed of
@@ -972,11 +977,13 @@ updateFormField msg fieldIndex string formFields formField =
                                         -- Cap at the new number of choices
                                         if newChoicesCount > 0 then
                                             Just newChoicesCount
+
                                         else
                                             Nothing
+
                                     else
                                         Just max
-                                
+
                                 Nothing ->
                                     Nothing
                     in
@@ -1401,26 +1408,33 @@ viewFormPreview customAttrs { formFields, needsFormLogic, trackedFormValues, sho
             , shortTextTypeDict = shortTextTypeDict
             , formFields = formFields
             , trackedFormValues = trackedFormValues
+            , needsFormLogic = needsFormLogic -- Pass the flag through to detect CollectData mode
             , onChooseMany =
                 if needsFormLogic then
                     onChooseManyAttrs
+
                 else
                     \fieldName choice ->
                         -- Wire up event handlers in CollectData mode for fields with min/max constraints
-                        case Array.toList formFields
-                            |> List.filter (\f -> fieldNameOf f == fieldName)
-                            |> List.head of
-                                Just field ->
-                                    case field.type_ of
-                                        ChooseMultiple { minRequired, maxAllowed } ->
-                                            if minRequired /= Nothing || maxAllowed /= Nothing then
-                                                onChooseManyAttrs fieldName choice
-                                            else
-                                                []
-                                        _ ->
+                        case
+                            Array.toList formFields
+                                |> List.filter (\f -> fieldNameOf f == fieldName)
+                                |> List.head
+                        of
+                            Just field ->
+                                case field.type_ of
+                                    ChooseMultiple { minRequired, maxAllowed } ->
+                                        if minRequired /= Nothing || maxAllowed /= Nothing then
+                                            onChooseManyAttrs fieldName choice
+
+                                        else
                                             []
-                                Nothing ->
-                                    []
+
+                                    _ ->
+                                        []
+
+                            Nothing ->
+                                []
             , onInput =
                 if needsFormLogic then
                     onInputAttrs
@@ -1461,6 +1475,7 @@ viewFormFieldPreview :
     , onChange : String -> List (Html.Attribute Msg)
     , shortTextTypeDict : Dict String CustomElement
     , formFields : Array FormField
+    , needsFormLogic : Bool
     }
     -> Int
     -> FormField
@@ -1486,10 +1501,11 @@ viewFormFieldPreview config index formField =
                             ChooseMultiple { minRequired, maxAllowed } ->
                                 if minRequired /= Nothing || maxAllowed /= Nothing then
                                     text ""
+
                                 else
                                     text " (optional)"
-                            
-                            _ -> 
+
+                            _ ->
                                 text " (optional)"
 
                     System ->
@@ -1624,6 +1640,7 @@ viewFormFieldOptionsPreview :
     , onChange : String -> List (Html.Attribute Msg)
     , shortTextTypeDict : Dict String CustomElement
     , formFields : Array FormField
+    , needsFormLogic : Bool
     }
     -> String
     -> FormField
@@ -1809,68 +1826,82 @@ viewFormFieldOptionsPreview config fieldID formField =
                 values =
                     Dict.get fieldName config.trackedFormValues
                         |> Maybe.withDefault []
-                
-                selectedCount = 
+
+                selectedCount =
                     List.length values
-                
+
                 -- Create validation messages when constraints aren't met
                 -- Removed validationMessage since we're using CSS for validation indication
-                
                 -- Determine if validation is satisfied
                 isValid =
                     case ( minRequired, maxAllowed ) of
                         ( Just min, Just max ) ->
                             selectedCount >= min && selectedCount <= max
-                        
+
                         ( Just min, Nothing ) ->
                             selectedCount >= min
-                        
+
                         ( Nothing, Just max ) ->
                             selectedCount <= max
-                        
+
                         ( Nothing, Nothing ) ->
                             True
-                
+
                 -- Add validation element for CollectData mode (just the hidden input for validation)
                 validationElement =
-                    if (minRequired /= Nothing || maxAllowed /= Nothing) && not isValid then
+                    -- Only apply validation in CollectData mode, not in Editor mode
+                    if config.needsFormLogic && (minRequired /= Nothing || maxAllowed /= Nothing) && not isValid then
                         [ input
                             [ type_ "text"
                             , required True
                             , value ""
                             , attribute "aria-hidden" "true"
-                            , attribute "style" "position: absolute; left: -9999px; height: 1px; width: 1px; overflow: hidden;"
-                            ] []
+                            , class "tff-visually-hidden"
+                            ]
+                            []
                         ]
+
                     else
                         []
             in
             -- checkboxes
-            div [ class ("tff-choosemany-group" ++ if (minRequired /= Nothing || maxAllowed /= Nothing) && not isValid then " tff-invalid-checkbox" else "") ]
-                (div [ class "tff-choosemany-checkboxes" ]
-                    (List.map
-                        (\choice ->
-                            div [ class "tff-checkbox-group" ]
-                                [ label [ class "tff-field-label" ]
-                                    [ input
-                                        ([ type_ "checkbox"
-                                         , tabindex 0
-                                         , name fieldName
-                                         , value choice.value
-                                         , checked (List.member choice.value values || chosenForYou choices)
-                                         ]
-                                            ++ config.customAttrs
-                                            ++ config.onChooseMany fieldName choice
-                                        )
-                                        []
-                                    , text " "
-                                    , text choice.label
-                                    ]
-                                ]
-                        )
-                        choices
+            div
+                [ class
+                    ("tff-choosemany-group"
+                        ++ (if config.needsFormLogic && (minRequired /= Nothing || maxAllowed /= Nothing) && not isValid then
+                                " tff-invalid-checkbox"
+
+                            else
+                                ""
+                           )
                     )
-                    :: validationElement)
+                ]
+                (validationElement
+                    ++ [ div [ class "tff-choosemany-checkboxes" ]
+                            (List.map
+                                (\choice ->
+                                    div [ class "tff-checkbox-group" ]
+                                        [ label [ class "tff-field-label" ]
+                                            [ input
+                                                ([ type_ "checkbox"
+                                                 , tabindex 0
+                                                 , name fieldName
+                                                 , value choice.value
+                                                 , checked (List.member choice.value values || chosenForYou choices)
+                                                 ]
+                                                    ++ config.customAttrs
+                                                    ++ config.onChooseMany fieldName choice
+                                                )
+                                                []
+                                            , text " "
+                                            , text choice.label
+                                            ]
+                                        ]
+                                )
+                                choices
+                            )
+                       ]
+                )
 
 
 renderFormField : Maybe ( Int, Animate ) -> Model -> Int -> Maybe FormField -> Html Msg
@@ -1978,6 +2009,7 @@ renderFormField maybeAnimate model index maybeFormField =
                             , onChange = \_ -> []
                             , shortTextTypeDict = model.shortTextTypeDict
                             , trackedFormValues = model.trackedFormValues
+                            , needsFormLogic = False -- We're in Editor mode here, so no validation
                             }
                             index
                             formField

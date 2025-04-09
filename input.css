@@ -75,14 +75,18 @@
 	border-radius: 0.2em;
 	outline: none;
 	cursor: pointer;
+	position: relative;
 }
 
-.tff-invalid-checkbox .tff-checkbox-group input[type='checkbox']:checked {
-	background-color: #fff;
-	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='red'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z'/%3E%3C/svg%3E");
-	background-size: 0.8em;
-	background-position: center;
-	background-repeat: no-repeat;
+.tff-invalid-checkbox .tff-checkbox-group input[type='checkbox']:checked::after {
+	content: '✓';
+	position: absolute;
+	color: red;
+	font-size: 1em;
+	line-height: 1;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
 }
 
 .tff-radiobuttons-group .tff-field-label input[type='radio']:invalid {
@@ -93,6 +97,15 @@
 	border: 1px solid red;
 	border-radius: 50%;
 	outline: none;
+}
+
+/* Visually hide elements but keep them accessible to screen readers */
+.tff-visually-hidden {
+	position: absolute;
+	left: -9999px;
+	height: 1px;
+	width: 1px;
+	overflow: hidden;
 }
 
 .tff-radiobuttons-group .tff-field-label input[type='radio']:invalid:before {
