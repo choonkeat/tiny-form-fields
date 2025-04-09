@@ -72,11 +72,7 @@ Add support for conditional visibility where each field can specify when it shou
     - Added support for multiple visibility rules
     - Each rule can have multiple conditions
     - Rules are evaluated independently
-- [ ] Show indicator when a field has other fields depending on its value
-
-### Validation & Dependencies
-- [ ] Automatically remove visibility rules when their referenced fields are deleted
-- [ ] Validate that referenced fields still exist when importing form definitions
+- [x] Add pill-shaped text indicators showing whether a field affects logic or contains logic
 
 ### Runtime Behavior
 - [x] Implement real-time visibility updates in CollectData mode
@@ -87,10 +83,8 @@ Add support for conditional visibility where each field can specify when it shou
 - [x] Fix browser compatibility issues
     - [x] Fix empty value interpretation in dropdown options
     - [x] Fix Edge browser compatibility on Windows
-- [ ] Handle dependent fields (fields that depend on hidden fields)
 - [ ] Skip validation for hidden required fields during form submission
 - [ ] Preserve values of hidden fields when they become visible again
-- [ ] Gracefully handle fields that become hidden during user input
 
 ### Browser Compatibility
 - [x] Ensure compatibility with major browsers (Chrome, Firefox, Safari, Edge)
@@ -100,7 +94,7 @@ Add support for conditional visibility where each field can specify when it shou
     - [x] Add meta tag to disable Dark Reader
 
 ### Documentation & Testing
-- [ ] Update documentation with new feature
+- [x] Update documentation with new feature
 - [ ] Document behavior of hidden fields in form submission
 - [x] Add tests for conditional logic
     - [x] Unit tests for isVisibilityRuleSatisfied
@@ -109,4 +103,3 @@ Add support for conditional visibility where each field can specify when it shou
     - [x] Tests cover single and multiple values
     - [x] Tests cover edge cases (empty strings, missing fields)
 - [ ] Add tests for form validation with hidden fields
-- [ ] Add tests for import/export with visibility rules

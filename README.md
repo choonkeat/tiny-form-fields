@@ -25,6 +25,10 @@ A lightweight, customizable form builder and renderer written in Elm. Create dyn
   - Multiple conditions with AND/OR logic
   - Real-time updates in CollectData mode
   - Support for various comparison types (equals, contains, ends with, greater than)
+  - Visual logic indicators showing which fields:
+    - Contain logic (blue pill with "Contains logic" text)
+    - Affect other fields' logic (gray pill with "Affects logic" text)
+    - Both contain and affect logic (blue pill with "Contains & affects logic" text)
 - Responsive design
 - Two modes: Editor (for building forms) and CollectData (for end users)
 - JSON import/export of form definitions
