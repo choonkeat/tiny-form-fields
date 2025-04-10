@@ -1660,6 +1660,11 @@ viewFormFieldOptionsPreview config fieldID formField =
 
                 System ->
                     List.length choices == 1
+
+        disabledMode =
+            List.member
+                (attribute "disabled" "disabled")
+                config.customAttrs
     in
     case formField.type_ of
         ShortText customElement ->
@@ -1757,7 +1762,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                      -- want to disable the `<option>`s so user can see the options but cannot choose
                      -- but if the `<select>` is required, then now we are in a bind
                      -- so we cannot have `required` on the `<select>` if we're disabling it
-                     , if List.member (attribute "disabled" "disabled") config.customAttrs then
+                     , if disabledMode then
                         class "tff-select-disabled"
 
                        else
@@ -1850,7 +1855,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                 -- Add validation element for CollectData mode (just the hidden input for validation)
                 validationElement =
                     -- Only apply validation in CollectData mode, not in Editor mode
-                    if config.needsFormLogic && (minRequired /= Nothing || maxAllowed /= Nothing) then
+                    if not disabledMode && (minRequired /= Nothing || maxAllowed /= Nothing) then
                         [ input
                             [ type_ "number"
                             , required True
@@ -1869,7 +1874,7 @@ viewFormFieldOptionsPreview config fieldID formField =
             div
                 [ class
                     ("tff-choosemany-group"
-                        ++ (if config.needsFormLogic && (minRequired /= Nothing || maxAllowed /= Nothing) && not isValid then
+                        ++ (if not disabledMode && (minRequired /= Nothing || maxAllowed /= Nothing) && not isValid then
                                 " tff-invalid-checkbox"
 
                             else
