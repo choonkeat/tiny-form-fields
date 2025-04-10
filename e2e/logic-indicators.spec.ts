@@ -2,13 +2,13 @@
 import { test, expect } from '@playwright/test';
 import { addField } from './test-utils';
 
-test('Logic indicators display correct text for different field relationships', async ({ page }) => {
+test('Logic indicators display correct text for different field relationships', async ({
+	page,
+}) => {
 	await page.goto('http://localhost:8000/');
 
 	// Add a dropdown field that will be referenced by other fields
-	await addField(page, 'Dropdown', [
-		{ label: 'Dropdown question title', value: 'Logic Source' },
-	]);
+	await addField(page, 'Dropdown', [{ label: 'Dropdown question title', value: 'Logic Source' }]);
 
 	// Add a field that depends on the dropdown (will have "Contains logic")
 	await addField(page, 'Single-line free text', [
@@ -34,7 +34,7 @@ test('Logic indicators display correct text for different field relationships', 
 	await addField(page, 'Dropdown', [
 		{ label: 'Dropdown question title', value: 'Both Logic Types' },
 		// Add visibility rule so this field contains logic
-		{ 
+		{
 			visibilityRule: [
 				{
 					type: 'Show this question when',
@@ -76,7 +76,7 @@ test('Logic indicators display correct text for different field relationships', 
 
 	// Get all field containers
 	const fieldContainers = page.locator('.tff-field-container');
-	
+
 	// Check the first field - should have "Affects logic" (gray)
 	const firstFieldIndicator = fieldContainers.nth(0).locator('.tff-logic-indicator');
 	await expect(firstFieldIndicator).toBeVisible();
@@ -96,7 +96,13 @@ test('Logic indicators display correct text for different field relationships', 
 	await expect(thirdFieldIndicator).toHaveClass(/tff-logic-indicator-blue/);
 
 	// Verify tooltip contents
-	await expect(firstFieldIndicator).toHaveAttribute('title', 'Other fields depend on this field\'s value');
+	await expect(firstFieldIndicator).toHaveAttribute(
+		'title',
+		"Other fields depend on this field's value"
+	);
 	await expect(secondFieldIndicator).toHaveAttribute('title', 'This field has visibility logic');
-	await expect(thirdFieldIndicator).toHaveAttribute('title', 'This field has visibility logic and other fields depend on it');
+	await expect(thirdFieldIndicator).toHaveAttribute(
+		'title',
+		'This field has visibility logic and other fields depend on it'
+	);
 });

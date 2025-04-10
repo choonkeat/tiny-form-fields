@@ -308,14 +308,22 @@ type InputField
     | LongText (AttributeOptional Int)
     | Dropdown (List Choice)
     | ChooseOne (List Choice)
-    | ChooseMultiple (List Choice)
+    | ChooseMultiple
+        { choices : List Choice
+        , minRequired : Maybe Int
+        , maxAllowed : Maybe Int
+        }
 
 
 allInputField : List InputField
 allInputField =
     [ Dropdown (List.map choiceFromString [ "Red", "Orange", "Yellow", "Green", "Blue", "Indigo", "Violet" ])
     , ChooseOne (List.map choiceFromString [ "Yes", "No" ])
-    , ChooseMultiple (List.map choiceFromString [ "Apple", "Banana", "Cantaloupe", "Durian" ])
+    , ChooseMultiple
+        { choices = List.map choiceFromString [ "Apple", "Banana", "Cantaloupe", "Durian" ]
+        , minRequired = Nothing
+        , maxAllowed = Nothing
+        }
     , LongText (AttributeGiven 160)
     ]
 
@@ -417,6 +425,8 @@ type FormFieldMsg
     | OnVisibilityConditionValueInput Int Int String
     | OnAddVisibilityRule
     | OnVisibilityConditionDuplicate Int
+    | OnCheckboxMinRequiredInput String
+    | OnCheckboxMaxAllowedInput String
 
 
 otherQuestionTitles : Array FormField -> Int -> List { label : String, name : Maybe String }
@@ -823,6 +833,102 @@ updateFormField msg fieldIndex string formFields formField =
             else
                 { formField | presence = Optional }
 
+        OnCheckboxMinRequiredInput minStr ->
+            case formField.type_ of
+                ChooseMultiple settings ->
+                    let
+                        -- Parse the entered value or set to Nothing if empty
+                        newMinRequired =
+                            if String.isEmpty minStr then
+                                Nothing
+
+                            else
+                                String.toInt minStr
+
+                        -- Ensure min doesn't exceed max (if max exists)
+                        adjustedMinRequired =
+                            case ( newMinRequired, settings.maxAllowed ) of
+                                ( Just min, Just max ) ->
+                                    if min > max then
+                                        Just max
+                                        -- Cap min at max value
+
+                                    else
+                                        Just min
+
+                                ( minValue, _ ) ->
+                                    minValue
+
+                        -- Ensure min doesn't exceed number of choices
+                        finalMinRequired =
+                            case adjustedMinRequired of
+                                Just min ->
+                                    if min > List.length settings.choices then
+                                        Just (List.length settings.choices)
+
+                                    else
+                                        Just min
+
+                                Nothing ->
+                                    Nothing
+                    in
+                    { formField
+                        | type_ =
+                            ChooseMultiple
+                                { settings | minRequired = finalMinRequired }
+                    }
+
+                _ ->
+                    formField
+
+        OnCheckboxMaxAllowedInput maxStr ->
+            case formField.type_ of
+                ChooseMultiple settings ->
+                    let
+                        -- Parse the entered value or set to Nothing if empty
+                        newMaxAllowed =
+                            if String.isEmpty maxStr then
+                                Nothing
+
+                            else
+                                String.toInt maxStr
+
+                        -- Ensure max is not less than min (if min exists)
+                        adjustedMaxAllowed =
+                            case ( newMaxAllowed, settings.minRequired ) of
+                                ( Just max, Just min ) ->
+                                    if max < min then
+                                        Just min
+                                        -- Raise max to min value
+
+                                    else
+                                        Just max
+
+                                ( maxValue, _ ) ->
+                                    maxValue
+
+                        -- Ensure max doesn't exceed number of choices
+                        finalMaxAllowed =
+                            case adjustedMaxAllowed of
+                                Just max ->
+                                    if max > List.length settings.choices then
+                                        Just (List.length settings.choices)
+
+                                    else
+                                        Just max
+
+                                Nothing ->
+                                    Nothing
+                    in
+                    { formField
+                        | type_ =
+                            ChooseMultiple
+                                { settings | maxAllowed = finalMaxAllowed }
+                    }
+
+                _ ->
+                    formField
+
         OnChoicesInput ->
             case formField.type_ of
                 ShortText _ ->
@@ -837,8 +943,58 @@ updateFormField msg fieldIndex string formFields formField =
                 ChooseOne _ ->
                     { formField | type_ = ChooseOne (List.map choiceFromString (String.lines string)) }
 
-                ChooseMultiple _ ->
-                    { formField | type_ = ChooseMultiple (List.map choiceFromString (String.lines string)) }
+                ChooseMultiple settings ->
+                    let
+                        newChoices =
+                            List.map choiceFromString (String.lines string)
+
+                        newChoicesCount =
+                            List.length newChoices
+
+                        -- Adjust minRequired if it exceeds new choices count
+                        newMinRequired =
+                            case settings.minRequired of
+                                Just min ->
+                                    if min > newChoicesCount then
+                                        -- Cap at the new number of choices
+                                        if newChoicesCount > 0 then
+                                            Just newChoicesCount
+
+                                        else
+                                            Nothing
+
+                                    else
+                                        Just min
+
+                                Nothing ->
+                                    Nothing
+
+                        -- Adjust maxAllowed if it exceeds new choices count
+                        newMaxAllowed =
+                            case settings.maxAllowed of
+                                Just max ->
+                                    if max > newChoicesCount then
+                                        -- Cap at the new number of choices
+                                        if newChoicesCount > 0 then
+                                            Just newChoicesCount
+
+                                        else
+                                            Nothing
+
+                                    else
+                                        Just max
+
+                                Nothing ->
+                                    Nothing
+                    in
+                    { formField
+                        | type_ =
+                            ChooseMultiple
+                                { choices = newChoices
+                                , minRequired = newMinRequired
+                                , maxAllowed = newMaxAllowed
+                                }
+                    }
 
         OnMultipleToggle bool ->
             case formField.type_ of
@@ -1252,12 +1408,33 @@ viewFormPreview customAttrs { formFields, needsFormLogic, trackedFormValues, sho
             , shortTextTypeDict = shortTextTypeDict
             , formFields = formFields
             , trackedFormValues = trackedFormValues
+            , needsFormLogic = needsFormLogic -- Pass the flag through to detect CollectData mode
             , onChooseMany =
                 if needsFormLogic then
                     onChooseManyAttrs
 
                 else
-                    \_ _ -> []
+                    \fieldName choice ->
+                        -- Wire up event handlers in CollectData mode for fields with min/max constraints
+                        case
+                            Array.toList formFields
+                                |> List.filter (\f -> fieldNameOf f == fieldName)
+                                |> List.head
+                        of
+                            Just field ->
+                                case field.type_ of
+                                    ChooseMultiple { minRequired, maxAllowed } ->
+                                        if minRequired /= Nothing || maxAllowed /= Nothing then
+                                            onChooseManyAttrs fieldName choice
+
+                                        else
+                                            []
+
+                                    _ ->
+                                        []
+
+                            Nothing ->
+                                []
             , onInput =
                 if needsFormLogic then
                     onInputAttrs
@@ -1298,6 +1475,7 @@ viewFormFieldPreview :
     , onChange : String -> List (Html.Attribute Msg)
     , shortTextTypeDict : Dict String CustomElement
     , formFields : Array FormField
+    , needsFormLogic : Bool
     }
     -> Int
     -> FormField
@@ -1318,7 +1496,17 @@ viewFormFieldPreview config index formField =
                         text ""
 
                     Optional ->
-                        text " (optional)"
+                        -- Don't show (optional) for checkboxes with min constraints only
+                        case formField.type_ of
+                            ChooseMultiple { minRequired } ->
+                                if minRequired /= Nothing then
+                                    text ""
+
+                                else
+                                    text " (optional)"
+
+                            _ ->
+                                text " (optional)"
 
                     System ->
                         text ""
@@ -1452,6 +1640,7 @@ viewFormFieldOptionsPreview :
     , onChange : String -> List (Html.Attribute Msg)
     , shortTextTypeDict : Dict String CustomElement
     , formFields : Array FormField
+    , needsFormLogic : Bool
     }
     -> String
     -> FormField
@@ -1471,6 +1660,11 @@ viewFormFieldOptionsPreview config fieldID formField =
 
                 System ->
                     List.length choices == 1
+
+        disabledMode =
+            List.member
+                (attribute "disabled" "disabled")
+                config.customAttrs
     in
     case formField.type_ of
         ShortText customElement ->
@@ -1568,7 +1762,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                      -- want to disable the `<option>`s so user can see the options but cannot choose
                      -- but if the `<select>` is required, then now we are in a bind
                      -- so we cannot have `required` on the `<select>` if we're disabling it
-                     , if List.member (attribute "disabled" "disabled") config.customAttrs then
+                     , if disabledMode then
                         class "tff-select-disabled"
 
                        else
@@ -1632,42 +1826,92 @@ viewFormFieldOptionsPreview config fieldID formField =
                     )
                 ]
 
-        ChooseMultiple choices ->
+        ChooseMultiple { choices, minRequired, maxAllowed } ->
             let
                 values =
                     Dict.get fieldName config.trackedFormValues
                         |> Maybe.withDefault []
+
+                selectedCount =
+                    List.length values
+
+                -- Create validation messages when constraints aren't met
+                -- Removed validationMessage since we're using CSS for validation indication
+                -- Determine if validation is satisfied
+                isValid =
+                    case ( minRequired, maxAllowed ) of
+                        ( Just min, Just max ) ->
+                            selectedCount >= min && selectedCount <= max
+
+                        ( Just min, Nothing ) ->
+                            selectedCount >= min
+
+                        ( Nothing, Just max ) ->
+                            selectedCount <= max
+
+                        ( Nothing, Nothing ) ->
+                            True
+
+                -- Add validation element for CollectData mode (just the hidden input for validation)
+                validationElement =
+                    -- Only apply validation in CollectData mode, not in Editor mode
+                    if not disabledMode && (minRequired /= Nothing || maxAllowed /= Nothing) then
+                        [ input
+                            [ type_ "number"
+                            , required True
+                            , attribute "value" (String.fromInt selectedCount) -- raw value for browser only
+                            , attribute "min" (Maybe.map String.fromInt minRequired |> Maybe.withDefault "")
+                            , attribute "max" (Maybe.map String.fromInt maxAllowed |> Maybe.withDefault "")
+                            , attribute "class" "tff-visually-hidden"
+                            ]
+                            []
+                        ]
+
+                    else
+                        []
             in
             -- checkboxes
-            div [ class "tff-choosemany-group" ]
-                [ div [ class "tff-choosemany-checkboxes" ]
-                    (List.map
-                        (\choice ->
-                            div [ class "tff-checkbox-group" ]
-                                [ label [ class "tff-field-label" ]
-                                    [ input
-                                        ([ type_ "checkbox"
-                                         , tabindex 0
-                                         , name fieldName
-                                         , value choice.value
-                                         , checked (List.member choice.value values || chosenForYou choices)
-                                         ]
-                                            ++ config.customAttrs
-                                            ++ config.onChooseMany fieldName choice
-                                        )
-                                        []
-                                    , text " "
-                                    , text choice.label
-                                    ]
-                                ]
-                        )
-                        choices
+            div
+                [ class
+                    ("tff-choosemany-group"
+                        ++ (if not disabledMode && (minRequired /= Nothing || maxAllowed /= Nothing) && not isValid then
+                                " tff-invalid-checkbox"
+
+                            else
+                                ""
+                           )
                     )
                 ]
+                (validationElement
+                    ++ [ div [ class "tff-choosemany-checkboxes" ]
+                            (List.map
+                                (\choice ->
+                                    div [ class "tff-checkbox-group" ]
+                                        [ label [ class "tff-field-label" ]
+                                            [ input
+                                                ([ type_ "checkbox"
+                                                 , tabindex 0
+                                                 , name fieldName
+                                                 , value choice.value
+                                                 , checked (List.member choice.value values || chosenForYou choices)
+                                                 ]
+                                                    ++ config.customAttrs
+                                                    ++ config.onChooseMany fieldName choice
+                                                )
+                                                []
+                                            , text " "
+                                            , text choice.label
+                                            ]
+                                        ]
+                                )
+                                choices
+                            )
+                       ]
+                )
 
 
-renderFormField : Maybe ( Int, Animate ) -> Model -> Int -> Maybe FormField -> Html Msg
-renderFormField maybeAnimate model index maybeFormField =
+renderFormBuilderField : Maybe ( Int, Animate ) -> Model -> Int -> Maybe FormField -> Html Msg
+renderFormBuilderField maybeAnimate model index maybeFormField =
     case maybeFormField of
         Nothing ->
             div
@@ -1771,6 +2015,7 @@ renderFormField maybeAnimate model index maybeFormField =
                             , onChange = \_ -> []
                             , shortTextTypeDict = model.shortTextTypeDict
                             , trackedFormValues = model.trackedFormValues
+                            , needsFormLogic = False -- We're in Editor mode here, so no form logic
                             }
                             index
                             formField
@@ -1872,7 +2117,7 @@ viewFormBuilder maybeAnimate model =
 
                 -- , preventDefaultOn "drop" (Json.Decode.succeed ( Drop Nothing, True ))
                 ]
-                (List.indexedMap (renderFormField maybeAnimate model) maybeFieldsList)
+                (List.indexedMap (renderFormBuilderField maybeAnimate model) maybeFieldsList)
             ]
         , viewRightPanel model
         ]
@@ -1946,7 +2191,7 @@ visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
                                 ChooseOne choices ->
                                     Just (Html.datalist [ id datalistId ] (List.map (\c -> Html.option [ value c.value ] []) choices))
 
-                                ChooseMultiple choices ->
+                                ChooseMultiple { choices } ->
                                     Just (Html.datalist [ id datalistId ] (List.map (\c -> Html.option [ value c.value ] []) choices))
 
                                 _ ->
@@ -2506,8 +2751,42 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
             [ choicesTextarea choices
             ]
 
-        ChooseMultiple choices ->
+        ChooseMultiple { choices, minRequired, maxAllowed } ->
             [ choicesTextarea choices
+            , div [ class "tff-field-group" ]
+                [ label [ class "tff-field-label" ] [ text "Minimum required" ]
+                , input
+                    [ type_ "number"
+                    , class "tff-text-field"
+                    , value (minRequired |> Maybe.map String.fromInt |> Maybe.withDefault "")
+                    , Attr.min "0"
+
+                    -- Maximum value constraint: Either the maxAllowed value (if present) or the number of choices
+                    , maxAllowed
+                        |> Maybe.map (\max -> Attr.max (String.fromInt max))
+                        |> Maybe.withDefault (Attr.max (String.fromInt (List.length choices)))
+                    , onInput (\val -> OnFormField (OnCheckboxMinRequiredInput val) index "")
+                    ]
+                    []
+                ]
+            , div [ class "tff-field-group" ]
+                [ label [ class "tff-field-label" ] [ text "Maximum allowed" ]
+                , input
+                    [ type_ "number"
+                    , class "tff-text-field"
+                    , value (maxAllowed |> Maybe.map String.fromInt |> Maybe.withDefault "")
+
+                    -- Minimum value constraint: Either the minRequired value (if present) or 0
+                    , minRequired
+                        |> Maybe.map (\min -> Attr.min (String.fromInt min))
+                        |> Maybe.withDefault (Attr.min "0")
+
+                    -- Maximum should not exceed the number of available choices
+                    , Attr.max (String.fromInt (List.length choices))
+                    , onInput (\val -> OnFormField (OnCheckboxMaxAllowedInput val) index "")
+                    ]
+                    []
+                ]
             ]
 
 
@@ -2968,11 +3247,26 @@ encodeInputField inputField =
                 , ( "choices", Json.Encode.list encodeChoice (List.filter (\{ value } -> String.trim value /= "") choices) )
                 ]
 
-        ChooseMultiple choices ->
+        ChooseMultiple { choices, minRequired, maxAllowed } ->
             Json.Encode.object
-                [ ( "type", Json.Encode.string "ChooseMultiple" )
-                , ( "choices", Json.Encode.list encodeChoice (List.filter (\{ value } -> String.trim value /= "") choices) )
-                ]
+                ([ ( "type", Json.Encode.string "ChooseMultiple" )
+                 , ( "choices", Json.Encode.list encodeChoice (List.filter (\{ value } -> String.trim value /= "") choices) )
+                 ]
+                    ++ (case minRequired of
+                            Just min ->
+                                [ ( "minRequired", Json.Encode.int min ) ]
+
+                            Nothing ->
+                                []
+                       )
+                    ++ (case maxAllowed of
+                            Just max ->
+                                [ ( "maxAllowed", Json.Encode.int max ) ]
+
+                            Nothing ->
+                                []
+                       )
+                )
 
 
 decodeInputField : Json.Decode.Decoder InputField
@@ -2997,8 +3291,17 @@ decodeInputField =
                             |> Json.Decode.map ChooseOne
 
                     "ChooseMultiple" ->
-                        Json.Decode.field "choices" (Json.Decode.list decodeChoice)
-                            |> Json.Decode.map ChooseMultiple
+                        Json.Decode.succeed
+                            (\choices minRequired maxAllowed ->
+                                ChooseMultiple
+                                    { choices = choices
+                                    , minRequired = minRequired
+                                    , maxAllowed = maxAllowed
+                                    }
+                            )
+                            |> andMap (Json.Decode.field "choices" (Json.Decode.list decodeChoice))
+                            |> andMap (Json.Decode.maybe (Json.Decode.field "minRequired" Json.Decode.int))
+                            |> andMap (Json.Decode.maybe (Json.Decode.field "maxAllowed" Json.Decode.int))
 
                     _ ->
                         Json.Decode.fail ("Unknown input field type: " ++ type_)

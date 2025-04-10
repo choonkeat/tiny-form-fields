@@ -61,8 +61,32 @@
 .tff-field-group.tff-required textarea:invalid,
 .tff-toggle-group textarea:invalid,
 .tff-toggle-group input:not(:placeholder-shown):invalid,
-.tff-field-group input:not(:placeholder-shown):invalid {
+.tff-field-group input:not(:placeholder-shown):invalid,
+.tff-invalid-checkbox .tff-checkbox-group input[type='checkbox'] {
 	border-color: red;
+}
+
+.tff-invalid-checkbox .tff-checkbox-group input[type='checkbox'] {
+	appearance: none;
+	-webkit-appearance: none;
+	width: 1em;
+	height: 1em;
+	border: 1px solid red;
+	border-radius: 0.2em;
+	outline: none;
+	cursor: pointer;
+	position: relative;
+}
+
+.tff-invalid-checkbox .tff-checkbox-group input[type='checkbox']:checked::after {
+	content: '✓';
+	position: absolute;
+	color: red;
+	font-size: 1em;
+	line-height: 1;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
 }
 
 .tff-radiobuttons-group .tff-field-label input[type='radio']:invalid {
@@ -74,6 +98,16 @@
 	border-radius: 50%;
 	outline: none;
 }
+
+/* Visually hide elements but keep them accessible to screen readers */
+.tff-visually-hidden {
+	position: absolute;
+	left: -9999px;
+	height: 1px;
+	width: 1px;
+	overflow: hidden;
+}
+
 .tff-radiobuttons-group .tff-field-label input[type='radio']:invalid:before {
 	content: '';
 	display: block;
