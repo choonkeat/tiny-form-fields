@@ -1860,9 +1860,9 @@ viewFormFieldOptionsPreview config fieldID formField =
                             [ type_ "number"
                             , required True
                             , attribute "value" (String.fromInt selectedCount) -- raw value for browser only
-                            , Attr.min (Maybe.map String.fromInt minRequired |> Maybe.withDefault "")
-                            , Attr.max (Maybe.map String.fromInt maxAllowed |> Maybe.withDefault "")
-                            , class "tff-visually-hidden"
+                            , attribute "min" (Maybe.map String.fromInt minRequired |> Maybe.withDefault "")
+                            , attribute "max" (Maybe.map String.fromInt maxAllowed |> Maybe.withDefault "")
+                            , attribute "class" "tff-visually-hidden"
                             ]
                             []
                         ]
