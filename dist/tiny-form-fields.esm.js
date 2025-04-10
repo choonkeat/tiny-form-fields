@@ -9344,7 +9344,7 @@ var $author$project$Main$viewFormFieldPreview = F3(
 						]))
 				]));
 	});
-var $author$project$Main$renderFormField = F4(
+var $author$project$Main$renderFormBuilderField = F4(
 	function (maybeAnimate, model, index, maybeFormField) {
 		if (maybeFormField.$ === 1) {
 			return A2(
@@ -11302,7 +11302,7 @@ var $author$project$Main$viewFormBuilder = F2(
 									]),
 								A2(
 									$elm$core$List$indexedMap,
-									A2($author$project$Main$renderFormField, maybeAnimate, model),
+									A2($author$project$Main$renderFormBuilderField, maybeAnimate, model),
 									maybeFieldsList))
 							])),
 						$author$project$Main$viewRightPanel(model)

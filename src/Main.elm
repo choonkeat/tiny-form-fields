@@ -1910,8 +1910,8 @@ viewFormFieldOptionsPreview config fieldID formField =
                 )
 
 
-renderFormField : Maybe ( Int, Animate ) -> Model -> Int -> Maybe FormField -> Html Msg
-renderFormField maybeAnimate model index maybeFormField =
+renderFormBuilderField : Maybe ( Int, Animate ) -> Model -> Int -> Maybe FormField -> Html Msg
+renderFormBuilderField maybeAnimate model index maybeFormField =
     case maybeFormField of
         Nothing ->
             div
@@ -2015,7 +2015,7 @@ renderFormField maybeAnimate model index maybeFormField =
                             , onChange = \_ -> []
                             , shortTextTypeDict = model.shortTextTypeDict
                             , trackedFormValues = model.trackedFormValues
-                            , needsFormLogic = False -- We're in Editor mode here, so no validation
+                            , needsFormLogic = False -- We're in Editor mode here, so no form logic
                             }
                             index
                             formField
@@ -2117,7 +2117,7 @@ viewFormBuilder maybeAnimate model =
 
                 -- , preventDefaultOn "drop" (Json.Decode.succeed ( Drop Nothing, True ))
                 ]
-                (List.indexedMap (renderFormField maybeAnimate model) maybeFieldsList)
+                (List.indexedMap (renderFormBuilderField maybeAnimate model) maybeFieldsList)
             ]
         , viewRightPanel model
         ]
