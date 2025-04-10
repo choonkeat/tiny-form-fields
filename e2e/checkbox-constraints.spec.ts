@@ -39,6 +39,11 @@ test('checkbox min/max constraints in Editor and CollectData modes', async ({
 	// 2. COLLECTDATA MODE: Test form validation with constraints
 	const formPage = await viewForm(page);
 
+	// Verify that "(optional)" is NOT part of the label for min/max constraints
+	const fieldLabelText = await formPage.locator('.tff-field-label').first().textContent();
+	expect(fieldLabelText).not.toContain('(optional)');
+	expect(fieldLabelText).toContain('Select your favorite fruits');
+
 	// Submit without selecting any checkbox - should fail validation
 	await attemptSubmitWithExpectedFailure(formPage);
 
@@ -118,6 +123,11 @@ test('only min constraint validation', async ({ page, browserName }) => {
 	// COLLECTDATA MODE: Test form validation with min constraint
 	const formPage = await viewForm(page);
 
+	// Verify that "(optional)" is NOT part of the label for min-only constraint
+	const fieldLabelText = await formPage.locator('.tff-field-label').first().textContent();
+	expect(fieldLabelText).not.toContain('(optional)');
+	expect(fieldLabelText).toContain('Select at least 2 colors');
+
 	// Select only 1 checkbox - should fail validation
 	await clickCollectDataCheckbox(formPage, 'Red', browserName);
 
@@ -163,6 +173,11 @@ test('only max constraint validation', async ({ page, browserName }) => {
 
 	// COLLECTDATA MODE: Test form validation with max constraint
 	const formPage = await viewForm(page);
+
+	// Verify that "(optional)" IS part of the label for max-only constraint
+	const fieldLabelText = await formPage.locator('.tff-field-label').first().textContent();
+	expect(fieldLabelText).toContain('(optional)');
+	expect(fieldLabelText).toContain('Select up to 2 animals');
 
 	// Select 3 checkboxes (exceeding maximum) - should fail validation
 	await clickCollectDataCheckbox(formPage, 'Dog', browserName);

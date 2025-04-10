@@ -1496,10 +1496,10 @@ viewFormFieldPreview config index formField =
                         text ""
 
                     Optional ->
-                        -- Don't show (optional) for checkboxes with min/max constraints
+                        -- Don't show (optional) for checkboxes with min constraints only
                         case formField.type_ of
-                            ChooseMultiple { minRequired, maxAllowed } ->
-                                if minRequired /= Nothing || maxAllowed /= Nothing then
+                            ChooseMultiple { minRequired } ->
+                                if minRequired /= Nothing then
                                     text ""
 
                                 else
