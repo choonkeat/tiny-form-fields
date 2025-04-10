@@ -5212,7 +5212,7 @@ var $author$project$Main$Config = F4(
 var $elm_community$json_extra$Json$Decode$Extra$andMap = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
 var $author$project$Main$FormField = F6(
 	function (label, name, presence, description, type_, visibilityRule) {
-		return {Q: description, g: label, ak: name, v: presence, e: type_, j: visibilityRule};
+		return {P: description, g: label, ak: name, v: presence, e: type_, j: visibilityRule};
 	});
 var $author$project$Main$AttributeNotNeeded = function (a) {
 	return {$: 0, a: a};
@@ -5711,7 +5711,7 @@ var $author$project$Main$decodeInputField = A2(
 								F3(
 									function (choices, minRequired, maxAllowed) {
 										return $author$project$Main$ChooseMultiple(
-											{L: choices, N: maxAllowed, O: minRequired});
+											{L: choices, Q: maxAllowed, N: minRequired});
 									})))));
 			default:
 				return $elm$json$Json$Decode$fail('Unknown input field type: ' + type_);
@@ -6332,8 +6332,8 @@ var $author$project$Main$encodeInputField = function (inputField) {
 					]));
 		default:
 			var choices = inputField.a.L;
-			var minRequired = inputField.a.O;
-			var maxAllowed = inputField.a.N;
+			var minRequired = inputField.a.N;
+			var maxAllowed = inputField.a.Q;
 			return $elm$json$Json$Encode$object(
 				_Utils_ap(
 					_List_fromArray(
@@ -6524,7 +6524,7 @@ var $author$project$Main$encodeFormFields = function (formFields) {
 								$author$project$Main$encodePresence(formField.v)),
 								_Utils_Tuple2(
 								'description',
-								A2($author$project$Main$encodeAttributeOptional, $elm$json$Json$Encode$string, formField.Q)),
+								A2($author$project$Main$encodeAttributeOptional, $elm$json$Json$Encode$string, formField.P)),
 								_Utils_Tuple2(
 								'type',
 								$author$project$Main$encodeInputField(formField.e)),
@@ -7595,18 +7595,18 @@ var $author$project$Main$updateFormField = F5(
 				return (string === '') ? _Utils_update(
 					formField,
 					{
-						Q: $author$project$Main$AttributeInvalid('')
+						P: $author$project$Main$AttributeInvalid('')
 					}) : _Utils_update(
 					formField,
 					{
-						Q: $author$project$Main$AttributeGiven(string)
+						P: $author$project$Main$AttributeGiven(string)
 					});
 			case 2:
 				var bool = msg.a;
 				return _Utils_update(
 					formField,
 					{
-						Q: A2($author$project$Main$toggleAttributeOptional, bool, formField.Q)
+						P: A2($author$project$Main$toggleAttributeOptional, bool, formField.P)
 					});
 			case 3:
 				var bool = msg.a;
@@ -7622,7 +7622,7 @@ var $author$project$Main$updateFormField = F5(
 					var settings = _v1.a;
 					var newMinRequired = $elm$core$String$isEmpty(minStr) ? $elm$core$Maybe$Nothing : $elm$core$String$toInt(minStr);
 					var adjustedMinRequired = function () {
-						var _v3 = _Utils_Tuple2(newMinRequired, settings.N);
+						var _v3 = _Utils_Tuple2(newMinRequired, settings.Q);
 						if ((!_v3.a.$) && (!_v3.b.$)) {
 							var min = _v3.a.a;
 							var max = _v3.b.a;
@@ -7649,7 +7649,7 @@ var $author$project$Main$updateFormField = F5(
 							e: $author$project$Main$ChooseMultiple(
 								_Utils_update(
 									settings,
-									{O: finalMinRequired}))
+									{N: finalMinRequired}))
 						});
 				} else {
 					return formField;
@@ -7661,7 +7661,7 @@ var $author$project$Main$updateFormField = F5(
 					var settings = _v4.a;
 					var newMaxAllowed = $elm$core$String$isEmpty(maxStr) ? $elm$core$Maybe$Nothing : $elm$core$String$toInt(maxStr);
 					var adjustedMaxAllowed = function () {
-						var _v6 = _Utils_Tuple2(newMaxAllowed, settings.O);
+						var _v6 = _Utils_Tuple2(newMaxAllowed, settings.N);
 						if ((!_v6.a.$) && (!_v6.b.$)) {
 							var max = _v6.a.a;
 							var min = _v6.b.a;
@@ -7688,7 +7688,7 @@ var $author$project$Main$updateFormField = F5(
 							e: $author$project$Main$ChooseMultiple(
 								_Utils_update(
 									settings,
-									{N: finalMaxAllowed}))
+									{Q: finalMaxAllowed}))
 						});
 				} else {
 					return formField;
@@ -7728,7 +7728,7 @@ var $author$project$Main$updateFormField = F5(
 							$elm$core$String$lines(string));
 						var newChoicesCount = $elm$core$List$length(newChoices);
 						var newMaxAllowed = function () {
-							var _v9 = settings.N;
+							var _v9 = settings.Q;
 							if (!_v9.$) {
 								var max = _v9.a;
 								return (_Utils_cmp(max, newChoicesCount) > 0) ? ((newChoicesCount > 0) ? $elm$core$Maybe$Just(newChoicesCount) : $elm$core$Maybe$Nothing) : $elm$core$Maybe$Just(max);
@@ -7737,7 +7737,7 @@ var $author$project$Main$updateFormField = F5(
 							}
 						}();
 						var newMinRequired = function () {
-							var _v8 = settings.O;
+							var _v8 = settings.N;
 							if (!_v8.$) {
 								var min = _v8.a;
 								return (_Utils_cmp(min, newChoicesCount) > 0) ? ((newChoicesCount > 0) ? $elm$core$Maybe$Just(newChoicesCount) : $elm$core$Maybe$Nothing) : $elm$core$Maybe$Just(min);
@@ -7749,7 +7749,7 @@ var $author$project$Main$updateFormField = F5(
 							formField,
 							{
 								e: $author$project$Main$ChooseMultiple(
-									{L: newChoices, N: newMaxAllowed, O: newMinRequired})
+									{L: newChoices, Q: newMaxAllowed, N: newMinRequired})
 							});
 				}
 			case 5:
@@ -8101,7 +8101,7 @@ var $author$project$Main$update = F2(
 				case 2:
 					var fieldType = msg.a;
 					var newFormField = {
-						Q: $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing),
+						P: $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing),
 						g: $author$project$Main$stringFromInputField(fieldType) + (' question ' + $elm$core$String$fromInt(model.X)),
 						ak: $elm$core$Maybe$Nothing,
 						v: A2(
@@ -8445,8 +8445,8 @@ var $author$project$Main$allInputField = _List_fromArray(
 				$author$project$Main$choiceFromString,
 				_List_fromArray(
 					['Apple', 'Banana', 'Cantaloupe', 'Durian'])),
-			N: $elm$core$Maybe$Nothing,
-			O: $elm$core$Maybe$Nothing
+			Q: $elm$core$Maybe$Nothing,
+			N: $elm$core$Maybe$Nothing
 		}),
 		$author$project$Main$LongText(
 		$author$project$Main$AttributeGiven(160))
@@ -8770,14 +8770,12 @@ var $author$project$Main$defaultValue = function (str) {
 };
 var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty('disabled');
 var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
-var $elm$html$Html$Attributes$max = $elm$html$Html$Attributes$stringProperty('max');
 var $elm$html$Html$Attributes$maxlength = function (n) {
 	return A2(
 		_VirtualDom_attribute,
 		'maxlength',
 		$elm$core$String$fromInt(n));
 };
-var $elm$html$Html$Attributes$min = $elm$html$Html$Attributes$stringProperty('min');
 var $elm$virtual_dom$VirtualDom$node = function (tag) {
 	return _VirtualDom_node(
 		_VirtualDom_noScript(tag));
@@ -9140,8 +9138,8 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 						]));
 			default:
 				var choices = _v0.a.L;
-				var minRequired = _v0.a.O;
-				var maxAllowed = _v0.a.N;
+				var minRequired = _v0.a.N;
+				var maxAllowed = _v0.a.Q;
 				var values = A2(
 					$elm$core$Maybe$withDefault,
 					_List_Nil,
@@ -9159,17 +9157,21 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 								$elm$html$Html$Attributes$attribute,
 								'value',
 								$elm$core$String$fromInt(selectedCount)),
-								$elm$html$Html$Attributes$min(
+								A2(
+								$elm$html$Html$Attributes$attribute,
+								'min',
 								A2(
 									$elm$core$Maybe$withDefault,
 									'',
 									A2($elm$core$Maybe$map, $elm$core$String$fromInt, minRequired))),
-								$elm$html$Html$Attributes$max(
+								A2(
+								$elm$html$Html$Attributes$attribute,
+								'max',
 								A2(
 									$elm$core$Maybe$withDefault,
 									'',
 									A2($elm$core$Maybe$map, $elm$core$String$fromInt, maxAllowed))),
-								$elm$html$Html$Attributes$class('tff-visually-hidden')
+								A2($elm$html$Html$Attributes$attribute, 'class', 'tff-visually-hidden')
 							]),
 						_List_Nil)
 					]) : _List_Nil;
@@ -9296,9 +9298,8 @@ var $author$project$Main$viewFormFieldPreview = F3(
 										case 1:
 											var _v1 = formField.e;
 											if (_v1.$ === 4) {
-												var minRequired = _v1.a.O;
-												var maxAllowed = _v1.a.N;
-												return ((!_Utils_eq(minRequired, $elm$core$Maybe$Nothing)) || (!_Utils_eq(maxAllowed, $elm$core$Maybe$Nothing))) ? $elm$html$Html$text('') : $elm$html$Html$text(' (optional)');
+												var minRequired = _v1.a.N;
+												return (!_Utils_eq(minRequired, $elm$core$Maybe$Nothing)) ? $elm$html$Html$text('') : $elm$html$Html$text(' (optional)');
 											} else {
 												return $elm$html$Html$text(' (optional)');
 											}
@@ -9318,7 +9319,7 @@ var $author$project$Main$viewFormFieldPreview = F3(
 								[
 									$elm$html$Html$text(
 									function () {
-										var _v2 = formField.Q;
+										var _v2 = formField.P;
 										switch (_v2.$) {
 											case 0:
 												return '';
@@ -9548,7 +9549,7 @@ var $author$project$Main$viewAddQuestionsList = F2(
 								$elm$json$Json$Decode$succeed(
 									$author$project$Main$DragStartNew(
 										{
-											Q: $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing),
+											P: $author$project$Main$AttributeNotNeeded($elm$core$Maybe$Nothing),
 											g: $author$project$Main$stringFromInputField(inputField) + (' question ' + $elm$core$String$fromInt(nextQuestionNumber)),
 											ak: $elm$core$Maybe$Nothing,
 											v: A2(
@@ -9814,6 +9815,8 @@ var $author$project$Main$OnMaxLengthInput = {$: 7};
 var $author$project$Main$OnMaxLengthToggle = function (a) {
 	return {$: 6, a: a};
 };
+var $elm$html$Html$Attributes$max = $elm$html$Html$Attributes$stringProperty('max');
+var $elm$html$Html$Attributes$min = $elm$html$Html$Attributes$stringProperty('min');
 var $elm$html$Html$Attributes$minlength = function (n) {
 	return A2(
 		_VirtualDom_attribute,
@@ -10071,8 +10074,8 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F3(
 					]);
 			default:
 				var choices = _v0.a.L;
-				var minRequired = _v0.a.O;
-				var maxAllowed = _v0.a.N;
+				var minRequired = _v0.a.N;
+				var maxAllowed = _v0.a.Q;
 				return _List_fromArray(
 					[
 						choicesTextarea(choices),
@@ -11072,7 +11075,7 @@ var $author$project$Main$viewFormFieldBuilder = F5(
 									'');
 							}
 						},
-						formField.Q)
+						formField.P)
 					]),
 				_Utils_ap(
 					A3($author$project$Main$viewFormFieldOptionsBuilder, shortTextTypeList, index, formField),
@@ -11464,8 +11467,8 @@ var $author$project$Main$viewFormPreview = F2(
 						var field = _v2.a;
 						var _v3 = field.e;
 						if (_v3.$ === 4) {
-							var minRequired = _v3.a.O;
-							var maxAllowed = _v3.a.N;
+							var minRequired = _v3.a.N;
+							var maxAllowed = _v3.a.Q;
 							return ((!_Utils_eq(minRequired, $elm$core$Maybe$Nothing)) || (!_Utils_eq(maxAllowed, $elm$core$Maybe$Nothing))) ? A2(onChooseManyAttrs, fieldName, choice) : _List_Nil;
 						} else {
 							return _List_Nil;
