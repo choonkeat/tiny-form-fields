@@ -1151,6 +1151,30 @@ moreTestInputFields =
         , maxlength = Main.AttributeGiven 20
         , datalist = Main.AttributeNotNeeded Nothing
         }
+    , Main.Dropdown
+        { choices = [ Main.Choice "option1" "option1", Main.Choice "option2" "option2" ]
+        , filter = Nothing
+        }
+    , Main.Dropdown
+        { choices = [ Main.Choice "option1" "option1", Main.Choice "option2" "option2" ]
+        , filter = Just (Main.FilterStartsWithFieldValueOf "sourceField")
+        }
+    , Main.ChooseOne
+        { choices = [ Main.Choice "option1" "option1", Main.Choice "option2" "option2" ]
+        , filter = Just (Main.FilterContainsFieldValueOf "sourceField")
+        }
+    , Main.ChooseMultiple
+        { choices = [ Main.Choice "option1" "option1", Main.Choice "option2" "option2" ]
+        , minRequired = Just 1
+        , maxAllowed = Just 2
+        , filter = Nothing
+        }
+    , Main.ChooseMultiple
+        { choices = [ Main.Choice "option1" "option1", Main.Choice "option2" "option2" ]
+        , minRequired = Nothing
+        , maxAllowed = Nothing
+        , filter = Just (Main.FilterStartsWithFieldValueOf "sourceField")
+        }
     ]
 
 
