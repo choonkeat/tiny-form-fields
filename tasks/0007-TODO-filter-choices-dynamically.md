@@ -40,7 +40,7 @@ This feature allows for dynamic filtering of options in dropdown, radio button, 
           }
   ```
 
-- [ ] Add new message variants for handling filter UI:
+- [x] Add new message variants for handling filter UI:
   ```elm
   type FormFieldMsg
       = ...existing variants...
@@ -51,12 +51,12 @@ This feature allows for dynamic filtering of options in dropdown, radio button, 
 
 ### UI Changes
 
-- [ ] Add a "Filter choices dynamically" checkbox underneath the "Choices" textarea for Dropdown, ChooseOne, and ChooseMultiple fields
-- [ ] When checked, display:
-  - [ ] Label: "Show choices that"
-  - [ ] First dropdown: "Starts with" | "Contains"
-  - [ ] Second dropdown: List of other question fields (same as those in Field Logic)
-- [ ] Update the `updateFormField` function to handle the new message variants:
+- [x] Add a "Filter choices dynamically" checkbox underneath the "Choices" textarea for Dropdown, ChooseOne, and ChooseMultiple fields
+- [x] When checked, display:
+  - [x] Label: "Show choices that"
+  - [x] First dropdown: "Starts with" | "Contains"
+  - [x] Second dropdown: List of other question fields (same as those in Field Logic)
+- [x] Update the `updateFormField` function to handle the new message variants:
   ```elm
   case msg of
       OnFilterToggle checked ->

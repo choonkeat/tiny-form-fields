@@ -443,6 +443,9 @@ type FormFieldMsg
     | OnVisibilityConditionDuplicate Int
     | OnCheckboxMinRequiredInput String
     | OnCheckboxMaxAllowedInput String
+    | OnFilterToggle Bool
+    | OnFilterTypeSelect String
+    | OnFilterSourceFieldSelect String
 
 
 otherQuestionTitles : Array FormField -> Int -> List { label : String, name : Maybe String }
@@ -1250,6 +1253,114 @@ updateFormField msg fieldIndex string formFields formField =
                         )
                         formField.visibilityRule
             }
+
+        OnFilterToggle checked ->
+            -- Remove filter if unchecked, add default if checked
+            case formField.type_ of
+                Dropdown settings ->
+                    let
+                        newFilter =
+                            if checked then
+                                Just (FilterStartsWithFieldValueOf "")
+
+                            else
+                                Nothing
+                    in
+                    { formField | type_ = Dropdown { settings | filter = newFilter } }
+
+                ChooseOne settings ->
+                    let
+                        newFilter =
+                            if checked then
+                                Just (FilterStartsWithFieldValueOf "")
+
+                            else
+                                Nothing
+                    in
+                    { formField | type_ = ChooseOne { settings | filter = newFilter } }
+
+                ChooseMultiple settings ->
+                    let
+                        newFilter =
+                            if checked then
+                                Just (FilterStartsWithFieldValueOf "")
+
+                            else
+                                Nothing
+                    in
+                    { formField | type_ = ChooseMultiple { settings | filter = newFilter } }
+
+                _ ->
+                    formField
+
+        OnFilterTypeSelect filterType ->
+            -- Update filter type (startsWith/contains) while preserving the source field
+            let
+                updateFilter existingFilter =
+                    case existingFilter of
+                        Just (FilterStartsWithFieldValueOf fieldName) ->
+                            if filterType == "contains" then
+                                Just (FilterContainsFieldValueOf fieldName)
+
+                            else
+                                existingFilter
+
+                        Just (FilterContainsFieldValueOf fieldName) ->
+                            if filterType == "startswith" then
+                                Just (FilterStartsWithFieldValueOf fieldName)
+
+                            else
+                                existingFilter
+
+                        Nothing ->
+                            if filterType == "startswith" then
+                                Just (FilterStartsWithFieldValueOf "")
+
+                            else if filterType == "contains" then
+                                Just (FilterContainsFieldValueOf "")
+
+                            else
+                                Nothing
+            in
+            case formField.type_ of
+                Dropdown settings ->
+                    { formField | type_ = Dropdown { settings | filter = updateFilter settings.filter } }
+
+                ChooseOne settings ->
+                    { formField | type_ = ChooseOne { settings | filter = updateFilter settings.filter } }
+
+                ChooseMultiple settings ->
+                    { formField | type_ = ChooseMultiple { settings | filter = updateFilter settings.filter } }
+
+                _ ->
+                    formField
+
+        OnFilterSourceFieldSelect fieldName ->
+            -- Update source field while preserving the filter type
+            let
+                updateSourceField existingFilter =
+                    case existingFilter of
+                        Just (FilterStartsWithFieldValueOf _) ->
+                            Just (FilterStartsWithFieldValueOf fieldName)
+
+                        Just (FilterContainsFieldValueOf _) ->
+                            Just (FilterContainsFieldValueOf fieldName)
+
+                        Nothing ->
+                            Just (FilterStartsWithFieldValueOf fieldName)
+            in
+            case formField.type_ of
+                Dropdown settings ->
+                    { formField | type_ = Dropdown { settings | filter = updateSourceField settings.filter } }
+
+                ChooseOne settings ->
+                    { formField | type_ = ChooseOne { settings | filter = updateSourceField settings.filter } }
+
+                ChooseMultiple settings ->
+                    { formField | type_ = ChooseMultiple { settings | filter = updateSourceField settings.filter } }
+
+                _ ->
+                    formField
 
 
 onDropped : Maybe Int -> { a | dragged : Maybe Dragged, formFields : Array FormField, nextQuestionNumber : Int } -> { a | dragged : Maybe Dragged, formFields : Array FormField, nextQuestionNumber : Int }
@@ -2520,7 +2631,7 @@ viewFormFieldBuilder shortTextTypeList index totalLength formFields formField =
             }
             formField.description
          ]
-            ++ viewFormFieldOptionsBuilder shortTextTypeList index formField
+            ++ viewFormFieldOptionsBuilder shortTextTypeList index formFields formField
             ++ [ visibilityRulesSection index formFields formField
                , div [ class "tff-build-field-buttons" ]
                     [ div [ class "tff-move" ]
@@ -2663,8 +2774,8 @@ viewAddQuestionsList nextQuestionNumber inputFields =
         )
 
 
-viewFormFieldOptionsBuilder : List CustomElement -> Int -> FormField -> List (Html Msg)
-viewFormFieldOptionsBuilder shortTextTypeList index formField =
+viewFormFieldOptionsBuilder : List CustomElement -> Int -> Array FormField -> FormField -> List (Html Msg)
+viewFormFieldOptionsBuilder shortTextTypeList index formFields formField =
     let
         idSuffix =
             String.fromInt index
@@ -2694,6 +2805,91 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
                     ]
                     []
                 ]
+
+        filterCheckbox filter =
+            div [ class "tff-field-group" ]
+                [ label [ class "tff-field-label", for ("filter-" ++ idSuffix) ]
+                    [ input
+                        [ id ("filter-" ++ idSuffix)
+                        , type_ "checkbox"
+                        , tabindex 0
+                        , checked (filter /= Nothing)
+                        , onCheck (\b -> OnFormField (OnFilterToggle b) index "")
+                        ]
+                        []
+                    , text " "
+                    , text "Filter choices dynamically"
+                    ]
+                ]
+
+        filterSettings filter =
+            if filter /= Nothing then
+                let
+                    filterType =
+                        case filter of
+                            Just (FilterStartsWithFieldValueOf _) ->
+                                "startswith"
+
+                            Just (FilterContainsFieldValueOf _) ->
+                                "contains"
+
+                            Nothing ->
+                                "startswith"
+
+                    sourceFieldName =
+                        case filter of
+                            Just (FilterStartsWithFieldValueOf name) ->
+                                name
+
+                            Just (FilterContainsFieldValueOf name) ->
+                                name
+
+                            Nothing ->
+                                ""
+
+                    otherFields =
+                        otherQuestionTitles formFields index
+                in
+                [ div [ class "tff-field-rule" ]
+                    [ div [ class "tff-field-group" ]
+                        [ label [ class "tff-field-label" ] [ text "Show choices that" ]
+                        , div [ class "tff-dropdown-group" ]
+                            [ selectArrowDown
+                            , select
+                                [ class "tff-select"
+                                , onInput (\newFilterType -> OnFormField (OnFilterTypeSelect newFilterType) index "")
+                                , value filterType
+                                ]
+                                [ option [ value "startswith" ] [ text "Starts with" ]
+                                , option [ value "contains" ] [ text "Contains" ]
+                                ]
+                            ]
+                        ]
+                    , div [ class "tff-field-group" ]
+                        [ label [ class "tff-field-label" ] [ text "Value from field" ]
+                        , div [ class "tff-dropdown-group" ]
+                            [ selectArrowDown
+                            , select
+                                [ class "tff-select"
+                                , onInput (\fieldName -> OnFormField (OnFilterSourceFieldSelect fieldName) index "")
+                                , value sourceFieldName
+                                ]
+                                (option [ value "" ] [ text "-- Select a field --" ]
+                                    :: List.map
+                                        (\field ->
+                                            option
+                                                [ value (field.name |> Maybe.withDefault field.label) ]
+                                                [ text field.label ]
+                                        )
+                                        otherFields
+                                )
+                            ]
+                        ]
+                    ]
+                ]
+
+            else
+                []
     in
     case formField.type_ of
         ShortText customElement ->
@@ -2804,51 +3000,58 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
                 optionalMaxLength
             ]
 
-        Dropdown { choices } ->
+        Dropdown { choices, filter } ->
             [ choicesTextarea choices
+            , filterCheckbox filter
             ]
+                ++ filterSettings filter
 
-        ChooseOne { choices } ->
+        ChooseOne { choices, filter } ->
             [ choicesTextarea choices
+            , filterCheckbox filter
             ]
+                ++ filterSettings filter
 
-        ChooseMultiple { choices, minRequired, maxAllowed } ->
+        ChooseMultiple { choices, minRequired, maxAllowed, filter } ->
             [ choicesTextarea choices
-            , div [ class "tff-field-group" ]
-                [ label [ class "tff-field-label" ] [ text "Minimum required" ]
-                , input
-                    [ type_ "number"
-                    , class "tff-text-field"
-                    , value (minRequired |> Maybe.map String.fromInt |> Maybe.withDefault "")
-                    , Attr.min "0"
-
-                    -- Maximum value constraint: Either the maxAllowed value (if present) or the number of choices
-                    , maxAllowed
-                        |> Maybe.map (\max -> Attr.max (String.fromInt max))
-                        |> Maybe.withDefault (Attr.max (String.fromInt (List.length choices)))
-                    , onInput (\val -> OnFormField (OnCheckboxMinRequiredInput val) index "")
-                    ]
-                    []
-                ]
-            , div [ class "tff-field-group" ]
-                [ label [ class "tff-field-label" ] [ text "Maximum allowed" ]
-                , input
-                    [ type_ "number"
-                    , class "tff-text-field"
-                    , value (maxAllowed |> Maybe.map String.fromInt |> Maybe.withDefault "")
-
-                    -- Minimum value constraint: Either the minRequired value (if present) or 0
-                    , minRequired
-                        |> Maybe.map (\min -> Attr.min (String.fromInt min))
-                        |> Maybe.withDefault (Attr.min "0")
-
-                    -- Maximum should not exceed the number of available choices
-                    , Attr.max (String.fromInt (List.length choices))
-                    , onInput (\val -> OnFormField (OnCheckboxMaxAllowedInput val) index "")
-                    ]
-                    []
-                ]
+            , filterCheckbox filter
             ]
+                ++ filterSettings filter
+                ++ [ div [ class "tff-field-group" ]
+                        [ label [ class "tff-field-label" ] [ text "Minimum required" ]
+                        , input
+                            [ type_ "number"
+                            , class "tff-text-field"
+                            , value (minRequired |> Maybe.map String.fromInt |> Maybe.withDefault "")
+                            , Attr.min "0"
+
+                            -- Maximum value constraint: Either the maxAllowed value (if present) or the number of choices
+                            , maxAllowed
+                                |> Maybe.map (\max -> Attr.max (String.fromInt max))
+                                |> Maybe.withDefault (Attr.max (String.fromInt (List.length choices)))
+                            , onInput (\val -> OnFormField (OnCheckboxMinRequiredInput val) index "")
+                            ]
+                            []
+                        ]
+                   , div [ class "tff-field-group" ]
+                        [ label [ class "tff-field-label" ] [ text "Maximum allowed" ]
+                        , input
+                            [ type_ "number"
+                            , class "tff-text-field"
+                            , value (maxAllowed |> Maybe.map String.fromInt |> Maybe.withDefault "")
+
+                            -- Minimum value constraint: Either the minRequired value (if present) or 0
+                            , minRequired
+                                |> Maybe.map (\min -> Attr.min (String.fromInt min))
+                                |> Maybe.withDefault (Attr.min "0")
+
+                            -- Maximum should not exceed the number of available choices
+                            , Attr.max (String.fromInt (List.length choices))
+                            , onInput (\val -> OnFormField (OnCheckboxMaxAllowedInput val) index "")
+                            ]
+                            []
+                        ]
+                   ]
 
 
 hasDuplicateLabel : Int -> String -> Array FormField -> Bool
