@@ -2857,7 +2857,7 @@ viewFormFieldOptionsBuilder shortTextTypeList index formFields formField =
                             [ selectArrowDown
                             , select
                                 [ class "tff-select"
-                                , onInput (\newFilterType -> OnFormField (OnFilterTypeSelect newFilterType) index "")
+                                , onChange (\newFilterType -> OnFormField (OnFilterTypeSelect newFilterType) index "")
                                 , value filterType
                                 ]
                                 [ option [ value "startswith" ] [ text "Starts with" ]
@@ -2871,7 +2871,7 @@ viewFormFieldOptionsBuilder shortTextTypeList index formFields formField =
                             [ selectArrowDown
                             , select
                                 [ class "tff-select"
-                                , onInput (\fieldName -> OnFormField (OnFilterSourceFieldSelect fieldName) index "")
+                                , onChange (\fieldName -> OnFormField (OnFilterSourceFieldSelect fieldName) index "")
                                 , value sourceFieldName
                                 ]
                                 (option [ value "" ] [ text "-- Select a field --" ]

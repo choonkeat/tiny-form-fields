@@ -10193,6 +10193,12 @@ var $elm$html$Html$Attributes$minlength = function (n) {
 		'minLength',
 		$elm$core$String$fromInt(n));
 };
+var $author$project$Main$onChange = function (msg) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'change',
+		A2($elm$json$Json$Decode$map, msg, $elm$html$Html$Events$targetValue));
+};
 var $author$project$Main$otherQuestionTitles = F2(
 	function (formFields, currentIndex) {
 		return A2(
@@ -10288,7 +10294,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F4(
 												_List_fromArray(
 													[
 														$elm$html$Html$Attributes$class('tff-select'),
-														$elm$html$Html$Events$onInput(
+														$author$project$Main$onChange(
 														function (newFilterType) {
 															return A3(
 																$author$project$Main$OnFormField,
@@ -10355,7 +10361,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F4(
 												_List_fromArray(
 													[
 														$elm$html$Html$Attributes$class('tff-select'),
-														$elm$html$Html$Events$onInput(
+														$author$project$Main$onChange(
 														function (fieldName) {
 															return A3(
 																$author$project$Main$OnFormField,
@@ -10904,12 +10910,6 @@ var $author$project$Main$isShowWhen = function (rule) {
 	} else {
 		return false;
 	}
-};
-var $author$project$Main$onChange = function (msg) {
-	return A2(
-		$elm$html$Html$Events$on,
-		'change',
-		A2($elm$json$Json$Decode$map, msg, $elm$html$Html$Events$targetValue));
 };
 var $author$project$Main$selectInputGroup = function (_v0) {
 	var selectAttrs = _v0.b1;

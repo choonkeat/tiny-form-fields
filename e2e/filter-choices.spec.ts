@@ -1,0 +1,220 @@
+import { test, expect } from '@playwright/test';
+import {
+	addField,
+	clickCollectDataCheckbox,
+	attemptSubmitWithExpectedFailure,
+	submitExpectingSuccess,
+	viewForm,
+} from './test-utils';
+
+test('filter choices dynamically based on another field', async ({ page, browserName }) => {
+	// Set a desktop viewport
+	await page.setViewportSize({ width: 2048, height: 800 });
+	await page.goto('http://localhost:8000/');
+
+	// 1. Add a text field that will be used as the source for filtering
+	await addField(page, 'Single-line free text', undefined, {
+		link: 'Single-line free text',
+		label: 'City prefix',
+		description: 'Enter a prefix to filter cities',
+	});
+
+	// Close the editor and wait
+	await page.waitForTimeout(600);
+
+	// 2. Add a dropdown field with cities that will be filtered
+	await addField(page, 'Dropdown', undefined, {
+		link: 'Dropdown',
+		label: 'Select a city',
+		description: 'Cities will be filtered based on the prefix',
+		choices: [
+			'New York',
+			'New Orleans',
+			'Los Angeles',
+			'San Francisco',
+			'Chicago',
+			'Boston',
+			'Seattle',
+		],
+	});
+
+	// Configure the dropdown to use filter
+	await page.locator('.tff-field-container .tff-drag-handle-icon').last().click();
+	await page.waitForTimeout(600);
+
+	// Enable filtering
+	await page.getByText('Filter choices dynamically').click();
+	await page.waitForTimeout(600);
+
+	// Set filter type to "Starts with"
+	const filterTypeDropdown = page
+		.locator('.tff-field-rule')
+		.first()
+		.locator('.tff-dropdown-group')
+		.first()
+		.locator('select');
+	console.log('Selecting filter type: startswith');
+	await filterTypeDropdown.selectOption('startswith');
+	await page.waitForTimeout(500);
+
+	// Set source field to the text field
+	const sourceFieldDropdown = page
+		.locator('.tff-field-rule')
+		.first()
+		.locator('.tff-dropdown-group')
+		.last()
+		.locator('select');
+	console.log('Selecting source field: City prefix');
+	await sourceFieldDropdown.selectOption('City prefix');
+	await page.waitForTimeout(500);
+
+	// Close the editor
+	await page.locator('.tff-close-button').click();
+	await page.waitForTimeout(1000);
+
+	// 3. COLLECTDATA MODE: Test the filtering
+	const formPage = await viewForm(page);
+
+	// Initially all cities should be available in the dropdown
+	const dropdown = formPage.locator('select');
+	await expect(dropdown.locator('option[value="New York"]')).toBeAttached();
+	await expect(dropdown.locator('option[value="Los Angeles"]')).toBeAttached();
+	await expect(dropdown.locator('option[value="Chicago"]')).toBeAttached();
+
+	// Enter "New" in the text field to filter cities
+	await formPage.getByLabel('City prefix').fill('New');
+	await formPage.waitForTimeout(600);
+
+	// Only "New York" and "New Orleans" should be available in the dropdown
+	await expect(dropdown.locator('option[value="New York"]')).toBeAttached();
+	await expect(dropdown.locator('option[value="New Orleans"]')).toBeAttached();
+	await expect(dropdown.locator('option[value="Los Angeles"]')).not.toBeAttached();
+	await expect(dropdown.locator('option[value="San Francisco"]')).not.toBeAttached();
+
+	// Change the filter to "San"
+	await formPage.getByLabel('City prefix').fill('San');
+	await formPage.waitForTimeout(600);
+
+	// Only "San Francisco" should be available in the dropdown
+	await expect(dropdown.locator('option[value="San Francisco"]')).toBeAttached();
+	await expect(dropdown.locator('option[value="New York"]')).not.toBeAttached();
+
+	// Select "San Francisco" and submit the form
+	await dropdown.selectOption('San Francisco');
+
+	// Submit and verify success
+	const response = await submitExpectingSuccess(formPage);
+
+	// Verify submission was successful
+	const responseBody = await response.json();
+	expect(responseBody.form).toEqual({
+		'City prefix': 'San',
+		'Select a city': 'San Francisco',
+	});
+});
+
+test('filter choices with "contains" option', async ({ page, browserName }) => {
+	// Set a desktop viewport
+	await page.setViewportSize({ width: 2048, height: 800 });
+	await page.goto('http://localhost:8000/');
+
+	// 1. Add a text field that will be used as the source for filtering
+	await addField(page, 'Single-line free text', undefined, {
+		link: 'Single-line free text',
+		label: 'Search term',
+		description: 'Enter text to filter fruit options',
+	});
+
+	// Close the editor and wait
+	await page.waitForTimeout(600);
+
+	// 2. Add a radio button field with fruits that will be filtered
+	await addField(page, 'Radio buttons', undefined, {
+		link: 'Radio buttons',
+		label: 'Choose a fruit',
+		description: 'Fruits will be filtered based on your search',
+		choices: [
+			'Apple',
+			'Pineapple',
+			'Banana',
+			'Strawberry',
+			'Blackberry',
+			'Orange',
+			'Grapefruit',
+		],
+	});
+
+	// Configure the radio buttons to use filter
+	await page.locator('.tff-field-container .tff-drag-handle-icon').last().click();
+	await page.waitForTimeout(600);
+
+	// Enable filtering
+	await page.getByText('Filter choices dynamically').click();
+	await page.waitForTimeout(600);
+
+	// Set filter type to "Contains"
+	const filterTypeDropdown = page
+		.locator('.tff-field-rule')
+		.first()
+		.locator('.tff-dropdown-group')
+		.first()
+		.locator('select');
+	console.log('Selecting filter type: contains');
+	await filterTypeDropdown.selectOption('contains');
+	await page.waitForTimeout(500);
+
+	// Set source field to the text field
+	const sourceFieldDropdown = page
+		.locator('.tff-field-rule')
+		.first()
+		.locator('.tff-dropdown-group')
+		.last()
+		.locator('select');
+	console.log('Selecting source field: Search term');
+	await sourceFieldDropdown.selectOption('Search term');
+	await page.waitForTimeout(500);
+
+	// Close the editor
+	await page.locator('.tff-close-button').click();
+	await page.waitForTimeout(1000);
+
+	// 3. COLLECTDATA MODE: Test the filtering
+	const formPage = await viewForm(page);
+
+	// Initially all fruits should be available as radio options
+	await expect(formPage.locator('input[value="Apple"]')).toBeAttached();
+	await expect(formPage.locator('input[value="Banana"]')).toBeAttached();
+	await expect(formPage.locator('input[value="Orange"]')).toBeAttached();
+
+	// Enter "berry" in the text field to filter fruits
+	await formPage.getByLabel('Search term').fill('berry');
+	await formPage.waitForTimeout(600);
+
+	// Only "Strawberry" and "Blackberry" should be available as radio options
+	await expect(formPage.locator('input[value="Strawberry"]')).toBeAttached();
+	await expect(formPage.locator('input[value="Blackberry"]')).toBeAttached();
+	await expect(formPage.locator('input[value="Apple"]')).not.toBeAttached();
+	await expect(formPage.locator('input[value="Banana"]')).not.toBeAttached();
+
+	// Change the filter to "apple"
+	await formPage.getByLabel('Search term').fill('apple');
+	await formPage.waitForTimeout(600);
+
+	// "Apple" and "Pineapple" should be available as radio options
+	await expect(formPage.locator('input[value="Apple"]')).toBeAttached();
+	await expect(formPage.locator('input[value="Pineapple"]')).toBeAttached();
+	await expect(formPage.locator('input[value="Banana"]')).not.toBeAttached();
+
+	// Select "Pineapple" and submit the form
+	await formPage.getByLabel('Pineapple').check();
+
+	// Submit and verify success
+	const response = await submitExpectingSuccess(formPage);
+
+	// Verify submission was successful
+	const responseBody = await response.json();
+	expect(responseBody.form).toEqual({
+		'Search term': 'apple',
+		'Choose a fruit': 'Pineapple',
+	});
+});

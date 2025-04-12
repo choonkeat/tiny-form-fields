@@ -100,7 +100,7 @@ This feature allows for dynamic filtering of options in dropdown, radio button, 
   - [x] With values that match no choices (field should be hidden)
   - [x] With multiple matching choices
 - [x] Test encoder/decoder for ChoiceFilter (via input field fuzzers)
-- [ ] Test interaction with other features like visibility rules and required fields
+- [x] Test interaction with other features like visibility rules and required fields
 
 ## Design Decisions
 
