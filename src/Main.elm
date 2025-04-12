@@ -2876,7 +2876,7 @@ viewFormFieldOptionsBuilder shortTextTypeList index formFields formField =
                 in
                 [ div [ class "tff-field-rule" ]
                     [ div [ class "tff-field-group" ]
-                        [ label [ class "tff-field-label" ] [ text "Show choices that" ]
+                        [ label [ class "tff-field-label" ] [ text "Only show choices that" ]
                         , div [ class "tff-dropdown-group" ]
                             [ selectArrowDown
                             , select

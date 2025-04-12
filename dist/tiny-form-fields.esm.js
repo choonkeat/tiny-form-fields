@@ -10296,7 +10296,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F4(
 											]),
 										_List_fromArray(
 											[
-												$elm$html$Html$text('Show choices that')
+												$elm$html$Html$text('Only show choices that')
 											])),
 										A2(
 										$elm$html$Html$div,
