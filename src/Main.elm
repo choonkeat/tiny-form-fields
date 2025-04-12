@@ -1,6 +1,7 @@
 port module Main exposing
     ( AttributeOptional(..)
     , Choice
+    , ChoiceFilter
     , Comparison(..)
     , Condition(..)
     , Dragged(..)
@@ -3850,3 +3851,8 @@ textarea attrs children =
             :: attrs
         )
         children
+
+
+type ChoiceFilter
+    = FilterStartsWithFieldValueOf String
+    | FilterContainsFieldValueOf String

@@ -12,7 +12,7 @@ This feature allows for dynamic filtering of options in dropdown, radio button, 
 
 ### Type Level Changes
 
-- [ ] Add a new `ChoiceFilter` type in `src/Main.elm` that combines both the filter rule and source field in one type:
+- [x] Add a new `ChoiceFilter` type in `src/Main.elm` that combines both the filter rule and source field in one type:
   ```elm
   type ChoiceFilter
       = FilterStartsWithFieldValueOf String  -- String is the source field name
