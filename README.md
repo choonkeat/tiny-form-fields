@@ -313,6 +313,48 @@ For custom elements using Web Components:
 2. Register it using `customElements.define`
 3. Include it in `shortTextTypeList` with the appropriate configuration
 
+## Developer Guidelines
+
+### Event Handling Architecture in CollectData Mode
+
+When implementing new features that depend on user input in CollectData mode, follow these important guidelines:
+
+1. **CollectData Mode Default Behavior**:
+   - By default, form fields in CollectData mode DO NOT wire up Elm event handling
+   - Users can change form values without triggering Elm events or model updates
+   - This maximizes compatibility with browser extensions
+
+2. **When Event Handlers Are Required**:
+   - Features that need to respond to user input must explicitly wire up event handlers
+   - Currently, this is controlled by these conditions:
+     - `needsFormLogic`: For fields with visibility rules
+     - `isAnyChooseManyUsingMinMax`: For checkboxes with min/max constraints
+     - `isUsingFilter`: For fields with filtering capability
+
+3. **Adding Event-Dependent Features**:
+   - Create a helper function to detect your feature (e.g., `isUsingFeatureX`)
+   - Update the appropriate event handler conditions in `viewFormPreview`:
+     ```elm
+     , onChooseMany =
+         if needsFormLogic || isAnyChooseManyUsingMinMax || isUsingFeatureX then
+             onChooseManyAttrs
+         else
+             \_ _ -> []
+     ```
+   - Add similar checks for all affected event types (`onInput`, `onChange`, etc.)
+
+4. **Common Mistakes to Avoid**:
+   - Not checking if your new feature requires event handling in CollectData mode
+   - Not updating the event handler conditions for all relevant event types
+   - Testing only in Editor mode and not in CollectData mode
+
+5. **Testing Your Feature**:
+   - Always test your feature in CollectData mode
+   - Verify that event handlers are properly wired up
+   - Create an E2E test that specifically validates the feature in CollectData mode
+
+Following these guidelines prevents bugs where features appear to work in UI but don't actually update the model or trigger expected behaviors.
+
 ## Contributing
 
 1. Fork the repository

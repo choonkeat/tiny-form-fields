@@ -553,7 +553,7 @@ init flags =
               , formFields = config.formFields
               , needsFormLogic =
                     config.formFields
-                        |> Array.filter (\f -> not (List.isEmpty f.visibilityRule))
+                        |> Array.filter (\f -> isUsingFilter f || not (List.isEmpty f.visibilityRule))
                         |> Array.isEmpty
                         |> not
               , trackedFormValues = initialTrackedFormValues
@@ -1525,6 +1525,46 @@ viewMain model =
         )
 
 
+{-| Checks if a ChooseMultiple field has min/max constraints
+-}
+isChooseManyUsingMinMax : FormField -> Bool
+isChooseManyUsingMinMax formField =
+    case formField.type_ of
+        ShortText _ ->
+            False
+
+        LongText _ ->
+            False
+
+        ChooseMultiple { minRequired, maxAllowed } ->
+            minRequired /= Nothing || maxAllowed /= Nothing
+
+        ChooseOne _ ->
+            False
+
+        Dropdown _ ->
+            False
+
+
+isUsingFilter : FormField -> Bool
+isUsingFilter formField =
+    case formField.type_ of
+        ShortText _ ->
+            False
+
+        LongText _ ->
+            False
+
+        ChooseMultiple { filter } ->
+            filter /= Nothing
+
+        ChooseOne { filter } ->
+            filter /= Nothing
+
+        Dropdown { filter } ->
+            filter /= Nothing
+
+
 viewFormPreview : List (Html.Attribute Msg) -> { a | formFields : Array FormField, needsFormLogic : Bool, trackedFormValues : Dict String (List String), shortTextTypeDict : Dict String CustomElement } -> List (Html Msg)
 viewFormPreview customAttrs { formFields, needsFormLogic, trackedFormValues, shortTextTypeDict } =
     let
@@ -1539,6 +1579,10 @@ viewFormPreview customAttrs { formFields, needsFormLogic, trackedFormValues, sho
             [ onChange (OnFormValuesUpdated fieldName)
             ]
 
+        isAnyChooseManyUsingMinMax =
+            Array.toList formFields
+                |> List.any isChooseManyUsingMinMax
+
         config =
             { customAttrs = customAttrs
             , shortTextTypeDict = shortTextTypeDict
@@ -1546,31 +1590,11 @@ viewFormPreview customAttrs { formFields, needsFormLogic, trackedFormValues, sho
             , trackedFormValues = trackedFormValues
             , needsFormLogic = needsFormLogic -- Pass the flag through to detect CollectData mode
             , onChooseMany =
-                if needsFormLogic then
+                if needsFormLogic || isAnyChooseManyUsingMinMax then
                     onChooseManyAttrs
 
                 else
-                    \fieldName choice ->
-                        -- Wire up event handlers in CollectData mode for fields with min/max constraints
-                        case
-                            Array.toList formFields
-                                |> List.filter (\f -> fieldNameOf f == fieldName)
-                                |> List.head
-                        of
-                            Just field ->
-                                case field.type_ of
-                                    ChooseMultiple { minRequired, maxAllowed } ->
-                                        if minRequired /= Nothing || maxAllowed /= Nothing then
-                                            onChooseManyAttrs fieldName choice
-
-                                        else
-                                            []
-
-                                    _ ->
-                                        []
-
-                            Nothing ->
-                                []
+                    \_ _ -> []
             , onInput =
                 if needsFormLogic then
                     onInputAttrs
