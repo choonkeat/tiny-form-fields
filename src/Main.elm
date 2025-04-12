@@ -1,7 +1,7 @@
 port module Main exposing
     ( AttributeOptional(..)
     , Choice
-    , ChoiceFilter
+    , ChoiceFilter(..)
     , Comparison(..)
     , Condition(..)
     , Dragged(..)
@@ -307,23 +307,37 @@ type alias Choice =
 type InputField
     = ShortText CustomElement
     | LongText (AttributeOptional Int)
-    | Dropdown (List Choice)
-    | ChooseOne (List Choice)
+    | Dropdown
+        { choices : List Choice
+        , filter : Maybe ChoiceFilter
+        }
+    | ChooseOne
+        { choices : List Choice
+        , filter : Maybe ChoiceFilter
+        }
     | ChooseMultiple
         { choices : List Choice
         , minRequired : Maybe Int
         , maxAllowed : Maybe Int
+        , filter : Maybe ChoiceFilter
         }
 
 
 allInputField : List InputField
 allInputField =
-    [ Dropdown (List.map choiceFromString [ "Red", "Orange", "Yellow", "Green", "Blue", "Indigo", "Violet" ])
-    , ChooseOne (List.map choiceFromString [ "Yes", "No" ])
+    [ Dropdown
+        { choices = List.map choiceFromString [ "Red", "Orange", "Yellow", "Green", "Blue", "Indigo", "Violet" ]
+        , filter = Nothing
+        }
+    , ChooseOne
+        { choices = List.map choiceFromString [ "Yes", "No" ]
+        , filter = Nothing
+        }
     , ChooseMultiple
         { choices = List.map choiceFromString [ "Apple", "Banana", "Cantaloupe", "Durian" ]
         , minRequired = Nothing
         , maxAllowed = Nothing
+        , filter = Nothing
         }
     , LongText (AttributeGiven 160)
     ]
@@ -938,11 +952,19 @@ updateFormField msg fieldIndex string formFields formField =
                 LongText _ ->
                     formField
 
-                Dropdown _ ->
-                    { formField | type_ = Dropdown (List.map choiceFromString (String.lines string)) }
+                Dropdown settings ->
+                    { formField
+                        | type_ =
+                            Dropdown
+                                { settings | choices = List.map choiceFromString (String.lines string) }
+                    }
 
-                ChooseOne _ ->
-                    { formField | type_ = ChooseOne (List.map choiceFromString (String.lines string)) }
+                ChooseOne settings ->
+                    { formField
+                        | type_ =
+                            ChooseOne
+                                { settings | choices = List.map choiceFromString (String.lines string) }
+                    }
 
                 ChooseMultiple settings ->
                     let
@@ -991,9 +1013,10 @@ updateFormField msg fieldIndex string formFields formField =
                     { formField
                         | type_ =
                             ChooseMultiple
-                                { choices = newChoices
-                                , minRequired = newMinRequired
-                                , maxAllowed = newMaxAllowed
+                                { settings
+                                    | choices = newChoices
+                                    , minRequired = newMinRequired
+                                    , maxAllowed = newMaxAllowed
                                 }
                     }
 
@@ -1746,7 +1769,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                 )
                 []
 
-        Dropdown choices ->
+        Dropdown { choices } ->
             let
                 valueString =
                     Dict.get fieldName config.trackedFormValues
@@ -1792,7 +1815,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                     )
                 ]
 
-        ChooseOne choices ->
+        ChooseOne { choices } ->
             let
                 valueString =
                     Dict.get fieldName config.trackedFormValues
@@ -1827,7 +1850,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                     )
                 ]
 
-        ChooseMultiple { choices, minRequired, maxAllowed } ->
+        ChooseMultiple { choices, minRequired, maxAllowed, filter } ->
             let
                 values =
                     Dict.get fieldName config.trackedFormValues
@@ -2186,10 +2209,10 @@ visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
                     case selectedField of
                         Just field ->
                             case field.type_ of
-                                Dropdown choices ->
+                                Dropdown { choices } ->
                                     Just (Html.datalist [ id datalistId ] (List.map (\c -> Html.option [ value c.value ] []) choices))
 
-                                ChooseOne choices ->
+                                ChooseOne { choices } ->
                                     Just (Html.datalist [ id datalistId ] (List.map (\c -> Html.option [ value c.value ] []) choices))
 
                                 ChooseMultiple { choices } ->
@@ -2744,11 +2767,11 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
                 optionalMaxLength
             ]
 
-        Dropdown choices ->
+        Dropdown { choices } ->
             [ choicesTextarea choices
             ]
 
-        ChooseOne choices ->
+        ChooseOne { choices } ->
             [ choicesTextarea choices
             ]
 
@@ -3221,6 +3244,22 @@ encodePairsFromCustomElement customElement =
     encodePairsFromRawCustomElements (toRawCustomElement customElement)
 
 
+encodeChoiceFilter : ChoiceFilter -> Json.Encode.Value
+encodeChoiceFilter filter =
+    case filter of
+        FilterStartsWithFieldValueOf fieldName ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "FilterStartsWith" )
+                , ( "fieldName", Json.Encode.string fieldName )
+                ]
+
+        FilterContainsFieldValueOf fieldName ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "FilterContains" )
+                , ( "fieldName", Json.Encode.string fieldName )
+                ]
+
+
 encodeInputField : InputField -> Json.Encode.Value
 encodeInputField inputField =
     case inputField of
@@ -3236,19 +3275,35 @@ encodeInputField inputField =
                 , ( "maxLength", encodeAttributeOptional Json.Encode.int optionalMaxLength )
                 ]
 
-        Dropdown choices ->
+        Dropdown { choices, filter } ->
             Json.Encode.object
-                [ ( "type", Json.Encode.string "Dropdown" )
-                , ( "choices", Json.Encode.list encodeChoice (List.filter (\{ value } -> String.trim value /= "") choices) )
-                ]
+                ([ ( "type", Json.Encode.string "Dropdown" )
+                 , ( "choices", Json.Encode.list encodeChoice (List.filter (\{ value } -> String.trim value /= "") choices) )
+                 ]
+                    ++ (case filter of
+                            Just f ->
+                                [ ( "filter", encodeChoiceFilter f ) ]
 
-        ChooseOne choices ->
+                            Nothing ->
+                                []
+                       )
+                )
+
+        ChooseOne { choices, filter } ->
             Json.Encode.object
-                [ ( "type", Json.Encode.string "ChooseOne" )
-                , ( "choices", Json.Encode.list encodeChoice (List.filter (\{ value } -> String.trim value /= "") choices) )
-                ]
+                ([ ( "type", Json.Encode.string "ChooseOne" )
+                 , ( "choices", Json.Encode.list encodeChoice (List.filter (\{ value } -> String.trim value /= "") choices) )
+                 ]
+                    ++ (case filter of
+                            Just f ->
+                                [ ( "filter", encodeChoiceFilter f ) ]
 
-        ChooseMultiple { choices, minRequired, maxAllowed } ->
+                            Nothing ->
+                                []
+                       )
+                )
+
+        ChooseMultiple { choices, minRequired, maxAllowed, filter } ->
             Json.Encode.object
                 ([ ( "type", Json.Encode.string "ChooseMultiple" )
                  , ( "choices", Json.Encode.list encodeChoice (List.filter (\{ value } -> String.trim value /= "") choices) )
@@ -3267,7 +3322,33 @@ encodeInputField inputField =
                             Nothing ->
                                 []
                        )
+                    ++ (case filter of
+                            Just f ->
+                                [ ( "filter", encodeChoiceFilter f ) ]
+
+                            Nothing ->
+                                []
+                       )
                 )
+
+
+decodeChoiceFilter : Json.Decode.Decoder ChoiceFilter
+decodeChoiceFilter =
+    Json.Decode.field "type" Json.Decode.string
+        |> Json.Decode.andThen
+            (\type_ ->
+                case type_ of
+                    "FilterStartsWith" ->
+                        Json.Decode.map FilterStartsWithFieldValueOf
+                            (Json.Decode.field "fieldName" Json.Decode.string)
+
+                    "FilterContains" ->
+                        Json.Decode.map FilterContainsFieldValueOf
+                            (Json.Decode.field "fieldName" Json.Decode.string)
+
+                    _ ->
+                        Json.Decode.fail ("Unknown choice filter type: " ++ type_)
+            )
 
 
 decodeInputField : Json.Decode.Decoder InputField
@@ -3284,25 +3365,41 @@ decodeInputField =
                             |> andMap (Json.Decode.field "maxLength" (decodeAttributeOptional Nothing Json.Decode.int))
 
                     "Dropdown" ->
-                        Json.Decode.field "choices" (Json.Decode.list decodeChoice)
-                            |> Json.Decode.map Dropdown
+                        Json.Decode.succeed
+                            (\choices filter ->
+                                Dropdown
+                                    { choices = choices
+                                    , filter = filter
+                                    }
+                            )
+                            |> andMap (Json.Decode.field "choices" (Json.Decode.list decodeChoice))
+                            |> andMap (Json.Decode.maybe (Json.Decode.field "filter" decodeChoiceFilter))
 
                     "ChooseOne" ->
-                        Json.Decode.field "choices" (Json.Decode.list decodeChoice)
-                            |> Json.Decode.map ChooseOne
+                        Json.Decode.succeed
+                            (\choices filter ->
+                                ChooseOne
+                                    { choices = choices
+                                    , filter = filter
+                                    }
+                            )
+                            |> andMap (Json.Decode.field "choices" (Json.Decode.list decodeChoice))
+                            |> andMap (Json.Decode.maybe (Json.Decode.field "filter" decodeChoiceFilter))
 
                     "ChooseMultiple" ->
                         Json.Decode.succeed
-                            (\choices minRequired maxAllowed ->
+                            (\choices minRequired maxAllowed filter ->
                                 ChooseMultiple
                                     { choices = choices
                                     , minRequired = minRequired
                                     , maxAllowed = maxAllowed
+                                    , filter = filter
                                     }
                             )
                             |> andMap (Json.Decode.field "choices" (Json.Decode.list decodeChoice))
                             |> andMap (Json.Decode.maybe (Json.Decode.field "minRequired" Json.Decode.int))
                             |> andMap (Json.Decode.maybe (Json.Decode.field "maxAllowed" Json.Decode.int))
+                            |> andMap (Json.Decode.maybe (Json.Decode.field "filter" decodeChoiceFilter))
 
                     _ ->
                         Json.Decode.fail ("Unknown input field type: " ++ type_)

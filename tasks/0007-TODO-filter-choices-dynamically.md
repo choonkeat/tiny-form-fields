@@ -19,7 +19,7 @@ This feature allows for dynamic filtering of options in dropdown, radio button, 
       | FilterContainsFieldValueOf String    -- String is the source field name
   ```
 
-- [ ] Update the relevant `InputField` variants to include filter configuration:
+- [x] Update the relevant `InputField` variants to include filter configuration:
   ```elm
   type InputField
       = ShortText CustomElement
@@ -68,8 +68,8 @@ This feature allows for dynamic filtering of options in dropdown, radio button, 
       OnFilterSourceFieldSelect fieldName ->
           -- Update source field while preserving the filter type
   ```
-- [ ] Add encoders/decoders for `ChoiceFilter`
-- [ ] Update encoders/decoders for modified `InputField` variants
+- [x] Add encoders/decoders for `ChoiceFilter`
+- [x] Update encoders/decoders for modified `InputField` variants
 
 ### Filter Implementation
 

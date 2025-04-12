@@ -18,6 +18,7 @@ emptyFormField =
             { choices = []
             , minRequired = Nothing
             , maxAllowed = Nothing
+            , filter = Nothing
             }
     , visibilityRule = []
     }
@@ -51,7 +52,7 @@ suite =
                     |> Result.map
                         (\field ->
                             case field.type_ of
-                                Main.ChooseMultiple { choices, minRequired, maxAllowed } ->
+                                Main.ChooseMultiple { choices, minRequired, maxAllowed, filter } ->
                                     { choicesCount = List.length choices
                                     , hasMinRequired = minRequired == Nothing
                                     , hasMaxAllowed = maxAllowed == Nothing
@@ -94,7 +95,7 @@ suite =
                     |> Result.map
                         (\field ->
                             case field.type_ of
-                                Main.ChooseMultiple { choices, minRequired, maxAllowed } ->
+                                Main.ChooseMultiple { choices, minRequired, maxAllowed, filter } ->
                                     { choicesCount = List.length choices
                                     , minRequired = minRequired
                                     , maxAllowed = maxAllowed
