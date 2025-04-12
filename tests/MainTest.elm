@@ -983,6 +983,103 @@ suite =
                                         Expect.fail ("Expected ShortText but got " ++ Debug.toString t)
                            )
             ]
+        , describe "filterChoices"
+            [ test "returns all choices when filter is Nothing" <|
+                \_ ->
+                    let
+                        choices =
+                            [ Main.Choice "apple" "apple"
+                            , Main.Choice "banana" "banana"
+                            , Main.Choice "cherry" "cherry"
+                            ]
+
+                        formValues =
+                            Dict.fromList [ ( "source", [ "test" ] ) ]
+                    in
+                    Main.filterChoices Nothing formValues choices
+                        |> Expect.equal choices
+            , test "filters choices that start with field value" <|
+                \_ ->
+                    let
+                        choices =
+                            [ Main.Choice "apple" "apple"
+                            , Main.Choice "banana" "banana"
+                            , Main.Choice "avocado" "avocado"
+                            ]
+
+                        formValues =
+                            Dict.fromList [ ( "source", [ "a" ] ) ]
+                    in
+                    Main.filterChoices (Just (Main.FilterStartsWithFieldValueOf "source")) formValues choices
+                        |> Expect.equal
+                            [ Main.Choice "apple" "apple"
+                            , Main.Choice "avocado" "avocado"
+                            ]
+            , test "filters choices that contain field value" <|
+                \_ ->
+                    let
+                        choices =
+                            [ Main.Choice "apple" "apple"
+                            , Main.Choice "banana" "banana"
+                            , Main.Choice "avocado" "avocado"
+                            ]
+
+                        formValues =
+                            Dict.fromList [ ( "source", [ "a" ] ) ]
+                    in
+                    Main.filterChoices (Just (Main.FilterContainsFieldValueOf "source")) formValues choices
+                        |> Expect.equal
+                            [ Main.Choice "apple" "apple"
+                            , Main.Choice "banana" "banana"
+                            , Main.Choice "avocado" "avocado"
+                            ]
+            , test "filters choices that contain field value case-insensitively" <|
+                \_ ->
+                    let
+                        choices =
+                            [ Main.Choice "Apple" "apple"
+                            , Main.Choice "BANANA" "banana"
+                            , Main.Choice "Avocado" "avocado"
+                            ]
+
+                        formValues =
+                            Dict.fromList [ ( "source", [ "a" ] ) ]
+                    in
+                    Main.filterChoices (Just (Main.FilterContainsFieldValueOf "source")) formValues choices
+                        |> Expect.equal
+                            [ Main.Choice "Apple" "apple"
+                            , Main.Choice "BANANA" "banana"
+                            , Main.Choice "Avocado" "avocado"
+                            ]
+            , test "returns all choices when source field is empty" <|
+                \_ ->
+                    let
+                        choices =
+                            [ Main.Choice "apple" "apple"
+                            , Main.Choice "banana" "banana"
+                            , Main.Choice "cherry" "cherry"
+                            ]
+
+                        formValues =
+                            Dict.fromList [ ( "source", [ "" ] ) ]
+                    in
+                    Main.filterChoices (Just (Main.FilterStartsWithFieldValueOf "source")) formValues choices
+                        |> Expect.equal choices
+            , test "returns all choices when source field doesn't exist" <|
+                \_ ->
+                    let
+                        choices =
+                            [ Main.Choice "apple" "apple"
+                            , Main.Choice "banana" "banana"
+                            , Main.Choice "cherry" "cherry"
+                            ]
+
+                        formValues =
+                            Dict.empty
+                    in
+                    Main.filterChoices (Just (Main.FilterStartsWithFieldValueOf "source")) formValues choices
+                        |> Expect.equal choices
+            ]
         ]
 
 

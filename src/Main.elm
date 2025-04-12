@@ -26,6 +26,7 @@ port module Main exposing
     , encodePairsFromCustomElement
     , evaluateCondition
     , fieldsWithPlaceholder
+    , filterChoices
     , fromRawCustomElement
     , isVisibilityRuleSatisfied
     , main
@@ -1769,92 +1770,123 @@ viewFormFieldOptionsPreview config fieldID formField =
                 )
                 []
 
-        Dropdown { choices } ->
+        Dropdown { choices, filter } ->
             let
                 valueString =
                     Dict.get fieldName config.trackedFormValues
                         |> Maybe.andThen List.head
                         |> Maybe.withDefault ""
+
+                filteredChoices =
+                    filterChoices filter config.trackedFormValues choices
+
+                -- If there are no choices after filtering, don't show the field at all
+                noChoicesAfterFiltering =
+                    not (List.isEmpty choices) && List.isEmpty filteredChoices
             in
-            div [ class "tff-dropdown-group" ]
-                [ selectArrowDown
-                , select
-                    ([ name fieldName
-                     , id fieldID
+            if noChoicesAfterFiltering && config.needsFormLogic then
+                -- Return empty div to hide the field when no choices match filter
+                div [] []
 
-                     -- when we're disabling `<select>` we actually only
-                     -- want to disable the `<option>`s so user can see the options but cannot choose
-                     -- but if the `<select>` is required, then now we are in a bind
-                     -- so we cannot have `required` on the `<select>` if we're disabling it
-                     , if disabledMode then
-                        class "tff-select-disabled"
+            else
+                div [ class "tff-dropdown-group" ]
+                    [ selectArrowDown
+                    , select
+                        ([ name fieldName
+                         , id fieldID
 
-                       else
-                        required (requiredData formField.presence)
-                     ]
-                        ++ config.onChange fieldName
-                    )
-                    (option
-                        ([ disabled True
-                         , defaultSelected (valueString == "" && not (chosenForYou choices))
-                         , attribute "value" ""
+                         -- when we're disabling `<select>` we actually only
+                         -- want to disable the `<option>`s so user can see the options but cannot choose
+                         -- but if the `<select>` is required, then now we are in a bind
+                         -- so we cannot have `required` on the `<select>` if we're disabling it
+                         , if disabledMode then
+                            class "tff-select-disabled"
+
+                           else
+                            required (requiredData formField.presence)
                          ]
-                            ++ config.customAttrs
+                            ++ config.onChange fieldName
                         )
-                        [ text "-- Select an option --" ]
-                        :: List.map
-                            (\choice ->
-                                option
-                                    (value choice.value
-                                        :: defaultSelected (valueString == choice.value || chosenForYou choices)
-                                        :: config.customAttrs
-                                    )
-                                    [ text choice.label ]
+                        (option
+                            ([ disabled True
+                             , defaultSelected (valueString == "" && not (chosenForYou filteredChoices))
+                             , attribute "value" ""
+                             ]
+                                ++ config.customAttrs
                             )
-                            choices
-                    )
-                ]
+                            [ text "-- Select an option --" ]
+                            :: List.map
+                                (\choice ->
+                                    option
+                                        (value choice.value
+                                            :: defaultSelected (valueString == choice.value || chosenForYou filteredChoices)
+                                            :: config.customAttrs
+                                        )
+                                        [ text choice.label ]
+                                )
+                                filteredChoices
+                        )
+                    ]
 
-        ChooseOne { choices } ->
+        ChooseOne { choices, filter } ->
             let
                 valueString =
                     Dict.get fieldName config.trackedFormValues
                         |> Maybe.andThen List.head
                         |> Maybe.withDefault ""
+
+                filteredChoices =
+                    filterChoices filter config.trackedFormValues choices
+
+                -- If there are no choices after filtering, don't show the field at all
+                noChoicesAfterFiltering =
+                    not (List.isEmpty choices) && List.isEmpty filteredChoices
             in
-            -- radio buttons
-            div [ class "tff-chooseone-group" ]
-                [ div [ class "tff-chooseone-radiobuttons" ]
-                    (List.map
-                        (\choice ->
-                            div [ class "tff-radiobuttons-group" ]
-                                [ label [ class "tff-field-label" ]
-                                    [ input
-                                        ([ type_ "radio"
-                                         , tabindex 0
-                                         , name fieldName
-                                         , value choice.value
-                                         , checked (valueString == choice.value || chosenForYou choices)
-                                         , required (requiredData formField.presence)
-                                         ]
-                                            ++ config.customAttrs
-                                            ++ config.onInput fieldName
-                                        )
-                                        []
-                                    , text " "
-                                    , text choice.label
+            if noChoicesAfterFiltering && config.needsFormLogic then
+                -- Return empty div to hide the field when no choices match filter
+                div [] []
+
+            else
+                -- radio buttons
+                div [ class "tff-chooseone-group" ]
+                    [ div [ class "tff-chooseone-radiobuttons" ]
+                        (List.map
+                            (\choice ->
+                                div [ class "tff-radiobuttons-group" ]
+                                    [ label [ class "tff-field-label" ]
+                                        [ input
+                                            ([ type_ "radio"
+                                             , tabindex 0
+                                             , name fieldName
+                                             , value choice.value
+                                             , checked (valueString == choice.value || chosenForYou filteredChoices)
+                                             , required (requiredData formField.presence)
+                                             ]
+                                                ++ config.customAttrs
+                                                ++ config.onInput fieldName
+                                            )
+                                            []
+                                        , text " "
+                                        , text choice.label
+                                        ]
                                     ]
-                                ]
+                            )
+                            filteredChoices
                         )
-                        choices
-                    )
-                ]
+                    ]
 
         ChooseMultiple { choices, minRequired, maxAllowed, filter } ->
             let
                 values =
                     Dict.get fieldName config.trackedFormValues
                         |> Maybe.withDefault []
+
+                filteredChoices =
+                    filterChoices filter config.trackedFormValues choices
+
+                -- If there are no choices after filtering, don't show the field at all
+                noChoicesAfterFiltering =
+                    not (List.isEmpty choices) && List.isEmpty filteredChoices
 
                 selectedCount =
                     List.length values
@@ -1894,44 +1926,49 @@ viewFormFieldOptionsPreview config fieldID formField =
                     else
                         []
             in
-            -- checkboxes
-            div
-                [ class
-                    ("tff-choosemany-group"
-                        ++ (if not disabledMode && (minRequired /= Nothing || maxAllowed /= Nothing) && not isValid then
-                                " tff-invalid-checkbox"
+            if noChoicesAfterFiltering && config.needsFormLogic then
+                -- Return empty div to hide the field when no choices match filter
+                div [] []
 
-                            else
-                                ""
-                           )
-                    )
-                ]
-                (validationElement
-                    ++ [ div [ class "tff-choosemany-checkboxes" ]
-                            (List.map
-                                (\choice ->
-                                    div [ class "tff-checkbox-group" ]
-                                        [ label [ class "tff-field-label" ]
-                                            [ input
-                                                ([ type_ "checkbox"
-                                                 , tabindex 0
-                                                 , name fieldName
-                                                 , value choice.value
-                                                 , checked (List.member choice.value values || chosenForYou choices)
-                                                 ]
-                                                    ++ config.customAttrs
-                                                    ++ config.onChooseMany fieldName choice
-                                                )
-                                                []
-                                            , text " "
-                                            , text choice.label
+            else
+                -- checkboxes
+                div
+                    [ class
+                        ("tff-choosemany-group"
+                            ++ (if not disabledMode && (minRequired /= Nothing || maxAllowed /= Nothing) && not isValid then
+                                    " tff-invalid-checkbox"
+
+                                else
+                                    ""
+                               )
+                        )
+                    ]
+                    (validationElement
+                        ++ [ div [ class "tff-choosemany-checkboxes" ]
+                                (List.map
+                                    (\choice ->
+                                        div [ class "tff-checkbox-group" ]
+                                            [ label [ class "tff-field-label" ]
+                                                [ input
+                                                    ([ type_ "checkbox"
+                                                     , tabindex 0
+                                                     , name fieldName
+                                                     , value choice.value
+                                                     , checked (List.member choice.value values || chosenForYou filteredChoices)
+                                                     ]
+                                                        ++ config.customAttrs
+                                                        ++ config.onChooseMany fieldName choice
+                                                    )
+                                                    []
+                                                , text " "
+                                                , text choice.label
+                                                ]
                                             ]
-                                        ]
+                                    )
+                                    filteredChoices
                                 )
-                                choices
-                            )
-                       ]
-                )
+                           ]
+                    )
 
 
 renderFormBuilderField : Maybe ( Int, Animate ) -> Model -> Int -> Maybe FormField -> Html Msg
@@ -3953,3 +3990,59 @@ textarea attrs children =
 type ChoiceFilter
     = FilterStartsWithFieldValueOf String
     | FilterContainsFieldValueOf String
+
+
+filterChoices : Maybe ChoiceFilter -> Dict String (List String) -> List Choice -> List Choice
+filterChoices maybeFilter formValues choices =
+    case maybeFilter of
+        Just (FilterStartsWithFieldValueOf fieldName) ->
+            -- Get field value and filter choices that start with it
+            case Dict.get fieldName formValues |> Maybe.andThen List.head of
+                Just filterValue ->
+                    if String.isEmpty filterValue then
+                        choices
+                        -- Show all choices when filter value is empty
+
+                    else
+                        List.filter
+                            (\choice ->
+                                String.startsWith
+                                    (String.toLower filterValue)
+                                    (String.toLower choice.value)
+                                    || String.startsWith
+                                        (String.toLower filterValue)
+                                        (String.toLower choice.label)
+                            )
+                            choices
+
+                Nothing ->
+                    choices
+
+        -- No filter value, show all choices
+        Just (FilterContainsFieldValueOf fieldName) ->
+            -- Get field value and filter choices that contain it
+            case Dict.get fieldName formValues |> Maybe.andThen List.head of
+                Just filterValue ->
+                    if String.isEmpty filterValue then
+                        choices
+                        -- Show all choices when filter value is empty
+
+                    else
+                        List.filter
+                            (\choice ->
+                                String.contains
+                                    (String.toLower filterValue)
+                                    (String.toLower choice.value)
+                                    || String.contains
+                                        (String.toLower filterValue)
+                                        (String.toLower choice.label)
+                            )
+                            choices
+
+                Nothing ->
+                    choices
+
+        -- No filter value, show all choices
+        Nothing ->
+            -- No filtering, return all choices
+            choices

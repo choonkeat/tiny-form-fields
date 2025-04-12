@@ -73,7 +73,7 @@ This feature allows for dynamic filtering of options in dropdown, radio button, 
 
 ### Filter Implementation
 
-- [ ] Add a function to filter choices based on the source field's value:
+- [x] Add a function to filter choices based on the source field's value:
   ```elm
   filterChoices : Maybe ChoiceFilter -> Dict String (List String) -> List Choice -> List Choice
   filterChoices maybeFilter formValues choices =
@@ -87,18 +87,18 @@ This feature allows for dynamic filtering of options in dropdown, radio button, 
           Nothing ->
               -- No filtering, return all choices
   ```
-- [ ] Update the preview rendering functions to apply the filter when displaying choices
-- [ ] For empty result sets (when filtering returns no choices), hide the field entirely 
-- [ ] Ensure that filtering updates dynamically when source fields change by using existing `trackedFormValues`
+- [x] Update the preview rendering functions to apply the filter when displaying choices
+- [x] For empty result sets (when filtering returns no choices), hide the field entirely 
+- [x] Ensure that filtering updates dynamically when source fields change by using existing `trackedFormValues`
 
 ### Testing
 
-- [ ] Add tests to verify filters work correctly in various scenarios:
-  - [ ] StartsWith filtering
-  - [ ] Contains filtering
-  - [ ] With empty source field (should show all choices)
-  - [ ] With values that match no choices (field should be hidden)
-  - [ ] With multiple matching choices
+- [x] Add tests to verify filters work correctly in various scenarios:
+  - [x] StartsWith filtering
+  - [x] Contains filtering
+  - [x] With empty source field (should show all choices)
+  - [x] With values that match no choices (field should be hidden)
+  - [x] With multiple matching choices
 - [ ] Test interaction with other features like visibility rules and required fields
 
 ## Design Decisions
