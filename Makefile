@@ -3,7 +3,7 @@ export PATH := node_modules/.bin:$(PATH)
 ELM_MAKE_FLAGS=--debug
 
 build: ELM_MAKE_FLAGS=--optimize
-build: css compile test test-go
+build: css format compile test test-go
 
 diff:
 	git diff -bw -- ':!dist'
@@ -38,14 +38,23 @@ node_modules/.bin/elm-esm:
 run-ignore-error:
 	make run || echo shutdown test server
 
+test-all: test test-go test-playwright
+
 test:
 	npx elm-test
 
 ping-run:
 	wget --tries=90 --retry-connrefused -SO - http://localhost:8000
 
+# Usage: make test-playwright [PLAYWRIGHT_FILE=e2e/mytest.spec.ts]
+# If PLAYWRIGHT_FILE is specified, only that file will be tested
+# Otherwise, all tests will be run
 test-playwright:
-	npx playwright test --reporter=line
+	@if [ -z "$(PLAYWRIGHT_FILE)" ]; then \
+		npx playwright test --reporter=line; \
+	else \
+		npx playwright test "$(PLAYWRIGHT_FILE)" --reporter=line; \
+	fi
 	echo playwright pass
 
 test-playwright-ui:
