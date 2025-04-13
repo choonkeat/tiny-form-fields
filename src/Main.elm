@@ -2105,7 +2105,11 @@ viewFormFieldOptionsPreview config fieldID formField =
                         |> Maybe.withDefault []
 
                 filteredChoices =
-                    filterChoices filter config.trackedFormValues choices
+                    if disabledMode then
+                        choices
+
+                    else
+                        filterChoices filter config.trackedFormValues choices
 
                 -- If there are no choices after filtering, don't show the field at all
                 noChoicesAfterFiltering =

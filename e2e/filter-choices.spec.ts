@@ -251,17 +251,19 @@ test('filter choices with "contains" option', async ({ page, browserName }) => {
 	});
 });
 
-test('bug: filter field selection not retained visually when reopening field settings', async ({
+test('filter field selection retained visually when reopening field settings', async ({
 	page,
 }) => {
 	// Set a desktop viewport
 	await page.setViewportSize({ width: 2048, height: 800 });
 	await page.goto('http://localhost:8000/');
 
+	const dependentFieldName = 'Filter field';
+
 	// 1. Add a text field that will be used as the source for filtering
 	await addField(page, 'Single-line free text', undefined, {
 		link: 'Single-line free text',
-		label: 'Filter field',
+		label: dependentFieldName,
 		description: 'Enter text to filter options',
 	});
 
@@ -291,7 +293,7 @@ test('bug: filter field selection not retained visually when reopening field set
 		.locator('.tff-dropdown-group')
 		.last()
 		.locator('select');
-	await sourceFieldDropdown.selectOption('Filter field');
+	await sourceFieldDropdown.selectOption(dependentFieldName);
 	await page.waitForTimeout(600);
 
 	// Close the editor
@@ -313,38 +315,17 @@ test('bug: filter field selection not retained visually when reopening field set
 		}
 	}
 
-	// BUG: The dropdown should show "Filter field" as the selected option,
-	// but it doesn't appear to be set visually
+	// The dropdown should show "Filter field" as the selected option
 	const reopenedDropdown = page
 		.locator('.tff-field-rule')
 		.first()
 		.locator('.tff-dropdown-group')
 		.last()
 		.locator('select');
-
-	// Get the selected option's value
-	const selectedValue = await reopenedDropdown.evaluate((el) => el.value);
-	console.log(`Selected value: "${selectedValue}"`);
-
-	// Let's check the HTML option elements available
-	const optionCount = await reopenedDropdown.locator('option').count();
-	console.log(`Number of options in dropdown: ${optionCount}`);
-
-	for (let i = 0; i < optionCount; i++) {
-		const option = reopenedDropdown.locator('option').nth(i);
-		const value = await option.getAttribute('value');
-		const text = await option.textContent();
-		const isSelected = await option.evaluate((el) => el.selected);
-		console.log(`Option ${i}: value="${value}", text="${text}", selected=${isSelected}`);
-	}
-
-	// This assertion should pass if the bug is fixed
-	// The bug is that the dropdown shows the selected option correctly (Filter field),
-	// but doesn't visually highlight it as selected - need to fix in Elm code
-	await expect(reopenedDropdown).toHaveValue('Filter field');
+	await expect(reopenedDropdown).toHaveValue(dependentFieldName);
 });
 
-test('bug: choices field should be hidden when filter field is empty', async ({ page }) => {
+test('choices field should be hidden when filter field is empty in CollectData mode (but fully visible in Editor)', async ({ page }) => {
 	// Set a desktop viewport
 	await page.setViewportSize({ width: 2048, height: 800 });
 	await page.goto('http://localhost:8000/');
@@ -359,15 +340,19 @@ test('bug: choices field should be hidden when filter field is empty', async ({ 
 	// Close the editor and wait
 	await page.waitForTimeout(600);
 
-	// 2. Add a dropdown field with options that will be filtered
-	await addField(page, 'Dropdown', undefined, {
-		link: 'Dropdown',
-		label: 'Filtered dropdown',
+	// 2. Add a checkboxes field with options that will be filtered
+	await addField(page, 'Checkboxes', undefined, {
+		link: 'Checkboxes',
+		label: 'Filtered checkboxes',
 		description: 'Options will be filtered based on input',
 		choices: ['Option 1', 'Option 2', 'Option 3'],
 	});
 
-	// Configure the dropdown to use filter
+	// Assert that the label and options exists on screen
+	await expect(page.getByText('Filtered checkboxes')).toBeVisible();
+	await expect(page.locator('.tff-field-preview input[type="checkbox"]')).toHaveCount(3);
+
+	// Configure the checkboxes to use filter
 	await page.locator('.tff-field-container .tff-drag-handle-icon').last().click();
 	await page.waitForTimeout(600);
 
@@ -399,61 +384,62 @@ test('bug: choices field should be hidden when filter field is empty', async ({ 
 	await page.locator('.tff-close-button').click();
 	await page.waitForTimeout(1000);
 
+	// Assert that the label and options still exists on screen
+	await expect(page.getByText('Filtered checkboxes')).toBeVisible();
+	await expect(page.locator('.tff-field-preview input[type="checkbox"]')).toHaveCount(3);
+
 	// Go to COLLECTDATA MODE
 	const formPage = await viewForm(page);
 	await page.waitForTimeout(1000);
 
-	// We need to check if any options are displayed in the dropdown,
-	// even though the dropdown itself might be visible
+	// We need to check if any options are displayed in the checkboxes question.
+	const checkboxesQuestion = formPage.locator('.tff-field-group:has-text("Filtered checkboxes")');
 
-	const filteredDropdown = formPage.getByLabel('Filtered dropdown');
+	// Check if checkboxes question has any options
+	const optionCount = await checkboxesQuestion.locator('input[type="checkbox"]').count();
+	console.log(`Initial number of visible checkboxes: ${optionCount}`);
 
-	// Check if dropdown has any options
-	const optionCount = await filteredDropdown.locator('option').count();
-	console.log(`Initial number of visible options: ${optionCount}`);
-
-	// If dropdown exists, check if it has options
+	// If checkboxes question exists, check if it has checkboxes
 	if (optionCount > 0) {
 		// Get the list of option values
-		const optionValues = await filteredDropdown.locator('option').allTextContents();
+		const optionValues = await checkboxesQuestion.locator('input[type="checkbox"]').allTextContents();
 		console.log(`Initial option values: ${JSON.stringify(optionValues)}`);
 	}
 
-	// BUG: The entire field (including label) should be hidden when filter field is empty
+	// The entire field (including label) should be hidden when filter field is empty
 	// Check that field label is not visible
-	const fieldLabel = formPage.getByText('Filtered dropdown');
+	const fieldLabel = formPage.getByText('Filtered checkboxes');
 	await expect(fieldLabel).not.toBeVisible();
 
 	// Also verify dropdown has no options
-	await expect(filteredDropdown.locator('option')).toHaveCount(0);
+	await expect(checkboxesQuestion.locator('input[type="checkbox"]')).toHaveCount(0);
 
 	// When filter field has a value, options should appear
 	await formPage.getByLabel('Filter field').fill('Option');
 	await page.waitForTimeout(600);
 
 	// Check again after filling
-	const optionCountAfterFill = await filteredDropdown.locator('option').count();
-	console.log(`Number of options after filling: ${optionCountAfterFill}`);
+	const optionCountAfterFill = await checkboxesQuestion.locator('input[type="checkbox"]').count();
+	console.log(`Number of checkboxes after filling: ${optionCountAfterFill}`);
 
 	// This assertion should pass if the bug is fixed - options appear after filling
-	await expect(filteredDropdown.locator('option')).not.toHaveCount(0);
+	await expect(checkboxesQuestion.locator('input[type="checkbox"]')).not.toHaveCount(0);
 
 	// Verify options are correct
-	const optionValuesAfterFill = await filteredDropdown.locator('option').allTextContents();
+	const optionValuesAfterFill = await checkboxesQuestion.locator('input[type="checkbox"]').allTextContents();
 	console.log(`Option values after filling: ${JSON.stringify(optionValuesAfterFill)}`);
 
 	// Verify that we can see all the options that match the filter
-	const dropdown = formPage.getByLabel('Filtered dropdown');
-	await expect(dropdown.locator('option[value="Option 1"]')).toBeAttached();
-	await expect(dropdown.locator('option[value="Option 2"]')).toBeAttached();
-	await expect(dropdown.locator('option[value="Option 3"]')).toBeAttached();
+	await expect(checkboxesQuestion.locator('input[type="checkbox"][value="Option 1"]')).toBeAttached();
+	await expect(checkboxesQuestion.locator('input[type="checkbox"][value="Option 2"]')).toBeAttached();
+	await expect(checkboxesQuestion.locator('input[type="checkbox"][value="Option 3"]')).toBeAttached();
 
 	// Change the filter to be more specific
 	await formPage.getByLabel('Filter field').fill('Option 1');
 	await page.waitForTimeout(600);
 
 	// Now only Option 1 should be available
-	await expect(dropdown.locator('option[value="Option 1"]')).toBeAttached();
-	await expect(dropdown.locator('option[value="Option 2"]')).not.toBeAttached();
-	await expect(dropdown.locator('option[value="Option 3"]')).not.toBeAttached();
+	await expect(checkboxesQuestion.locator('input[type="checkbox"][value="Option 1"]')).toBeAttached();
+	await expect(checkboxesQuestion.locator('input[type="checkbox"][value="Option 2"]')).not.toBeAttached();
+	await expect(checkboxesQuestion.locator('input[type="checkbox"][value="Option 3"]')).not.toBeAttached();
 });
