@@ -19,18 +19,17 @@
 
 /* Settings panel styles */
 .tff-settings-content .tff-field-group,
-.tff-settings-content .tff-toggle-group {
-	@apply mb-4;
-}
-
+.tff-settings-content .tff-toggle-group,
 .tff-center-panel .tff-field-group,
 .tff-center-panel .tff-toggle-group {
 	@apply mb-4;
 }
 
 .tff-settings-content .tff-field-group:last-child,
-.tff-settings-content .tff-toggle-group:last-child {
-	@apply mb-4;
+.tff-settings-content .tff-toggle-group:last-child,
+.tff-center-panel .tff-field-group:last-child,
+.tff-center-panel .tff-toggle-group:last-child {
+	@apply mb-0;
 }
 
 /* Field group styles */
@@ -462,7 +461,7 @@
 	@apply min-h-[40px];
 }
 
-.tff-field-preview > div:last-child {
+.tff-field-preview>div:last-child {
 	@apply flex-grow;
 }
 
@@ -569,7 +568,7 @@
 		@apply translate-x-0;
 	}
 
-	.tff-right-panel.tff-panel-visible ~ .tff-left-panel {
+	.tff-right-panel.tff-panel-visible~.tff-left-panel {
 		@apply opacity-0;
 		@apply pointer-events-none;
 	}
@@ -665,7 +664,7 @@
 	@apply overflow-y-auto;
 }
 
-.tff-right-panel > div:last-child {
+.tff-right-panel>div:last-child {
 	@apply overflow-y-auto;
 }
 

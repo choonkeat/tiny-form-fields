@@ -10319,16 +10319,6 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F4(
 								_List_fromArray(
 									[
 										A2(
-										$elm$html$Html$label,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('tff-field-label')
-											]),
-										_List_fromArray(
-											[
-												$elm$html$Html$text('Only show choices that')
-											])),
-										A2(
 										$elm$html$Html$div,
 										_List_fromArray(
 											[
@@ -10362,7 +10352,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F4(
 															]),
 														_List_fromArray(
 															[
-																$elm$html$Html$text('Starts with')
+																$elm$html$Html$text('Show choices that starts with')
 															])),
 														A2(
 														$elm$html$Html$option,
@@ -10372,7 +10362,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F4(
 															]),
 														_List_fromArray(
 															[
-																$elm$html$Html$text('Contains')
+																$elm$html$Html$text('Show choices that contains')
 															]))
 													]))
 											]))
@@ -10381,20 +10371,10 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F4(
 								$elm$html$Html$div,
 								_List_fromArray(
 									[
-										$elm$html$Html$Attributes$class('tff-field-group')
+										$elm$html$Html$Attributes$class('tff-field-group mb-0')
 									]),
 								_List_fromArray(
 									[
-										A2(
-										$elm$html$Html$label,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('tff-field-label')
-											]),
-										_List_fromArray(
-											[
-												$elm$html$Html$text('Value from field')
-											])),
 										A2(
 										$elm$html$Html$div,
 										_List_fromArray(
@@ -10443,7 +10423,11 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F4(
 																	]),
 																_List_fromArray(
 																	[
-																		$elm$html$Html$text(field.g)
+																		$elm$html$Html$text(
+																		'value of ' + A2(
+																			$elm$json$Json$Encode$encode,
+																			0,
+																			$elm$json$Json$Encode$string(field.g)))
 																	]));
 														},
 														otherFields)))
@@ -10493,7 +10477,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F4(
 									]),
 								_List_Nil),
 								$elm$html$Html$text(' '),
-								$elm$html$Html$text('Filter choices dynamically')
+								$elm$html$Html$text('Filter choices')
 							]))
 					]));
 		};
@@ -11214,7 +11198,7 @@ var $author$project$Main$visibilityRuleSection = F4(
 													_List_fromArray(
 														[
 															$elm$html$Html$text(
-															A2(
+															'value of ' + A2(
 																$elm$json$Json$Encode$encode,
 																0,
 																$elm$json$Json$Encode$string(field.g)))

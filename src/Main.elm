@@ -475,7 +475,7 @@ isFieldReferencedBy fieldName formFields =
         |> List.any
             (\field ->
                 -- Check if the field is used in any visibility rules
-                (List.any
+                List.any
                     (\rule ->
                         case rule of
                             ShowWhen conditions ->
@@ -485,7 +485,6 @@ isFieldReferencedBy fieldName formFields =
                                 List.any (isConditionReferencingField fieldName) conditions
                     )
                     field.visibilityRule
-                )
                     -- Check if the field is used in any choice filters
                     || isFieldUsedInFilter fieldName field.type_
             )
@@ -2472,7 +2471,7 @@ visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
                                                    )
                                             )
                                         ]
-                                        [ text (Json.Encode.encode 0 (Json.Encode.string field.label)) ]
+                                        [ text ("value of " ++ Json.Encode.encode 0 (Json.Encode.string field.label)) ]
                                 )
                                 (otherQuestionTitles formFields fieldIndex)
                         )
@@ -2879,7 +2878,7 @@ viewFormFieldOptionsBuilder shortTextTypeList index formFields formField =
                         ]
                         []
                     , text " "
-                    , text "Filter choices dynamically"
+                    , text "Filter choices"
                     ]
                 ]
 
@@ -2913,22 +2912,20 @@ viewFormFieldOptionsBuilder shortTextTypeList index formFields formField =
                 in
                 [ div [ class "tff-field-rule" ]
                     [ div [ class "tff-field-group" ]
-                        [ label [ class "tff-field-label" ] [ text "Only show choices that" ]
-                        , div [ class "tff-dropdown-group" ]
+                        [ div [ class "tff-dropdown-group" ]
                             [ selectArrowDown
                             , select
                                 [ class "tff-select"
                                 , onChange (\newFilterType -> OnFormField (OnFilterTypeSelect newFilterType) index "")
                                 , value filterType
                                 ]
-                                [ option [ value "startswith" ] [ text "Starts with" ]
-                                , option [ value "contains" ] [ text "Contains" ]
+                                [ option [ value "startswith" ] [ text "Show choices that starts with" ]
+                                , option [ value "contains" ] [ text "Show choices that contains" ]
                                 ]
                             ]
                         ]
-                    , div [ class "tff-field-group" ]
-                        [ label [ class "tff-field-label" ] [ text "Value from field" ]
-                        , div [ class "tff-dropdown-group" ]
+                    , div [ class "tff-field-group mb-0" ]
+                        [ div [ class "tff-dropdown-group" ]
                             [ selectArrowDown
                             , select
                                 [ class "tff-select"
@@ -2940,7 +2937,7 @@ viewFormFieldOptionsBuilder shortTextTypeList index formFields formField =
                                         (\field ->
                                             option
                                                 [ value (field.name |> Maybe.withDefault field.label) ]
-                                                [ text field.label ]
+                                                [ text ("value of " ++ Json.Encode.encode 0 (Json.Encode.string field.label)) ]
                                         )
                                         otherFields
                                 )

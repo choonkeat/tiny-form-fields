@@ -43,7 +43,7 @@ test('filter choices dynamically based on another field', async ({ page, browser
 	await page.waitForTimeout(600);
 
 	// Enable filtering
-	await page.getByText('Filter choices dynamically').click();
+	await page.getByText('Filter choices').click();
 	await page.waitForTimeout(600);
 
 	// Set filter type to "Starts with"
@@ -157,7 +157,7 @@ test('filter choices with "contains" option', async ({ page, browserName }) => {
 	await page.waitForTimeout(600);
 
 	// Enable filtering
-	await page.getByText('Filter choices dynamically').click();
+	await page.getByText('Filter choices').click();
 	await page.waitForTimeout(600);
 
 	// Set filter type to "Contains"
