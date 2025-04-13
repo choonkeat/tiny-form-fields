@@ -234,3 +234,134 @@ test('filter choices with "contains" option', async ({ page, browserName }) => {
 		'Choose a fruit': 'Pineapple',
 	});
 });
+
+test('bug: filter field selection not retained visually when reopening field settings', async ({ page }) => {
+	// Set a desktop viewport
+	await page.setViewportSize({ width: 2048, height: 800 });
+	await page.goto('http://localhost:8000/');
+
+	// 1. Add a text field that will be used as the source for filtering
+	await addField(page, 'Single-line free text', undefined, {
+		link: 'Single-line free text',
+		label: 'Filter field',
+		description: 'Enter text to filter options',
+	});
+
+	// Close the editor and wait
+	await page.waitForTimeout(600);
+
+	// 2. Add a dropdown field with options that will be filtered
+	await addField(page, 'Dropdown', undefined, {
+		link: 'Dropdown',
+		label: 'Filtered dropdown',
+		description: 'Options will be filtered based on input',
+		choices: ['Option 1', 'Option 2', 'Option 3'],
+	});
+
+	// Configure the dropdown to use filter
+	await page.locator('.tff-field-container .tff-drag-handle-icon').last().click();
+	await page.waitForTimeout(600);
+
+	// Enable filtering
+	await page.getByText('Filter choices').click();
+	await page.waitForTimeout(600);
+
+	// Set source field to the text field
+	const sourceFieldDropdown = page
+		.locator('.tff-field-rule')
+		.first()
+		.locator('.tff-dropdown-group')
+		.last()
+		.locator('select');
+	await sourceFieldDropdown.selectOption('Filter field');
+	await page.waitForTimeout(600);
+
+	// Close the editor
+	await page.locator('.tff-close-button').click();
+	await page.waitForTimeout(1000);
+
+	// Reopen the editor
+	await page.locator('.tff-field-container .tff-drag-handle-icon').last().click();
+	await page.waitForTimeout(1000);
+
+	// BUG: The dropdown should show "Filter field" as the selected option,
+	// but it doesn't appear to be set visually
+	const reopenedDropdown = page
+		.locator('.tff-field-rule')
+		.first()
+		.locator('.tff-dropdown-group')
+		.last()
+		.locator('select');
+	
+	// This assertion should pass if the bug is fixed
+	await expect(reopenedDropdown).toHaveValue('Filter field');
+});
+
+test('bug: choices field should be hidden when filter field is empty', async ({ page }) => {
+	// Set a desktop viewport
+	await page.setViewportSize({ width: 2048, height: 800 });
+	await page.goto('http://localhost:8000/');
+
+	// 1. Add a text field that will be used as the source for filtering
+	await addField(page, 'Single-line free text', undefined, {
+		link: 'Single-line free text',
+		label: 'Filter field',
+		description: 'Enter text to filter options',
+	});
+
+	// Close the editor and wait
+	await page.waitForTimeout(600);
+
+	// 2. Add a dropdown field with options that will be filtered
+	await addField(page, 'Dropdown', undefined, {
+		link: 'Dropdown',
+		label: 'Filtered dropdown',
+		description: 'Options will be filtered based on input',
+		choices: ['Option 1', 'Option 2', 'Option 3'],
+	});
+
+	// Configure the dropdown to use filter
+	await page.locator('.tff-field-container .tff-drag-handle-icon').last().click();
+	await page.waitForTimeout(600);
+
+	// Enable filtering
+	await page.getByText('Filter choices').click();
+	await page.waitForTimeout(600);
+
+	// Set filter type to "Contains"
+	const filterTypeDropdown = page
+		.locator('.tff-field-rule')
+		.first()
+		.locator('.tff-dropdown-group')
+		.first()
+		.locator('select');
+	await filterTypeDropdown.selectOption('contains');
+	await page.waitForTimeout(500);
+
+	// Set source field to the text field
+	const sourceFieldDropdown = page
+		.locator('.tff-field-rule')
+		.first()
+		.locator('.tff-dropdown-group')
+		.last()
+		.locator('select');
+	await sourceFieldDropdown.selectOption('Filter field');
+	await page.waitForTimeout(600);
+
+	// Close the editor
+	await page.locator('.tff-close-button').click();
+	await page.waitForTimeout(1000);
+
+	// Go to COLLECTDATA MODE
+	const formPage = await viewForm(page);
+	await page.waitForTimeout(1000);
+
+	// BUG: The dropdown should be hidden when the filter field is empty
+	// This assertion should fail if the bug exists 
+	await expect(formPage.getByLabel('Filtered dropdown')).not.toBeVisible();
+
+	// When filter field has a value, the dropdown should become visible
+	await formPage.getByLabel('Filter field').fill('Option');
+	await page.waitForTimeout(600);
+	await expect(formPage.getByLabel('Filtered dropdown')).toBeVisible();
+});
