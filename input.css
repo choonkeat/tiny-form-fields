@@ -404,10 +404,16 @@
 }
 
 /* Logic indicator styles */
-.tff-logic-indicator {
+.tff-logic-indicators-container {
 	@apply absolute;
 	@apply top-1;
 	@apply right-1;
+	@apply flex;
+	@apply flex-row;
+	@apply gap-1;
+}
+
+.tff-logic-indicator {
 	@apply rounded-xl;
 	@apply h-5;
 	@apply px-2;
@@ -416,6 +422,7 @@
 	@apply justify-center;
 	@apply text-xs;
 	@apply cursor-help;
+	@apply whitespace-nowrap;
 }
 
 .tff-logic-indicator-blue {
@@ -426,6 +433,11 @@
 .tff-logic-indicator-gray {
 	@apply bg-gray-200;
 	color: rgb(153, 159, 168);
+}
+
+.tff-logic-indicator-orange {
+	@apply bg-orange-100;
+	@apply text-orange-800;
 }
 
 .tff-field-preview:hover .tff-drag-handle,

@@ -72,15 +72,15 @@ test('filter choices dynamically based on another field', async ({ page, browser
 	await page.locator('.tff-close-button').click();
 	await page.waitForTimeout(1000);
 
-	// Check that the source field has the "Affects logic" indicator
+	// Check that the source field has the "Affects choices" indicator
 	const textFieldContainer = page.locator('.tff-field-container').first();
 	const logicIndicator = textFieldContainer.locator('.tff-logic-indicator');
 	await expect(logicIndicator).toBeVisible();
-	await expect(logicIndicator).toHaveText('Affects logic');
+	await expect(logicIndicator).toHaveText('Affects choices');
 	await expect(logicIndicator).toHaveClass(/tff-logic-indicator-gray/);
 	await expect(logicIndicator).toHaveAttribute(
 		'title',
-		"Other fields depend on this field's value"
+		"Other fields' choices depend on this field's value"
 	);
 
 	// 3. COLLECTDATA MODE: Test the filtering
@@ -195,15 +195,15 @@ test('filter choices with "contains" option', async ({ page, browserName }) => {
 	await page.locator('.tff-close-button').click();
 	await page.waitForTimeout(1000);
 
-	// Check that the source field has the "Affects logic" indicator
+	// Check that the source field has the "Affects choices" indicator
 	const textFieldContainer = page.locator('.tff-field-container').first();
 	const logicIndicator = textFieldContainer.locator('.tff-logic-indicator');
 	await expect(logicIndicator).toBeVisible();
-	await expect(logicIndicator).toHaveText('Affects logic');
+	await expect(logicIndicator).toHaveText('Affects choices');
 	await expect(logicIndicator).toHaveClass(/tff-logic-indicator-gray/);
 	await expect(logicIndicator).toHaveAttribute(
 		'title',
-		"Other fields depend on this field's value"
+		"Other fields' choices depend on this field's value"
 	);
 
 	// 3. COLLECTDATA MODE: Test the filtering
@@ -251,9 +251,7 @@ test('filter choices with "contains" option', async ({ page, browserName }) => {
 	});
 });
 
-test('filter field selection retained visually when reopening field settings', async ({
-	page,
-}) => {
+test('filter field selection retained visually when reopening field settings', async ({ page }) => {
 	// Set a desktop viewport
 	await page.setViewportSize({ width: 2048, height: 800 });
 	await page.goto('http://localhost:8000/');
@@ -325,7 +323,9 @@ test('filter field selection retained visually when reopening field settings', a
 	await expect(reopenedDropdown).toHaveValue(dependentFieldName);
 });
 
-test('choices field should be hidden when filter field is empty in CollectData mode (but fully visible in Editor)', async ({ page }) => {
+test('choices field should be hidden when filter field is empty in CollectData mode (but fully visible in Editor)', async ({
+	page,
+}) => {
 	// Set a desktop viewport
 	await page.setViewportSize({ width: 2048, height: 800 });
 	await page.goto('http://localhost:8000/');
@@ -402,7 +402,9 @@ test('choices field should be hidden when filter field is empty in CollectData m
 	// If checkboxes question exists, check if it has checkboxes
 	if (optionCount > 0) {
 		// Get the list of option values
-		const optionValues = await checkboxesQuestion.locator('input[type="checkbox"]').allTextContents();
+		const optionValues = await checkboxesQuestion
+			.locator('input[type="checkbox"]')
+			.allTextContents();
 		console.log(`Initial option values: ${JSON.stringify(optionValues)}`);
 	}
 
@@ -426,20 +428,34 @@ test('choices field should be hidden when filter field is empty in CollectData m
 	await expect(checkboxesQuestion.locator('input[type="checkbox"]')).not.toHaveCount(0);
 
 	// Verify options are correct
-	const optionValuesAfterFill = await checkboxesQuestion.locator('input[type="checkbox"]').allTextContents();
+	const optionValuesAfterFill = await checkboxesQuestion
+		.locator('input[type="checkbox"]')
+		.allTextContents();
 	console.log(`Option values after filling: ${JSON.stringify(optionValuesAfterFill)}`);
 
 	// Verify that we can see all the options that match the filter
-	await expect(checkboxesQuestion.locator('input[type="checkbox"][value="Option 1"]')).toBeAttached();
-	await expect(checkboxesQuestion.locator('input[type="checkbox"][value="Option 2"]')).toBeAttached();
-	await expect(checkboxesQuestion.locator('input[type="checkbox"][value="Option 3"]')).toBeAttached();
+	await expect(
+		checkboxesQuestion.locator('input[type="checkbox"][value="Option 1"]')
+	).toBeAttached();
+	await expect(
+		checkboxesQuestion.locator('input[type="checkbox"][value="Option 2"]')
+	).toBeAttached();
+	await expect(
+		checkboxesQuestion.locator('input[type="checkbox"][value="Option 3"]')
+	).toBeAttached();
 
 	// Change the filter to be more specific
 	await formPage.getByLabel('Filter field').fill('Option 1');
 	await page.waitForTimeout(600);
 
 	// Now only Option 1 should be available
-	await expect(checkboxesQuestion.locator('input[type="checkbox"][value="Option 1"]')).toBeAttached();
-	await expect(checkboxesQuestion.locator('input[type="checkbox"][value="Option 2"]')).not.toBeAttached();
-	await expect(checkboxesQuestion.locator('input[type="checkbox"][value="Option 3"]')).not.toBeAttached();
+	await expect(
+		checkboxesQuestion.locator('input[type="checkbox"][value="Option 1"]')
+	).toBeAttached();
+	await expect(
+		checkboxesQuestion.locator('input[type="checkbox"][value="Option 2"]')
+	).not.toBeAttached();
+	await expect(
+		checkboxesQuestion.locator('input[type="checkbox"][value="Option 3"]')
+	).not.toBeAttached();
 });

@@ -784,11 +784,11 @@ function _Debug_crash_UNUSED(identifier, fact1, fact2, fact3, fact4)
 
 function _Debug_regionToString(region)
 {
-	if (region.a6.aE === region.bn.aE)
+	if (region.a8.aE === region.bp.aE)
 	{
-		return 'on line ' + region.a6.aE;
+		return 'on line ' + region.a8.aE;
 	}
-	return 'on lines ' + region.a6.aE + ' through ' + region.bn.aE;
+	return 'on lines ' + region.a8.aE + ' through ' + region.bp.aE;
 }
 
 
@@ -1857,9 +1857,9 @@ var _Platform_worker = F4(function(impl, flagDecoder, debugMetadata, args)
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.cC,
-		impl.c0,
-		impl.cY,
+		impl.cE,
+		impl.c2,
+		impl.c_,
 		function() { return function() {} }
 	);
 });
@@ -2720,8 +2720,8 @@ var _VirtualDom_mapEventRecord = F2(function(func, record)
 {
 	return {
 		ae: func(record.ae),
-		a7: record.a7,
-		a4: record.a4
+		a9: record.a9,
+		a6: record.a6
 	}
 });
 
@@ -2990,10 +2990,10 @@ function _VirtualDom_makeCallback(eventNode, initialHandler)
 
 		var value = result.a;
 		var message = !tag ? value : tag < 3 ? value.a : value.ae;
-		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.a7;
+		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.a9;
 		var currentEventNode = (
 			stopPropagation && event.stopPropagation(),
-			(tag == 2 ? value.b : tag == 3 && value.a4) && event.preventDefault(),
+			(tag == 2 ? value.b : tag == 3 && value.a6) && event.preventDefault(),
 			eventNode
 		);
 		var tagger;
@@ -3943,11 +3943,11 @@ var _Browser_element = _Debugger_element || F4(function(impl, flagDecoder, debug
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.cC,
-		impl.c0,
-		impl.cY,
+		impl.cE,
+		impl.c2,
+		impl.c_,
 		function(sendToApp, initialModel) {
-			var view = impl.c1;
+			var view = impl.c3;
 			/**/
 			var domNode = args['node'];
 			//*/
@@ -3979,12 +3979,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.cC,
-		impl.c0,
-		impl.cY,
+		impl.cE,
+		impl.c2,
+		impl.c_,
 		function(sendToApp, initialModel) {
-			var divertHrefToApp = impl.a5 && impl.a5(sendToApp)
-			var view = impl.c1;
+			var divertHrefToApp = impl.a7 && impl.a7(sendToApp)
+			var view = impl.c3;
 			var title = _VirtualDom_doc.title;
 			var bodyNode = _VirtualDom_doc.body;
 			var currNode = _VirtualDom_virtualize(bodyNode);
@@ -3992,12 +3992,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 			{
 				_VirtualDom_divertHrefToApp = divertHrefToApp;
 				var doc = view(model);
-				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.cl);
+				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.cn);
 				var patches = _VirtualDom_diff(currNode, nextNode);
 				bodyNode = _VirtualDom_applyPatches(bodyNode, currNode, patches, sendToApp);
 				currNode = nextNode;
 				_VirtualDom_divertHrefToApp = 0;
-				(title !== doc.c$) && (_VirtualDom_doc.title = title = doc.c$);
+				(title !== doc.c1) && (_VirtualDom_doc.title = title = doc.c1);
 			});
 		}
 	);
@@ -4053,12 +4053,12 @@ function _Browser_makeAnimator(model, draw)
 
 function _Browser_application(impl)
 {
-	var onUrlChange = impl.cQ;
-	var onUrlRequest = impl.cR;
+	var onUrlChange = impl.cS;
+	var onUrlRequest = impl.cT;
 	var key = function() { key.a(onUrlChange(_Browser_getUrl())); };
 
 	return _Browser_document({
-		a5: function(sendToApp)
+		a7: function(sendToApp)
 		{
 			key.a = sendToApp;
 			_Browser_window.addEventListener('popstate', key);
@@ -4074,9 +4074,9 @@ function _Browser_application(impl)
 					var next = $elm$url$Url$fromString(href).a;
 					sendToApp(onUrlRequest(
 						(next
-							&& curr.bU === next.bU
-							&& curr.by === next.by
-							&& curr.bQ.a === next.bQ.a
+							&& curr.bW === next.bW
+							&& curr.bA === next.bA
+							&& curr.bS.a === next.bS.a
 						)
 							? $elm$browser$Browser$Internal(next)
 							: $elm$browser$Browser$External(href)
@@ -4084,13 +4084,13 @@ function _Browser_application(impl)
 				}
 			});
 		},
-		cC: function(flags)
+		cE: function(flags)
 		{
-			return A3(impl.cC, flags, _Browser_getUrl(), key);
+			return A3(impl.cE, flags, _Browser_getUrl(), key);
 		},
-		c1: impl.c1,
-		c0: impl.c0,
-		cY: impl.cY
+		c3: impl.c3,
+		c2: impl.c2,
+		c_: impl.c_
 	});
 }
 
@@ -4156,17 +4156,17 @@ var _Browser_decodeEvent = F2(function(decoder, event)
 function _Browser_visibilityInfo()
 {
 	return (typeof _VirtualDom_doc.hidden !== 'undefined')
-		? { cz: 'hidden', co: 'visibilitychange' }
+		? { cB: 'hidden', cq: 'visibilitychange' }
 		:
 	(typeof _VirtualDom_doc.mozHidden !== 'undefined')
-		? { cz: 'mozHidden', co: 'mozvisibilitychange' }
+		? { cB: 'mozHidden', cq: 'mozvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.msHidden !== 'undefined')
-		? { cz: 'msHidden', co: 'msvisibilitychange' }
+		? { cB: 'msHidden', cq: 'msvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.webkitHidden !== 'undefined')
-		? { cz: 'webkitHidden', co: 'webkitvisibilitychange' }
-		: { cz: 'hidden', co: 'visibilitychange' };
+		? { cB: 'webkitHidden', cq: 'webkitvisibilitychange' }
+		: { cB: 'hidden', cq: 'visibilitychange' };
 }
 
 
@@ -4247,12 +4247,12 @@ var _Browser_call = F2(function(functionName, id)
 function _Browser_getViewport()
 {
 	return {
-		b$: _Browser_getScene(),
-		cb: {
-			ce: _Browser_window.pageXOffset,
-			cf: _Browser_window.pageYOffset,
-			cd: _Browser_doc.documentElement.clientWidth,
-			bw: _Browser_doc.documentElement.clientHeight
+		b1: _Browser_getScene(),
+		cd: {
+			cg: _Browser_window.pageXOffset,
+			ch: _Browser_window.pageYOffset,
+			cf: _Browser_doc.documentElement.clientWidth,
+			by: _Browser_doc.documentElement.clientHeight
 		}
 	};
 }
@@ -4262,8 +4262,8 @@ function _Browser_getScene()
 	var body = _Browser_doc.body;
 	var elem = _Browser_doc.documentElement;
 	return {
-		cd: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
-		bw: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
+		cf: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
+		by: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
 	};
 }
 
@@ -4286,15 +4286,15 @@ function _Browser_getViewportOf(id)
 	return _Browser_withNode(id, function(node)
 	{
 		return {
-			b$: {
-				cd: node.scrollWidth,
-				bw: node.scrollHeight
+			b1: {
+				cf: node.scrollWidth,
+				by: node.scrollHeight
 			},
-			cb: {
-				ce: node.scrollLeft,
-				cf: node.scrollTop,
-				cd: node.clientWidth,
-				bw: node.clientHeight
+			cd: {
+				cg: node.scrollLeft,
+				ch: node.scrollTop,
+				cf: node.clientWidth,
+				by: node.clientHeight
 			}
 		};
 	});
@@ -4324,18 +4324,18 @@ function _Browser_getElement(id)
 		var x = _Browser_window.pageXOffset;
 		var y = _Browser_window.pageYOffset;
 		return {
-			b$: _Browser_getScene(),
-			cb: {
-				ce: x,
-				cf: y,
-				cd: _Browser_doc.documentElement.clientWidth,
-				bw: _Browser_doc.documentElement.clientHeight
+			b1: _Browser_getScene(),
+			cd: {
+				cg: x,
+				ch: y,
+				cf: _Browser_doc.documentElement.clientWidth,
+				by: _Browser_doc.documentElement.clientHeight
 			},
-			ct: {
-				ce: x + rect.left,
-				cf: y + rect.top,
-				cd: rect.width,
-				bw: rect.height
+			cv: {
+				cg: x + rect.left,
+				ch: y + rect.top,
+				cf: rect.width,
+				by: rect.height
 			}
 		};
 	});
@@ -4911,7 +4911,7 @@ var $elm$url$Url$Http = 0;
 var $elm$url$Url$Https = 1;
 var $elm$url$Url$Url = F6(
 	function (protocol, host, port_, path, query, fragment) {
-		return {bs: fragment, by: host, bO: path, bQ: port_, bU: protocol, bV: query};
+		return {bu: fragment, bA: host, bQ: path, bS: port_, bW: protocol, bX: query};
 	});
 var $elm$core$String$contains = _String_contains;
 var $elm$core$String$length = _String_length;
@@ -5199,7 +5199,7 @@ var $author$project$Main$PortOutgoingFormFields = function (a) {
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $author$project$Main$Config = F4(
 	function (viewMode, formFields, formValues, shortTextTypeList) {
-		return {f: formFields, aY: formValues, ai: shortTextTypeList, _: viewMode};
+		return {f: formFields, a_: formValues, ai: shortTextTypeList, _: viewMode};
 	});
 var $elm_community$json_extra$Json$Decode$Extra$andMap = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
 var $author$project$Main$FormField = F6(
@@ -5708,7 +5708,7 @@ var $author$project$Main$decodeInputField = A2(
 							F2(
 								function (choices, filter) {
 									return $author$project$Main$Dropdown(
-										{k: choices, e: filter});
+										{k: choices, d: filter});
 								}))));
 			case 'ChooseOne':
 				return A2(
@@ -5725,7 +5725,7 @@ var $author$project$Main$decodeInputField = A2(
 							F2(
 								function (choices, filter) {
 									return $author$project$Main$ChooseOne(
-										{k: choices, e: filter});
+										{k: choices, d: filter});
 								}))));
 			case 'ChooseMultiple':
 				return A2(
@@ -5750,7 +5750,7 @@ var $author$project$Main$decodeInputField = A2(
 									F4(
 										function (choices, minRequired, maxAllowed, filter) {
 											return $author$project$Main$ChooseMultiple(
-												{k: choices, e: filter, R: maxAllowed, O: minRequired});
+												{k: choices, d: filter, R: maxAllowed, O: minRequired});
 										}))))));
 			default:
 				return $elm$json$Json$Decode$fail('Unknown input field type: ' + type_);
@@ -6356,7 +6356,7 @@ var $author$project$Main$encodeInputField = function (inputField) {
 					]));
 		case 2:
 			var choices = inputField.a.k;
-			var filter = inputField.a.e;
+			var filter = inputField.a.d;
 			return $elm$json$Json$Encode$object(
 				_Utils_ap(
 					_List_fromArray(
@@ -6392,7 +6392,7 @@ var $author$project$Main$encodeInputField = function (inputField) {
 					}()));
 		case 3:
 			var choices = inputField.a.k;
-			var filter = inputField.a.e;
+			var filter = inputField.a.d;
 			return $elm$json$Json$Encode$object(
 				_Utils_ap(
 					_List_fromArray(
@@ -6430,7 +6430,7 @@ var $author$project$Main$encodeInputField = function (inputField) {
 			var choices = inputField.a.k;
 			var minRequired = inputField.a.O;
 			var maxAllowed = inputField.a.R;
-			var filter = inputField.a.e;
+			var filter = inputField.a.d;
 			return $elm$json$Json$Encode$object(
 				_Utils_ap(
 					_List_fromArray(
@@ -6705,13 +6705,13 @@ var $author$project$Main$isUsingFilter = function (formField) {
 		case 1:
 			return false;
 		case 4:
-			var filter = _v0.a.e;
+			var filter = _v0.a.d;
 			return !_Utils_eq(filter, $elm$core$Maybe$Nothing);
 		case 3:
-			var filter = _v0.a.e;
+			var filter = _v0.a.d;
 			return !_Utils_eq(filter, $elm$core$Maybe$Nothing);
 		default:
-			var filter = _v0.a.e;
+			var filter = _v0.a.d;
 			return !_Utils_eq(filter, $elm$core$Maybe$Nothing);
 	}
 };
@@ -6822,7 +6822,7 @@ var $author$project$Main$init = function (flags) {
 									$author$project$Main$maybeDecode,
 									fieldName,
 									$author$project$Main$decodeListOrSingleton($elm$json$Json$Decode$string),
-									config.aY)));
+									config.a_)));
 					} else {
 						return _Utils_Tuple2(
 							fieldName,
@@ -6832,7 +6832,7 @@ var $author$project$Main$init = function (flags) {
 								A2(
 									$elm$core$Maybe$map,
 									$elm$core$List$singleton,
-									A3($author$project$Main$maybeDecode, fieldName, $elm$json$Json$Decode$string, config.aY))));
+									A3($author$project$Main$maybeDecode, fieldName, $elm$json$Json$Decode$string, config.a_))));
 					}
 				},
 				$elm$core$Array$toList(config.f)));
@@ -7210,7 +7210,7 @@ var $author$project$Main$onDropped = F2(
 		var _v0 = model.p;
 		if (!_v0.$) {
 			if (!_v0.a.$) {
-				var dragIndex = _v0.a.a.aX;
+				var dragIndex = _v0.a.a.aZ;
 				var dropIndex = _v0.a.a.F;
 				if (targetIndex.$ === 1) {
 					return _Utils_update(
@@ -7270,7 +7270,7 @@ var $author$project$Main$onDropped = F2(
 					}
 				}
 			} else {
-				var field = _v0.a.a.bq;
+				var field = _v0.a.a.bs;
 				var dropIndex = _v0.a.a.F;
 				if (targetIndex.$ === 1) {
 					return _Utils_update(
@@ -8231,7 +8231,7 @@ var $author$project$Main$updateFormField = F5(
 								b: $author$project$Main$Dropdown(
 									_Utils_update(
 										settings,
-										{e: newFilter}))
+										{d: newFilter}))
 							});
 					case 3:
 						var settings = _v21.a;
@@ -8243,7 +8243,7 @@ var $author$project$Main$updateFormField = F5(
 								b: $author$project$Main$ChooseOne(
 									_Utils_update(
 										settings,
-										{e: newFilter}))
+										{d: newFilter}))
 							});
 					case 4:
 						var settings = _v21.a;
@@ -8255,7 +8255,7 @@ var $author$project$Main$updateFormField = F5(
 								b: $author$project$Main$ChooseMultiple(
 									_Utils_update(
 										settings,
-										{e: newFilter}))
+										{d: newFilter}))
 							});
 					default:
 						return formField;
@@ -8290,7 +8290,7 @@ var $author$project$Main$updateFormField = F5(
 									_Utils_update(
 										settings,
 										{
-											e: updateFilter(settings.e)
+											d: updateFilter(settings.d)
 										}))
 							});
 					case 3:
@@ -8302,7 +8302,7 @@ var $author$project$Main$updateFormField = F5(
 									_Utils_update(
 										settings,
 										{
-											e: updateFilter(settings.e)
+											d: updateFilter(settings.d)
 										}))
 							});
 					case 4:
@@ -8314,7 +8314,7 @@ var $author$project$Main$updateFormField = F5(
 									_Utils_update(
 										settings,
 										{
-											e: updateFilter(settings.e)
+											d: updateFilter(settings.d)
 										}))
 							});
 					default:
@@ -8347,7 +8347,7 @@ var $author$project$Main$updateFormField = F5(
 									_Utils_update(
 										settings,
 										{
-											e: updateSourceField(settings.e)
+											d: updateSourceField(settings.d)
 										}))
 							});
 					case 3:
@@ -8359,7 +8359,7 @@ var $author$project$Main$updateFormField = F5(
 									_Utils_update(
 										settings,
 										{
-											e: updateSourceField(settings.e)
+											d: updateSourceField(settings.d)
 										}))
 							});
 					case 4:
@@ -8371,7 +8371,7 @@ var $author$project$Main$updateFormField = F5(
 									_Utils_update(
 										settings,
 										{
-											e: updateSourceField(settings.e)
+											d: updateSourceField(settings.d)
 										}))
 							});
 					default:
@@ -8546,7 +8546,7 @@ var $author$project$Main$update = F2(
 							{
 								p: $elm$core$Maybe$Just(
 									$author$project$Main$DragExisting(
-										{aX: fieldIndex, F: $elm$core$Maybe$Nothing})),
+										{aZ: fieldIndex, F: $elm$core$Maybe$Nothing})),
 								E: $elm$core$Maybe$Nothing
 							}),
 						$elm$core$Platform$Cmd$none);
@@ -8561,7 +8561,7 @@ var $author$project$Main$update = F2(
 										{
 											F: $elm$core$Maybe$Just(
 												_Utils_Tuple2(0, $elm$core$Maybe$Nothing)),
-											bq: fieldIndex
+											bs: fieldIndex
 										}))
 							}),
 						$elm$core$Platform$Cmd$none);
@@ -8734,7 +8734,7 @@ var $author$project$Main$allInputField = _List_fromArray(
 				$author$project$Main$choiceFromString,
 				_List_fromArray(
 					['Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Indigo', 'Violet'])),
-			e: $elm$core$Maybe$Nothing
+			d: $elm$core$Maybe$Nothing
 		}),
 		$author$project$Main$ChooseOne(
 		{
@@ -8743,7 +8743,7 @@ var $author$project$Main$allInputField = _List_fromArray(
 				$author$project$Main$choiceFromString,
 				_List_fromArray(
 					['Yes', 'No'])),
-			e: $elm$core$Maybe$Nothing
+			d: $elm$core$Maybe$Nothing
 		}),
 		$author$project$Main$ChooseMultiple(
 		{
@@ -8752,7 +8752,7 @@ var $author$project$Main$allInputField = _List_fromArray(
 				$author$project$Main$choiceFromString,
 				_List_fromArray(
 					['Apple', 'Banana', 'Cantaloupe', 'Durian'])),
-			e: $elm$core$Maybe$Nothing,
+			d: $elm$core$Maybe$Nothing,
 			R: $elm$core$Maybe$Nothing,
 			O: $elm$core$Maybe$Nothing
 		}),
@@ -8793,7 +8793,7 @@ var $author$project$Main$fieldsWithPlaceholder = F2(
 			return A2($elm$core$List$map, $elm$core$Maybe$Just, fields);
 		} else {
 			if (!dragged.a.$) {
-				var dragIndex = dragged.a.a.aX;
+				var dragIndex = dragged.a.a.aZ;
 				var dropIndex = dragged.a.a.F;
 				if (dropIndex.$ === 1) {
 					return A2($elm$core$List$map, $elm$core$Maybe$Just, fields);
@@ -8971,13 +8971,13 @@ var $author$project$Main$isFieldUsedInFilter = F2(
 	function (fieldName, inputField) {
 		switch (inputField.$) {
 			case 2:
-				var filter = inputField.a.e;
+				var filter = inputField.a.d;
 				return A2($author$project$Main$isFieldUsedInChoiceFilter, fieldName, filter);
 			case 3:
-				var filter = inputField.a.e;
+				var filter = inputField.a.d;
 				return A2($author$project$Main$isFieldUsedInChoiceFilter, fieldName, filter);
 			case 4:
-				var filter = inputField.a.e;
+				var filter = inputField.a.d;
 				return A2($author$project$Main$isFieldUsedInChoiceFilter, fieldName, filter);
 			default:
 				return false;
@@ -8985,7 +8985,14 @@ var $author$project$Main$isFieldUsedInFilter = F2(
 	});
 var $author$project$Main$isFieldReferencedBy = F2(
 	function (fieldName, formFields) {
-		return A2(
+		var fieldList = $elm$core$Array$toList(formFields);
+		var isUsedInChoiceFilters = A2(
+			$elm$core$List$any,
+			function (field) {
+				return A2($author$project$Main$isFieldUsedInFilter, fieldName, field.b);
+			},
+			fieldList);
+		var isUsedInVisibilityRules = A2(
 			$elm$core$List$any,
 			function (field) {
 				return A2(
@@ -9005,9 +9012,10 @@ var $author$project$Main$isFieldReferencedBy = F2(
 								conditions);
 						}
 					},
-					field.l) || A2($author$project$Main$isFieldUsedInFilter, fieldName, field.b);
+					field.l);
 			},
-			$elm$core$Array$toList(formFields));
+			fieldList);
+		return {aW: isUsedInChoiceFilters, aX: isUsedInVisibilityRules};
 	});
 var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
 	return {$: 1, a: a};
@@ -9398,7 +9406,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 					_List_Nil);
 			case 2:
 				var choices = _v0.a.k;
-				var filter = _v0.a.e;
+				var filter = _v0.a.d;
 				var valueString = A2(
 					$elm$core$Maybe$withDefault,
 					'',
@@ -9427,7 +9435,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 										disabledMode ? $elm$html$Html$Attributes$class('tff-select-disabled') : $elm$html$Html$Attributes$required(
 										$author$project$Main$requiredData(formField.y))
 									]),
-								config.a2(fieldName)),
+								config.a4(fieldName)),
 							A2(
 								$elm$core$List$cons,
 								A2(
@@ -9467,7 +9475,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 						]));
 			case 3:
 				var choices = _v0.a.k;
-				var filter = _v0.a.e;
+				var filter = _v0.a.d;
 				var valueString = A2(
 					$elm$core$Maybe$withDefault,
 					'',
@@ -9539,7 +9547,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 				var choices = _v0.a.k;
 				var minRequired = _v0.a.O;
 				var maxAllowed = _v0.a.R;
-				var filter = _v0.a.e;
+				var filter = _v0.a.d;
 				var values = A2(
 					$elm$core$Maybe$withDefault,
 					_List_Nil,
@@ -9599,7 +9607,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 						}
 					}
 				}();
-				var filteredChoices = A3($author$project$Main$filterChoices, filter, config.w, choices);
+				var filteredChoices = disabledMode ? choices : A3($author$project$Main$filterChoices, filter, config.w, choices);
 				var noChoicesAfterFiltering = (!$elm$core$List$isEmpty(choices)) && $elm$core$List$isEmpty(filteredChoices);
 				return (noChoicesAfterFiltering && config.Y) ? A2($elm$html$Html$div, _List_Nil, _List_Nil) : A2(
 					$elm$html$Html$div,
@@ -9651,7 +9659,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 																	]),
 																_Utils_ap(
 																	config.W,
-																	A2(config.a3, fieldName, choice))),
+																	A2(config.a5, fieldName, choice))),
 															_List_Nil),
 															$elm$html$Html$text(' '),
 															$elm$html$Html$text(choice.g)
@@ -9873,22 +9881,61 @@ var $author$project$Main$renderFormBuilderField = F4(
 											[$author$project$Main$dragHandleIcon])),
 										function () {
 										var hasVisibilityRules = !$elm$core$List$isEmpty(formField.l);
+										var hasFilterChoices = function () {
+											var _v7 = formField.b;
+											switch (_v7.$) {
+												case 2:
+													var filter = _v7.a.d;
+													return !_Utils_eq(filter, $elm$core$Maybe$Nothing);
+												case 3:
+													var filter = _v7.a.d;
+													return !_Utils_eq(filter, $elm$core$Maybe$Nothing);
+												case 4:
+													var filter = _v7.a.d;
+													return !_Utils_eq(filter, $elm$core$Maybe$Nothing);
+												default:
+													return false;
+											}
+										}();
 										var fieldName = $author$project$Main$fieldNameOf(formField);
-										var isReferenced = A2($author$project$Main$isFieldReferencedBy, fieldName, model.f);
-										return (hasVisibilityRules || isReferenced) ? A2(
+										var referencedInfo = A2($author$project$Main$isFieldReferencedBy, fieldName, model.f);
+										return A2(
 											$elm$html$Html$div,
 											_List_fromArray(
 												[
-													$elm$html$Html$Attributes$class(
-													hasVisibilityRules ? 'tff-logic-indicator tff-logic-indicator-blue' : 'tff-logic-indicator tff-logic-indicator-gray'),
-													$elm$html$Html$Attributes$title(
-													(hasVisibilityRules && isReferenced) ? 'This field has visibility logic and other fields depend on it' : (hasVisibilityRules ? 'This field has visibility logic' : 'Other fields depend on this field\'s value'))
+													$elm$html$Html$Attributes$class('tff-logic-indicators-container')
 												]),
 											_List_fromArray(
 												[
-													$elm$html$Html$text(
-													(hasVisibilityRules && isReferenced) ? 'Contains & affects logic' : (hasVisibilityRules ? 'Contains logic' : 'Affects logic'))
-												])) : $elm$html$Html$text('');
+													(hasVisibilityRules || referencedInfo.aX) ? A2(
+													$elm$html$Html$div,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class(
+															hasVisibilityRules ? 'tff-logic-indicator tff-logic-indicator-blue' : 'tff-logic-indicator tff-logic-indicator-gray'),
+															$elm$html$Html$Attributes$title(
+															(hasVisibilityRules && referencedInfo.aX) ? 'This field has visibility logic and other fields\' visibility depends on it' : (hasVisibilityRules ? 'This field has visibility logic' : 'Other fields\' visibility depends on this field\'s value'))
+														]),
+													_List_fromArray(
+														[
+															$elm$html$Html$text(
+															(hasVisibilityRules && referencedInfo.aX) ? 'Contains & affects logic' : (hasVisibilityRules ? 'Contains logic' : 'Affects logic'))
+														])) : $elm$html$Html$text(''),
+													(hasFilterChoices || referencedInfo.aW) ? A2(
+													$elm$html$Html$div,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class(
+															hasFilterChoices ? 'tff-logic-indicator tff-logic-indicator-orange' : 'tff-logic-indicator tff-logic-indicator-gray'),
+															$elm$html$Html$Attributes$title(
+															(hasFilterChoices && referencedInfo.aW) ? 'This field filters choices and other fields\' choices depend on it' : (hasFilterChoices ? 'This field filters choices based on another field' : 'Other fields\' choices depend on this field\'s value'))
+														]),
+													_List_fromArray(
+														[
+															$elm$html$Html$text(
+															(hasFilterChoices && referencedInfo.aW) ? 'Filters & affects choices' : (hasFilterChoices ? 'Filters choices' : 'Affects choices'))
+														])) : $elm$html$Html$text('')
+												]));
 									}(),
 										A3(
 										$author$project$Main$viewFormFieldPreview,
@@ -9899,14 +9946,14 @@ var $author$project$Main$renderFormBuilderField = F4(
 												]),
 											f: model.f,
 											Y: false,
-											a2: function (_v7) {
+											a4: function (_v8) {
 												return _List_Nil;
 											},
-											a3: F2(
-												function (_v8, _v9) {
+											a5: F2(
+												function (_v9, _v10) {
 													return _List_Nil;
 												}),
-											aH: function (_v10) {
+											aH: function (_v11) {
 												return _List_Nil;
 											},
 											ah: model.ah,
@@ -10712,7 +10759,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F4(
 					]);
 			case 2:
 				var choices = _v0.a.k;
-				var filter = _v0.a.e;
+				var filter = _v0.a.d;
 				return _Utils_ap(
 					_List_fromArray(
 						[
@@ -10722,7 +10769,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F4(
 					filterSettings(filter));
 			case 3:
 				var choices = _v0.a.k;
-				var filter = _v0.a.e;
+				var filter = _v0.a.d;
 				return _Utils_ap(
 					_List_fromArray(
 						[
@@ -10734,7 +10781,7 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F4(
 				var choices = _v0.a.k;
 				var minRequired = _v0.a.O;
 				var maxAllowed = _v0.a.R;
-				var filter = _v0.a.e;
+				var filter = _v0.a.d;
 				return _Utils_ap(
 					_List_fromArray(
 						[
@@ -10940,10 +10987,10 @@ var $author$project$Main$isShowWhen = function (rule) {
 	}
 };
 var $author$project$Main$selectInputGroup = function (_v0) {
-	var selectAttrs = _v0.b1;
-	var options = _v0.bN;
-	var inputAttrs = _v0.bB;
-	var children = _v0.bh;
+	var selectAttrs = _v0.b3;
+	var options = _v0.bP;
+	var inputAttrs = _v0.bD;
+	var children = _v0.bj;
 	var calculatedAttrs = A2(
 		$elm$core$List$append,
 		_List_fromArray(
@@ -11204,7 +11251,7 @@ var $author$project$Main$visibilityRuleSection = F4(
 								])),
 							$author$project$Main$selectInputGroup(
 							{
-								bh: function () {
+								bj: function () {
 									if (!datalistElement.$) {
 										var element = datalistElement.a;
 										return _List_fromArray(
@@ -11213,7 +11260,7 @@ var $author$project$Main$visibilityRuleSection = F4(
 										return _List_Nil;
 									}
 								}(),
-								bB: _Utils_ap(
+								bD: _Utils_ap(
 									_List_fromArray(
 										[
 											$elm$html$Html$Attributes$type_('text'),
@@ -11246,7 +11293,7 @@ var $author$project$Main$visibilityRuleSection = F4(
 											$elm$html$Html$Attributes$class('tff-comparison-value')
 										]),
 									datalistAttr),
-								bN: _List_fromArray(
+								bP: _List_fromArray(
 									[
 										_Utils_Tuple3(
 										'Equals',
@@ -11277,7 +11324,7 @@ var $author$project$Main$visibilityRuleSection = F4(
 											$author$project$Main$GreaterThan('something'),
 											$author$project$Main$comparisonOf(rule)))
 									]),
-								b1: _List_fromArray(
+								b3: _List_fromArray(
 									[
 										$author$project$Main$onChange(
 										function (str) {
@@ -11984,7 +12031,7 @@ var $author$project$Main$fieldHasEmptyFilter = F2(
 		var _v0 = formField.b;
 		switch (_v0.$) {
 			case 2:
-				var filter = _v0.a.e;
+				var filter = _v0.a.d;
 				return A2(
 					$elm$core$Maybe$withDefault,
 					false,
@@ -11993,7 +12040,7 @@ var $author$project$Main$fieldHasEmptyFilter = F2(
 						isFilterFieldEmpty,
 						getFilterField(filter)));
 			case 3:
-				var filter = _v0.a.e;
+				var filter = _v0.a.d;
 				return A2(
 					$elm$core$Maybe$withDefault,
 					false,
@@ -12002,7 +12049,7 @@ var $author$project$Main$fieldHasEmptyFilter = F2(
 						isFilterFieldEmpty,
 						getFilterField(filter)));
 			case 4:
-				var filter = _v0.a.e;
+				var filter = _v0.a.d;
 				return A2(
 					$elm$core$Maybe$withDefault,
 					false,
@@ -12168,10 +12215,10 @@ var $author$project$Main$viewFormPreview = F2(
 			W: customAttrs,
 			f: formFields,
 			Y: needsFormLogic,
-			a2: needsFormLogic ? onChangeAttrs : function (_v1) {
+			a4: needsFormLogic ? onChangeAttrs : function (_v1) {
 				return _List_Nil;
 			},
-			a3: (needsFormLogic || isAnyChooseManyUsingMinMax) ? onChooseManyAttrs : F2(
+			a5: (needsFormLogic || isAnyChooseManyUsingMinMax) ? onChooseManyAttrs : F2(
 				function (_v2, _v3) {
 					return _List_Nil;
 				}),
@@ -12257,5 +12304,5 @@ var $author$project$Main$view = function (model) {
 	}
 };
 var $author$project$Main$main = $elm$browser$Browser$element(
-	{cC: $author$project$Main$init, cY: $author$project$Main$subscriptions, c0: $author$project$Main$update, c1: $author$project$Main$view});
+	{cE: $author$project$Main$init, c_: $author$project$Main$subscriptions, c2: $author$project$Main$update, c3: $author$project$Main$view});
 _Platform_export({'Main':{'init':$author$project$Main$main($elm$json$Json$Decode$value)(0)}});}(this));

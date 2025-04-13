@@ -469,25 +469,36 @@ getPreviousFieldNameOrLabel index formFields =
 
 {-| Check if a field is referenced by any other field's visibility rules or choice filters
 -}
-isFieldReferencedBy : String -> Array FormField -> Bool
+isFieldReferencedBy : String -> Array FormField -> { usedInVisibilityRules : Bool, usedInChoiceFilters : Bool }
 isFieldReferencedBy fieldName formFields =
-    Array.toList formFields
-        |> List.any
-            (\field ->
-                -- Check if the field is used in any visibility rules
-                List.any
-                    (\rule ->
-                        case rule of
-                            ShowWhen conditions ->
-                                List.any (isConditionReferencingField fieldName) conditions
+    let
+        fieldList =
+            Array.toList formFields
 
-                            HideWhen conditions ->
-                                List.any (isConditionReferencingField fieldName) conditions
-                    )
-                    field.visibilityRule
-                    -- Check if the field is used in any choice filters
-                    || isFieldUsedInFilter fieldName field.type_
-            )
+        isUsedInVisibilityRules =
+            List.any
+                (\field ->
+                    List.any
+                        (\rule ->
+                            case rule of
+                                ShowWhen conditions ->
+                                    List.any (isConditionReferencingField fieldName) conditions
+
+                                HideWhen conditions ->
+                                    List.any (isConditionReferencingField fieldName) conditions
+                        )
+                        field.visibilityRule
+                )
+                fieldList
+
+        isUsedInChoiceFilters =
+            List.any
+                (\field -> isFieldUsedInFilter fieldName field.type_)
+                fieldList
+    in
+    { usedInVisibilityRules = isUsedInVisibilityRules
+    , usedInChoiceFilters = isUsedInChoiceFilters
+    }
 
 
 {-| Check if a condition references the given field
@@ -2260,43 +2271,96 @@ renderFormBuilderField maybeAnimate model index maybeFormField =
                             fieldName =
                                 fieldNameOf formField
 
-                            isReferenced =
+                            referencedInfo =
                                 isFieldReferencedBy fieldName model.formFields
+
+                            hasFilterChoices =
+                                case formField.type_ of
+                                    Dropdown { filter } ->
+                                        filter /= Nothing
+
+                                    ChooseOne { filter } ->
+                                        filter /= Nothing
+
+                                    ChooseMultiple { filter } ->
+                                        filter /= Nothing
+
+                                    _ ->
+                                        False
                           in
-                          if hasVisibilityRules || isReferenced then
-                            div
-                                [ class
-                                    (if hasVisibilityRules then
-                                        "tff-logic-indicator tff-logic-indicator-blue"
+                          div [ class "tff-logic-indicators-container" ]
+                            [ -- Visibility Logic Indicator
+                              if hasVisibilityRules || referencedInfo.usedInVisibilityRules then
+                                div
+                                    [ class
+                                        (if hasVisibilityRules then
+                                            "tff-logic-indicator tff-logic-indicator-blue"
 
-                                     else
-                                        "tff-logic-indicator tff-logic-indicator-gray"
-                                    )
-                                , title
-                                    (if hasVisibilityRules && isReferenced then
-                                        "This field has visibility logic and other fields depend on it"
+                                         else
+                                            "tff-logic-indicator tff-logic-indicator-gray"
+                                        )
+                                    , title
+                                        (if hasVisibilityRules && referencedInfo.usedInVisibilityRules then
+                                            "This field has visibility logic and other fields' visibility depends on it"
 
-                                     else if hasVisibilityRules then
-                                        "This field has visibility logic"
+                                         else if hasVisibilityRules then
+                                            "This field has visibility logic"
 
-                                     else
-                                        "Other fields depend on this field's value"
-                                    )
-                                ]
-                                [ text
-                                    (if hasVisibilityRules && isReferenced then
-                                        "Contains & affects logic"
+                                         else
+                                            "Other fields' visibility depends on this field's value"
+                                        )
+                                    ]
+                                    [ text
+                                        (if hasVisibilityRules && referencedInfo.usedInVisibilityRules then
+                                            "Contains & affects logic"
 
-                                     else if hasVisibilityRules then
-                                        "Contains logic"
+                                         else if hasVisibilityRules then
+                                            "Contains logic"
 
-                                     else
-                                        "Affects logic"
-                                    )
-                                ]
+                                         else
+                                            "Affects logic"
+                                        )
+                                    ]
 
-                          else
-                            text ""
+                              else
+                                text ""
+
+                            -- Choice Filter Indicator
+                            , if hasFilterChoices || referencedInfo.usedInChoiceFilters then
+                                div
+                                    [ class
+                                        (if hasFilterChoices then
+                                            "tff-logic-indicator tff-logic-indicator-orange"
+
+                                         else
+                                            "tff-logic-indicator tff-logic-indicator-gray"
+                                        )
+                                    , title
+                                        (if hasFilterChoices && referencedInfo.usedInChoiceFilters then
+                                            "This field filters choices and other fields' choices depend on it"
+
+                                         else if hasFilterChoices then
+                                            "This field filters choices based on another field"
+
+                                         else
+                                            "Other fields' choices depend on this field's value"
+                                        )
+                                    ]
+                                    [ text
+                                        (if hasFilterChoices && referencedInfo.usedInChoiceFilters then
+                                            "Filters & affects choices"
+
+                                         else if hasFilterChoices then
+                                            "Filters choices"
+
+                                         else
+                                            "Affects choices"
+                                        )
+                                    ]
+
+                              else
+                                text ""
+                            ]
                         , viewFormFieldPreview
                             { customAttrs = [ attribute "disabled" "disabled" ]
                             , formFields = model.formFields

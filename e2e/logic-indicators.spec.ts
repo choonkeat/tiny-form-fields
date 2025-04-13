@@ -78,19 +78,25 @@ test('Logic indicators display correct text for different field relationships', 
 	const fieldContainers = page.locator('.tff-field-container');
 
 	// Check the first field - should have "Affects logic" (gray)
-	const firstFieldIndicator = fieldContainers.nth(0).locator('.tff-logic-indicator');
+	const firstFieldContainer = fieldContainers.nth(0).locator('.tff-logic-indicators-container');
+	await expect(firstFieldContainer).toBeVisible();
+	const firstFieldIndicator = firstFieldContainer.locator('.tff-logic-indicator').first();
 	await expect(firstFieldIndicator).toBeVisible();
 	await expect(firstFieldIndicator).toHaveText('Affects logic');
 	await expect(firstFieldIndicator).toHaveClass(/tff-logic-indicator-gray/);
 
 	// Check the second field - should have "Contains logic" (blue)
-	const secondFieldIndicator = fieldContainers.nth(1).locator('.tff-logic-indicator');
+	const secondFieldContainer = fieldContainers.nth(1).locator('.tff-logic-indicators-container');
+	await expect(secondFieldContainer).toBeVisible();
+	const secondFieldIndicator = secondFieldContainer.locator('.tff-logic-indicator').first();
 	await expect(secondFieldIndicator).toBeVisible();
 	await expect(secondFieldIndicator).toHaveText('Contains logic');
 	await expect(secondFieldIndicator).toHaveClass(/tff-logic-indicator-blue/);
 
 	// Check the third field - should have "Contains & Affects logic" (blue)
-	const thirdFieldIndicator = fieldContainers.nth(2).locator('.tff-logic-indicator');
+	const thirdFieldContainer = fieldContainers.nth(2).locator('.tff-logic-indicators-container');
+	await expect(thirdFieldContainer).toBeVisible();
+	const thirdFieldIndicator = thirdFieldContainer.locator('.tff-logic-indicator').first();
 	await expect(thirdFieldIndicator).toBeVisible();
 	await expect(thirdFieldIndicator).toHaveText('Contains & affects logic');
 	await expect(thirdFieldIndicator).toHaveClass(/tff-logic-indicator-blue/);
@@ -98,11 +104,11 @@ test('Logic indicators display correct text for different field relationships', 
 	// Verify tooltip contents
 	await expect(firstFieldIndicator).toHaveAttribute(
 		'title',
-		"Other fields depend on this field's value"
+		"Other fields' visibility depends on this field's value"
 	);
 	await expect(secondFieldIndicator).toHaveAttribute('title', 'This field has visibility logic');
 	await expect(thirdFieldIndicator).toHaveAttribute(
 		'title',
-		'This field has visibility logic and other fields depend on it'
+		"This field has visibility logic and other fields' visibility depends on it"
 	);
 });
