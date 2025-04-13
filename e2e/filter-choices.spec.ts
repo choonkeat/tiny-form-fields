@@ -71,6 +71,14 @@ test('filter choices dynamically based on another field', async ({ page, browser
 	// Close the editor
 	await page.locator('.tff-close-button').click();
 	await page.waitForTimeout(1000);
+	
+	// Check that the source field has the "Affects logic" indicator
+	const textFieldContainer = page.locator('.tff-field-container').first();
+	const logicIndicator = textFieldContainer.locator('.tff-logic-indicator');
+	await expect(logicIndicator).toBeVisible();
+	await expect(logicIndicator).toHaveText('Affects logic');
+	await expect(logicIndicator).toHaveClass(/tff-logic-indicator-gray/);
+	await expect(logicIndicator).toHaveAttribute('title', "Other fields depend on this field's value");
 
 	// 3. COLLECTDATA MODE: Test the filtering
 	const formPage = await viewForm(page);
@@ -177,6 +185,14 @@ test('filter choices with "contains" option', async ({ page, browserName }) => {
 	// Close the editor
 	await page.locator('.tff-close-button').click();
 	await page.waitForTimeout(1000);
+	
+	// Check that the source field has the "Affects logic" indicator
+	const textFieldContainer = page.locator('.tff-field-container').first();
+	const logicIndicator = textFieldContainer.locator('.tff-logic-indicator');
+	await expect(logicIndicator).toBeVisible();
+	await expect(logicIndicator).toHaveText('Affects logic');
+	await expect(logicIndicator).toHaveClass(/tff-logic-indicator-gray/);
+	await expect(logicIndicator).toHaveAttribute('title', "Other fields depend on this field's value");
 
 	// 3. COLLECTDATA MODE: Test the filtering
 	const formPage = await viewForm(page);

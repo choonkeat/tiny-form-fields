@@ -467,14 +467,15 @@ getPreviousFieldNameOrLabel index formFields =
         ""
 
 
-{-| Check if a field is referenced by any other field's visibility rules
+{-| Check if a field is referenced by any other field's visibility rules or choice filters
 -}
 isFieldReferencedBy : String -> Array FormField -> Bool
 isFieldReferencedBy fieldName formFields =
     Array.toList formFields
         |> List.any
             (\field ->
-                List.any
+                -- Check if the field is used in any visibility rules
+                (List.any
                     (\rule ->
                         case rule of
                             ShowWhen conditions ->
@@ -484,6 +485,9 @@ isFieldReferencedBy fieldName formFields =
                                 List.any (isConditionReferencingField fieldName) conditions
                     )
                     field.visibilityRule
+                )
+                    -- Check if the field is used in any choice filters
+                    || isFieldUsedInFilter fieldName field.type_
             )
 
 
@@ -494,6 +498,39 @@ isConditionReferencingField fieldName condition =
     case condition of
         Field conditionFieldName _ ->
             conditionFieldName == fieldName
+
+
+{-| Check if a field is used as a source field in a choice filter
+-}
+isFieldUsedInFilter : String -> InputField -> Bool
+isFieldUsedInFilter fieldName inputField =
+    case inputField of
+        Dropdown { filter } ->
+            isFieldUsedInChoiceFilter fieldName filter
+
+        ChooseOne { filter } ->
+            isFieldUsedInChoiceFilter fieldName filter
+
+        ChooseMultiple { filter } ->
+            isFieldUsedInChoiceFilter fieldName filter
+
+        _ ->
+            False
+
+
+{-| Check if a field is referenced in a choice filter
+-}
+isFieldUsedInChoiceFilter : String -> Maybe ChoiceFilter -> Bool
+isFieldUsedInChoiceFilter fieldName maybeFilter =
+    case maybeFilter of
+        Just (FilterStartsWithFieldValueOf sourceField) ->
+            sourceField == fieldName
+
+        Just (FilterContainsFieldValueOf sourceField) ->
+            sourceField == fieldName
+
+        Nothing ->
+            False
 
 
 
