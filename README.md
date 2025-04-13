@@ -33,7 +33,7 @@ A lightweight, customizable form builder and renderer written in Elm. Create dyn
   - Filter dropdown, radio button, or checkbox choices based on values from other fields
   - Support for "starts with" and "contains" filtering modes
   - Real-time filtering as users type in source fields
-  - Automatically hide fields when no options match the filter
+  - Fields are hidden when filter field is empty or no options match the filter
 - Responsive design
 - Two modes: Editor (for building forms) and CollectData (for end users)
 - JSON import/export of form definitions

@@ -1051,7 +1051,7 @@ suite =
                             , Main.Choice "BANANA" "banana"
                             , Main.Choice "Avocado" "avocado"
                             ]
-            , test "returns all choices when source field is empty" <|
+            , test "returns no choices when source field is empty" <|
                 \_ ->
                     let
                         choices =
@@ -1064,8 +1064,8 @@ suite =
                             Dict.fromList [ ( "source", [ "" ] ) ]
                     in
                     Main.filterChoices (Just (Main.FilterStartsWithFieldValueOf "source")) formValues choices
-                        |> Expect.equal choices
-            , test "returns all choices when source field doesn't exist" <|
+                        |> Expect.equal []
+            , test "returns no choices when source field doesn't exist" <|
                 \_ ->
                     let
                         choices =
@@ -1078,7 +1078,7 @@ suite =
                             Dict.empty
                     in
                     Main.filterChoices (Just (Main.FilterStartsWithFieldValueOf "source")) formValues choices
-                        |> Expect.equal choices
+                        |> Expect.equal []
             ]
         ]
 

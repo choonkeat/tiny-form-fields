@@ -2932,11 +2932,24 @@ viewFormFieldOptionsBuilder shortTextTypeList index formFields formField =
                                 , onChange (\fieldName -> OnFormField (OnFilterSourceFieldSelect fieldName) index "")
                                 , value sourceFieldName
                                 ]
-                                (option [ value "" ] [ text "-- Select a field --" ]
+                                (option
+                                    [ value ""
+                                    , selected (String.isEmpty sourceFieldName)
+                                    ]
+                                    [ text "-- Select a field --" ]
                                     :: List.map
                                         (\field ->
+                                            let
+                                                fieldValue =
+                                                    field.name |> Maybe.withDefault field.label
+
+                                                isSelected =
+                                                    fieldValue == sourceFieldName
+                                            in
                                             option
-                                                [ value (field.name |> Maybe.withDefault field.label) ]
+                                                [ value fieldValue
+                                                , selected isSelected
+                                                ]
                                                 [ text ("value of " ++ Json.Encode.encode 0 (Json.Encode.string field.label)) ]
                                         )
                                         otherFields
@@ -4261,8 +4274,8 @@ filterChoices maybeFilter formValues choices =
             case Dict.get fieldName formValues |> Maybe.andThen List.head of
                 Just filterValue ->
                     if String.isEmpty filterValue then
-                        choices
-                        -- Show all choices when filter value is empty
+                        []
+                        -- Hide choices when filter value is empty
 
                     else
                         List.filter
@@ -4277,16 +4290,17 @@ filterChoices maybeFilter formValues choices =
                             choices
 
                 Nothing ->
-                    choices
+                    []
 
+        -- Hide choices when field is not found
         -- No filter value, show all choices
         Just (FilterContainsFieldValueOf fieldName) ->
             -- Get field value and filter choices that contain it
             case Dict.get fieldName formValues |> Maybe.andThen List.head of
                 Just filterValue ->
                     if String.isEmpty filterValue then
-                        choices
-                        -- Show all choices when filter value is empty
+                        []
+                        -- Hide choices when filter value is empty
 
                     else
                         List.filter
@@ -4301,8 +4315,9 @@ filterChoices maybeFilter formValues choices =
                             choices
 
                 Nothing ->
-                    choices
+                    []
 
+        -- Hide choices when field is not found
         -- No filter value, show all choices
         Nothing ->
             -- No filtering, return all choices

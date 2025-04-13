@@ -9127,7 +9127,7 @@ var $author$project$Main$filterChoices = F3(
 					A2($elm$core$Dict$get, fieldName, formValues));
 				if (!_v1.$) {
 					var filterValue = _v1.a;
-					return $elm$core$String$isEmpty(filterValue) ? choices : A2(
+					return $elm$core$String$isEmpty(filterValue) ? _List_Nil : A2(
 						$elm$core$List$filter,
 						function (choice) {
 							return A2(
@@ -9140,7 +9140,7 @@ var $author$project$Main$filterChoices = F3(
 						},
 						choices);
 				} else {
-					return choices;
+					return _List_Nil;
 				}
 			} else {
 				var fieldName = maybeFilter.a.a;
@@ -9150,7 +9150,7 @@ var $author$project$Main$filterChoices = F3(
 					A2($elm$core$Dict$get, fieldName, formValues));
 				if (!_v2.$) {
 					var filterValue = _v2.a;
-					return $elm$core$String$isEmpty(filterValue) ? choices : A2(
+					return $elm$core$String$isEmpty(filterValue) ? _List_Nil : A2(
 						$elm$core$List$filter,
 						function (choice) {
 							return A2(
@@ -9163,7 +9163,7 @@ var $author$project$Main$filterChoices = F3(
 						},
 						choices);
 				} else {
-					return choices;
+					return _List_Nil;
 				}
 			}
 		} else {
@@ -10405,7 +10405,9 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F4(
 														$elm$html$Html$option,
 														_List_fromArray(
 															[
-																$elm$html$Html$Attributes$value('')
+																$elm$html$Html$Attributes$value(''),
+																$elm$html$Html$Attributes$selected(
+																$elm$core$String$isEmpty(sourceFieldName))
 															]),
 														_List_fromArray(
 															[
@@ -10414,12 +10416,14 @@ var $author$project$Main$viewFormFieldOptionsBuilder = F4(
 													A2(
 														$elm$core$List$map,
 														function (field) {
+															var fieldValue = A2($elm$core$Maybe$withDefault, field.g, field.af);
+															var isSelected = _Utils_eq(fieldValue, sourceFieldName);
 															return A2(
 																$elm$html$Html$option,
 																_List_fromArray(
 																	[
-																		$elm$html$Html$Attributes$value(
-																		A2($elm$core$Maybe$withDefault, field.g, field.af))
+																		$elm$html$Html$Attributes$value(fieldValue),
+																		$elm$html$Html$Attributes$selected(isSelected)
 																	]),
 																_List_fromArray(
 																	[

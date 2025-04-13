@@ -88,7 +88,9 @@ This feature allows for dynamic filtering of options in dropdown, radio button, 
               -- No filtering, return all choices
   ```
 - [x] Update the preview rendering functions to apply the filter when displaying choices
-- [x] For empty result sets (when filtering returns no choices), hide the field entirely 
+- [x] Hide field entirely when:
+  - Filter field is empty (to enforce users providing filter values first)
+  - No choices match the filter criteria
 - [x] Ensure that filtering updates dynamically when source fields change by using existing `trackedFormValues`
 
 ### Testing
@@ -96,7 +98,7 @@ This feature allows for dynamic filtering of options in dropdown, radio button, 
 - [x] Add tests to verify filters work correctly in various scenarios:
   - [x] StartsWith filtering
   - [x] Contains filtering
-  - [x] With empty source field (should show all choices)
+  - [x] With empty source field (field should be hidden)
   - [x] With values that match no choices (field should be hidden)
   - [x] With multiple matching choices
 - [x] Test encoder/decoder for ChoiceFilter (via input field fuzzers)
@@ -109,5 +111,5 @@ This feature allows for dynamic filtering of options in dropdown, radio button, 
 - Filtering is conceptually separate from visibility rules, so it gets its own UI section
 - Filter UI is placed directly under the choices it affects for intuitive connection
 - Pattern matching for filter processing becomes clearer with the combined type
-- If filtering returns no options, the field is hidden, similar to visibility rules behavior
+- Field is hidden when filter field is empty or when filtering returns no matching options
 - Simpler to extend with additional filter types in the future by adding new constructors
