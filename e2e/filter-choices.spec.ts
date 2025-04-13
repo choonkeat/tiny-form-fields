@@ -323,7 +323,7 @@ test('filter field selection retained visually when reopening field settings', a
 	await expect(reopenedDropdown).toHaveValue(dependentFieldName);
 });
 
-test('choices field should be hidden when filter field is empty in CollectData mode (but fully visible in Editor)', async ({
+test('checkboxes should be hidden when filter field is empty in CollectData mode (but fully visible in Editor)', async ({
 	page,
 }) => {
 	// Set a desktop viewport
@@ -457,5 +457,279 @@ test('choices field should be hidden when filter field is empty in CollectData m
 	).not.toBeAttached();
 	await expect(
 		checkboxesQuestion.locator('input[type="checkbox"][value="Option 3"]')
+	).not.toBeAttached();
+});
+
+test('radio buttons should be hidden when filter field is empty in CollectData mode (but fully visible in Editor)', async ({
+	page,
+}) => {
+	// Set a desktop viewport
+	await page.setViewportSize({ width: 2048, height: 800 });
+	await page.goto('http://localhost:8000/');
+
+	// 1. Add a text field that will be used as the source for filtering
+	await addField(page, 'Single-line free text', undefined, {
+		link: 'Single-line free text',
+		label: 'Filter field',
+		description: 'Enter text to filter options',
+	});
+
+	// Close the editor and wait
+	await page.waitForTimeout(600);
+
+	// 2. Add a radio buttons field with options that will be filtered
+	await addField(page, 'Radio buttons', undefined, {
+		link: 'Radio buttons',
+		label: 'Filtered radio buttons',
+		description: 'Options will be filtered based on input',
+		choices: ['Option 1', 'Option 2', 'Option 3'],
+	});
+
+	// Assert that the label and options exists on screen
+	await expect(page.getByText('Filtered radio buttons')).toBeVisible();
+	await expect(page.locator('.tff-field-preview input[type="radio"]')).toHaveCount(3);
+
+	// Configure the radio buttons to use filter
+	await page.locator('.tff-field-container .tff-drag-handle-icon').last().click();
+	await page.waitForTimeout(600);
+
+	// Enable filtering
+	await page.getByText('Filter choices').click();
+	await page.waitForTimeout(600);
+
+	// Set filter type to "Contains"
+	const filterTypeDropdown = page
+		.locator('.tff-field-rule')
+		.first()
+		.locator('.tff-dropdown-group')
+		.first()
+		.locator('select');
+	await filterTypeDropdown.selectOption('contains');
+	await page.waitForTimeout(500);
+
+	// Set source field to the text field
+	const sourceFieldDropdown = page
+		.locator('.tff-field-rule')
+		.first()
+		.locator('.tff-dropdown-group')
+		.last()
+		.locator('select');
+	await sourceFieldDropdown.selectOption('Filter field');
+	await page.waitForTimeout(600);
+
+	// Close the editor
+	await page.locator('.tff-close-button').click();
+	await page.waitForTimeout(1000);
+
+	// Assert that the label and options still exists on screen
+	await expect(page.getByText('Filtered radio buttons')).toBeVisible();
+	await expect(page.locator('.tff-field-preview input[type="radio"]')).toHaveCount(3);
+
+	// Go to COLLECTDATA MODE
+	const formPage = await viewForm(page);
+	await page.waitForTimeout(1000);
+
+	// We need to check if any options are displayed in the radio buttons question.
+	const radioButtonsQuestion = formPage.locator('.tff-field-group:has-text("Filtered radio buttons")');
+
+	// Check if radio buttons question has any options
+	const optionCount = await radioButtonsQuestion.locator('input[type="radio"]').count();
+	console.log(`Initial number of visible radio buttons: ${optionCount}`);
+
+	// If radio buttons question exists, check if it has radio buttons
+	if (optionCount > 0) {
+		// Get the list of option values
+		const optionValues = await radioButtonsQuestion
+			.locator('input[type="radio"]')
+			.allTextContents();
+		console.log(`Initial option values: ${JSON.stringify(optionValues)}`);
+	}
+
+	// The entire field (including label) should be hidden when filter field is empty
+	// Check that field label is not visible
+	const fieldLabel = formPage.getByText('Filtered radio buttons');
+	await expect(fieldLabel).not.toBeVisible();
+
+	// Also verify dropdown has no options
+	await expect(radioButtonsQuestion.locator('input[type="radio"]')).toHaveCount(0);
+
+	// When filter field has a value, options should appear
+	await formPage.getByLabel('Filter field').fill('Option');
+	await page.waitForTimeout(600);
+
+	// Check again after filling
+	const optionCountAfterFill = await radioButtonsQuestion.locator('input[type="radio"]').count();
+	console.log(`Number of radio buttons after filling: ${optionCountAfterFill}`);
+
+	// This assertion should pass if the bug is fixed - options appear after filling
+	await expect(radioButtonsQuestion.locator('input[type="radio"]')).not.toHaveCount(0);
+
+	// Verify options are correct
+	const optionValuesAfterFill = await radioButtonsQuestion
+		.locator('input[type="radio"]')
+		.allTextContents();
+	console.log(`Option values after filling: ${JSON.stringify(optionValuesAfterFill)}`);
+
+	// Verify that we can see all the options that match the filter
+	await expect(
+		radioButtonsQuestion.locator('input[type="radio"][value="Option 1"]')
+	).toBeAttached();
+	await expect(
+		radioButtonsQuestion.locator('input[type="radio"][value="Option 2"]')
+	).toBeAttached();
+	await expect(
+		radioButtonsQuestion.locator('input[type="radio"][value="Option 3"]')
+	).toBeAttached();
+
+	// Change the filter to be more specific
+	await formPage.getByLabel('Filter field').fill('Option 1');
+	await page.waitForTimeout(600);
+
+	// Now only Option 1 should be available
+	await expect(
+		radioButtonsQuestion.locator('input[type="radio"][value="Option 1"]')
+	).toBeAttached();
+	await expect(
+		radioButtonsQuestion.locator('input[type="radio"][value="Option 2"]')
+	).not.toBeAttached();
+	await expect(
+		radioButtonsQuestion.locator('input[type="radio"][value="Option 3"]')
+	).not.toBeAttached();
+});
+
+test('dropdown should be hidden when filter field is empty in CollectData mode (but fully visible in Editor)', async ({
+	page,
+}) => {
+	// Set a desktop viewport
+	await page.setViewportSize({ width: 2048, height: 800 });
+	await page.goto('http://localhost:8000/');
+
+	// 1. Add a text field that will be used as the source for filtering
+	await addField(page, 'Single-line free text', undefined, {
+		link: 'Single-line free text',
+		label: 'Filter field',
+		description: 'Enter text to filter options',
+	});
+
+	// Close the editor and wait
+	await page.waitForTimeout(600);
+
+	// 2. Add a dropdown field with options that will be filtered
+	await addField(page, 'Dropdown', undefined, {
+		link: 'Dropdown',
+		label: 'Filtered dropdown',
+		description: 'Options will be filtered based on input',
+		choices: ['Option 1', 'Option 2', 'Option 3'],
+	});
+
+	// Assert that the label and options exists on screen
+	await expect(page.getByText('Filtered dropdown')).toBeVisible();
+	await expect(page.locator('select[name="Filtered dropdown"] option')).toHaveCount(3 + 1); // +1 for the `-- Select --` option
+
+	// Configure the dropdown to use filter
+	await page.locator('.tff-field-container .tff-drag-handle-icon').last().click();
+	await page.waitForTimeout(600);
+
+	// Enable filtering
+	await page.getByText('Filter choices').click();
+	await page.waitForTimeout(600);
+
+	// Set filter type to "Contains"
+	const filterTypeDropdown = page
+		.locator('.tff-field-rule')
+		.first()
+		.locator('.tff-dropdown-group')
+		.first()
+		.locator('select');
+	await filterTypeDropdown.selectOption('contains');
+	await page.waitForTimeout(500);
+
+	// Set source field to the text field
+	const sourceFieldDropdown = page
+		.locator('.tff-field-rule')
+		.first()
+		.locator('.tff-dropdown-group')
+		.last()
+		.locator('select');
+	await sourceFieldDropdown.selectOption('Filter field');
+	await page.waitForTimeout(600);
+
+	// Close the editor
+	await page.locator('.tff-close-button').click();
+	await page.waitForTimeout(1000);
+
+	// Assert that the label and options still exists on screen
+	await expect(page.getByText('Filtered dropdown')).toBeVisible();
+	await expect(page.locator('select[name="Filtered dropdown"] option')).toHaveCount(3 + 1); // +1 for the `-- Select --` option
+
+	// Go to COLLECTDATA MODE
+	const formPage = await viewForm(page);
+	await page.waitForTimeout(1000);
+
+	// We need to check if any options are displayed in the dropdown question.
+	const dropdownQuestion = formPage.locator('.tff-field-group:has-text("Filtered dropdown")');
+
+	// Check if dropdown question has any options
+	const optionCount = await dropdownQuestion.locator('option').count();
+	console.log(`Initial number of visible dropdown options: ${optionCount}`);
+
+	// If dropdown question exists, check if it has options
+	if (optionCount > 0) {
+		// Get the list of option values
+		const optionValues = await dropdownQuestion
+			.locator('option')
+			.allTextContents();
+		console.log(`Initial option values: ${JSON.stringify(optionValues)}`);
+	}
+
+	// The entire field (including label) should be hidden when filter field is empty
+	// Check that field label is not visible
+	const fieldLabel = formPage.getByText('Filtered dropdown');
+	await expect(fieldLabel).not.toBeVisible();
+
+	// Also verify dropdown has no options
+	await expect(dropdownQuestion.locator('option')).toHaveCount(0);
+
+	// When filter field has a value, options should appear
+	await formPage.getByLabel('Filter field').fill('Option');
+	await page.waitForTimeout(600);
+
+	// Check again after filling
+	const optionCountAfterFill = await dropdownQuestion.locator('option').count();
+	console.log(`Number of dropdown options after filling: ${optionCountAfterFill}`);
+
+	// This assertion should pass if the bug is fixed - options appear after filling
+	await expect(dropdownQuestion.locator('option')).not.toHaveCount(0);
+
+	// Verify options are correct
+	const optionValuesAfterFill = await dropdownQuestion
+		.locator('option')
+		.allTextContents();
+	console.log(`Option values after filling: ${JSON.stringify(optionValuesAfterFill)}`);
+
+	// Verify that we can see all the options that match the filter
+	await expect(
+		dropdownQuestion.locator('option[value="Option 1"]')
+	).toBeAttached();
+	await expect(
+		dropdownQuestion.locator('option[value="Option 2"]')
+	).toBeAttached();
+	await expect(
+		dropdownQuestion.locator('option[value="Option 3"]')
+	).toBeAttached();
+
+	// Change the filter to be more specific
+	await formPage.getByLabel('Filter field').fill('Option 1');
+	await page.waitForTimeout(600);
+
+	// Now only Option 1 should be available
+	await expect(
+		dropdownQuestion.locator('option[value="Option 1"]')
+	).toBeAttached();
+	await expect(
+		dropdownQuestion.locator('option[value="Option 2"]')
+	).not.toBeAttached();
+	await expect(
+		dropdownQuestion.locator('option[value="Option 3"]')
 	).not.toBeAttached();
 });
