@@ -89,7 +89,11 @@ test('filter choices dynamically based on another field', async ({ page, browser
 	// Dropdown should be initially hidden while filter is empty
 	const dropdown = formPage.locator('select');
 
-	// To match our new behavior, dropdown options should initially be empty
+	// Check that the entire field (including label) is hidden, not just the options
+	const fieldLabel = formPage.getByText('Select a city');
+	await expect(fieldLabel).not.toBeVisible();
+
+	// Also verify dropdown options are not attached
 	await expect(dropdown.locator('option[value="New York"]')).not.toBeAttached();
 	await expect(dropdown.locator('option[value="Los Angeles"]')).not.toBeAttached();
 	await expect(dropdown.locator('option[value="Chicago"]')).not.toBeAttached();
@@ -208,7 +212,7 @@ test('filter choices with "contains" option', async ({ page, browserName }) => {
 	// Check that the entire field (including label) is hidden, not just the options
 	const fieldLabel = formPage.getByText('Choose a fruit');
 	await expect(fieldLabel).not.toBeVisible();
-	
+
 	// Also verify radio options are not attached
 	await expect(formPage.locator('input[value="Apple"]')).not.toBeAttached();
 	await expect(formPage.locator('input[value="Banana"]')).not.toBeAttached();
@@ -415,9 +419,12 @@ test('bug: choices field should be hidden when filter field is empty', async ({ 
 		console.log(`Initial option values: ${JSON.stringify(optionValues)}`);
 	}
 
-	// BUG: The dropdown should have no options when filter field is empty
-	// We can verify this by checking the option count
-	// This assertion should pass once the bug is fixed
+	// BUG: The entire field (including label) should be hidden when filter field is empty
+	// Check that field label is not visible
+	const fieldLabel = formPage.getByText('Filtered dropdown');
+	await expect(fieldLabel).not.toBeVisible();
+
+	// Also verify dropdown has no options
 	await expect(filteredDropdown.locator('option')).toHaveCount(0);
 
 	// When filter field has a value, options should appear

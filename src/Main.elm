@@ -1648,10 +1648,56 @@ viewFormPreview customAttrs { formFields, needsFormLogic, trackedFormValues, sho
     formFields
         |> Array.filter
             (\formField ->
+                -- Only show fields that satisfy visibility rules...
                 isVisibilityRuleSatisfied formField.visibilityRule trackedFormValues
+                    -- ...AND for fields with filters, the filter field must not be empty
+                    && not (fieldHasEmptyFilter formField trackedFormValues)
             )
         |> Array.indexedMap (viewFormFieldPreview config)
         |> Array.toList
+
+
+fieldHasEmptyFilter : FormField -> Dict String (List String) -> Bool
+fieldHasEmptyFilter formField trackedFormValues =
+    let
+        getFilterField filter =
+            case filter of
+                Just (FilterStartsWithFieldValueOf fieldName) ->
+                    Just fieldName
+
+                Just (FilterContainsFieldValueOf fieldName) ->
+                    Just fieldName
+
+                Nothing ->
+                    Nothing
+
+        isFilterFieldEmpty fieldName =
+            Dict.get fieldName trackedFormValues
+                |> Maybe.andThen List.head
+                |> Maybe.map String.isEmpty
+                |> Maybe.withDefault True
+    in
+    case formField.type_ of
+        Dropdown { filter } ->
+            filter
+                |> getFilterField
+                |> Maybe.map isFilterFieldEmpty
+                |> Maybe.withDefault False
+
+        ChooseOne { filter } ->
+            filter
+                |> getFilterField
+                |> Maybe.map isFilterFieldEmpty
+                |> Maybe.withDefault False
+
+        ChooseMultiple { filter } ->
+            filter
+                |> getFilterField
+                |> Maybe.map isFilterFieldEmpty
+                |> Maybe.withDefault False
+
+        _ ->
+            False
 
 
 when : Bool -> { true : a, false : a } -> a
@@ -1954,6 +2000,9 @@ viewFormFieldOptionsPreview config fieldID formField =
                 -- If there are no choices after filtering, don't show the field at all
                 noChoicesAfterFiltering =
                     not (List.isEmpty choices) && List.isEmpty filteredChoices
+
+                -- Empty filter field is now handled at a higher level in viewFormPreview
+                -- but keeping this check for backward compatibility
             in
             if noChoicesAfterFiltering && config.needsFormLogic then
                 -- Return empty div to hide the field when no choices match filter
@@ -2012,6 +2061,9 @@ viewFormFieldOptionsPreview config fieldID formField =
                 -- If there are no choices after filtering, don't show the field at all
                 noChoicesAfterFiltering =
                     not (List.isEmpty choices) && List.isEmpty filteredChoices
+
+                -- Empty filter field is now handled at a higher level in viewFormPreview
+                -- but keeping this check for backward compatibility
             in
             if noChoicesAfterFiltering && config.needsFormLogic then
                 -- Return empty div to hide the field when no choices match filter
@@ -2059,6 +2111,8 @@ viewFormFieldOptionsPreview config fieldID formField =
                 noChoicesAfterFiltering =
                     not (List.isEmpty choices) && List.isEmpty filteredChoices
 
+                -- Empty filter field is now handled at a higher level in viewFormPreview
+                -- but keeping this check for backward compatibility
                 selectedCount =
                     List.length values
 
