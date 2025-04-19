@@ -1,6 +1,7 @@
 port module Main exposing
     ( AttributeOptional(..)
     , Choice
+    , ChoiceFilter(..)
     , Comparison(..)
     , Condition(..)
     , Dragged(..)
@@ -25,6 +26,7 @@ port module Main exposing
     , encodePairsFromCustomElement
     , evaluateCondition
     , fieldsWithPlaceholder
+    , filterChoices
     , fromRawCustomElement
     , isVisibilityRuleSatisfied
     , main
@@ -306,23 +308,37 @@ type alias Choice =
 type InputField
     = ShortText CustomElement
     | LongText (AttributeOptional Int)
-    | Dropdown (List Choice)
-    | ChooseOne (List Choice)
+    | Dropdown
+        { choices : List Choice
+        , filter : Maybe ChoiceFilter
+        }
+    | ChooseOne
+        { choices : List Choice
+        , filter : Maybe ChoiceFilter
+        }
     | ChooseMultiple
         { choices : List Choice
         , minRequired : Maybe Int
         , maxAllowed : Maybe Int
+        , filter : Maybe ChoiceFilter
         }
 
 
 allInputField : List InputField
 allInputField =
-    [ Dropdown (List.map choiceFromString [ "Red", "Orange", "Yellow", "Green", "Blue", "Indigo", "Violet" ])
-    , ChooseOne (List.map choiceFromString [ "Yes", "No" ])
+    [ Dropdown
+        { choices = List.map choiceFromString [ "Red", "Orange", "Yellow", "Green", "Blue", "Indigo", "Violet" ]
+        , filter = Nothing
+        }
+    , ChooseOne
+        { choices = List.map choiceFromString [ "Yes", "No" ]
+        , filter = Nothing
+        }
     , ChooseMultiple
         { choices = List.map choiceFromString [ "Apple", "Banana", "Cantaloupe", "Durian" ]
         , minRequired = Nothing
         , maxAllowed = Nothing
+        , filter = Nothing
         }
     , LongText (AttributeGiven 160)
     ]
@@ -427,6 +443,9 @@ type FormFieldMsg
     | OnVisibilityConditionDuplicate Int
     | OnCheckboxMinRequiredInput String
     | OnCheckboxMaxAllowedInput String
+    | OnFilterToggle Bool
+    | OnFilterTypeSelect String
+    | OnFilterSourceFieldSelect String
 
 
 otherQuestionTitles : Array FormField -> Int -> List { label : String, name : Maybe String }
@@ -448,24 +467,38 @@ getPreviousFieldNameOrLabel index formFields =
         ""
 
 
-{-| Check if a field is referenced by any other field's visibility rules
+{-| Check if a field is referenced by any other field's visibility rules or choice filters
 -}
-isFieldReferencedBy : String -> Array FormField -> Bool
+isFieldReferencedBy : String -> Array FormField -> { usedInVisibilityRules : Bool, usedInChoiceFilters : Bool }
 isFieldReferencedBy fieldName formFields =
-    Array.toList formFields
-        |> List.any
-            (\field ->
-                List.any
-                    (\rule ->
-                        case rule of
-                            ShowWhen conditions ->
-                                List.any (isConditionReferencingField fieldName) conditions
+    let
+        fieldList =
+            Array.toList formFields
 
-                            HideWhen conditions ->
-                                List.any (isConditionReferencingField fieldName) conditions
-                    )
-                    field.visibilityRule
-            )
+        isUsedInVisibilityRules =
+            List.any
+                (\field ->
+                    List.any
+                        (\rule ->
+                            case rule of
+                                ShowWhen conditions ->
+                                    List.any (isConditionReferencingField fieldName) conditions
+
+                                HideWhen conditions ->
+                                    List.any (isConditionReferencingField fieldName) conditions
+                        )
+                        field.visibilityRule
+                )
+                fieldList
+
+        isUsedInChoiceFilters =
+            List.any
+                (\field -> isFieldUsedInFilter fieldName field.type_)
+                fieldList
+    in
+    { usedInVisibilityRules = isUsedInVisibilityRules
+    , usedInChoiceFilters = isUsedInChoiceFilters
+    }
 
 
 {-| Check if a condition references the given field
@@ -475,6 +508,39 @@ isConditionReferencingField fieldName condition =
     case condition of
         Field conditionFieldName _ ->
             conditionFieldName == fieldName
+
+
+{-| Check if a field is used as a source field in a choice filter
+-}
+isFieldUsedInFilter : String -> InputField -> Bool
+isFieldUsedInFilter fieldName inputField =
+    case inputField of
+        Dropdown { filter } ->
+            isFieldUsedInChoiceFilter fieldName filter
+
+        ChooseOne { filter } ->
+            isFieldUsedInChoiceFilter fieldName filter
+
+        ChooseMultiple { filter } ->
+            isFieldUsedInChoiceFilter fieldName filter
+
+        _ ->
+            False
+
+
+{-| Check if a field is referenced in a choice filter
+-}
+isFieldUsedInChoiceFilter : String -> Maybe ChoiceFilter -> Bool
+isFieldUsedInChoiceFilter fieldName maybeFilter =
+    case maybeFilter of
+        Just (FilterStartsWithFieldValueOf sourceField) ->
+            sourceField == fieldName
+
+        Just (FilterContainsFieldValueOf sourceField) ->
+            sourceField == fieldName
+
+        Nothing ->
+            False
 
 
 
@@ -534,7 +600,7 @@ init flags =
               , formFields = config.formFields
               , needsFormLogic =
                     config.formFields
-                        |> Array.filter (\f -> not (List.isEmpty f.visibilityRule))
+                        |> Array.filter (\f -> isUsingFilter f || not (List.isEmpty f.visibilityRule))
                         |> Array.isEmpty
                         |> not
               , trackedFormValues = initialTrackedFormValues
@@ -937,11 +1003,19 @@ updateFormField msg fieldIndex string formFields formField =
                 LongText _ ->
                     formField
 
-                Dropdown _ ->
-                    { formField | type_ = Dropdown (List.map choiceFromString (String.lines string)) }
+                Dropdown settings ->
+                    { formField
+                        | type_ =
+                            Dropdown
+                                { settings | choices = List.map choiceFromString (String.lines string) }
+                    }
 
-                ChooseOne _ ->
-                    { formField | type_ = ChooseOne (List.map choiceFromString (String.lines string)) }
+                ChooseOne settings ->
+                    { formField
+                        | type_ =
+                            ChooseOne
+                                { settings | choices = List.map choiceFromString (String.lines string) }
+                    }
 
                 ChooseMultiple settings ->
                     let
@@ -990,9 +1064,10 @@ updateFormField msg fieldIndex string formFields formField =
                     { formField
                         | type_ =
                             ChooseMultiple
-                                { choices = newChoices
-                                , minRequired = newMinRequired
-                                , maxAllowed = newMaxAllowed
+                                { settings
+                                    | choices = newChoices
+                                    , minRequired = newMinRequired
+                                    , maxAllowed = newMaxAllowed
                                 }
                     }
 
@@ -1226,6 +1301,114 @@ updateFormField msg fieldIndex string formFields formField =
                         formField.visibilityRule
             }
 
+        OnFilterToggle checked ->
+            -- Remove filter if unchecked, add default if checked
+            case formField.type_ of
+                Dropdown settings ->
+                    let
+                        newFilter =
+                            if checked then
+                                Just (FilterStartsWithFieldValueOf "")
+
+                            else
+                                Nothing
+                    in
+                    { formField | type_ = Dropdown { settings | filter = newFilter } }
+
+                ChooseOne settings ->
+                    let
+                        newFilter =
+                            if checked then
+                                Just (FilterStartsWithFieldValueOf "")
+
+                            else
+                                Nothing
+                    in
+                    { formField | type_ = ChooseOne { settings | filter = newFilter } }
+
+                ChooseMultiple settings ->
+                    let
+                        newFilter =
+                            if checked then
+                                Just (FilterStartsWithFieldValueOf "")
+
+                            else
+                                Nothing
+                    in
+                    { formField | type_ = ChooseMultiple { settings | filter = newFilter } }
+
+                _ ->
+                    formField
+
+        OnFilterTypeSelect filterType ->
+            -- Update filter type (startsWith/contains) while preserving the source field
+            let
+                updateFilter existingFilter =
+                    case existingFilter of
+                        Just (FilterStartsWithFieldValueOf fieldName) ->
+                            if filterType == "contains" then
+                                Just (FilterContainsFieldValueOf fieldName)
+
+                            else
+                                existingFilter
+
+                        Just (FilterContainsFieldValueOf fieldName) ->
+                            if filterType == "startswith" then
+                                Just (FilterStartsWithFieldValueOf fieldName)
+
+                            else
+                                existingFilter
+
+                        Nothing ->
+                            if filterType == "startswith" then
+                                Just (FilterStartsWithFieldValueOf "")
+
+                            else if filterType == "contains" then
+                                Just (FilterContainsFieldValueOf "")
+
+                            else
+                                Nothing
+            in
+            case formField.type_ of
+                Dropdown settings ->
+                    { formField | type_ = Dropdown { settings | filter = updateFilter settings.filter } }
+
+                ChooseOne settings ->
+                    { formField | type_ = ChooseOne { settings | filter = updateFilter settings.filter } }
+
+                ChooseMultiple settings ->
+                    { formField | type_ = ChooseMultiple { settings | filter = updateFilter settings.filter } }
+
+                _ ->
+                    formField
+
+        OnFilterSourceFieldSelect fieldName ->
+            -- Update source field while preserving the filter type
+            let
+                updateSourceField existingFilter =
+                    case existingFilter of
+                        Just (FilterStartsWithFieldValueOf _) ->
+                            Just (FilterStartsWithFieldValueOf fieldName)
+
+                        Just (FilterContainsFieldValueOf _) ->
+                            Just (FilterContainsFieldValueOf fieldName)
+
+                        Nothing ->
+                            Just (FilterStartsWithFieldValueOf fieldName)
+            in
+            case formField.type_ of
+                Dropdown settings ->
+                    { formField | type_ = Dropdown { settings | filter = updateSourceField settings.filter } }
+
+                ChooseOne settings ->
+                    { formField | type_ = ChooseOne { settings | filter = updateSourceField settings.filter } }
+
+                ChooseMultiple settings ->
+                    { formField | type_ = ChooseMultiple { settings | filter = updateSourceField settings.filter } }
+
+                _ ->
+                    formField
+
 
 onDropped : Maybe Int -> { a | dragged : Maybe Dragged, formFields : Array FormField, nextQuestionNumber : Int } -> { a | dragged : Maybe Dragged, formFields : Array FormField, nextQuestionNumber : Int }
 onDropped targetIndex model =
@@ -1389,6 +1572,46 @@ viewMain model =
         )
 
 
+{-| Checks if a ChooseMultiple field has min/max constraints
+-}
+isChooseManyUsingMinMax : FormField -> Bool
+isChooseManyUsingMinMax formField =
+    case formField.type_ of
+        ShortText _ ->
+            False
+
+        LongText _ ->
+            False
+
+        ChooseMultiple { minRequired, maxAllowed } ->
+            minRequired /= Nothing || maxAllowed /= Nothing
+
+        ChooseOne _ ->
+            False
+
+        Dropdown _ ->
+            False
+
+
+isUsingFilter : FormField -> Bool
+isUsingFilter formField =
+    case formField.type_ of
+        ShortText _ ->
+            False
+
+        LongText _ ->
+            False
+
+        ChooseMultiple { filter } ->
+            filter /= Nothing
+
+        ChooseOne { filter } ->
+            filter /= Nothing
+
+        Dropdown { filter } ->
+            filter /= Nothing
+
+
 viewFormPreview : List (Html.Attribute Msg) -> { a | formFields : Array FormField, needsFormLogic : Bool, trackedFormValues : Dict String (List String), shortTextTypeDict : Dict String CustomElement } -> List (Html Msg)
 viewFormPreview customAttrs { formFields, needsFormLogic, trackedFormValues, shortTextTypeDict } =
     let
@@ -1403,6 +1626,10 @@ viewFormPreview customAttrs { formFields, needsFormLogic, trackedFormValues, sho
             [ onChange (OnFormValuesUpdated fieldName)
             ]
 
+        isAnyChooseManyUsingMinMax =
+            Array.toList formFields
+                |> List.any isChooseManyUsingMinMax
+
         config =
             { customAttrs = customAttrs
             , shortTextTypeDict = shortTextTypeDict
@@ -1410,31 +1637,11 @@ viewFormPreview customAttrs { formFields, needsFormLogic, trackedFormValues, sho
             , trackedFormValues = trackedFormValues
             , needsFormLogic = needsFormLogic -- Pass the flag through to detect CollectData mode
             , onChooseMany =
-                if needsFormLogic then
+                if needsFormLogic || isAnyChooseManyUsingMinMax then
                     onChooseManyAttrs
 
                 else
-                    \fieldName choice ->
-                        -- Wire up event handlers in CollectData mode for fields with min/max constraints
-                        case
-                            Array.toList formFields
-                                |> List.filter (\f -> fieldNameOf f == fieldName)
-                                |> List.head
-                        of
-                            Just field ->
-                                case field.type_ of
-                                    ChooseMultiple { minRequired, maxAllowed } ->
-                                        if minRequired /= Nothing || maxAllowed /= Nothing then
-                                            onChooseManyAttrs fieldName choice
-
-                                        else
-                                            []
-
-                                    _ ->
-                                        []
-
-                            Nothing ->
-                                []
+                    \_ _ -> []
             , onInput =
                 if needsFormLogic then
                     onInputAttrs
@@ -1452,10 +1659,56 @@ viewFormPreview customAttrs { formFields, needsFormLogic, trackedFormValues, sho
     formFields
         |> Array.filter
             (\formField ->
+                -- Only show fields that satisfy visibility rules...
                 isVisibilityRuleSatisfied formField.visibilityRule trackedFormValues
+                    -- ...AND for fields with filters, the filter field must not be empty
+                    && not (fieldHasEmptyFilter formField trackedFormValues)
             )
         |> Array.indexedMap (viewFormFieldPreview config)
         |> Array.toList
+
+
+fieldHasEmptyFilter : FormField -> Dict String (List String) -> Bool
+fieldHasEmptyFilter formField trackedFormValues =
+    let
+        getFilterField filter =
+            case filter of
+                Just (FilterStartsWithFieldValueOf fieldName) ->
+                    Just fieldName
+
+                Just (FilterContainsFieldValueOf fieldName) ->
+                    Just fieldName
+
+                Nothing ->
+                    Nothing
+
+        isFilterFieldEmpty fieldName =
+            Dict.get fieldName trackedFormValues
+                |> Maybe.andThen List.head
+                |> Maybe.map String.isEmpty
+                |> Maybe.withDefault True
+    in
+    case formField.type_ of
+        Dropdown { filter } ->
+            filter
+                |> getFilterField
+                |> Maybe.map isFilterFieldEmpty
+                |> Maybe.withDefault False
+
+        ChooseOne { filter } ->
+            filter
+                |> getFilterField
+                |> Maybe.map isFilterFieldEmpty
+                |> Maybe.withDefault False
+
+        ChooseMultiple { filter } ->
+            filter
+                |> getFilterField
+                |> Maybe.map isFilterFieldEmpty
+                |> Maybe.withDefault False
+
+        _ ->
+            False
 
 
 when : Bool -> { true : a, false : a } -> a
@@ -1745,93 +1998,144 @@ viewFormFieldOptionsPreview config fieldID formField =
                 )
                 []
 
-        Dropdown choices ->
+        Dropdown { choices, filter } ->
             let
                 valueString =
                     Dict.get fieldName config.trackedFormValues
                         |> Maybe.andThen List.head
                         |> Maybe.withDefault ""
-            in
-            div [ class "tff-dropdown-group" ]
-                [ selectArrowDown
-                , select
-                    ([ name fieldName
-                     , id fieldID
 
-                     -- when we're disabling `<select>` we actually only
-                     -- want to disable the `<option>`s so user can see the options but cannot choose
-                     -- but if the `<select>` is required, then now we are in a bind
-                     -- so we cannot have `required` on the `<select>` if we're disabling it
-                     , if disabledMode then
-                        class "tff-select-disabled"
-
-                       else
-                        required (requiredData formField.presence)
-                     ]
-                        ++ config.onChange fieldName
-                    )
-                    (option
-                        ([ disabled True
-                         , defaultSelected (valueString == "" && not (chosenForYou choices))
-                         , attribute "value" ""
-                         ]
-                            ++ config.customAttrs
-                        )
-                        [ text "-- Select an option --" ]
-                        :: List.map
-                            (\choice ->
-                                option
-                                    (value choice.value
-                                        :: defaultSelected (valueString == choice.value || chosenForYou choices)
-                                        :: config.customAttrs
-                                    )
-                                    [ text choice.label ]
-                            )
-                            choices
-                    )
-                ]
-
-        ChooseOne choices ->
-            let
-                valueString =
-                    Dict.get fieldName config.trackedFormValues
-                        |> Maybe.andThen List.head
-                        |> Maybe.withDefault ""
-            in
-            -- radio buttons
-            div [ class "tff-chooseone-group" ]
-                [ div [ class "tff-chooseone-radiobuttons" ]
-                    (List.map
-                        (\choice ->
-                            div [ class "tff-radiobuttons-group" ]
-                                [ label [ class "tff-field-label" ]
-                                    [ input
-                                        ([ type_ "radio"
-                                         , tabindex 0
-                                         , name fieldName
-                                         , value choice.value
-                                         , checked (valueString == choice.value || chosenForYou choices)
-                                         , required (requiredData formField.presence)
-                                         ]
-                                            ++ config.customAttrs
-                                            ++ config.onInput fieldName
-                                        )
-                                        []
-                                    , text " "
-                                    , text choice.label
-                                    ]
-                                ]
-                        )
+                filteredChoices =
+                    if disabledMode then
                         choices
-                    )
-                ]
 
-        ChooseMultiple { choices, minRequired, maxAllowed } ->
+                    else
+                        filterChoices filter config.trackedFormValues choices
+
+                -- If there are no choices after filtering, don't show the field at all
+                noChoicesAfterFiltering =
+                    not (List.isEmpty choices) && List.isEmpty filteredChoices
+
+                -- Empty filter field is now handled at a higher level in viewFormPreview
+                -- but keeping this check for backward compatibility
+            in
+            if noChoicesAfterFiltering && config.needsFormLogic then
+                -- Return empty div to hide the field when no choices match filter
+                div [] []
+
+            else
+                div [ class "tff-dropdown-group" ]
+                    [ selectArrowDown
+                    , select
+                        ([ name fieldName
+                         , id fieldID
+
+                         -- when we're disabling `<select>` we actually only
+                         -- want to disable the `<option>`s so user can see the options but cannot choose
+                         -- but if the `<select>` is required, then now we are in a bind
+                         -- so we cannot have `required` on the `<select>` if we're disabling it
+                         , if disabledMode then
+                            class "tff-select-disabled"
+
+                           else
+                            required (requiredData formField.presence)
+                         ]
+                            ++ config.onChange fieldName
+                        )
+                        (option
+                            ([ disabled True
+                             , defaultSelected (valueString == "" && not (chosenForYou filteredChoices))
+                             , attribute "value" ""
+                             ]
+                                ++ config.customAttrs
+                            )
+                            [ text "-- Select an option --" ]
+                            :: List.map
+                                (\choice ->
+                                    option
+                                        (value choice.value
+                                            :: defaultSelected (valueString == choice.value || chosenForYou filteredChoices)
+                                            :: config.customAttrs
+                                        )
+                                        [ text choice.label ]
+                                )
+                                filteredChoices
+                        )
+                    ]
+
+        ChooseOne { choices, filter } ->
+            let
+                valueString =
+                    Dict.get fieldName config.trackedFormValues
+                        |> Maybe.andThen List.head
+                        |> Maybe.withDefault ""
+
+                filteredChoices =
+                    if disabledMode then
+                        choices
+
+                    else
+                        filterChoices filter config.trackedFormValues choices
+
+                -- If there are no choices after filtering, don't show the field at all
+                noChoicesAfterFiltering =
+                    not (List.isEmpty choices) && List.isEmpty filteredChoices
+
+                -- Empty filter field is now handled at a higher level in viewFormPreview
+                -- but keeping this check for backward compatibility
+            in
+            if noChoicesAfterFiltering && config.needsFormLogic then
+                -- Return empty div to hide the field when no choices match filter
+                div [] []
+
+            else
+                -- radio buttons
+                div [ class "tff-chooseone-group" ]
+                    [ div [ class "tff-chooseone-radiobuttons" ]
+                        (List.map
+                            (\choice ->
+                                div [ class "tff-radiobuttons-group" ]
+                                    [ label [ class "tff-field-label" ]
+                                        [ input
+                                            ([ type_ "radio"
+                                             , tabindex 0
+                                             , name fieldName
+                                             , value choice.value
+                                             , checked (valueString == choice.value || chosenForYou filteredChoices)
+                                             , required (requiredData formField.presence)
+                                             ]
+                                                ++ config.customAttrs
+                                                ++ config.onInput fieldName
+                                            )
+                                            []
+                                        , text " "
+                                        , text choice.label
+                                        ]
+                                    ]
+                            )
+                            filteredChoices
+                        )
+                    ]
+
+        ChooseMultiple { choices, minRequired, maxAllowed, filter } ->
             let
                 values =
                     Dict.get fieldName config.trackedFormValues
                         |> Maybe.withDefault []
 
+                filteredChoices =
+                    if disabledMode then
+                        choices
+
+                    else
+                        filterChoices filter config.trackedFormValues choices
+
+                -- If there are no choices after filtering, don't show the field at all
+                noChoicesAfterFiltering =
+                    not (List.isEmpty choices) && List.isEmpty filteredChoices
+
+                -- Empty filter field is now handled at a higher level in viewFormPreview
+                -- but keeping this check for backward compatibility
                 selectedCount =
                     List.length values
 
@@ -1870,44 +2174,49 @@ viewFormFieldOptionsPreview config fieldID formField =
                     else
                         []
             in
-            -- checkboxes
-            div
-                [ class
-                    ("tff-choosemany-group"
-                        ++ (if not disabledMode && (minRequired /= Nothing || maxAllowed /= Nothing) && not isValid then
-                                " tff-invalid-checkbox"
+            if noChoicesAfterFiltering && config.needsFormLogic then
+                -- Return empty div to hide the field when no choices match filter
+                div [] []
 
-                            else
-                                ""
-                           )
-                    )
-                ]
-                (validationElement
-                    ++ [ div [ class "tff-choosemany-checkboxes" ]
-                            (List.map
-                                (\choice ->
-                                    div [ class "tff-checkbox-group" ]
-                                        [ label [ class "tff-field-label" ]
-                                            [ input
-                                                ([ type_ "checkbox"
-                                                 , tabindex 0
-                                                 , name fieldName
-                                                 , value choice.value
-                                                 , checked (List.member choice.value values || chosenForYou choices)
-                                                 ]
-                                                    ++ config.customAttrs
-                                                    ++ config.onChooseMany fieldName choice
-                                                )
-                                                []
-                                            , text " "
-                                            , text choice.label
+            else
+                -- checkboxes
+                div
+                    [ class
+                        ("tff-choosemany-group"
+                            ++ (if not disabledMode && (minRequired /= Nothing || maxAllowed /= Nothing) && not isValid then
+                                    " tff-invalid-checkbox"
+
+                                else
+                                    ""
+                               )
+                        )
+                    ]
+                    (validationElement
+                        ++ [ div [ class "tff-choosemany-checkboxes" ]
+                                (List.map
+                                    (\choice ->
+                                        div [ class "tff-checkbox-group" ]
+                                            [ label [ class "tff-field-label" ]
+                                                [ input
+                                                    ([ type_ "checkbox"
+                                                     , tabindex 0
+                                                     , name fieldName
+                                                     , value choice.value
+                                                     , checked (List.member choice.value values || chosenForYou filteredChoices)
+                                                     ]
+                                                        ++ config.customAttrs
+                                                        ++ config.onChooseMany fieldName choice
+                                                    )
+                                                    []
+                                                , text " "
+                                                , text choice.label
+                                                ]
                                             ]
-                                        ]
+                                    )
+                                    filteredChoices
                                 )
-                                choices
-                            )
-                       ]
-                )
+                           ]
+                    )
 
 
 renderFormBuilderField : Maybe ( Int, Animate ) -> Model -> Int -> Maybe FormField -> Html Msg
@@ -1970,43 +2279,96 @@ renderFormBuilderField maybeAnimate model index maybeFormField =
                             fieldName =
                                 fieldNameOf formField
 
-                            isReferenced =
+                            referencedInfo =
                                 isFieldReferencedBy fieldName model.formFields
+
+                            hasFilterChoices =
+                                case formField.type_ of
+                                    Dropdown { filter } ->
+                                        filter /= Nothing
+
+                                    ChooseOne { filter } ->
+                                        filter /= Nothing
+
+                                    ChooseMultiple { filter } ->
+                                        filter /= Nothing
+
+                                    _ ->
+                                        False
                           in
-                          if hasVisibilityRules || isReferenced then
-                            div
-                                [ class
-                                    (if hasVisibilityRules then
-                                        "tff-logic-indicator tff-logic-indicator-blue"
+                          div [ class "tff-logic-indicators-container" ]
+                            [ -- Visibility Logic Indicator
+                              if hasVisibilityRules || referencedInfo.usedInVisibilityRules then
+                                div
+                                    [ class
+                                        (if hasVisibilityRules then
+                                            "tff-logic-indicator tff-logic-indicator-blue"
 
-                                     else
-                                        "tff-logic-indicator tff-logic-indicator-gray"
-                                    )
-                                , title
-                                    (if hasVisibilityRules && isReferenced then
-                                        "This field has visibility logic and other fields depend on it"
+                                         else
+                                            "tff-logic-indicator tff-logic-indicator-gray"
+                                        )
+                                    , title
+                                        (if hasVisibilityRules && referencedInfo.usedInVisibilityRules then
+                                            "This field has visibility logic and other fields' visibility depends on it"
 
-                                     else if hasVisibilityRules then
-                                        "This field has visibility logic"
+                                         else if hasVisibilityRules then
+                                            "This field has visibility logic"
 
-                                     else
-                                        "Other fields depend on this field's value"
-                                    )
-                                ]
-                                [ text
-                                    (if hasVisibilityRules && isReferenced then
-                                        "Contains & affects logic"
+                                         else
+                                            "Other fields' visibility depends on this field's value"
+                                        )
+                                    ]
+                                    [ text
+                                        (if hasVisibilityRules && referencedInfo.usedInVisibilityRules then
+                                            "Contains & affects logic"
 
-                                     else if hasVisibilityRules then
-                                        "Contains logic"
+                                         else if hasVisibilityRules then
+                                            "Contains logic"
 
-                                     else
-                                        "Affects logic"
-                                    )
-                                ]
+                                         else
+                                            "Affects logic"
+                                        )
+                                    ]
 
-                          else
-                            text ""
+                              else
+                                text ""
+
+                            -- Choice Filter Indicator
+                            , if hasFilterChoices || referencedInfo.usedInChoiceFilters then
+                                div
+                                    [ class
+                                        (if hasFilterChoices then
+                                            "tff-logic-indicator tff-logic-indicator-orange"
+
+                                         else
+                                            "tff-logic-indicator tff-logic-indicator-gray"
+                                        )
+                                    , title
+                                        (if hasFilterChoices && referencedInfo.usedInChoiceFilters then
+                                            "This field filters choices and other fields' choices depend on it"
+
+                                         else if hasFilterChoices then
+                                            "This field filters choices based on another field"
+
+                                         else
+                                            "Other fields' choices depend on this field's value"
+                                        )
+                                    ]
+                                    [ text
+                                        (if hasFilterChoices && referencedInfo.usedInChoiceFilters then
+                                            "Filters & affects choices"
+
+                                         else if hasFilterChoices then
+                                            "Filters choices"
+
+                                         else
+                                            "Affects choices"
+                                        )
+                                    ]
+
+                              else
+                                text ""
+                            ]
                         , viewFormFieldPreview
                             { customAttrs = [ attribute "disabled" "disabled" ]
                             , formFields = model.formFields
@@ -2185,10 +2547,10 @@ visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
                     case selectedField of
                         Just field ->
                             case field.type_ of
-                                Dropdown choices ->
+                                Dropdown { choices } ->
                                     Just (Html.datalist [ id datalistId ] (List.map (\c -> Html.option [ value c.value ] []) choices))
 
-                                ChooseOne choices ->
+                                ChooseOne { choices } ->
                                     Just (Html.datalist [ id datalistId ] (List.map (\c -> Html.option [ value c.value ] []) choices))
 
                                 ChooseMultiple { choices } ->
@@ -2239,7 +2601,7 @@ visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
                                                    )
                                             )
                                         ]
-                                        [ text (Json.Encode.encode 0 (Json.Encode.string field.label)) ]
+                                        [ text ("value of " ++ Json.Encode.encode 0 (Json.Encode.string field.label)) ]
                                 )
                                 (otherQuestionTitles formFields fieldIndex)
                         )
@@ -2459,7 +2821,7 @@ viewFormFieldBuilder shortTextTypeList index totalLength formFields formField =
             }
             formField.description
          ]
-            ++ viewFormFieldOptionsBuilder shortTextTypeList index formField
+            ++ viewFormFieldOptionsBuilder shortTextTypeList index formFields formField
             ++ [ visibilityRulesSection index formFields formField
                , div [ class "tff-build-field-buttons" ]
                     [ div [ class "tff-move" ]
@@ -2602,8 +2964,8 @@ viewAddQuestionsList nextQuestionNumber inputFields =
         )
 
 
-viewFormFieldOptionsBuilder : List CustomElement -> Int -> FormField -> List (Html Msg)
-viewFormFieldOptionsBuilder shortTextTypeList index formField =
+viewFormFieldOptionsBuilder : List CustomElement -> Int -> Array FormField -> FormField -> List (Html Msg)
+viewFormFieldOptionsBuilder shortTextTypeList index formFields formField =
     let
         idSuffix =
             String.fromInt index
@@ -2633,6 +2995,102 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
                     ]
                     []
                 ]
+
+        filterCheckbox filter =
+            div [ class "tff-field-group" ]
+                [ label [ class "tff-field-label", for ("filter-" ++ idSuffix) ]
+                    [ input
+                        [ id ("filter-" ++ idSuffix)
+                        , type_ "checkbox"
+                        , tabindex 0
+                        , checked (filter /= Nothing)
+                        , onCheck (\b -> OnFormField (OnFilterToggle b) index "")
+                        ]
+                        []
+                    , text " "
+                    , text "Filter choices"
+                    ]
+                ]
+
+        filterSettings filter =
+            if filter /= Nothing then
+                let
+                    filterType =
+                        case filter of
+                            Just (FilterStartsWithFieldValueOf _) ->
+                                "startswith"
+
+                            Just (FilterContainsFieldValueOf _) ->
+                                "contains"
+
+                            Nothing ->
+                                "startswith"
+
+                    sourceFieldName =
+                        case filter of
+                            Just (FilterStartsWithFieldValueOf name) ->
+                                name
+
+                            Just (FilterContainsFieldValueOf name) ->
+                                name
+
+                            Nothing ->
+                                ""
+
+                    otherFields =
+                        otherQuestionTitles formFields index
+                in
+                [ div [ class "tff-field-rule" ]
+                    [ div [ class "tff-field-group" ]
+                        [ div [ class "tff-dropdown-group" ]
+                            [ selectArrowDown
+                            , select
+                                [ class "tff-select"
+                                , onChange (\newFilterType -> OnFormField (OnFilterTypeSelect newFilterType) index "")
+                                , value filterType
+                                ]
+                                [ option [ value "startswith" ] [ text "Show choices that starts with" ]
+                                , option [ value "contains" ] [ text "Show choices that contains" ]
+                                ]
+                            ]
+                        ]
+                    , div [ class "tff-field-group mb-0" ]
+                        [ div [ class "tff-dropdown-group" ]
+                            [ selectArrowDown
+                            , select
+                                [ class "tff-select"
+                                , onChange (\fieldName -> OnFormField (OnFilterSourceFieldSelect fieldName) index "")
+                                , value sourceFieldName
+                                ]
+                                (option
+                                    [ value ""
+                                    , selected (String.isEmpty sourceFieldName)
+                                    ]
+                                    [ text "-- Select a field --" ]
+                                    :: List.map
+                                        (\field ->
+                                            let
+                                                fieldValue =
+                                                    field.name |> Maybe.withDefault field.label
+
+                                                isSelected =
+                                                    fieldValue == sourceFieldName
+                                            in
+                                            option
+                                                [ value fieldValue
+                                                , selected isSelected
+                                                ]
+                                                [ text ("value of " ++ Json.Encode.encode 0 (Json.Encode.string field.label)) ]
+                                        )
+                                        otherFields
+                                )
+                            ]
+                        ]
+                    ]
+                ]
+
+            else
+                []
     in
     case formField.type_ of
         ShortText customElement ->
@@ -2743,51 +3201,58 @@ viewFormFieldOptionsBuilder shortTextTypeList index formField =
                 optionalMaxLength
             ]
 
-        Dropdown choices ->
+        Dropdown { choices, filter } ->
             [ choicesTextarea choices
+            , filterCheckbox filter
             ]
+                ++ filterSettings filter
 
-        ChooseOne choices ->
+        ChooseOne { choices, filter } ->
             [ choicesTextarea choices
+            , filterCheckbox filter
             ]
+                ++ filterSettings filter
 
-        ChooseMultiple { choices, minRequired, maxAllowed } ->
+        ChooseMultiple { choices, minRequired, maxAllowed, filter } ->
             [ choicesTextarea choices
-            , div [ class "tff-field-group" ]
-                [ label [ class "tff-field-label" ] [ text "Minimum required" ]
-                , input
-                    [ type_ "number"
-                    , class "tff-text-field"
-                    , value (minRequired |> Maybe.map String.fromInt |> Maybe.withDefault "")
-                    , Attr.min "0"
-
-                    -- Maximum value constraint: Either the maxAllowed value (if present) or the number of choices
-                    , maxAllowed
-                        |> Maybe.map (\max -> Attr.max (String.fromInt max))
-                        |> Maybe.withDefault (Attr.max (String.fromInt (List.length choices)))
-                    , onInput (\val -> OnFormField (OnCheckboxMinRequiredInput val) index "")
-                    ]
-                    []
-                ]
-            , div [ class "tff-field-group" ]
-                [ label [ class "tff-field-label" ] [ text "Maximum allowed" ]
-                , input
-                    [ type_ "number"
-                    , class "tff-text-field"
-                    , value (maxAllowed |> Maybe.map String.fromInt |> Maybe.withDefault "")
-
-                    -- Minimum value constraint: Either the minRequired value (if present) or 0
-                    , minRequired
-                        |> Maybe.map (\min -> Attr.min (String.fromInt min))
-                        |> Maybe.withDefault (Attr.min "0")
-
-                    -- Maximum should not exceed the number of available choices
-                    , Attr.max (String.fromInt (List.length choices))
-                    , onInput (\val -> OnFormField (OnCheckboxMaxAllowedInput val) index "")
-                    ]
-                    []
-                ]
+            , filterCheckbox filter
             ]
+                ++ filterSettings filter
+                ++ [ div [ class "tff-field-group" ]
+                        [ label [ class "tff-field-label" ] [ text "Minimum required" ]
+                        , input
+                            [ type_ "number"
+                            , class "tff-text-field"
+                            , value (minRequired |> Maybe.map String.fromInt |> Maybe.withDefault "")
+                            , Attr.min "0"
+
+                            -- Maximum value constraint: Either the maxAllowed value (if present) or the number of choices
+                            , maxAllowed
+                                |> Maybe.map (\max -> Attr.max (String.fromInt max))
+                                |> Maybe.withDefault (Attr.max (String.fromInt (List.length choices)))
+                            , onInput (\val -> OnFormField (OnCheckboxMinRequiredInput val) index "")
+                            ]
+                            []
+                        ]
+                   , div [ class "tff-field-group" ]
+                        [ label [ class "tff-field-label" ] [ text "Maximum allowed" ]
+                        , input
+                            [ type_ "number"
+                            , class "tff-text-field"
+                            , value (maxAllowed |> Maybe.map String.fromInt |> Maybe.withDefault "")
+
+                            -- Minimum value constraint: Either the minRequired value (if present) or 0
+                            , minRequired
+                                |> Maybe.map (\min -> Attr.min (String.fromInt min))
+                                |> Maybe.withDefault (Attr.min "0")
+
+                            -- Maximum should not exceed the number of available choices
+                            , Attr.max (String.fromInt (List.length choices))
+                            , onInput (\val -> OnFormField (OnCheckboxMaxAllowedInput val) index "")
+                            ]
+                            []
+                        ]
+                   ]
 
 
 hasDuplicateLabel : Int -> String -> Array FormField -> Bool
@@ -3220,6 +3685,22 @@ encodePairsFromCustomElement customElement =
     encodePairsFromRawCustomElements (toRawCustomElement customElement)
 
 
+encodeChoiceFilter : ChoiceFilter -> Json.Encode.Value
+encodeChoiceFilter filter =
+    case filter of
+        FilterStartsWithFieldValueOf fieldName ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "FilterStartsWith" )
+                , ( "fieldName", Json.Encode.string fieldName )
+                ]
+
+        FilterContainsFieldValueOf fieldName ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "FilterContains" )
+                , ( "fieldName", Json.Encode.string fieldName )
+                ]
+
+
 encodeInputField : InputField -> Json.Encode.Value
 encodeInputField inputField =
     case inputField of
@@ -3235,19 +3716,35 @@ encodeInputField inputField =
                 , ( "maxLength", encodeAttributeOptional Json.Encode.int optionalMaxLength )
                 ]
 
-        Dropdown choices ->
+        Dropdown { choices, filter } ->
             Json.Encode.object
-                [ ( "type", Json.Encode.string "Dropdown" )
-                , ( "choices", Json.Encode.list encodeChoice (List.filter (\{ value } -> String.trim value /= "") choices) )
-                ]
+                ([ ( "type", Json.Encode.string "Dropdown" )
+                 , ( "choices", Json.Encode.list encodeChoice (List.filter (\{ value } -> String.trim value /= "") choices) )
+                 ]
+                    ++ (case filter of
+                            Just f ->
+                                [ ( "filter", encodeChoiceFilter f ) ]
 
-        ChooseOne choices ->
+                            Nothing ->
+                                []
+                       )
+                )
+
+        ChooseOne { choices, filter } ->
             Json.Encode.object
-                [ ( "type", Json.Encode.string "ChooseOne" )
-                , ( "choices", Json.Encode.list encodeChoice (List.filter (\{ value } -> String.trim value /= "") choices) )
-                ]
+                ([ ( "type", Json.Encode.string "ChooseOne" )
+                 , ( "choices", Json.Encode.list encodeChoice (List.filter (\{ value } -> String.trim value /= "") choices) )
+                 ]
+                    ++ (case filter of
+                            Just f ->
+                                [ ( "filter", encodeChoiceFilter f ) ]
 
-        ChooseMultiple { choices, minRequired, maxAllowed } ->
+                            Nothing ->
+                                []
+                       )
+                )
+
+        ChooseMultiple { choices, minRequired, maxAllowed, filter } ->
             Json.Encode.object
                 ([ ( "type", Json.Encode.string "ChooseMultiple" )
                  , ( "choices", Json.Encode.list encodeChoice (List.filter (\{ value } -> String.trim value /= "") choices) )
@@ -3266,7 +3763,33 @@ encodeInputField inputField =
                             Nothing ->
                                 []
                        )
+                    ++ (case filter of
+                            Just f ->
+                                [ ( "filter", encodeChoiceFilter f ) ]
+
+                            Nothing ->
+                                []
+                       )
                 )
+
+
+decodeChoiceFilter : Json.Decode.Decoder ChoiceFilter
+decodeChoiceFilter =
+    Json.Decode.field "type" Json.Decode.string
+        |> Json.Decode.andThen
+            (\type_ ->
+                case type_ of
+                    "FilterStartsWith" ->
+                        Json.Decode.map FilterStartsWithFieldValueOf
+                            (Json.Decode.field "fieldName" Json.Decode.string)
+
+                    "FilterContains" ->
+                        Json.Decode.map FilterContainsFieldValueOf
+                            (Json.Decode.field "fieldName" Json.Decode.string)
+
+                    _ ->
+                        Json.Decode.fail ("Unknown choice filter type: " ++ type_)
+            )
 
 
 decodeInputField : Json.Decode.Decoder InputField
@@ -3283,25 +3806,41 @@ decodeInputField =
                             |> andMap (Json.Decode.field "maxLength" (decodeAttributeOptional Nothing Json.Decode.int))
 
                     "Dropdown" ->
-                        Json.Decode.field "choices" (Json.Decode.list decodeChoice)
-                            |> Json.Decode.map Dropdown
+                        Json.Decode.succeed
+                            (\choices filter ->
+                                Dropdown
+                                    { choices = choices
+                                    , filter = filter
+                                    }
+                            )
+                            |> andMap (Json.Decode.field "choices" (Json.Decode.list decodeChoice))
+                            |> andMap (Json.Decode.maybe (Json.Decode.field "filter" decodeChoiceFilter))
 
                     "ChooseOne" ->
-                        Json.Decode.field "choices" (Json.Decode.list decodeChoice)
-                            |> Json.Decode.map ChooseOne
+                        Json.Decode.succeed
+                            (\choices filter ->
+                                ChooseOne
+                                    { choices = choices
+                                    , filter = filter
+                                    }
+                            )
+                            |> andMap (Json.Decode.field "choices" (Json.Decode.list decodeChoice))
+                            |> andMap (Json.Decode.maybe (Json.Decode.field "filter" decodeChoiceFilter))
 
                     "ChooseMultiple" ->
                         Json.Decode.succeed
-                            (\choices minRequired maxAllowed ->
+                            (\choices minRequired maxAllowed filter ->
                                 ChooseMultiple
                                     { choices = choices
                                     , minRequired = minRequired
                                     , maxAllowed = maxAllowed
+                                    , filter = filter
                                     }
                             )
                             |> andMap (Json.Decode.field "choices" (Json.Decode.list decodeChoice))
                             |> andMap (Json.Decode.maybe (Json.Decode.field "minRequired" Json.Decode.int))
                             |> andMap (Json.Decode.maybe (Json.Decode.field "maxAllowed" Json.Decode.int))
+                            |> andMap (Json.Decode.maybe (Json.Decode.field "filter" decodeChoiceFilter))
 
                     _ ->
                         Json.Decode.fail ("Unknown input field type: " ++ type_)
@@ -3850,3 +4389,66 @@ textarea attrs children =
             :: attrs
         )
         children
+
+
+type ChoiceFilter
+    = FilterStartsWithFieldValueOf String
+    | FilterContainsFieldValueOf String
+
+
+filterChoices : Maybe ChoiceFilter -> Dict String (List String) -> List Choice -> List Choice
+filterChoices maybeFilter formValues choices =
+    case maybeFilter of
+        Just (FilterStartsWithFieldValueOf fieldName) ->
+            -- Get field value and filter choices that start with it
+            case Dict.get fieldName formValues |> Maybe.andThen List.head of
+                Just filterValue ->
+                    if String.isEmpty filterValue then
+                        []
+                        -- Hide choices when filter value is empty
+
+                    else
+                        List.filter
+                            (\choice ->
+                                String.startsWith
+                                    (String.toLower filterValue)
+                                    (String.toLower choice.value)
+                                    || String.startsWith
+                                        (String.toLower filterValue)
+                                        (String.toLower choice.label)
+                            )
+                            choices
+
+                Nothing ->
+                    []
+
+        -- Hide choices when field is not found
+        -- No filter value, show all choices
+        Just (FilterContainsFieldValueOf fieldName) ->
+            -- Get field value and filter choices that contain it
+            case Dict.get fieldName formValues |> Maybe.andThen List.head of
+                Just filterValue ->
+                    if String.isEmpty filterValue then
+                        []
+                        -- Hide choices when filter value is empty
+
+                    else
+                        List.filter
+                            (\choice ->
+                                String.contains
+                                    (String.toLower filterValue)
+                                    (String.toLower choice.value)
+                                    || String.contains
+                                        (String.toLower filterValue)
+                                        (String.toLower choice.label)
+                            )
+                            choices
+
+                Nothing ->
+                    []
+
+        -- Hide choices when field is not found
+        -- No filter value, show all choices
+        Nothing ->
+            -- No filtering, return all choices
+            choices
