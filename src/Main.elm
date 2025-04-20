@@ -2195,6 +2195,15 @@ viewFormFieldOptionsPreview config fieldID formField =
                         ++ [ div [ class "tff-choosemany-checkboxes" ]
                                 (List.map
                                     (\choice ->
+                                        let
+                                            alreadyFull =
+                                                case maxAllowed of
+                                                    Just m  -> selectedCount >= m
+                                                    Nothing -> False
+
+                                            shouldDisable =
+                                                alreadyFull && not (List.member choice.value values)
+                                        in
                                         div [ class "tff-checkbox-group" ]
                                             [ label [ class "tff-field-label" ]
                                                 [ input
@@ -2203,6 +2212,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                                                      , name fieldName
                                                      , value choice.value
                                                      , checked (List.member choice.value values || chosenForYou filteredChoices)
+                                                     , disabled shouldDisable
                                                      ]
                                                         ++ config.customAttrs
                                                         ++ config.onChooseMany fieldName choice
