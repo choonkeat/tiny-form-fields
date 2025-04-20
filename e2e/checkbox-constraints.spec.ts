@@ -86,7 +86,7 @@ test('checkbox min/max constraints in Editor and CollectData modes', async ({
 	const response2 = await submitExpectingSuccess(newFormPage);
 	const responseBody2 = await response2.json();
 	expect(responseBody2.form).toEqual({
-	  'Select your favorite fruits': ['Apple', 'Banana', 'Cherry'],
+		'Select your favorite fruits': ['Apple', 'Banana', 'Cherry'],
 	});
 });
 
@@ -172,18 +172,18 @@ test('only max constraint validation', async ({ page, browserName }) => {
 	expect(fieldLabelText).toContain('(optional)');
 	expect(fieldLabelText).toContain('Select up to 2 animals');
 
-  // Select up to the maximum (2)
-  await clickCollectDataCheckbox(formPage, 'Dog', browserName);
-  await clickCollectDataCheckbox(formPage, 'Cat', browserName);
+	// Select up to the maximum (2)
+	await clickCollectDataCheckbox(formPage, 'Dog', browserName);
+	await clickCollectDataCheckbox(formPage, 'Cat', browserName);
 
-  // The third option should be disabled now
-  const birdCheckbox = formPage.getByLabel('Bird', { exact: true });
-  await expect(birdCheckbox).toBeDisabled();
+	// The third option should be disabled now
+	const birdCheckbox = formPage.getByLabel('Bird', { exact: true });
+	await expect(birdCheckbox).toBeDisabled();
 
-  // Submit and verify success with the allowed selections
-  const response = await submitExpectingSuccess(formPage);
-  const responseBody = await response.json();
-  expect(responseBody.form).toEqual({
-    'Select up to 2 animals': ['Dog', 'Cat'],
-  });
+	// Submit and verify success with the allowed selections
+	const response = await submitExpectingSuccess(formPage);
+	const responseBody = await response.json();
+	expect(responseBody.form).toEqual({
+		'Select up to 2 animals': ['Dog', 'Cat'],
+	});
 });
