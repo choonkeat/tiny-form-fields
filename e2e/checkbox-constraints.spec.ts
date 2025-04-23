@@ -70,27 +70,20 @@ test('checkbox min/max constraints in Editor and CollectData modes', async ({
 	// Get the form view again
 	const newFormPage = await viewForm(page);
 
-	// Now select 4 checkboxes to exceed maximum (max=3)
+	// Now select up to the maximum (max=3)
 	await newFormPage.getByLabel('Apple', { exact: true }).check();
 	await newFormPage.waitForTimeout(100);
 	await newFormPage.getByLabel('Banana', { exact: true }).check();
 	await newFormPage.waitForTimeout(100);
 	await newFormPage.getByLabel('Cherry', { exact: true }).check();
 	await newFormPage.waitForTimeout(100);
-	await newFormPage.getByLabel('Durian', { exact: true }).check();
-	await page.waitForTimeout(200);
 
-	// Test exceeding max limit - should fail validation
-	await attemptSubmitWithExpectedFailure(newFormPage);
+	// The fourth option should be disabled now
+	const durianCheckbox = newFormPage.getByLabel('Durian', { exact: true });
+	await expect(durianCheckbox).toBeDisabled();
 
-	// Uncheck one, bringing selection to valid range (3 checkboxes)
-	await newFormPage.getByLabel('Durian', { exact: true }).uncheck();
-	await newFormPage.waitForTimeout(200);
-
-	// Submit and verify success
+	// Submit and verify success with the allowed selections
 	const response2 = await submitExpectingSuccess(newFormPage);
-
-	// Verify submission was successful
 	const responseBody2 = await response2.json();
 	expect(responseBody2.form).toEqual({
 		'Select your favorite fruits': ['Apple', 'Banana', 'Cherry'],
@@ -179,23 +172,16 @@ test('only max constraint validation', async ({ page, browserName }) => {
 	expect(fieldLabelText).toContain('(optional)');
 	expect(fieldLabelText).toContain('Select up to 2 animals');
 
-	// Select 3 checkboxes (exceeding maximum) - should fail validation
+	// Select up to the maximum (2)
 	await clickCollectDataCheckbox(formPage, 'Dog', browserName);
 	await clickCollectDataCheckbox(formPage, 'Cat', browserName);
-	await clickCollectDataCheckbox(formPage, 'Bird', browserName);
 
-	// Check for invalid checkbox styling instead of validation message
-	await expect(formPage.locator('.tff-invalid-checkbox')).toBeVisible();
+	// The third option should be disabled now
+	const birdCheckbox = formPage.getByLabel('Bird', { exact: true });
+	await expect(birdCheckbox).toBeDisabled();
 
-	await attemptSubmitWithExpectedFailure(formPage);
-
-	// Uncheck one, bringing selection to valid range (2 checkboxes)
-	await clickCollectDataCheckbox(formPage, 'Bird', browserName);
-
-	// Submit and verify success
+	// Submit and verify success with the allowed selections
 	const response = await submitExpectingSuccess(formPage);
-
-	// Verify submission was successful
 	const responseBody = await response.json();
 	expect(responseBody.form).toEqual({
 		'Select up to 2 animals': ['Dog', 'Cat'],

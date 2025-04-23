@@ -1630,6 +1630,9 @@ viewFormPreview customAttrs { formFields, needsFormLogic, trackedFormValues, sho
             Array.toList formFields
                 |> List.any isChooseManyUsingMinMax
 
+        needsEventHandlers =
+            needsFormLogic || isAnyChooseManyUsingMinMax
+
         config =
             { customAttrs = customAttrs
             , shortTextTypeDict = shortTextTypeDict
@@ -1637,19 +1640,19 @@ viewFormPreview customAttrs { formFields, needsFormLogic, trackedFormValues, sho
             , trackedFormValues = trackedFormValues
             , needsFormLogic = needsFormLogic -- Pass the flag through to detect CollectData mode
             , onChooseMany =
-                if needsFormLogic || isAnyChooseManyUsingMinMax then
+                if needsEventHandlers then
                     onChooseManyAttrs
 
                 else
                     \_ _ -> []
             , onInput =
-                if needsFormLogic then
+                if needsEventHandlers then
                     onInputAttrs
 
                 else
                     \_ -> []
             , onChange =
-                if needsFormLogic then
+                if needsEventHandlers then
                     onChangeAttrs
 
                 else
@@ -2195,6 +2198,18 @@ viewFormFieldOptionsPreview config fieldID formField =
                         ++ [ div [ class "tff-choosemany-checkboxes" ]
                                 (List.map
                                     (\choice ->
+                                        let
+                                            alreadyFull =
+                                                case maxAllowed of
+                                                    Just m ->
+                                                        selectedCount >= m
+
+                                                    Nothing ->
+                                                        False
+
+                                            shouldDisable =
+                                                alreadyFull && not (List.member choice.value values)
+                                        in
                                         div [ class "tff-checkbox-group" ]
                                             [ label [ class "tff-field-label" ]
                                                 [ input
@@ -2203,6 +2218,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                                                      , name fieldName
                                                      , value choice.value
                                                      , checked (List.member choice.value values || chosenForYou filteredChoices)
+                                                     , disabled shouldDisable
                                                      ]
                                                         ++ config.customAttrs
                                                         ++ config.onChooseMany fieldName choice

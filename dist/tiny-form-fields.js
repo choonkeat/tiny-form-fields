@@ -9240,8 +9240,8 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 			A2($elm$html$Html$Attributes$attribute, 'disabled', 'disabled'),
 			config.W);
 		var chosenForYou = function (choices) {
-			var _v9 = formField.y;
-			switch (_v9) {
+			var _v10 = formField.y;
+			switch (_v10) {
 				case 1:
 					return false;
 				case 0:
@@ -9414,7 +9414,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 						$elm$core$Maybe$andThen,
 						$elm$core$List$head,
 						A2($elm$core$Dict$get, fieldName, config.w)));
-				var filteredChoices = A3($author$project$Main$filterChoices, filter, config.w, choices);
+				var filteredChoices = disabledMode ? choices : A3($author$project$Main$filterChoices, filter, config.w, choices);
 				var noChoicesAfterFiltering = (!$elm$core$List$isEmpty(choices)) && $elm$core$List$isEmpty(filteredChoices);
 				return (noChoicesAfterFiltering && config.Y) ? A2($elm$html$Html$div, _List_Nil, _List_Nil) : A2(
 					$elm$html$Html$div,
@@ -9483,7 +9483,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 						$elm$core$Maybe$andThen,
 						$elm$core$List$head,
 						A2($elm$core$Dict$get, fieldName, config.w)));
-				var filteredChoices = A3($author$project$Main$filterChoices, filter, config.w, choices);
+				var filteredChoices = disabledMode ? choices : A3($author$project$Main$filterChoices, filter, config.w, choices);
 				var noChoicesAfterFiltering = (!$elm$core$List$isEmpty(choices)) && $elm$core$List$isEmpty(filteredChoices);
 				return (noChoicesAfterFiltering && config.Y) ? A2($elm$html$Html$div, _List_Nil, _List_Nil) : A2(
 					$elm$html$Html$div,
@@ -9584,25 +9584,25 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 						_List_Nil)
 					]) : _List_Nil;
 				var isValid = function () {
-					var _v4 = _Utils_Tuple2(minRequired, maxAllowed);
-					if (!_v4.a.$) {
-						if (!_v4.b.$) {
-							var min = _v4.a.a;
-							var max = _v4.b.a;
+					var _v5 = _Utils_Tuple2(minRequired, maxAllowed);
+					if (!_v5.a.$) {
+						if (!_v5.b.$) {
+							var min = _v5.a.a;
+							var max = _v5.b.a;
 							return (_Utils_cmp(selectedCount, min) > -1) && (_Utils_cmp(selectedCount, max) < 1);
 						} else {
-							var min = _v4.a.a;
-							var _v5 = _v4.b;
+							var min = _v5.a.a;
+							var _v6 = _v5.b;
 							return _Utils_cmp(selectedCount, min) > -1;
 						}
 					} else {
-						if (!_v4.b.$) {
-							var _v6 = _v4.a;
-							var max = _v4.b.a;
+						if (!_v5.b.$) {
+							var _v7 = _v5.a;
+							var max = _v5.b.a;
 							return _Utils_cmp(selectedCount, max) < 1;
 						} else {
-							var _v7 = _v4.a;
-							var _v8 = _v4.b;
+							var _v8 = _v5.a;
+							var _v9 = _v5.b;
 							return true;
 						}
 					}
@@ -9629,6 +9629,15 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 								A2(
 									$elm$core$List$map,
 									function (choice) {
+										var alreadyFull = function () {
+											if (!maxAllowed.$) {
+												var m = maxAllowed.a;
+												return _Utils_cmp(selectedCount, m) > -1;
+											} else {
+												return false;
+											}
+										}();
+										var shouldDisable = alreadyFull && (!A2($elm$core$List$member, choice.n, values));
 										return A2(
 											$elm$html$Html$div,
 											_List_fromArray(
@@ -9655,7 +9664,8 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 																		$elm$html$Html$Attributes$name(fieldName),
 																		$elm$html$Html$Attributes$value(choice.n),
 																		$elm$html$Html$Attributes$checked(
-																		A2($elm$core$List$member, choice.n, values) || chosenForYou(filteredChoices))
+																		A2($elm$core$List$member, choice.n, values) || chosenForYou(filteredChoices)),
+																		$elm$html$Html$Attributes$disabled(shouldDisable)
 																	]),
 																_Utils_ap(
 																	config.W,
@@ -12211,18 +12221,19 @@ var $author$project$Main$viewFormPreview = F2(
 			$elm$core$List$any,
 			$author$project$Main$isChooseManyUsingMinMax,
 			$elm$core$Array$toList(formFields));
+		var needsEventHandlers = needsFormLogic || isAnyChooseManyUsingMinMax;
 		var config = {
 			W: customAttrs,
 			f: formFields,
 			Y: needsFormLogic,
-			a4: needsFormLogic ? onChangeAttrs : function (_v1) {
+			a4: needsEventHandlers ? onChangeAttrs : function (_v1) {
 				return _List_Nil;
 			},
-			a5: (needsFormLogic || isAnyChooseManyUsingMinMax) ? onChooseManyAttrs : F2(
+			a5: needsEventHandlers ? onChooseManyAttrs : F2(
 				function (_v2, _v3) {
 					return _List_Nil;
 				}),
-			aH: needsFormLogic ? onInputAttrs : function (_v4) {
+			aH: needsEventHandlers ? onInputAttrs : function (_v4) {
 				return _List_Nil;
 			},
 			ah: shortTextTypeDict,

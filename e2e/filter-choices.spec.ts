@@ -530,7 +530,9 @@ test('radio buttons should be hidden when filter field is empty in CollectData m
 	await page.waitForTimeout(1000);
 
 	// We need to check if any options are displayed in the radio buttons question.
-	const radioButtonsQuestion = formPage.locator('.tff-field-group:has-text("Filtered radio buttons")');
+	const radioButtonsQuestion = formPage.locator(
+		'.tff-field-group:has-text("Filtered radio buttons")'
+	);
 
 	// Check if radio buttons question has any options
 	const optionCount = await radioButtonsQuestion.locator('input[type="radio"]').count();
@@ -676,9 +678,7 @@ test('dropdown should be hidden when filter field is empty in CollectData mode (
 	// If dropdown question exists, check if it has options
 	if (optionCount > 0) {
 		// Get the list of option values
-		const optionValues = await dropdownQuestion
-			.locator('option')
-			.allTextContents();
+		const optionValues = await dropdownQuestion.locator('option').allTextContents();
 		console.log(`Initial option values: ${JSON.stringify(optionValues)}`);
 	}
 
@@ -702,34 +702,20 @@ test('dropdown should be hidden when filter field is empty in CollectData mode (
 	await expect(dropdownQuestion.locator('option')).not.toHaveCount(0);
 
 	// Verify options are correct
-	const optionValuesAfterFill = await dropdownQuestion
-		.locator('option')
-		.allTextContents();
+	const optionValuesAfterFill = await dropdownQuestion.locator('option').allTextContents();
 	console.log(`Option values after filling: ${JSON.stringify(optionValuesAfterFill)}`);
 
 	// Verify that we can see all the options that match the filter
-	await expect(
-		dropdownQuestion.locator('option[value="Option 1"]')
-	).toBeAttached();
-	await expect(
-		dropdownQuestion.locator('option[value="Option 2"]')
-	).toBeAttached();
-	await expect(
-		dropdownQuestion.locator('option[value="Option 3"]')
-	).toBeAttached();
+	await expect(dropdownQuestion.locator('option[value="Option 1"]')).toBeAttached();
+	await expect(dropdownQuestion.locator('option[value="Option 2"]')).toBeAttached();
+	await expect(dropdownQuestion.locator('option[value="Option 3"]')).toBeAttached();
 
 	// Change the filter to be more specific
 	await formPage.getByLabel('Filter field').fill('Option 1');
 	await page.waitForTimeout(600);
 
 	// Now only Option 1 should be available
-	await expect(
-		dropdownQuestion.locator('option[value="Option 1"]')
-	).toBeAttached();
-	await expect(
-		dropdownQuestion.locator('option[value="Option 2"]')
-	).not.toBeAttached();
-	await expect(
-		dropdownQuestion.locator('option[value="Option 3"]')
-	).not.toBeAttached();
+	await expect(dropdownQuestion.locator('option[value="Option 1"]')).toBeAttached();
+	await expect(dropdownQuestion.locator('option[value="Option 2"]')).not.toBeAttached();
+	await expect(dropdownQuestion.locator('option[value="Option 3"]')).not.toBeAttached();
 });
