@@ -44,7 +44,7 @@ import Array exposing (Array)
 import Browser
 import Dict exposing (Dict)
 import Html exposing (Html, button, div, h2, h3, input, label, option, pre, select, text, ul)
-import Html.Attributes as Attr exposing (attribute, checked, class, classList, disabled, for, id, maxlength, minlength, name, pattern, placeholder, readonly, required, selected, tabindex, title, type_, value)
+import Html.Attributes as Attr exposing (attribute, checked, class, classList, for, id, maxlength, minlength, name, pattern, placeholder, readonly, required, selected, tabindex, title, type_, value)
 import Html.Events exposing (on, onCheck, onClick, onInput, preventDefaultOn, stopPropagationOn)
 import Json.Decode
 import Json.Decode.Extra exposing (andMap)
@@ -2046,7 +2046,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                             ++ config.onChange fieldName
                         )
                         (option
-                            ([ disabled True
+                            ([ attribute "disabled" "disabled"
                              , defaultSelected (valueString == "" && not (chosenForYou filteredChoices))
                              , attribute "value" ""
                              ]
@@ -2218,8 +2218,13 @@ viewFormFieldOptionsPreview config fieldID formField =
                                                      , name fieldName
                                                      , value choice.value
                                                      , checked (List.member choice.value values || chosenForYou filteredChoices)
-                                                     , disabled shouldDisable
                                                      ]
+                                                        ++ (if shouldDisable then
+                                                                [ attribute "disabled" "disabled" ]
+
+                                                            else
+                                                                []
+                                                           )
                                                         ++ config.customAttrs
                                                         ++ config.onChooseMany fieldName choice
                                                     )

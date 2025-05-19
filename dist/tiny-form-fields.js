@@ -9114,7 +9114,6 @@ var $author$project$Main$defaultSelected = function (bool) {
 var $author$project$Main$defaultValue = function (str) {
 	return $elm$html$Html$Attributes$value(str);
 };
-var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty('disabled');
 var $elm$core$String$toLower = _String_toLower;
 var $author$project$Main$filterChoices = F3(
 	function (maybeFilter, formValues, choices) {
@@ -9443,7 +9442,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 									_Utils_ap(
 										_List_fromArray(
 											[
-												$elm$html$Html$Attributes$disabled(true),
+												A2($elm$html$Html$Attributes$attribute, 'disabled', 'disabled'),
 												$author$project$Main$defaultSelected(
 												(valueString === '') && (!chosenForYou(filteredChoices))),
 												A2($elm$html$Html$Attributes$attribute, 'value', '')
@@ -9664,12 +9663,16 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 																		$elm$html$Html$Attributes$name(fieldName),
 																		$elm$html$Html$Attributes$value(choice.n),
 																		$elm$html$Html$Attributes$checked(
-																		A2($elm$core$List$member, choice.n, values) || chosenForYou(filteredChoices)),
-																		$elm$html$Html$Attributes$disabled(shouldDisable)
+																		A2($elm$core$List$member, choice.n, values) || chosenForYou(filteredChoices))
 																	]),
 																_Utils_ap(
-																	config.W,
-																	A2(config.a5, fieldName, choice))),
+																	shouldDisable ? _List_fromArray(
+																		[
+																			A2($elm$html$Html$Attributes$attribute, 'disabled', 'disabled')
+																		]) : _List_Nil,
+																	_Utils_ap(
+																		config.W,
+																		A2(config.a5, fieldName, choice)))),
 															_List_Nil),
 															$elm$html$Html$text(' '),
 															$elm$html$Html$text(choice.g)
