@@ -197,6 +197,18 @@ func TestValidFormValues(t *testing.T) {
                 "type": "datetime-local"
               }
             }
+          },
+          {
+            "label": "Question 15",
+            "name": "question_15",
+            "presence": "Optional",
+            "type": {
+                "type": "ShortText",
+                "inputType": "Telephone",
+                "attributes": {
+                    "type": "tel"
+                }
+            }
           }
         ]`
 
@@ -215,6 +227,7 @@ func TestValidFormValues(t *testing.T) {
 		"question_12": {"2024-09-19"},
 		"question_13": {"19:18"},
 		"question_14": {"2024-09-19T21:01"},
+		"question_15": {""},
 	}
 
 	err := ValidFormValues([]byte(formFieldsJSON), formValues)

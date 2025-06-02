@@ -225,8 +225,8 @@ func (f *DropdownField) Validate(value []string, field TinyFormField) error {
 	if len(value) > 1 {
 		return fmt.Errorf("%w: %s should have only one value", ErrInvalidFieldValue, fieldName)
 	}
-	if len(value) == 0 {
-		// value is empty, and presence is not "Required", so it's OK
+	// Optional fields with empty values skip validation
+	if !isRequired(field) && isEmptyValue(value) {
 		return nil
 	}
 	val := value[0]
@@ -273,7 +273,8 @@ func (f *ChooseOneField) Validate(value []string, field TinyFormField) error {
 	if len(value) > 1 {
 		return fmt.Errorf("%w: %s should have only one value", ErrInvalidFieldValue, fieldName)
 	}
-	if len(value) == 0 {
+	// Optional fields with empty values skip validation
+	if !isRequired(field) && isEmptyValue(value) {
 		return nil
 	}
 	val := value[0]
@@ -317,7 +318,8 @@ func (f *ChooseMultipleField) Validate(value []string, field TinyFormField) erro
 	if isRequired(field) && len(value) == 0 {
 		return fmt.Errorf("%w: %s", ErrRequiredFieldMissing, fieldName)
 	}
-	if len(value) == 0 {
+	// Optional fields with empty values skip validation
+	if !isRequired(field) && isEmptyValue(value) {
 		return nil
 	}
 	// Collect valid values
@@ -351,7 +353,11 @@ func (f *LongTextField) Validate(value []string, field TinyFormField) error {
 	if isRequired(field) && (len(value) == 0 || value[0] == "") {
 		return fmt.Errorf("%w: %s", ErrRequiredFieldMissing, fieldName)
 	}
-	if len(value) == 0 {
+	if len(value) > 1 {
+		return fmt.Errorf("%w: %s should have only one value", ErrInvalidFieldValue, fieldName)
+	}
+	// Optional fields with empty values skip validation
+	if !isRequired(field) && isEmptyValue(value) {
 		return nil
 	}
 	val := value[0]
@@ -373,7 +379,11 @@ func (f *ShortTextField) Validate(value []string, field TinyFormField) error {
 	if isRequired(field) && (len(value) == 0 || value[0] == "") {
 		return fmt.Errorf("%w: %s", ErrRequiredFieldMissing, fieldName)
 	}
-	if len(value) == 0 {
+	if len(value) > 1 {
+		return fmt.Errorf("%w: %s should have only one value", ErrInvalidFieldValue, fieldName)
+	}
+	// Optional fields with empty values skip validation
+	if !isRequired(field) && isEmptyValue(value) {
 		return nil
 	}
 	val := value[0]
@@ -629,4 +639,20 @@ func ValidFormValues(formFields []byte, values url.Values) error {
 	}
 
 	return nil
+}
+
+// isEmptyValue checks if a slice of strings is empty or contains only empty strings.
+// This is used to determine if an optional field should skip validation.
+func isEmptyValue(value []string) bool {
+	if len(value) == 0 {
+		return true
+	}
+
+	for _, v := range value {
+		if v != "" {
+			return false
+		}
+	}
+
+	return true
 }
