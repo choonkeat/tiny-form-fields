@@ -3,7 +3,7 @@ export PATH := node_modules/.bin:$(PATH)
 ELM_MAKE_FLAGS=--debug
 
 build: ELM_MAKE_FLAGS=--optimize
-build: css format compile test test-go
+build: css format compile schema test test-go
 
 diff:
 	git diff -bw -- ':!dist'
@@ -68,6 +68,25 @@ stop-run:
 
 elm-review:
 	(yes | npx elm-review --fix-all) || npx elm-review
+
+schema: dist/config.schema.json
+
+dist/config.schema.json: src/ConfigSchema.elm src/GenerateSchema.elm Makefile
+	elm make src/GenerateSchema.elm --output=elm-schema.js
+	node generate-schema.js
+	rm elm-schema.js
+	npx --package=ajv-cli ajv compile -s dist/config.schema.json
+
+test-schema-compile:
+	elm make src/GenerateSchema.elm --output=elm-schema-test.js
+	rm elm-schema-test.js
+
+validate-config:
+	@if [ -z "$(CONFIG)" ]; then \
+		echo "Usage: make validate-config CONFIG=path/to/config.json"; \
+		exit 1; \
+	fi
+	node validate-config.js "$(CONFIG)"
 
 format:
 	npx elm-format src/ tests/ --yes

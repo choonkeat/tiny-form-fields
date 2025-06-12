@@ -83,6 +83,50 @@ See the [tasks](tasks/) directory for planned features and improvements. Each ta
    ```
    See [FLAGS.md](FLAGS.md) for detailed documentation of all available configuration options.
 
+## Config Validation
+
+tiny-form-fields provides JSON Schema validation for configuration objects to help catch errors early and provide IDE support.
+
+### JSON Schema File
+
+The project automatically generates `dist/config.schema.json` during the build process. This schema validates the structure of configuration objects passed to the `flags` parameter.
+
+### IDE Integration
+
+For IDE autocompletion and validation, add the schema reference to your JSON config files:
+
+```json
+{
+  "$schema": "https://tiny-form-fields.netlify.app/dist/config.schema.json",
+  "viewMode": "Editor",
+  "formFields": [],
+  "formValues": {},
+  "shortTextTypeList": []
+}
+```
+
+### CLI Validation
+
+Validate config files from the command line:
+
+```bash
+# Validate a config file
+make validate-config CONFIG=my-config.json
+
+# Or use the validation script directly
+node validate-config.js my-config.json
+```
+
+### Requirements
+
+Config validation requires the `ajv` package:
+
+```bash
+npm install --save-dev ajv
+```
+
+The schema is automatically regenerated whenever you run `make build` or `make schema`, ensuring it stays in sync with code changes.
+
 ## Development
 
 ### Prerequisites
@@ -108,14 +152,19 @@ See the [tasks](tasks/) directory for planned features and improvements. Each ta
 - `make test-playwright` - Run end-to-end tests
 - `make test-playwright-ui` - Run end-to-end tests with UI
 - `make elm-review` - Run elm-review with auto-fix
+- `make schema` - Generate JSON schema for config validation
+- `make validate-config CONFIG=path/to/config.json` - Validate a config file
 
 ### Project Structure
 
 - `src/Main.elm` - Main Elm source code
+- `src/ConfigSchema.elm` - JSON schema definition for config validation
+- `src/GenerateSchema.elm` - Schema generation utilities
 - `input.css` - Source CSS file (processed by Tailwind)
 - `tests/` - Elm unit tests
 - `e2e/` - Playwright end-to-end tests
 - `dist/` - Compiled assets
+  - `dist/config.schema.json` - Auto-generated JSON schema for config validation
 
 ## Usage Example
 
