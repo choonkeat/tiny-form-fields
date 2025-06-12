@@ -1080,6 +1080,113 @@ suite =
                     Main.filterChoices (Just (Main.FilterStartsWithFieldValueOf "source")) formValues choices
                         |> Expect.equal []
             ]
+        , describe "filterValuesByFieldChoices"
+            [ test "filters ChooseMultiple field values to only valid choices" <|
+                \_ ->
+                    let
+                        field =
+                            { label = "Test Field"
+                            , type_ =
+                                Main.ChooseMultiple
+                                    { choices = [ Main.Choice "apple" "apple", Main.Choice "banana" "banana" ]
+                                    , minRequired = Nothing
+                                    , maxAllowed = Nothing
+                                    , filter = Nothing
+                                    }
+                            , presence = Main.Required
+                            , description = Main.AttributeNotNeeded Nothing
+                            , name = Nothing
+                            , visibilityRule = []
+                            }
+
+                        inputValues =
+                            [ "apple", "cherry", "banana", "invalid" ]
+                    in
+                    Main.filterValuesByFieldChoices field inputValues
+                        |> Expect.equal [ "apple", "banana" ]
+            , test "filters ChooseOne field values to only valid choices" <|
+                \_ ->
+                    let
+                        field =
+                            { label = "Test Field"
+                            , type_ =
+                                Main.ChooseOne
+                                    { choices = [ Main.Choice "yes" "yes", Main.Choice "no" "no" ]
+                                    , filter = Nothing
+                                    }
+                            , presence = Main.Required
+                            , description = Main.AttributeNotNeeded Nothing
+                            , name = Nothing
+                            , visibilityRule = []
+                            }
+
+                        inputValues =
+                            [ "yes", "maybe", "no" ]
+                    in
+                    Main.filterValuesByFieldChoices field inputValues
+                        |> Expect.equal [ "yes", "no" ]
+            , test "filters Dropdown field values to only valid choices" <|
+                \_ ->
+                    let
+                        field =
+                            { label = "Test Field"
+                            , type_ =
+                                Main.Dropdown
+                                    { choices = [ Main.Choice "red" "red", Main.Choice "blue" "blue" ]
+                                    , filter = Nothing
+                                    }
+                            , presence = Main.Required
+                            , description = Main.AttributeNotNeeded Nothing
+                            , name = Nothing
+                            , visibilityRule = []
+                            }
+
+                        inputValues =
+                            [ "red", "green", "blue", "yellow" ]
+                    in
+                    Main.filterValuesByFieldChoices field inputValues
+                        |> Expect.equal [ "red", "blue" ]
+            , test "allows all values for non-choice fields" <|
+                \_ ->
+                    let
+                        field =
+                            { label = "Test Field"
+                            , type_ = Main.ShortText (Main.fromRawCustomElement rawCustomElement)
+                            , presence = Main.Required
+                            , description = Main.AttributeNotNeeded Nothing
+                            , name = Nothing
+                            , visibilityRule = []
+                            }
+
+                        inputValues =
+                            [ "any", "text", "values" ]
+                    in
+                    Main.filterValuesByFieldChoices field inputValues
+                        |> Expect.equal [ "any", "text", "values" ]
+            , test "returns empty list when no values match choices" <|
+                \_ ->
+                    let
+                        field =
+                            { label = "Test Field"
+                            , type_ =
+                                Main.ChooseMultiple
+                                    { choices = [ Main.Choice "apple" "apple", Main.Choice "banana" "banana" ]
+                                    , minRequired = Nothing
+                                    , maxAllowed = Nothing
+                                    , filter = Nothing
+                                    }
+                            , presence = Main.Required
+                            , description = Main.AttributeNotNeeded Nothing
+                            , name = Nothing
+                            , visibilityRule = []
+                            }
+
+                        inputValues =
+                            [ "cherry", "grape", "orange" ]
+                    in
+                    Main.filterValuesByFieldChoices field inputValues
+                        |> Expect.equal []
+            ]
         ]
 
 

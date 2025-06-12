@@ -27,6 +27,7 @@ port module Main exposing
     , evaluateCondition
     , fieldsWithPlaceholder
     , filterChoices
+    , filterValuesByFieldChoices
     , fromRawCustomElement
     , isVisibilityRuleSatisfied
     , main
@@ -578,20 +579,22 @@ init flags =
                                 let
                                     fieldName =
                                         fieldNameOf field
-                                in
-                                case field.type_ of
-                                    ChooseMultiple _ ->
-                                        ( fieldName
-                                        , maybeDecode fieldName (decodeListOrSingleton Json.Decode.string) config.formValues
-                                            |> Maybe.withDefault []
-                                        )
 
-                                    _ ->
-                                        ( fieldName
-                                        , maybeDecode fieldName Json.Decode.string config.formValues
-                                            |> Maybe.map List.singleton
-                                            |> Maybe.withDefault []
-                                        )
+                                    rawValues =
+                                        case field.type_ of
+                                            ChooseMultiple _ ->
+                                                maybeDecode fieldName (decodeListOrSingleton Json.Decode.string) config.formValues
+                                                    |> Maybe.withDefault []
+
+                                            _ ->
+                                                maybeDecode fieldName Json.Decode.string config.formValues
+                                                    |> Maybe.map List.singleton
+                                                    |> Maybe.withDefault []
+
+                                    filteredValues =
+                                        filterValuesByFieldChoices field rawValues
+                                in
+                                ( fieldName, filteredValues )
                             )
                         |> Dict.fromList
             in
@@ -3368,6 +3371,34 @@ choiceFromString s =
 
         _ ->
             { value = s, label = s }
+
+
+filterValuesByFieldChoices : FormField -> List String -> List String
+filterValuesByFieldChoices field values =
+    case field.type_ of
+        Dropdown { choices } ->
+            let
+                validChoiceValues =
+                    List.map .value choices
+            in
+            List.filter (\value -> List.member value validChoiceValues) values
+
+        ChooseOne { choices } ->
+            let
+                validChoiceValues =
+                    List.map .value choices
+            in
+            List.filter (\value -> List.member value validChoiceValues) values
+
+        ChooseMultiple { choices } ->
+            let
+                validChoiceValues =
+                    List.map .value choices
+            in
+            List.filter (\value -> List.member value validChoiceValues) values
+
+        _ ->
+            values
 
 
 decodeChoice : Json.Decode.Decoder Choice
