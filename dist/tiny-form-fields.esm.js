@@ -5300,29 +5300,39 @@ var $author$project$Main$ShortText = function (a) {
 };
 var $elm$json$Json$Decode$andThen = _Json_andThen;
 var $author$project$Main$choiceDelimiter = ' | ';
+var $elm$core$String$trim = _String_trim;
 var $author$project$Main$choiceFromString = function (s) {
 	var _v0 = A2($elm$core$String$split, $author$project$Main$choiceDelimiter, s);
 	if (_v0.b) {
 		if (!_v0.b.b) {
 			var value = _v0.a;
-			return {g: value, k: value};
+			return {
+				g: value,
+				k: $elm$core$String$trim(value)
+			};
 		} else {
 			if (!_v0.b.b.b) {
 				var value = _v0.a;
 				var _v1 = _v0.b;
 				var label = _v1.a;
-				return {g: label, k: value};
+				return {
+					g: label,
+					k: $elm$core$String$trim(value)
+				};
 			} else {
 				var value = _v0.a;
 				var labels = _v0.b;
 				return {
 					g: A2($elm$core$String$join, $author$project$Main$choiceDelimiter, labels),
-					k: value
+					k: $elm$core$String$trim(value)
 				};
 			}
 		}
 	} else {
-		return {g: s, k: s};
+		return {
+			g: s,
+			k: $elm$core$String$trim(s)
+		};
 	}
 };
 var $author$project$Main$decodeChoice = A2($elm$json$Json$Decode$map, $author$project$Main$choiceFromString, $elm$json$Json$Decode$string);
@@ -5551,7 +5561,6 @@ var $elm$core$Dict$get = F2(
 		}
 	});
 var $elm$core$Basics$neq = _Utils_notEqual;
-var $elm$core$String$trim = _String_trim;
 var $author$project$Main$fromRawCustomElement = function (ele) {
 	return {
 		t: A2(

@@ -3361,16 +3361,16 @@ choiceFromString : String -> Choice
 choiceFromString s =
     case String.split choiceDelimiter s of
         [ value ] ->
-            { value = value, label = value }
+            { value = String.trim value, label = value }
 
         [ value, label ] ->
-            { value = value, label = label }
+            { value = String.trim value, label = label }
 
         value :: labels ->
-            { value = value, label = String.join choiceDelimiter labels }
+            { value = String.trim value, label = String.join choiceDelimiter labels }
 
         _ ->
-            { value = s, label = s }
+            { value = String.trim s, label = s }
 
 
 filterValuesByFieldChoices : FormField -> List String -> List String
