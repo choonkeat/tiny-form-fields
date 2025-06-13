@@ -770,13 +770,13 @@ suite =
                               }
                             ]
                         )
-        , Test.fuzz choiceStringFuzzer "choiceStringToChoice,choiceStringFromString is reversible" <|
+        , Test.fuzz choiceStringFuzzer "choiceStringToChoice,choiceStringFromString is reversible (but value is always trimmed)" <|
             \choice ->
                 choice
                     |> Main.encodeChoice
                     |> Json.Encode.encode 0
                     |> Json.Decode.decodeString Main.decodeChoice
-                    |> Expect.equal (Ok choice)
+                    |> Expect.equal (Ok { choice | value = String.trim choice.value })
         , Test.fuzz pairOfFormFieldFuzzer "encode old FormField can be decoded with decodeFormField" <|
             \{ oldField, newField } ->
                 oldField

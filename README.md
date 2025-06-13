@@ -292,6 +292,8 @@ tiny-form-fields supports custom form field elements through web components. If 
 
 The library accepts two main configuration objects: `formFields` for defining form fields, and `shortTextTypeList` for defining custom input types.
 
+**Note:** For choice-based fields (dropdowns, radio buttons, checkboxes), all choice values are automatically trimmed of leading and trailing whitespace to ensure consistent matching between form definitions and submitted values.
+
 #### Form Fields Format
 
 Form fields should be defined with this structure:
