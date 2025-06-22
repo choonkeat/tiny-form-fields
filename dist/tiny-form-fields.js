@@ -6162,7 +6162,9 @@ var $author$project$Main$encodeAttributeOptional = F2(
 		}
 	});
 var $author$project$Main$choiceToString = function (choice) {
-	return _Utils_eq(choice.g, choice.k) ? choice.g : _Utils_ap(
+	return _Utils_eq(
+		$elm$core$String$trim(choice.g),
+		$elm$core$String$trim(choice.k)) ? choice.g : _Utils_ap(
 		choice.k,
 		_Utils_ap($author$project$Main$choiceDelimiter, choice.g));
 };

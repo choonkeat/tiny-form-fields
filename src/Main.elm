@@ -3350,7 +3350,7 @@ choiceDelimiter =
 
 choiceToString : Choice -> String
 choiceToString choice =
-    if choice.label == choice.value then
+    if String.trim choice.label == String.trim choice.value then
         choice.label
 
     else
