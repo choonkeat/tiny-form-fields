@@ -1168,6 +1168,132 @@ func TestVisibilityRules(t *testing.T) {
 			},
 			expectedError: nil,
 		},
+		{
+			name: "Required field hidden by logic with blank value - should pass",
+			formFields: `[
+				{
+					"label": "Show Details",
+					"name": "show_details",
+					"presence": "Required",
+					"type": {
+						"type": "ChooseOne",
+						"choices": ["Yes", "No"]
+					}
+				},
+				{
+					"label": "Details",
+					"name": "details",
+					"presence": "Required",
+					"type": {
+						"type": "LongText",
+						"maxLength": 500
+					},
+					"visibilityRule": [
+						{
+							"type": "ShowWhen",
+							"conditions": [
+								{
+									"field": "show_details",
+									"comparison": {
+										"type": "Equals",
+										"value": "Yes"
+									}
+								}
+							]
+						}
+					]
+				}
+			]`,
+			values: url.Values{
+				"show_details": []string{"No"},
+				"details":      []string{""}, // Empty value for required field, but it's hidden
+			},
+			expectedError: nil,
+		},
+		{
+			name: "Required dropdown hidden by logic with blank value - should pass",
+			formFields: `[
+				{
+					"label": "Country",
+					"name": "country",
+					"presence": "Required",
+					"type": {
+						"type": "Dropdown",
+						"choices": ["USA", "Canada", "Other"]
+					}
+				},
+				{
+					"label": "State",
+					"name": "state",
+					"presence": "Required",
+					"type": {
+						"type": "Dropdown",
+						"choices": ["California", "New York", "Texas"]
+					},
+					"visibilityRule": [
+						{
+							"type": "ShowWhen",
+							"conditions": [
+								{
+									"field": "country",
+									"comparison": {
+										"type": "Equals",
+										"value": "USA"
+									}
+								}
+							]
+						}
+					]
+				}
+			]`,
+			values: url.Values{
+				"country": []string{"Canada"},
+				"state":   []string{""}, // Empty value for required dropdown, but it's hidden
+			},
+			expectedError: nil,
+		},
+		{
+			name: "Required checkbox hidden by logic with no selection - should pass",
+			formFields: `[
+				{
+					"label": "Subscribe to newsletter",
+					"name": "subscribe",
+					"presence": "Required",
+					"type": {
+						"type": "ChooseOne",
+						"choices": ["Yes", "No"]
+					}
+				},
+				{
+					"label": "Topics",
+					"name": "topics",
+					"presence": "Required",
+					"type": {
+						"type": "ChooseMultiple",
+						"choices": ["Tech", "Sports", "Politics", "Entertainment"]
+					},
+					"visibilityRule": [
+						{
+							"type": "ShowWhen",
+							"conditions": [
+								{
+									"field": "subscribe",
+									"comparison": {
+										"type": "Equals",
+										"value": "Yes"
+									}
+								}
+							]
+						}
+					]
+				}
+			]`,
+			values: url.Values{
+				"subscribe": []string{"No"},
+				// No topics selected, but field is hidden
+			},
+			expectedError: nil,
+		},
 	}
 
 	for _, tt := range scenarios {
