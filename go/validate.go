@@ -61,7 +61,8 @@ type VisibilityComparison struct {
 }
 
 type VisibilityCondition struct {
-	Field      string               `json:"field"`
+	Type       string               `json:"type,omitempty"`
+	FieldName  string               `json:"fieldName,omitempty"`
 	Comparison VisibilityComparison `json:"comparison"`
 }
 
@@ -562,7 +563,7 @@ func isRequired(field TinyFormField) bool {
 
 func isVisibilityRuleSatisfied(rule VisibilityRule, values url.Values) bool {
 	for _, condition := range rule.Conditions {
-		fieldValue := values.Get(condition.Field)
+		fieldValue := values.Get(condition.FieldName)
 
 		var conditionMet bool
 		switch condition.Comparison.Type {

@@ -661,7 +661,8 @@ func TestVisibilityRules(t *testing.T) {
 							"type": "ShowWhen",
 							"conditions": [
 								{
-									"field": "color",
+									"type": "Field",
+									"fieldName": "color",
 									"comparison": {
 										"type": "Equals",
 										"value": "Red"
@@ -703,7 +704,8 @@ func TestVisibilityRules(t *testing.T) {
 							"type": "ShowWhen",
 							"conditions": [
 								{
-									"field": "color",
+									"type": "Field",
+									"fieldName": "color",
 									"comparison": {
 										"type": "Equals",
 										"value": "Red"
@@ -744,7 +746,8 @@ func TestVisibilityRules(t *testing.T) {
 							"type": "ShowWhen",
 							"conditions": [
 								{
-									"field": "color",
+									"type": "Field",
+									"fieldName": "color",
 									"comparison": {
 										"type": "Equals",
 										"value": "Red"
@@ -785,7 +788,8 @@ func TestVisibilityRules(t *testing.T) {
 							"type": "HideWhen",
 							"conditions": [
 								{
-									"field": "has_comments",
+									"type": "Field",
+									"fieldName": "has_comments",
 									"comparison": {
 										"type": "Equals",
 										"value": "No"
@@ -827,7 +831,8 @@ func TestVisibilityRules(t *testing.T) {
 							"type": "HideWhen",
 							"conditions": [
 								{
-									"field": "has_comments",
+									"type": "Field",
+									"fieldName": "has_comments",
 									"comparison": {
 										"type": "Equals",
 										"value": "No"
@@ -868,7 +873,8 @@ func TestVisibilityRules(t *testing.T) {
 							"type": "HideWhen",
 							"conditions": [
 								{
-									"field": "has_comments",
+									"type": "Field",
+									"fieldName": "has_comments",
 									"comparison": {
 										"type": "Equals",
 										"value": "No"
@@ -907,7 +913,8 @@ func TestVisibilityRules(t *testing.T) {
 							"type": "ShowWhen",
 							"conditions": [
 								{
-									"field": "description",
+									"type": "Field",
+									"fieldName": "description",
 									"comparison": {
 										"type": "StringContains",
 										"value": "urgent"
@@ -947,7 +954,8 @@ func TestVisibilityRules(t *testing.T) {
 							"type": "ShowWhen",
 							"conditions": [
 								{
-									"field": "description",
+									"type": "Field",
+									"fieldName": "description",
 									"comparison": {
 										"type": "StringContains",
 										"value": "urgent"
@@ -986,7 +994,8 @@ func TestVisibilityRules(t *testing.T) {
 							"type": "ShowWhen",
 							"conditions": [
 								{
-									"field": "description",
+									"type": "Field",
+									"fieldName": "description",
 									"comparison": {
 										"type": "StringContains",
 										"value": "urgent"
@@ -1027,7 +1036,8 @@ func TestVisibilityRules(t *testing.T) {
 							"type": "ShowWhen",
 							"conditions": [
 								{
-									"field": "score",
+									"type": "Field",
+									"fieldName": "score",
 									"comparison": {
 										"type": "GreaterThan",
 										"value": "100"
@@ -1069,7 +1079,8 @@ func TestVisibilityRules(t *testing.T) {
 							"type": "ShowWhen",
 							"conditions": [
 								{
-									"field": "score",
+									"type": "Field",
+									"fieldName": "score",
 									"comparison": {
 										"type": "GreaterThan",
 										"value": "100"
@@ -1110,7 +1121,8 @@ func TestVisibilityRules(t *testing.T) {
 							"type": "ShowWhen",
 							"conditions": [
 								{
-									"field": "name",
+									"type": "Field",
+									"fieldName": "name",
 									"comparison": {
 										"type": "GreaterThan",
 										"value": "abc"
@@ -1152,7 +1164,8 @@ func TestVisibilityRules(t *testing.T) {
 							"type": "ShowWhen",
 							"conditions": [
 								{
-									"field": "name",
+									"type": "Field",
+									"fieldName": "name",
 									"comparison": {
 										"type": "GreaterThan",
 										"value": "xyz"
@@ -1193,7 +1206,8 @@ func TestVisibilityRules(t *testing.T) {
 							"type": "ShowWhen",
 							"conditions": [
 								{
-									"field": "show_details",
+									"type": "Field",
+									"fieldName": "show_details",
 									"comparison": {
 										"type": "Equals",
 										"value": "Yes"
@@ -1235,7 +1249,8 @@ func TestVisibilityRules(t *testing.T) {
 							"type": "ShowWhen",
 							"conditions": [
 								{
-									"field": "country",
+									"type": "Field",
+									"fieldName": "country",
 									"comparison": {
 										"type": "Equals",
 										"value": "USA"
@@ -1277,7 +1292,8 @@ func TestVisibilityRules(t *testing.T) {
 							"type": "ShowWhen",
 							"conditions": [
 								{
-									"field": "subscribe",
+									"type": "Field",
+									"fieldName": "subscribe",
 									"comparison": {
 										"type": "Equals",
 										"value": "Yes"
