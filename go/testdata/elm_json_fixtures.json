@@ -1,0 +1,245 @@
+{
+  "showWhenVisibilityRule": [
+    {
+      "label": "Color",
+      "name": "color",
+      "presence": "Required",
+      "type": {
+        "type": "Dropdown",
+        "choices": [
+          "Red",
+          "Blue"
+        ]
+      },
+      "visibilityRule": []
+    },
+    {
+      "label": "Why Red?",
+      "name": "why_red",
+      "presence": "Required",
+      "type": {
+        "type": "ShortText",
+        "inputType": "Single-line free text",
+        "attributes": {
+          "type": "text"
+        }
+      },
+      "visibilityRule": [
+        {
+          "type": "ShowWhen",
+          "conditions": [
+            {
+              "type": "Field",
+              "fieldName": "color",
+              "comparison": {
+                "type": "Equals",
+                "value": "Red"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "hideWhenVisibilityRule": [
+    {
+      "label": "Has Comments",
+      "name": "has_comments",
+      "presence": "Required",
+      "type": {
+        "type": "ChooseOne",
+        "choices": [
+          "Yes",
+          "No"
+        ]
+      },
+      "visibilityRule": []
+    },
+    {
+      "label": "Comments",
+      "name": "comments",
+      "presence": "Required",
+      "type": {
+        "type": "LongText",
+        "maxLength": 1000
+      },
+      "visibilityRule": [
+        {
+          "type": "HideWhen",
+          "conditions": [
+            {
+              "type": "Field",
+              "fieldName": "has_comments",
+              "comparison": {
+                "type": "Equals",
+                "value": "No"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "stringContainsRule": [
+    {
+      "label": "Description",
+      "name": "description",
+      "presence": "Optional",
+      "type": {
+        "type": "LongText",
+        "maxLength": null
+      },
+      "visibilityRule": []
+    },
+    {
+      "label": "Urgent Note",
+      "name": "urgent_note",
+      "presence": "Required",
+      "type": {
+        "type": "ShortText",
+        "inputType": "Single-line free text",
+        "attributes": {
+          "type": "text"
+        }
+      },
+      "visibilityRule": [
+        {
+          "type": "ShowWhen",
+          "conditions": [
+            {
+              "type": "Field",
+              "fieldName": "description",
+              "comparison": {
+                "type": "StringContains",
+                "value": "urgent"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "greaterThanNumericRule": [
+    {
+      "label": "Score",
+      "name": "score",
+      "presence": "Required",
+      "type": {
+        "type": "ShortText",
+        "inputType": "Single-line free text",
+        "attributes": {
+          "type": "text"
+        }
+      },
+      "visibilityRule": []
+    },
+    {
+      "label": "High Score Message",
+      "name": "high_score_msg",
+      "presence": "Required",
+      "type": {
+        "type": "ShortText",
+        "inputType": "Single-line free text",
+        "attributes": {
+          "type": "text"
+        }
+      },
+      "visibilityRule": [
+        {
+          "type": "ShowWhen",
+          "conditions": [
+            {
+              "type": "Field",
+              "fieldName": "score",
+              "comparison": {
+                "type": "GreaterThan",
+                "value": "100"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "greaterThanStringRule": [
+    {
+      "label": "Name",
+      "name": "name",
+      "presence": "Required",
+      "type": {
+        "type": "ShortText",
+        "inputType": "Single-line free text",
+        "attributes": {
+          "type": "text"
+        }
+      },
+      "visibilityRule": []
+    },
+    {
+      "label": "Message",
+      "name": "message",
+      "presence": "Required",
+      "type": {
+        "type": "ShortText",
+        "inputType": "Single-line free text",
+        "attributes": {
+          "type": "text"
+        }
+      },
+      "visibilityRule": [
+        {
+          "type": "ShowWhen",
+          "conditions": [
+            {
+              "type": "Field",
+              "fieldName": "name",
+              "comparison": {
+                "type": "GreaterThan",
+                "value": "abc"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "requiredHiddenField": [
+    {
+      "label": "Show Details",
+      "name": "show_details",
+      "presence": "Required",
+      "type": {
+        "type": "ChooseOne",
+        "choices": [
+          "Yes",
+          "No"
+        ]
+      },
+      "visibilityRule": []
+    },
+    {
+      "label": "Details",
+      "name": "details",
+      "presence": "Required",
+      "type": {
+        "type": "LongText",
+        "maxLength": 500
+      },
+      "visibilityRule": [
+        {
+          "type": "ShowWhen",
+          "conditions": [
+            {
+              "type": "Field",
+              "fieldName": "show_details",
+              "comparison": {
+                "type": "Equals",
+                "value": "Yes"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -3,7 +3,7 @@ export PATH := node_modules/.bin:$(PATH)
 ELM_MAKE_FLAGS=--debug
 
 build: ELM_MAKE_FLAGS=--optimize
-build: css format compile schema test test-go
+build: css format compile schema test test-go test-json-compatibility
 
 diff:
 	git diff -bw -- ':!dist'
@@ -38,7 +38,7 @@ node_modules/.bin/elm-esm:
 run-ignore-error:
 	make run || echo shutdown test server
 
-test-all: test test-go test-playwright
+test-all: test test-go test-json-compatibility test-playwright
 
 test:
 	npx elm-test
@@ -60,8 +60,24 @@ test-playwright:
 test-playwright-ui:
 	npx playwright test --ui
 
-test-go:
+generate-go-test-json: go/testdata/elm_json_fixtures.json
+
+go/testdata/elm_json_fixtures.json: scripts/GenerateGoTestJSON.elm src/Main.elm
+	elm make scripts/GenerateGoTestJSON.elm --output=scripts/generate-go-test-json-elm.js
+	node -e "const {Elm} = require('./scripts/generate-go-test-json-elm.js'); const fs = require('fs'); const app = Elm.GenerateGoTestJSON.init(); app.ports.output.subscribe(json => { fs.writeFileSync('go/testdata/elm_json_fixtures.json', json); console.log('Generated go/testdata/elm_json_fixtures.json'); process.exit(0); });"
+	rm scripts/generate-go-test-json-elm.js
+
+test-go: generate-go-test-json
 	make -C go test
+
+test-json-compatibility: generate-go-test-json
+	@echo "Testing JSON compatibility between Elm and Go..."
+	@if make -C go test > /dev/null 2>&1; then \
+		echo "✓ JSON compatibility test passed"; \
+	else \
+		echo "✗ JSON compatibility test failed - Elm/Go JSON structures are out of sync"; \
+		exit 1; \
+	fi
 
 stop-run:
 	killall node
@@ -91,3 +107,6 @@ validate-config:
 format:
 	npx elm-format src/ tests/ --yes
 	npx prettier --write "index.html" "input.css" "e2e/**/*.ts"
+
+clean:
+	rm -f go/testdata/elm_json_fixtures.json scripts/generate-go-test-json-elm.js
