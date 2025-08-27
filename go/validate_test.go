@@ -1,6 +1,7 @@
 package tinyformfields
 
 import (
+	"encoding/json"
 	"errors"
 	"net/url"
 	"testing"
@@ -230,7 +231,7 @@ func TestValidFormValues(t *testing.T) {
 		"question_15": {""},
 	}
 
-	err := ValidFormValues([]byte(formFieldsJSON), formValues)
+	err := ValidFormValues(toTinyFormFields(t, []byte(formFieldsJSON)), formValues)
 	if err != nil {
 		t.Errorf("Validation Error: %v", err)
 	}
@@ -271,7 +272,7 @@ func TestChoiceParsingAndValidation(t *testing.T) {
 		"question_2": {"Option1", "Option3"},
 	}
 
-	err := ValidFormValues([]byte(formFieldsJSON), formValues)
+	err := ValidFormValues(toTinyFormFields(t, []byte(formFieldsJSON)), formValues)
 	if err != nil {
 		t.Errorf("Validation Error: %v", err)
 	}
@@ -281,7 +282,7 @@ func TestChoiceParsingAndValidation(t *testing.T) {
 		"question_1": {"I might want to go!"},
 	}
 
-	err = ValidFormValues([]byte(formFieldsJSON), formValuesInvalid)
+	err = ValidFormValues(toTinyFormFields(t, []byte(formFieldsJSON)), formValuesInvalid)
 	expectedError := "invalid choice: question_1 has invalid value 'I might want to go!'. Valid choices are: [Yes Maybe No]"
 	if err == nil {
 		t.Errorf("Expected error but got nil")
@@ -615,7 +616,7 @@ func TestInvalidFormValues(t *testing.T) {
 
 	for _, scenario := range scenarios {
 		t.Run(scenario.name, func(t *testing.T) {
-			err := ValidFormValues([]byte(scenario.formFields), scenario.formValues)
+			err := ValidFormValues(toTinyFormFields(t, []byte(scenario.formFields)), scenario.formValues)
 			if scenario.expectError == nil && err != nil {
 				t.Errorf("Unexpected error: %v", err)
 			} else if scenario.expectError != nil {
@@ -1314,7 +1315,7 @@ func TestVisibilityRules(t *testing.T) {
 
 	for _, tt := range scenarios {
 		t.Run(tt.name, func(t *testing.T) {
-			err := ValidFormValues([]byte(tt.formFields), tt.values)
+			err := ValidFormValues(toTinyFormFields(t, []byte(tt.formFields)), tt.values)
 			if tt.expectedError == nil {
 				if err != nil {
 					t.Errorf("Expected no error, got: %v", err)
@@ -1326,4 +1327,16 @@ func TestVisibilityRules(t *testing.T) {
 			}
 		})
 	}
+}
+
+func toTinyFormFields(t *testing.T, bytes []byte) []TinyFormField {
+	t.Helper()
+
+	var tff []TinyFormField
+	err := json.Unmarshal(bytes, &tff)
+	if err != nil {
+		t.Errorf("Validation Error: %v", err)
+	}
+
+	return tff
 }

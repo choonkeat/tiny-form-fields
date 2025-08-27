@@ -642,13 +642,8 @@ func isFieldVisible(field TinyFormField, values url.Values) bool {
 
 // ValidFormValues validates the form submission values against the form definition.
 // Returns nil if validation passes, otherwise returns an error.
-func ValidFormValues(formFields []byte, values url.Values) error {
-	var fields []TinyFormField
-	if err := json.Unmarshal(formFields, &fields); err != nil {
-		return fmt.Errorf("error parsing form fields: %w", err)
-	}
-
-	for _, field := range fields {
+func ValidFormValues(formFields []TinyFormField, values url.Values) error {
+	for _, field := range formFields {
 		// Skip validation if field is not visible
 		if !isFieldVisible(field, values) {
 			continue
