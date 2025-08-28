@@ -88,6 +88,19 @@ type TinyFormField struct {
 	VisibilityRule []VisibilityRule      `json:"visibilityRule,omitempty"`
 }
 
+func (tff TinyFormField) Validate(values url.Values) error {
+	// Skip validation if field is not visible
+	if !isFieldVisible(tff, values) {
+		return nil
+	}
+
+	value := values[tff.FieldName()]
+	if err := tff.Type.Validate(value, tff); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (tff TinyFormField) FieldName() string {
 	switch {
 	case tff.Presence.Name != "":
@@ -195,7 +208,8 @@ type ChoiceFilter struct {
 
 // parseChoices parses the choices array, handling " | " delimiters.
 func parseChoices(choiceStrings []string) []Choice {
-	choices := []Choice{}
+	choices := make([]Choice, 0, len(choiceStrings))
+
 	for _, choiceStr := range choiceStrings {
 		parts := strings.SplitN(choiceStr, " | ", 2)
 		if len(parts) == 2 {
@@ -214,10 +228,9 @@ func parseChoices(choiceStrings []string) []Choice {
 }
 
 type DropdownField struct {
-	Type          string        `json:"type"` // "Dropdown"
-	Choices       []string      `json:"choices"`
-	Filter        *ChoiceFilter `json:"filter,omitempty"`
-	parsedChoices []Choice
+	Type    string        `json:"type"` // "Dropdown"
+	Choices []string      `json:"choices"`
+	Filter  *ChoiceFilter `json:"filter,omitempty"`
 }
 
 func (f *DropdownField) UnmarshalJSON(data []byte) error {
@@ -230,8 +243,7 @@ func (f *DropdownField) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
-	// Parse choices
-	f.parsedChoices = parseChoices(f.Choices)
+
 	return nil
 }
 
@@ -248,25 +260,28 @@ func (f *DropdownField) Validate(value []string, field TinyFormField) error {
 		return nil
 	}
 	val := value[0]
+
+	// Parse choices
+	parsedChoices := parseChoices(f.Choices)
+
 	// Check that val is one of the allowed values
-	for _, choice := range f.parsedChoices {
+	for _, choice := range parsedChoices {
 		if val == choice.Value {
 			return nil // valid
 		}
 	}
 	// Collect valid values
-	validValues := make([]string, len(f.parsedChoices))
-	for i, choice := range f.parsedChoices {
+	validValues := make([]string, len(parsedChoices))
+	for i, choice := range parsedChoices {
 		validValues[i] = choice.Value
 	}
 	return fmt.Errorf("%w: %s has invalid value '%s'. Valid choices are: %v", ErrInvalidChoice, fieldName, val, validValues)
 }
 
 type ChooseOneField struct {
-	Type          string        `json:"type"` // "ChooseOne"
-	Choices       []string      `json:"choices"`
-	Filter        *ChoiceFilter `json:"filter,omitempty"`
-	parsedChoices []Choice
+	Type    string        `json:"type"` // "ChooseOne"
+	Choices []string      `json:"choices"`
+	Filter  *ChoiceFilter `json:"filter,omitempty"`
 }
 
 func (f *ChooseOneField) UnmarshalJSON(data []byte) error {
@@ -279,8 +294,7 @@ func (f *ChooseOneField) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
-	// Parse choices
-	f.parsedChoices = parseChoices(f.Choices)
+
 	return nil
 }
 
@@ -297,27 +311,30 @@ func (f *ChooseOneField) Validate(value []string, field TinyFormField) error {
 		return nil
 	}
 	val := value[0]
+
+	// Parse choices
+	parsedChoices := parseChoices(f.Choices)
+
 	// Check that val is one of the allowed values
-	for _, choice := range f.parsedChoices {
+	for _, choice := range parsedChoices {
 		if val == choice.Value {
 			return nil // valid
 		}
 	}
 	// Collect valid values
-	validValues := make([]string, len(f.parsedChoices))
-	for i, choice := range f.parsedChoices {
+	validValues := make([]string, len(parsedChoices))
+	for i, choice := range parsedChoices {
 		validValues[i] = choice.Value
 	}
 	return fmt.Errorf("%w: %s has invalid value '%s'. Valid choices are: %v", ErrInvalidChoice, fieldName, val, validValues)
 }
 
 type ChooseMultipleField struct {
-	Type          string        `json:"type"` // "ChooseMultiple"
-	Choices       []string      `json:"choices"`
-	MinRequired   *int          `json:"minRequired,omitempty"`
-	MaxAllowed    *int          `json:"maxAllowed,omitempty"`
-	Filter        *ChoiceFilter `json:"filter,omitempty"`
-	parsedChoices []Choice
+	Type        string        `json:"type"` // "ChooseMultiple"
+	Choices     []string      `json:"choices"`
+	MinRequired *int          `json:"minRequired,omitempty"`
+	MaxAllowed  *int          `json:"maxAllowed,omitempty"`
+	Filter      *ChoiceFilter `json:"filter,omitempty"`
 }
 
 func (f *ChooseMultipleField) UnmarshalJSON(data []byte) error {
@@ -330,8 +347,7 @@ func (f *ChooseMultipleField) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
-	// Parse choices
-	f.parsedChoices = parseChoices(f.Choices)
+
 	return nil
 }
 
@@ -355,15 +371,19 @@ func (f *ChooseMultipleField) Validate(value []string, field TinyFormField) erro
 		return fmt.Errorf("%w: %s allows at most %d choices, got %d", ErrInvalidFieldValue, fieldName, *f.MaxAllowed, len(value))
 	}
 
+	// Parse choices
+	parsedChoices := parseChoices(f.Choices)
+
 	// Collect valid values
-	validValues := make([]string, len(f.parsedChoices))
-	for i, choice := range f.parsedChoices {
+	validValues := make([]string, len(parsedChoices))
+	for i, choice := range parsedChoices {
 		validValues[i] = choice.Value
 	}
+
 	// Check that each value is among the allowed values
 	for _, val := range value {
 		valid := false
-		for _, choice := range f.parsedChoices {
+		for _, choice := range parsedChoices {
 			if val == choice.Value {
 				valid = true
 				break
@@ -642,20 +662,13 @@ func isFieldVisible(field TinyFormField, values url.Values) bool {
 
 // ValidFormValues validates the form submission values against the form definition.
 // Returns nil if validation passes, otherwise returns an error.
-func ValidFormValues(formFields []TinyFormField, values url.Values) error {
-	for _, field := range formFields {
-		// Skip validation if field is not visible
-		if !isFieldVisible(field, values) {
-			continue
-		}
-
-		value := values[field.FieldName()]
-		if err := field.Type.Validate(value, field); err != nil {
-			return err
-		}
+func ValidFormValues(formFields []byte, values url.Values) error {
+	var fields TinyFormFields
+	if err := json.Unmarshal(formFields, &fields); err != nil {
+		return fmt.Errorf("error parsing form fields: %w", err)
 	}
 
-	return nil
+	return fields.Validate(values)
 }
 
 // isEmptyValue checks if a slice of strings is empty or contains only empty strings.
@@ -672,4 +685,15 @@ func isEmptyValue(value []string) bool {
 	}
 
 	return true
+}
+
+type TinyFormFields []TinyFormField
+
+func (tffs TinyFormFields) Validate(values url.Values) error {
+	for _, field := range tffs {
+		if err := field.Validate(values); err != nil {
+			return err
+		}
+	}
+	return nil
 }
