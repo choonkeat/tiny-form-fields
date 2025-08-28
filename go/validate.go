@@ -398,7 +398,7 @@ func (f *ChooseMultipleField) Validate(value []string, field TinyFormField) erro
 
 type LongTextField struct {
 	Type      string `json:"type"` // "LongText"
-	MaxLength int    `json:"maxLength,omitempty"`
+	MaxLength *int   `json:"maxLength"`
 }
 
 func (f *LongTextField) Validate(value []string, field TinyFormField) error {
@@ -415,8 +415,8 @@ func (f *LongTextField) Validate(value []string, field TinyFormField) error {
 	}
 	val := value[0]
 	// LongText can contain \r\n
-	if f.MaxLength > 0 && len(val) > f.MaxLength {
-		return fmt.Errorf("%w: %s exceeds max length of %d", ErrInvalidLength, fieldName, f.MaxLength)
+	if f.MaxLength != nil && len(val) > *f.MaxLength {
+		return fmt.Errorf("%w: %s exceeds max length of %d", ErrInvalidLength, fieldName, *f.MaxLength)
 	}
 	return nil
 }
