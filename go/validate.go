@@ -88,6 +88,19 @@ type TinyFormField struct {
 	VisibilityRule []VisibilityRule      `json:"visibilityRule,omitempty"`
 }
 
+func (tff TinyFormField) Validate(values url.Values) error {
+	// Skip validation if field is not visible
+	if !isFieldVisible(tff, values) {
+		return nil
+	}
+
+	value := values[tff.FieldName()]
+	if err := tff.Type.Validate(value, tff); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (tff TinyFormField) FieldName() string {
 	switch {
 	case tff.Presence.Name != "":
@@ -649,20 +662,13 @@ func isFieldVisible(field TinyFormField, values url.Values) bool {
 
 // ValidFormValues validates the form submission values against the form definition.
 // Returns nil if validation passes, otherwise returns an error.
-func ValidFormValues(formFields []TinyFormField, values url.Values) error {
-	for _, field := range formFields {
-		// Skip validation if field is not visible
-		if !isFieldVisible(field, values) {
-			continue
-		}
-
-		value := values[field.FieldName()]
-		if err := field.Type.Validate(value, field); err != nil {
-			return err
-		}
+func ValidFormValues(formFields []byte, values url.Values) error {
+	var fields TinyFormFields
+	if err := json.Unmarshal(formFields, &fields); err != nil {
+		return fmt.Errorf("error parsing form fields: %w", err)
 	}
 
-	return nil
+	return fields.Validate(values)
 }
 
 // isEmptyValue checks if a slice of strings is empty or contains only empty strings.
@@ -679,4 +685,15 @@ func isEmptyValue(value []string) bool {
 	}
 
 	return true
+}
+
+type TinyFormFields []TinyFormField
+
+func (tffs TinyFormFields) Validate(values url.Values) error {
+	for _, field := range tffs {
+		if err := field.Validate(values); err != nil {
+			return err
+		}
+	}
+	return nil
 }
