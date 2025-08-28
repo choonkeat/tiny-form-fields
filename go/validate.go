@@ -195,7 +195,8 @@ type ChoiceFilter struct {
 
 // parseChoices parses the choices array, handling " | " delimiters.
 func parseChoices(choiceStrings []string) []Choice {
-	choices := []Choice{}
+	choices := make([]Choice, 0, len(choiceStrings))
+
 	for _, choiceStr := range choiceStrings {
 		parts := strings.SplitN(choiceStr, " | ", 2)
 		if len(parts) == 2 {
@@ -214,10 +215,9 @@ func parseChoices(choiceStrings []string) []Choice {
 }
 
 type DropdownField struct {
-	Type          string        `json:"type"` // "Dropdown"
-	Choices       []string      `json:"choices"`
-	Filter        *ChoiceFilter `json:"filter,omitempty"`
-	parsedChoices []Choice
+	Type    string        `json:"type"` // "Dropdown"
+	Choices []string      `json:"choices"`
+	Filter  *ChoiceFilter `json:"filter,omitempty"`
 }
 
 func (f *DropdownField) UnmarshalJSON(data []byte) error {
@@ -230,8 +230,7 @@ func (f *DropdownField) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
-	// Parse choices
-	f.parsedChoices = parseChoices(f.Choices)
+
 	return nil
 }
 
@@ -248,25 +247,28 @@ func (f *DropdownField) Validate(value []string, field TinyFormField) error {
 		return nil
 	}
 	val := value[0]
+
+	// Parse choices
+	parsedChoices := parseChoices(f.Choices)
+
 	// Check that val is one of the allowed values
-	for _, choice := range f.parsedChoices {
+	for _, choice := range parsedChoices {
 		if val == choice.Value {
 			return nil // valid
 		}
 	}
 	// Collect valid values
-	validValues := make([]string, len(f.parsedChoices))
-	for i, choice := range f.parsedChoices {
+	validValues := make([]string, len(parsedChoices))
+	for i, choice := range parsedChoices {
 		validValues[i] = choice.Value
 	}
 	return fmt.Errorf("%w: %s has invalid value '%s'. Valid choices are: %v", ErrInvalidChoice, fieldName, val, validValues)
 }
 
 type ChooseOneField struct {
-	Type          string        `json:"type"` // "ChooseOne"
-	Choices       []string      `json:"choices"`
-	Filter        *ChoiceFilter `json:"filter,omitempty"`
-	parsedChoices []Choice
+	Type    string        `json:"type"` // "ChooseOne"
+	Choices []string      `json:"choices"`
+	Filter  *ChoiceFilter `json:"filter,omitempty"`
 }
 
 func (f *ChooseOneField) UnmarshalJSON(data []byte) error {
@@ -279,8 +281,7 @@ func (f *ChooseOneField) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
-	// Parse choices
-	f.parsedChoices = parseChoices(f.Choices)
+
 	return nil
 }
 
@@ -297,27 +298,30 @@ func (f *ChooseOneField) Validate(value []string, field TinyFormField) error {
 		return nil
 	}
 	val := value[0]
+
+	// Parse choices
+	parsedChoices := parseChoices(f.Choices)
+
 	// Check that val is one of the allowed values
-	for _, choice := range f.parsedChoices {
+	for _, choice := range parsedChoices {
 		if val == choice.Value {
 			return nil // valid
 		}
 	}
 	// Collect valid values
-	validValues := make([]string, len(f.parsedChoices))
-	for i, choice := range f.parsedChoices {
+	validValues := make([]string, len(parsedChoices))
+	for i, choice := range parsedChoices {
 		validValues[i] = choice.Value
 	}
 	return fmt.Errorf("%w: %s has invalid value '%s'. Valid choices are: %v", ErrInvalidChoice, fieldName, val, validValues)
 }
 
 type ChooseMultipleField struct {
-	Type          string        `json:"type"` // "ChooseMultiple"
-	Choices       []string      `json:"choices"`
-	MinRequired   *int          `json:"minRequired,omitempty"`
-	MaxAllowed    *int          `json:"maxAllowed,omitempty"`
-	Filter        *ChoiceFilter `json:"filter,omitempty"`
-	parsedChoices []Choice
+	Type        string        `json:"type"` // "ChooseMultiple"
+	Choices     []string      `json:"choices"`
+	MinRequired *int          `json:"minRequired,omitempty"`
+	MaxAllowed  *int          `json:"maxAllowed,omitempty"`
+	Filter      *ChoiceFilter `json:"filter,omitempty"`
 }
 
 func (f *ChooseMultipleField) UnmarshalJSON(data []byte) error {
@@ -330,8 +334,7 @@ func (f *ChooseMultipleField) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
-	// Parse choices
-	f.parsedChoices = parseChoices(f.Choices)
+
 	return nil
 }
 
@@ -355,15 +358,19 @@ func (f *ChooseMultipleField) Validate(value []string, field TinyFormField) erro
 		return fmt.Errorf("%w: %s allows at most %d choices, got %d", ErrInvalidFieldValue, fieldName, *f.MaxAllowed, len(value))
 	}
 
+	// Parse choices
+	parsedChoices := parseChoices(f.Choices)
+
 	// Collect valid values
-	validValues := make([]string, len(f.parsedChoices))
-	for i, choice := range f.parsedChoices {
+	validValues := make([]string, len(parsedChoices))
+	for i, choice := range parsedChoices {
 		validValues[i] = choice.Value
 	}
+
 	// Check that each value is among the allowed values
 	for _, val := range value {
 		valid := false
-		for _, choice := range f.parsedChoices {
+		for _, choice := range parsedChoices {
 			if val == choice.Value {
 				valid = true
 				break
