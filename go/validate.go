@@ -55,6 +55,14 @@ func (p *TinyFormFieldPresence) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (p TinyFormFieldPresence) MarshalJSON() ([]byte, error) {
+	if p.Type != "" {
+		return json.Marshal(p.Type)
+	}
+
+	return json.Marshal(nil)
+}
+
 type VisibilityComparison struct {
 	Type  string `json:"type"`
 	Value string `json:"value"`
@@ -74,6 +82,7 @@ type VisibilityRule struct {
 type TinyFormField struct {
 	Label          string                `json:"label"`
 	Name           string                `json:"name,omitempty"`
+	Description    string                `json:"description,omitempty"`
 	Presence       TinyFormFieldPresence `json:"presence,omitempty"`
 	Type           FieldType             `json:"type"`
 	VisibilityRule []VisibilityRule      `json:"visibilityRule,omitempty"`
@@ -95,6 +104,7 @@ func (f *TinyFormField) UnmarshalJSON(data []byte) error {
 	var tmp struct {
 		Label          string          `json:"label"`
 		Name           string          `json:"name,omitempty"`
+		Description    string          `json:"description,omitempty"`
 		Presence       json.RawMessage `json:"presence,omitempty"`
 		Type           json.RawMessage `json:"type"`
 		VisibilityRule json.RawMessage `json:"visibilityRule,omitempty"`
@@ -104,6 +114,7 @@ func (f *TinyFormField) UnmarshalJSON(data []byte) error {
 	}
 	f.Label = tmp.Label
 	f.Name = tmp.Name
+	f.Description = tmp.Description
 
 	// Unmarshal Presence
 	if tmp.Presence != nil {
@@ -177,6 +188,11 @@ type Choice struct {
 	Label string
 }
 
+type ChoiceFilter struct {
+	Type      string `json:"type"`
+	FieldName string `json:"fieldName"`
+}
+
 // parseChoices parses the choices array, handling " | " delimiters.
 func parseChoices(choiceStrings []string) []Choice {
 	choices := []Choice{}
@@ -198,8 +214,9 @@ func parseChoices(choiceStrings []string) []Choice {
 }
 
 type DropdownField struct {
-	Type          string   `json:"type"` // "Dropdown"
-	Choices       []string `json:"choices"`
+	Type          string        `json:"type"` // "Dropdown"
+	Choices       []string      `json:"choices"`
+	Filter        *ChoiceFilter `json:"filter,omitempty"`
 	parsedChoices []Choice
 }
 
@@ -246,8 +263,9 @@ func (f *DropdownField) Validate(value []string, field TinyFormField) error {
 }
 
 type ChooseOneField struct {
-	Type          string   `json:"type"` // "ChooseOne"
-	Choices       []string `json:"choices"`
+	Type          string        `json:"type"` // "ChooseOne"
+	Choices       []string      `json:"choices"`
+	Filter        *ChoiceFilter `json:"filter,omitempty"`
 	parsedChoices []Choice
 }
 
@@ -294,8 +312,11 @@ func (f *ChooseOneField) Validate(value []string, field TinyFormField) error {
 }
 
 type ChooseMultipleField struct {
-	Type          string   `json:"type"` // "ChooseMultiple"
-	Choices       []string `json:"choices"`
+	Type          string        `json:"type"` // "ChooseMultiple"
+	Choices       []string      `json:"choices"`
+	MinRequired   *int          `json:"minRequired,omitempty"`
+	MaxAllowed    *int          `json:"maxAllowed,omitempty"`
+	Filter        *ChoiceFilter `json:"filter,omitempty"`
 	parsedChoices []Choice
 }
 
@@ -323,6 +344,17 @@ func (f *ChooseMultipleField) Validate(value []string, field TinyFormField) erro
 	if !isRequired(field) && isEmptyValue(value) {
 		return nil
 	}
+
+	// Check MinRequired constraint
+	if f.MinRequired != nil && len(value) < *f.MinRequired {
+		return fmt.Errorf("%w: %s requires at least %d choices, got %d", ErrInvalidFieldValue, fieldName, *f.MinRequired, len(value))
+	}
+
+	// Check MaxAllowed constraint
+	if f.MaxAllowed != nil && len(value) > *f.MaxAllowed {
+		return fmt.Errorf("%w: %s allows at most %d choices, got %d", ErrInvalidFieldValue, fieldName, *f.MaxAllowed, len(value))
+	}
+
 	// Collect valid values
 	validValues := make([]string, len(f.parsedChoices))
 	for i, choice := range f.parsedChoices {
@@ -370,9 +402,10 @@ func (f *LongTextField) Validate(value []string, field TinyFormField) error {
 }
 
 type ShortTextField struct {
-	Type       string                 `json:"type"` // "ShortText"
-	InputType  string                 `json:"inputType"`
-	Attributes map[string]interface{} `json:"attributes"`
+	Type       string            `json:"type"` // "ShortText"
+	InputType  string            `json:"inputType"`
+	InputTag   string            `json:"inputTag,omitempty"`
+	Attributes map[string]string `json:"attributes,omitempty"`
 }
 
 func (f *ShortTextField) Validate(value []string, field TinyFormField) error {
@@ -391,7 +424,7 @@ func (f *ShortTextField) Validate(value []string, field TinyFormField) error {
 
 	// For "multiple": "true", we need to split the value
 	multiple := false
-	if m, ok := f.Attributes["multiple"].(string); ok && m == "true" {
+	if m, ok := f.Attributes["multiple"]; ok && m == "true" {
 		multiple = true
 	}
 
@@ -409,7 +442,7 @@ func (f *ShortTextField) Validate(value []string, field TinyFormField) error {
 		}
 
 		// Check for "pattern"
-		if pattern, ok := f.Attributes["pattern"].(string); ok {
+		if pattern, ok := f.Attributes["pattern"]; ok {
 			re, err := regexp.Compile(pattern)
 			if err != nil {
 				return fmt.Errorf("invalid pattern in %s: %v", fieldName, err)
@@ -421,32 +454,20 @@ func (f *ShortTextField) Validate(value []string, field TinyFormField) error {
 
 		// Check for "maxlength", "minlength"
 		if maxLenValue, ok := f.Attributes["maxlength"]; ok {
-			var maxLen int
-			switch v := maxLenValue.(type) {
-			case float64:
-				maxLen = int(v)
-			case string:
-				maxLen, _ = strconv.Atoi(v)
-			}
+			maxLen, _ := strconv.Atoi(maxLenValue)
 			if len(val) > maxLen {
 				return fmt.Errorf("%w: %s exceeds maximum length of %d", ErrInvalidLength, fieldName, maxLen)
 			}
 		}
 		if minLenValue, ok := f.Attributes["minlength"]; ok {
-			var minLen int
-			switch v := minLenValue.(type) {
-			case float64:
-				minLen = int(v)
-			case string:
-				minLen, _ = strconv.Atoi(v)
-			}
+			minLen, _ := strconv.Atoi(minLenValue)
 			if len(val) < minLen {
 				return fmt.Errorf("%w: %s is shorter than minimum length of %d", ErrInvalidLength, fieldName, minLen)
 			}
 		}
 
 		// Check for "type"
-		if typ, ok := f.Attributes["type"].(string); ok {
+		if typ, ok := f.Attributes["type"]; ok {
 			switch typ {
 			case "email":
 				if err := validateEmail(val); err != nil {
@@ -621,13 +642,8 @@ func isFieldVisible(field TinyFormField, values url.Values) bool {
 
 // ValidFormValues validates the form submission values against the form definition.
 // Returns nil if validation passes, otherwise returns an error.
-func ValidFormValues(formFields []byte, values url.Values) error {
-	var fields []TinyFormField
-	if err := json.Unmarshal(formFields, &fields); err != nil {
-		return fmt.Errorf("error parsing form fields: %w", err)
-	}
-
-	for _, field := range fields {
+func ValidFormValues(formFields []TinyFormField, values url.Values) error {
+	for _, field := range formFields {
 		// Skip validation if field is not visible
 		if !isFieldVisible(field, values) {
 			continue
