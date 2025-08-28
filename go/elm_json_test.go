@@ -143,7 +143,7 @@ func TestElmGeneratedJSON(t *testing.T) {
 			}
 
 			// Validate the form
-			err := ValidFormValues(toTinyFormFields(t, []byte(formFieldsJSON)), tc.values)
+			err := ValidFormValues([]byte(formFieldsJSON), tc.values)
 
 			if tc.shouldErr {
 				if err == nil {
