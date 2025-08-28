@@ -17,6 +17,8 @@ jobs:
       run: npm ci
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
+    - name: Run test-json-compatibility
+      run: make test-json-compatibility
     - name: Run Playwright tests
       run: make -j2 run-ignore-error ping-run test-playwright stop-run
     - uses: actions/upload-artifact@v4
