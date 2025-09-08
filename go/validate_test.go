@@ -338,6 +338,25 @@ func TestInvalidFormValues(t *testing.T) {
 			expectError: nil,
 		},
 		{
+			name: "Valid Choice with Value with Spaces",
+			formFields: `[
+			  {
+				"label": "Question 1",
+				"name": "question_1",
+				"presence": "Required",
+				"type": {
+				  "type": "Dropdown",
+				  "choices": [
+					  " Yes ",
+					  " No "
+				  ]
+				}
+			  }
+			]`,
+			formValues:  url.Values{"question_1": {"Yes"}},
+			expectError: nil,
+		},
+		{
 			name: "Invalid Choice in Dropdown",
 			formFields: `[
 			  {
