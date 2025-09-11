@@ -208,11 +208,10 @@ func parseChoices(choiceStrings []string) []string {
 
 	for _, choiceStr := range choiceStrings {
 		parts := strings.SplitN(choiceStr, " | ", 2)
-		if len(parts) == 2 {
-			choices = append(choices, strings.TrimSpace(parts[0]))
-		} else {
-			choices = append(choices, strings.TrimSpace(choiceStr))
+		if len(parts) == 0 {
+			continue
 		}
+		choices = append(choices, strings.TrimSpace(parts[0]))
 	}
 	return choices
 }
