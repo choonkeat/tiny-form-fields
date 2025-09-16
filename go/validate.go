@@ -7,6 +7,7 @@ import (
 	"net/mail"
 	"net/url"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -196,33 +197,21 @@ type FieldType interface {
 	Validate(value []string, field TinyFormField) error
 }
 
-type Choice struct {
-	Value string
-	Label string
-}
-
 type ChoiceFilter struct {
 	Type      string `json:"type"`
 	FieldName string `json:"fieldName"`
 }
 
 // parseChoices parses the choices array, handling " | " delimiters.
-func parseChoices(choiceStrings []string) []Choice {
-	choices := make([]Choice, 0, len(choiceStrings))
+func parseChoices(choiceStrings []string) []string {
+	choices := make([]string, 0, len(choiceStrings))
 
 	for _, choiceStr := range choiceStrings {
 		parts := strings.SplitN(choiceStr, " | ", 2)
-		if len(parts) == 2 {
-			choices = append(choices, Choice{
-				Value: parts[0],
-				Label: parts[1],
-			})
-		} else {
-			choices = append(choices, Choice{
-				Value: choiceStr,
-				Label: choiceStr,
-			})
+		if len(parts) == 0 {
+			continue
 		}
+		choices = append(choices, strings.TrimSpace(parts[0]))
 	}
 	return choices
 }
@@ -265,17 +254,11 @@ func (f *DropdownField) Validate(value []string, field TinyFormField) error {
 	parsedChoices := parseChoices(f.Choices)
 
 	// Check that val is one of the allowed values
-	for _, choice := range parsedChoices {
-		if val == choice.Value {
-			return nil // valid
-		}
+	if slices.Index(parsedChoices, val) == -1 {
+		return fmt.Errorf("%w: %s has invalid value '%s'. Valid choices are: %v", ErrInvalidChoice, fieldName, val, parsedChoices)
 	}
-	// Collect valid values
-	validValues := make([]string, len(parsedChoices))
-	for i, choice := range parsedChoices {
-		validValues[i] = choice.Value
-	}
-	return fmt.Errorf("%w: %s has invalid value '%s'. Valid choices are: %v", ErrInvalidChoice, fieldName, val, validValues)
+
+	return nil // valid
 }
 
 type ChooseOneField struct {
@@ -316,17 +299,11 @@ func (f *ChooseOneField) Validate(value []string, field TinyFormField) error {
 	parsedChoices := parseChoices(f.Choices)
 
 	// Check that val is one of the allowed values
-	for _, choice := range parsedChoices {
-		if val == choice.Value {
-			return nil // valid
-		}
+	if slices.Index(parsedChoices, val) == -1 {
+		return fmt.Errorf("%w: %s has invalid value '%s'. Valid choices are: %v", ErrInvalidChoice, fieldName, val, parsedChoices)
 	}
-	// Collect valid values
-	validValues := make([]string, len(parsedChoices))
-	for i, choice := range parsedChoices {
-		validValues[i] = choice.Value
-	}
-	return fmt.Errorf("%w: %s has invalid value '%s'. Valid choices are: %v", ErrInvalidChoice, fieldName, val, validValues)
+
+	return nil
 }
 
 type ChooseMultipleField struct {
@@ -374,23 +351,10 @@ func (f *ChooseMultipleField) Validate(value []string, field TinyFormField) erro
 	// Parse choices
 	parsedChoices := parseChoices(f.Choices)
 
-	// Collect valid values
-	validValues := make([]string, len(parsedChoices))
-	for i, choice := range parsedChoices {
-		validValues[i] = choice.Value
-	}
-
 	// Check that each value is among the allowed values
 	for _, val := range value {
-		valid := false
-		for _, choice := range parsedChoices {
-			if val == choice.Value {
-				valid = true
-				break
-			}
-		}
-		if !valid {
-			return fmt.Errorf("%w: %s has invalid value '%s'. Valid choices are: %v", ErrInvalidChoice, fieldName, val, validValues)
+		if slices.Index(parsedChoices, val) == -1 {
+			return fmt.Errorf("%w: %s has invalid value '%s'. Valid choices are: %v", ErrInvalidChoice, fieldName, val, parsedChoices)
 		}
 	}
 	return nil
