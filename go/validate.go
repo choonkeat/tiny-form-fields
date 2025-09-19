@@ -70,8 +70,8 @@ type VisibilityComparison struct {
 }
 
 type VisibilityCondition struct {
-	Type       string               `json:"type,omitempty"`
-	FieldName  string               `json:"fieldName,omitempty"`
+	Type       string               `json:"type"`
+	FieldName  string               `json:"fieldName"`
 	Comparison VisibilityComparison `json:"comparison"`
 }
 
