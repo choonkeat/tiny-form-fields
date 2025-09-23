@@ -60,6 +60,12 @@ test-playwright:
 test-playwright-ui:
 	npx playwright test --ui
 
+generate-elm-test-json: 
+	@echo "Generating Go test fixtures..."
+	@cd go && go test -run TestGenerateGoFixtures > /dev/null 2>&1
+	@echo "Generating cross-validation test data..."
+	node scripts/generate-cross-validation-tests.js
+
 generate-go-test-json: go/testdata/elm_json_fixtures.json
 
 go/testdata/elm_json_fixtures.json: scripts/GenerateGoTestJSON.elm src/Main.elm
@@ -70,7 +76,7 @@ go/testdata/elm_json_fixtures.json: scripts/GenerateGoTestJSON.elm src/Main.elm
 test-go: generate-go-test-json
 	make -C go test
 
-test-json-compatibility: generate-go-test-json
+test-json-compatibility: generate-go-test-json generate-elm-test-json
 	@echo "Testing JSON compatibility between Elm and Go..."
 	@if make -C go test > /dev/null 2>&1; then \
 		echo "✓ JSON compatibility test passed"; \
@@ -78,6 +84,8 @@ test-json-compatibility: generate-go-test-json
 		echo "✗ JSON compatibility test failed - Elm/Go JSON structures are out of sync"; \
 		exit 1; \
 	fi
+	@echo "Testing JSON compatibility between Go and Elm..."
+	npx elm-test tests/GoElmCrossValidationTest.elm
 
 stop-run:
 	killall node

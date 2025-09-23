@@ -1,0 +1,1 @@
+[{"label":"basic","presence":"Optional","type":{"type":"ChooseMultiple","choices":["option 1","option 2"]}},{"label":"complex","presence":"Optional","type":{"type":"ChooseMultiple","choices":["1 | option 1","2 | option 2"],"minRequired":1,"maxAllowed":2,"filter":{"type":"Field","fieldName":"another_field"}}}]
