@@ -1,0 +1,1 @@
+[{"label":"basic","presence":"Optional","type":{"type":"Dropdown","choices":["Yes","No"]}},{"label":"complex","presence":"Optional","type":{"type":"Dropdown","choices":["y | Yes","n | No"],"filter":{"type":"Field","fieldName":"another_field"}}}]

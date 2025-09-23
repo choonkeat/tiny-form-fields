@@ -1,0 +1,1 @@
+[{"label":"basic","presence":"Optional","type":{"type":"ShortText","inputType":"Single-line free text"}},{"label":"complex","presence":"Optional","type":{"type":"ShortText","inputType":"Single-line free text","inputTag":"custom-component","attributes":{"custom":"attribute","datalist":"a\\nb\\nc","maxlength":"10","minlength":"3","multiple":"true","pattern":"[A-Za-z]+"}}}]

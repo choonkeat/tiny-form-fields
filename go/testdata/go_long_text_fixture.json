@@ -1,0 +1,1 @@
+[{"label":"basic","presence":"Optional","type":{"type":"LongText","maxLength":null}},{"label":"complex","presence":"Optional","type":{"type":"LongText","maxLength":10}}]
