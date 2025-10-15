@@ -444,6 +444,10 @@ type FormFieldMsg
     | OnVisibilityConditionDuplicate Int
     | OnCheckboxMinRequiredInput String
     | OnCheckboxMaxAllowedInput String
+    | OnDateMinToggle Bool
+    | OnDateMaxToggle Bool
+    | OnDateMinInput String
+    | OnDateMaxInput String
     | OnFilterToggle Bool
     | OnFilterTypeSelect String
     | OnFilterSourceFieldSelect String
@@ -998,6 +1002,44 @@ updateFormField msg fieldIndex string formFields formField =
                 _ ->
                     formField
 
+        OnDateMinInput minStr ->
+            case formField.type_ of
+                ShortText customElement ->
+                    let
+                        newCustomElement =
+                            { customElement
+                                | min =
+                                    if String.isEmpty minStr then
+                                        AttributeNotNeeded Nothing
+
+                                    else
+                                        AttributeGiven minStr
+                            }
+                    in
+                    { formField | type_ = ShortText newCustomElement }
+
+                _ ->
+                    formField
+
+        OnDateMaxInput maxStr ->
+            case formField.type_ of
+                ShortText customElement ->
+                    let
+                        newCustomElement =
+                            { customElement
+                                | max =
+                                    if String.isEmpty maxStr then
+                                        AttributeNotNeeded Nothing
+
+                                    else
+                                        AttributeGiven maxStr
+                            }
+                    in
+                    { formField | type_ = ShortText newCustomElement }
+
+                _ ->
+                    formField
+
         OnChoicesInput ->
             case formField.type_ of
                 ShortText _ ->
@@ -1152,6 +1194,30 @@ updateFormField msg fieldIndex string formFields formField =
                     formField
 
                 ChooseMultiple _ ->
+                    formField
+
+        OnDateMinToggle bool ->
+            case formField.type_ of
+                ShortText customElement ->
+                    let
+                        newCustomElement =
+                            { customElement | min = toggleAttributeOptional bool customElement.min }
+                    in
+                    { formField | type_ = ShortText newCustomElement }
+
+                _ ->
+                    formField
+
+        OnDateMaxToggle bool ->
+            case formField.type_ of
+                ShortText customElement ->
+                    let
+                        newCustomElement =
+                            { customElement | max = toggleAttributeOptional bool customElement.max }
+                    in
+                    { formField | type_ = ShortText newCustomElement }
+
+                _ ->
                     formField
 
         OnDatalistToggle bool ->
@@ -3192,6 +3258,71 @@ viewFormFieldOptionsBuilder shortTextTypeList index formFields formField =
                 }
                 customElement.datalist
             ]
+                ++ (if
+                        customElement.inputType
+                            == "date"
+                            || (customElement.attributes |> Dict.get "type" |> Maybe.withDefault "")
+                            == "date"
+                    then
+                        [ inputAttributeOptional
+                            { onCheck = \b -> OnFormField (OnDateMinToggle b) index ""
+                            , label = "Minimum date"
+                            , htmlNode =
+                                \result ->
+                                    case result of
+                                        Ok dateStr ->
+                                            Html.input
+                                                [ class "tff-text-field"
+                                                , required True
+                                                , type_ "date"
+                                                , value dateStr
+                                                , onInput (\val -> OnFormField (OnDateMinInput val) index "")
+                                                ]
+                                                []
+
+                                        Err err ->
+                                            Html.input
+                                                [ class "tff-text-field"
+                                                , required True
+                                                , type_ "date"
+                                                , value err
+                                                , onInput (\val -> OnFormField (OnDateMinInput val) index "")
+                                                ]
+                                                []
+                            }
+                            customElement.min
+                        , inputAttributeOptional
+                            { onCheck = \b -> OnFormField (OnDateMaxToggle b) index ""
+                            , label = "Maximum date"
+                            , htmlNode =
+                                \result ->
+                                    case result of
+                                        Ok dateStr ->
+                                            Html.input
+                                                [ class "tff-text-field"
+                                                , required True
+                                                , type_ "date"
+                                                , value dateStr
+                                                , onInput (\val -> OnFormField (OnDateMaxInput val) index "")
+                                                ]
+                                                []
+
+                                        Err err ->
+                                            Html.input
+                                                [ class "tff-text-field"
+                                                , required True
+                                                , type_ "date"
+                                                , value err
+                                                , onInput (\val -> OnFormField (OnDateMaxInput val) index "")
+                                                ]
+                                                []
+                            }
+                            customElement.max
+                        ]
+
+                    else
+                        []
+                   )
 
         LongText optionalMaxLength ->
             [ inputAttributeOptional
@@ -3951,6 +4082,8 @@ type alias CustomElement =
     , multiple : AttributeOptional Bool
     , maxlength : AttributeOptional Int
     , datalist : AttributeOptional (List Choice)
+    , min : AttributeOptional String
+    , max : AttributeOptional String
     }
 
 
@@ -4004,6 +4137,26 @@ fromRawCustomElement ele =
 
             Nothing ->
                 AttributeNotNeeded Nothing
+    , min =
+        case Dict.get "min" ele.attributes of
+            Just "" ->
+                AttributeNotNeeded Nothing
+
+            Just value ->
+                AttributeGiven value
+
+            Nothing ->
+                AttributeNotNeeded Nothing
+    , max =
+        case Dict.get "max" ele.attributes of
+            Just "" ->
+                AttributeNotNeeded Nothing
+
+            Just value ->
+                AttributeGiven value
+
+            Nothing ->
+                AttributeNotNeeded Nothing
     }
 
 
@@ -4039,6 +4192,22 @@ toRawCustomElement ele =
 
                 AttributeNotNeeded _ ->
                     dict
+
+        addMinIfGiven dict =
+            case ele.min of
+                AttributeGiven value ->
+                    Dict.insert "min" value dict
+
+                _ ->
+                    Dict.filter (\k _ -> k /= "min") dict
+
+        addMaxIfGiven dict =
+            case ele.max of
+                AttributeGiven value ->
+                    Dict.insert "max" value dict
+
+                _ ->
+                    Dict.filter (\k _ -> k /= "max") dict
     in
     { inputTag = ele.inputTag
     , inputType = ele.inputType
@@ -4047,6 +4216,8 @@ toRawCustomElement ele =
             |> addMaxLengthIfGiven
             |> addMultipleIfGiven
             |> addDatalistIfGiven
+            |> addMinIfGiven
+            |> addMaxIfGiven
     }
 
 
