@@ -630,6 +630,72 @@ func TestInvalidFormValues(t *testing.T) {
 			formValues:  url.Values{"emails": {"test1@example.com, invalid-email"}},
 			expectError: ErrInvalidPattern,
 		},
+		{
+			name: "Invalid Date Field - before min",
+			formFields: `[
+				{
+					"label": "Date",
+					"name": "date",
+					"presence": "Required",
+					"description": "",
+					"type": {
+						"type": "ShortText",
+						"inputType": "Date",
+						"attributes": {
+							"type": "date",
+							"min": "2024-09-19",
+							"max": "2024-09-20"
+						}
+					}
+				}
+			]`,
+			formValues:  url.Values{"date": {"2024-09-18"}},
+			expectError: ErrInvalidDate,
+		},
+		{
+			name: "Invalid Date Field - after max",
+			formFields: `[
+				{
+					"label": "Date",
+					"name": "date",
+					"presence": "Required",
+					"description": "",
+					"type": {
+						"type": "ShortText",
+						"inputType": "Date",
+						"attributes": {
+							"type": "date",
+							"min": "2024-09-19",
+							"max": "2024-09-20"
+						}
+					}
+				}
+			]`,
+			formValues:  url.Values{"date": {"2024-09-21"}},
+			expectError: ErrInvalidDate,
+		},
+		{
+			name: "Valid Date Field - between min and max (inclusive)",
+			formFields: `[
+				{
+					"label": "Date",
+					"name": "date",
+					"presence": "Required",
+					"description": "",
+					"type": {
+						"type": "ShortText",
+						"inputType": "Date",
+						"attributes": {
+							"type": "date",
+							"min": "2024-09-20",
+							"max": "2024-09-20"
+						}
+					}
+				}
+			]`,
+			formValues:  url.Values{"date": {"2024-09-20"}},
+			expectError: nil,
+		},
 	}
 
 	for _, scenario := range scenarios {
