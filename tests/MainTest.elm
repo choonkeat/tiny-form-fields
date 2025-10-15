@@ -672,6 +672,8 @@ suite =
                               , multiple = Main.AttributeNotNeeded Nothing
                               , maxlength = Main.AttributeNotNeeded Nothing
                               , datalist = Main.AttributeNotNeeded Nothing
+                              , min = Main.AttributeNotNeeded Nothing
+                              , max = Main.AttributeNotNeeded Nothing
                               }
                             , { inputType = "Text"
                               , inputTag = "input"
@@ -684,6 +686,8 @@ suite =
                               , multiple = Main.AttributeGiven False
                               , maxlength = Main.AttributeGiven 10
                               , datalist = Main.AttributeNotNeeded Nothing
+                              , min = Main.AttributeNotNeeded Nothing
+                              , max = Main.AttributeNotNeeded Nothing
                               }
                             , { inputType = "Text"
                               , inputTag = "input"
@@ -697,6 +701,8 @@ suite =
                                     Main.AttributeGiven
                                         [ { label = "someid", value = "someid" }
                                         ]
+                              , min = Main.AttributeNotNeeded Nothing
+                              , max = Main.AttributeNotNeeded Nothing
                               }
                             , { inputType = "Text"
                               , inputTag = "input"
@@ -713,6 +719,8 @@ suite =
                                         , { label = "tres", value = "three" }
                                         , { label = "four", value = "four" }
                                         ]
+                              , min = Main.AttributeNotNeeded Nothing
+                              , max = Main.AttributeNotNeeded Nothing
                               }
                             , { inputType = "Email"
                               , inputTag = "input"
@@ -723,6 +731,8 @@ suite =
                               , multiple = Main.AttributeNotNeeded Nothing
                               , maxlength = Main.AttributeNotNeeded Nothing
                               , datalist = Main.AttributeNotNeeded Nothing
+                              , min = Main.AttributeNotNeeded Nothing
+                              , max = Main.AttributeNotNeeded Nothing
                               }
                             , { inputType = "Emails"
                               , inputTag = "input"
@@ -734,6 +744,8 @@ suite =
                               , multiple = Main.AttributeGiven True
                               , maxlength = Main.AttributeNotNeeded Nothing
                               , datalist = Main.AttributeNotNeeded Nothing
+                              , min = Main.AttributeNotNeeded Nothing
+                              , max = Main.AttributeNotNeeded Nothing
                               }
                             , { inputType = "Digits"
                               , inputTag = "input"
@@ -745,6 +757,8 @@ suite =
                               , multiple = Main.AttributeNotNeeded Nothing
                               , maxlength = Main.AttributeNotNeeded Nothing
                               , datalist = Main.AttributeNotNeeded Nothing
+                              , min = Main.AttributeNotNeeded Nothing
+                              , max = Main.AttributeNotNeeded Nothing
                               }
                             , { inputType = "Nric2"
                               , inputTag = "nric-custom-ele"
@@ -756,6 +770,8 @@ suite =
                               , multiple = Main.AttributeNotNeeded Nothing
                               , maxlength = Main.AttributeNotNeeded Nothing
                               , datalist = Main.AttributeNotNeeded Nothing
+                              , min = Main.AttributeNotNeeded Nothing
+                              , max = Main.AttributeNotNeeded Nothing
                               }
                             , { inputType = "Nric"
                               , inputTag = "input"
@@ -767,6 +783,8 @@ suite =
                               , multiple = Main.AttributeNotNeeded Nothing
                               , maxlength = Main.AttributeNotNeeded Nothing
                               , datalist = Main.AttributeNotNeeded Nothing
+                              , min = Main.AttributeNotNeeded Nothing
+                              , max = Main.AttributeNotNeeded Nothing
                               }
                             ]
                         )
@@ -911,6 +929,8 @@ suite =
                                         , datalist = Main.AttributeNotNeeded Nothing
                                         , maxlength = Main.AttributeNotNeeded Nothing
                                         , multiple = Main.AttributeNotNeeded Nothing
+                                        , min = Main.AttributeNotNeeded Nothing
+                                        , max = Main.AttributeNotNeeded Nothing
                                         }
                             }
                     in
@@ -939,6 +959,8 @@ suite =
                                         , datalist = Main.AttributeNotNeeded Nothing
                                         , maxlength = Main.AttributeNotNeeded Nothing
                                         , multiple = Main.AttributeNotNeeded Nothing
+                                        , min = Main.AttributeNotNeeded Nothing
+                                        , max = Main.AttributeNotNeeded Nothing
                                         }
                             }
                     in
@@ -967,6 +989,8 @@ suite =
                                         , datalist = Main.AttributeNotNeeded Nothing
                                         , maxlength = Main.AttributeNotNeeded Nothing
                                         , multiple = Main.AttributeNotNeeded Nothing
+                                        , min = Main.AttributeNotNeeded Nothing
+                                        , max = Main.AttributeNotNeeded Nothing
                                         }
                             }
                     in
@@ -1231,6 +1255,8 @@ moreTestInputFields =
         , multiple = Main.AttributeNotNeeded Nothing
         , maxlength = Main.AttributeNotNeeded Nothing
         , datalist = Main.AttributeNotNeeded Nothing
+        , min = Main.AttributeNotNeeded Nothing
+        , max = Main.AttributeNotNeeded Nothing
         }
     , Main.ShortText
         { inputType = "Emails"
@@ -1243,6 +1269,8 @@ moreTestInputFields =
         , multiple = Main.AttributeGiven True
         , maxlength = Main.AttributeNotNeeded Nothing
         , datalist = Main.AttributeNotNeeded Nothing
+        , min = Main.AttributeNotNeeded Nothing
+        , max = Main.AttributeNotNeeded Nothing
         }
     , Main.ShortText
         { inputType = "Emails with maxlength"
@@ -1257,6 +1285,8 @@ moreTestInputFields =
         , multiple = Main.AttributeGiven True
         , maxlength = Main.AttributeGiven 20
         , datalist = Main.AttributeNotNeeded Nothing
+        , min = Main.AttributeNotNeeded Nothing
+        , max = Main.AttributeNotNeeded Nothing
         }
     , Main.Dropdown
         { choices = [ Main.Choice "option1" "option1", Main.Choice "option2" "option2" ]

@@ -122,7 +122,9 @@
                       "attributes",
                       "multiple",
                       "maxlength",
-                      "datalist"
+                      "datalist",
+                      "min",
+                      "max"
                     ],
                     "properties": {
                       "inputType": {
@@ -208,6 +210,48 @@
                               ]
                             },
                             "type": "array"
+                          },
+                          {
+                            "type": "object",
+                            "required": [
+                              "AttributeInvalid"
+                            ],
+                            "properties": {
+                              "AttributeInvalid": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      "min": {
+                        "oneOf": [
+                          {
+                            "type": "null"
+                          },
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "object",
+                            "required": [
+                              "AttributeInvalid"
+                            ],
+                            "properties": {
+                              "AttributeInvalid": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      "max": {
+                        "oneOf": [
+                          {
+                            "type": "null"
+                          },
+                          {
+                            "type": "string"
                           },
                           {
                             "type": "object",
@@ -550,7 +594,9 @@
           "attributes",
           "multiple",
           "maxlength",
-          "datalist"
+          "datalist",
+          "min",
+          "max"
         ],
         "properties": {
           "inputType": {
@@ -636,6 +682,48 @@
                   ]
                 },
                 "type": "array"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "AttributeInvalid"
+                ],
+                "properties": {
+                  "AttributeInvalid": {
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          },
+          "min": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "AttributeInvalid"
+                ],
+                "properties": {
+                  "AttributeInvalid": {
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          },
+          "max": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
               },
               {
                 "type": "object",
