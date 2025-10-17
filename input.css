@@ -157,6 +157,168 @@
 	text-align: inherit;
 }
 
+/* Temporal input placeholder styling - Make empty state visually distinct */
+/* Only applies within tff containers to avoid affecting user's app styles */
+
+/* Chrome/Edge/Opera/Safari - WebKit pseudo-elements for empty inputs only */
+.tff-field-group input[type='date']:not(:valid)::-webkit-datetime-edit-text,
+.tff-field-group input[type='date']:not(:valid)::-webkit-datetime-edit-month-field,
+.tff-field-group input[type='date']:not(:valid)::-webkit-datetime-edit-day-field,
+.tff-field-group input[type='date']:not(:valid)::-webkit-datetime-edit-year-field,
+.tff-field-group input[type='time']:not(:valid)::-webkit-datetime-edit-text,
+.tff-field-group input[type='time']:not(:valid)::-webkit-datetime-edit-hour-field,
+.tff-field-group input[type='time']:not(:valid)::-webkit-datetime-edit-minute-field,
+.tff-field-group input[type='time']:not(:valid)::-webkit-datetime-edit-second-field,
+.tff-field-group input[type='time']:not(:valid)::-webkit-datetime-edit-ampm-field,
+.tff-field-group input[type='datetime-local']:not(:valid)::-webkit-datetime-edit-text,
+.tff-field-group input[type='datetime-local']:not(:valid)::-webkit-datetime-edit-month-field,
+.tff-field-group input[type='datetime-local']:not(:valid)::-webkit-datetime-edit-day-field,
+.tff-field-group input[type='datetime-local']:not(:valid)::-webkit-datetime-edit-year-field,
+.tff-field-group input[type='datetime-local']:not(:valid)::-webkit-datetime-edit-hour-field,
+.tff-field-group input[type='datetime-local']:not(:valid)::-webkit-datetime-edit-minute-field {
+	color: rgb(248, 113, 113);
+	opacity: 0.7;
+}
+
+/* Chrome/Edge/Opera/Safari - WebKit pseudo-elements for empty optional inputs */
+/* Target empty optional inputs using JS class approach only (since optional empty inputs are :valid) */
+.tff-field-group input[type='date'].tff-empty-optional::-webkit-datetime-edit-text,
+.tff-field-group input[type='date'].tff-empty-optional::-webkit-datetime-edit-month-field,
+.tff-field-group input[type='date'].tff-empty-optional::-webkit-datetime-edit-day-field,
+.tff-field-group input[type='date'].tff-empty-optional::-webkit-datetime-edit-year-field,
+.tff-field-group input[type='time'].tff-empty-optional::-webkit-datetime-edit-text,
+.tff-field-group input[type='time'].tff-empty-optional::-webkit-datetime-edit-hour-field,
+.tff-field-group input[type='time'].tff-empty-optional::-webkit-datetime-edit-minute-field,
+.tff-field-group input[type='time'].tff-empty-optional::-webkit-datetime-edit-second-field,
+.tff-field-group input[type='time'].tff-empty-optional::-webkit-datetime-edit-ampm-field,
+.tff-field-group input[type='datetime-local'].tff-empty-optional::-webkit-datetime-edit-text,
+.tff-field-group input[type='datetime-local'].tff-empty-optional::-webkit-datetime-edit-month-field,
+.tff-field-group input[type='datetime-local'].tff-empty-optional::-webkit-datetime-edit-day-field,
+.tff-field-group input[type='datetime-local'].tff-empty-optional::-webkit-datetime-edit-year-field,
+.tff-field-group input[type='datetime-local'].tff-empty-optional::-webkit-datetime-edit-hour-field,
+.tff-field-group
+	input[type='datetime-local'].tff-empty-optional::-webkit-datetime-edit-minute-field {
+	color: rgb(248, 113, 113);
+	opacity: 0.7;
+}
+
+/* Firefox - style empty temporal inputs to look like placeholders */
+.tff-field-group input[type='date']:not(:valid),
+.tff-field-group input[type='time']:not(:valid),
+.tff-field-group input[type='datetime-local']:not(:valid) {
+	color: rgb(248, 113, 113) !important;
+	opacity: 0.7 !important;
+}
+
+/* Firefox - style empty optional temporal inputs */
+.tff-field-group input[type='date'].tff-empty-optional,
+.tff-field-group input[type='time'].tff-empty-optional,
+.tff-field-group input[type='datetime-local'].tff-empty-optional {
+	color: rgb(248, 113, 113) !important;
+	opacity: 0.7 !important;
+}
+
+/* Override styles when inside editor layout center panel - make invisible */
+.tff-editor-layout .tff-center-panel input[type='date']:not(:valid)::-webkit-datetime-edit-text,
+.tff-editor-layout
+	.tff-center-panel
+	input[type='date']:not(:valid)::-webkit-datetime-edit-month-field,
+.tff-editor-layout
+	.tff-center-panel
+	input[type='date']:not(:valid)::-webkit-datetime-edit-day-field,
+.tff-editor-layout
+	.tff-center-panel
+	input[type='date']:not(:valid)::-webkit-datetime-edit-year-field,
+.tff-editor-layout .tff-center-panel input[type='time']:not(:valid)::-webkit-datetime-edit-text,
+.tff-editor-layout
+	.tff-center-panel
+	input[type='time']:not(:valid)::-webkit-datetime-edit-hour-field,
+.tff-editor-layout
+	.tff-center-panel
+	input[type='time']:not(:valid)::-webkit-datetime-edit-minute-field,
+.tff-editor-layout
+	.tff-center-panel
+	input[type='time']:not(:valid)::-webkit-datetime-edit-second-field,
+.tff-editor-layout
+	.tff-center-panel
+	input[type='time']:not(:valid)::-webkit-datetime-edit-ampm-field,
+.tff-editor-layout
+	.tff-center-panel
+	input[type='datetime-local']:not(:valid)::-webkit-datetime-edit-text,
+.tff-editor-layout
+	.tff-center-panel
+	input[type='datetime-local']:not(:valid)::-webkit-datetime-edit-month-field,
+.tff-editor-layout
+	.tff-center-panel
+	input[type='datetime-local']:not(:valid)::-webkit-datetime-edit-day-field,
+.tff-editor-layout
+	.tff-center-panel
+	input[type='datetime-local']:not(:valid)::-webkit-datetime-edit-year-field,
+.tff-editor-layout
+	.tff-center-panel
+	input[type='datetime-local']:not(:valid)::-webkit-datetime-edit-hour-field,
+.tff-editor-layout
+	.tff-center-panel
+	input[type='datetime-local']:not(:valid)::-webkit-datetime-edit-minute-field,
+.tff-editor-layout
+	.tff-center-panel
+	input[type='date'].tff-empty-optional::-webkit-datetime-edit-text,
+.tff-editor-layout
+	.tff-center-panel
+	input[type='date'].tff-empty-optional::-webkit-datetime-edit-month-field,
+.tff-editor-layout
+	.tff-center-panel
+	input[type='date'].tff-empty-optional::-webkit-datetime-edit-day-field,
+.tff-editor-layout
+	.tff-center-panel
+	input[type='date'].tff-empty-optional::-webkit-datetime-edit-year-field,
+.tff-editor-layout
+	.tff-center-panel
+	input[type='time'].tff-empty-optional::-webkit-datetime-edit-text,
+.tff-editor-layout
+	.tff-center-panel
+	input[type='time'].tff-empty-optional::-webkit-datetime-edit-hour-field,
+.tff-editor-layout
+	.tff-center-panel
+	input[type='time'].tff-empty-optional::-webkit-datetime-edit-minute-field,
+.tff-editor-layout
+	.tff-center-panel
+	input[type='time'].tff-empty-optional::-webkit-datetime-edit-second-field,
+.tff-editor-layout
+	.tff-center-panel
+	input[type='time'].tff-empty-optional::-webkit-datetime-edit-ampm-field,
+.tff-editor-layout
+	.tff-center-panel
+	input[type='datetime-local'].tff-empty-optional::-webkit-datetime-edit-text,
+.tff-editor-layout
+	.tff-center-panel
+	input[type='datetime-local'].tff-empty-optional::-webkit-datetime-edit-month-field,
+.tff-editor-layout
+	.tff-center-panel
+	input[type='datetime-local'].tff-empty-optional::-webkit-datetime-edit-day-field,
+.tff-editor-layout
+	.tff-center-panel
+	input[type='datetime-local'].tff-empty-optional::-webkit-datetime-edit-year-field,
+.tff-editor-layout
+	.tff-center-panel
+	input[type='datetime-local'].tff-empty-optional::-webkit-datetime-edit-hour-field,
+.tff-editor-layout
+	.tff-center-panel
+	input[type='datetime-local'].tff-empty-optional::-webkit-datetime-edit-minute-field {
+	color: transparent !important;
+	opacity: 0 !important;
+}
+
+.tff-editor-layout .tff-center-panel input[type='date']:not(:valid),
+.tff-editor-layout .tff-center-panel input[type='time']:not(:valid),
+.tff-editor-layout .tff-center-panel input[type='datetime-local']:not(:valid),
+.tff-editor-layout .tff-center-panel input[type='date'].tff-empty-optional,
+.tff-editor-layout .tff-center-panel input[type='time'].tff-empty-optional,
+.tff-editor-layout .tff-center-panel input[type='datetime-local'].tff-empty-optional {
+	color: inherit !important;
+	opacity: 1 !important;
+}
+
 .tff-dropdown-group {
 	@apply grid;
 }

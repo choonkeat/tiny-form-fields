@@ -1681,6 +1681,48 @@ isUsingFilter formField =
             filter /= Nothing
 
 
+{-| Checks if a field is an optional temporal input (date, time, datetime-local)
+that needs the tff-empty-optional class management
+-}
+isOptionalTemporalInput : FormField -> Bool
+isOptionalTemporalInput formField =
+    case ( formField.presence, formField.type_ ) of
+        ( Optional, ShortText customElement ) ->
+            let
+                inputType =
+                    Dict.get "type" customElement.attributes
+                        |> Maybe.withDefault ""
+            in
+            List.member inputType [ "date", "time", "datetime-local" ]
+
+        _ ->
+            False
+
+
+{-| Builds the CSS class string for input elements, adding tff-empty-optional for empty optional temporal inputs
+-}
+buildInputClassString : FormField -> String -> Dict String (List String) -> String
+buildInputClassString formField fieldName trackedFormValues =
+    let
+        baseClass =
+            "tff-text-field"
+
+        isEmpty =
+            Dict.get fieldName trackedFormValues
+                |> Maybe.andThen List.head
+                |> Maybe.map String.isEmpty
+                |> Maybe.withDefault True
+
+        needsEmptyOptionalClass =
+            isOptionalTemporalInput formField && isEmpty
+    in
+    if needsEmptyOptionalClass then
+        baseClass ++ " tff-empty-optional"
+
+    else
+        baseClass
+
+
 viewFormPreview : List (Html.Attribute Msg) -> { a | formFields : Array FormField, needsFormLogic : Bool, trackedFormValues : Dict String (List String), shortTextTypeDict : Dict String CustomElement } -> List (Html Msg)
 viewFormPreview customAttrs { formFields, needsFormLogic, trackedFormValues, shortTextTypeDict } =
     let
@@ -1699,8 +1741,12 @@ viewFormPreview customAttrs { formFields, needsFormLogic, trackedFormValues, sho
             Array.toList formFields
                 |> List.any isChooseManyUsingMinMax
 
+        hasOptionalTemporalInputs =
+            Array.toList formFields
+                |> List.any isOptionalTemporalInput
+
         needsEventHandlers =
-            needsFormLogic || isAnyChooseManyUsingMinMax
+            needsFormLogic || isAnyChooseManyUsingMinMax || hasOptionalTemporalInputs
 
         config =
             { customAttrs = customAttrs
@@ -2034,7 +2080,7 @@ viewFormFieldOptionsPreview config fieldID formField =
             in
             div []
                 [ Html.node customElement.inputTag
-                    ([ attribute "class" "tff-text-field"
+                    ([ attribute "class" (buildInputClassString formField fieldName config.trackedFormValues)
                      , name fieldName
                      , id fieldID
                      , required (requiredData formField.presence)
