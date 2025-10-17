@@ -5,7 +5,7 @@ import { addField } from './test-utils';
 test('Logic indicators display correct text for different field relationships', async ({
 	page,
 }) => {
-	await page.goto('http://localhost:8000/');
+	await page.goto('');
 
 	// Add a dropdown field that will be referenced by other fields
 	await addField(page, 'Dropdown', [{ label: 'Dropdown question title', value: 'Logic Source' }]);

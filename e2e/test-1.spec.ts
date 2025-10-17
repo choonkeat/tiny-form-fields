@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { addField } from './test-utils';
+import { addField, getHttpbinUrl } from './test-utils';
 
 function randomOne(items) {
 	return items[Math.floor(Math.random() * items.length)];
@@ -76,7 +76,7 @@ const sports = [
 test('test', async ({ page }) => {
 	// Set a desktop viewport
 	await page.setViewportSize({ width: 2048, height: 800 });
-	await page.goto('http://localhost:8000/');
+	await page.goto('');
 
 	const inputs = [
 		{
@@ -155,7 +155,11 @@ test('test', async ({ page }) => {
 		await addField(page, input.link, undefined, input);
 	}
 
-	await page.locator('.tff-close-button').click();
+	// Set the form target URL to use the configured httpbin URL
+	await page.locator('#form_target_url').fill(getHttpbinUrl());
+	await page.locator('#form_target_url').evaluate((e) => e.blur());
+
+	await page.locator('.tff-close-button').click({ force: true });
 	await expect(page.locator('.tff-panel-visible:has-text("Field Settings")')).toHaveCount(0);
 
 	const page1Promise = page.waitForEvent('popup');
@@ -182,7 +186,7 @@ test('test', async ({ page }) => {
 		}
 	}
 
-	const responsePromise = page1.waitForResponse('https://httpbin.org/post', {
+	const responsePromise = page1.waitForResponse(getHttpbinUrl(), {
 		timeout: 30000,
 	});
 	await page1.getByRole('button', { name: 'Submit' }).click();
@@ -203,7 +207,7 @@ test('test', async ({ page }) => {
 test('test with custom target URL', async ({ page }) => {
 	// Set a desktop viewport
 	await page.setViewportSize({ width: 2048, height: 800 });
-	await page.goto('http://localhost:8000/');
+	await page.goto('');
 
 	// Add a simple text field
 	const input = {
@@ -216,7 +220,7 @@ test('test with custom target URL', async ({ page }) => {
 	await addField(page, input.link, undefined, input);
 
 	// Change form target URL
-	const customUrl = 'https://httpbin.org/post?123=abc';
+	const customUrl = getHttpbinUrl() + '?123=abc';
 	await page.locator('#form_target_url').fill(customUrl);
 	await page.locator('#form_target_url').evaluate((e) => e.blur());
 

@@ -43,9 +43,6 @@ test-all: test test-go test-json-compatibility test-playwright
 test:
 	npx elm-test
 
-ping-run:
-	wget --tries=90 --retry-connrefused -SO - http://localhost:8000
-
 # Usage: make test-playwright [PLAYWRIGHT_FILE=e2e/mytest.spec.ts]
 # If PLAYWRIGHT_FILE is specified, only that file will be tested
 # Otherwise, all tests will be run
@@ -87,8 +84,19 @@ test-json-compatibility: generate-go-test-json generate-elm-test-json
 	@echo "Testing JSON compatibility between Go and Elm..."
 	npx elm-test tests/GoElmCrossValidationTest.elm
 
+run-httpbin-ignore-error:
+	CGO_ENABLED=0 go build -o httpbin go/httpbin/main.go
+	./httpbin || echo shutdown httpbin server
+
+ping-both:
+	wget --tries=90 --retry-connrefused -SO - http://localhost:8000
+	wget --tries=90 --retry-connrefused -SO - http://localhost:9000
+
 stop-run:
 	killall node
+
+stop-httpbin:
+	pkill -f "./httpbin" || true
 
 elm-review:
 	(yes | npx elm-review --fix-all) || npx elm-review
@@ -117,4 +125,4 @@ format:
 	npx prettier --write "index.html" "input.css" "e2e/**/*.ts"
 
 clean:
-	rm -f go/testdata/elm_json_fixtures.json scripts/generate-go-test-json-elm.js
+	rm -f go/testdata/elm_json_fixtures.json scripts/generate-go-test-json-elm.js dist/*
