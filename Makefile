@@ -36,7 +36,7 @@ node_modules/.bin/elm-esm:
 	npm ci
 
 run-ignore-error:
-	make run || echo shutdown test server
+	make run ELM_MAKE_FLAGS=--optimize || echo shutdown test server
 
 test-all: test test-go test-json-compatibility test-playwright
 
