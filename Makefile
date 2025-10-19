@@ -67,11 +67,10 @@ test-playwright-ci:
 	make run-background && \
 	make run-httpbin-background && \
 	make ping-both && \
-	make $(CI_TEST_TARGET); \
-	EXIT_CODE=$$?; \
+	{ make $(CI_TEST_TARGET); EXIT_CODE=$$?; } ; \
 	echo "Cleaning up servers..."; \
 	make stop-run stop-httpbin; \
-	exit $$EXIT_CODE
+	exit $${EXIT_CODE:-0}
 
 test-playwright-ui:
 	npx playwright test --ui
