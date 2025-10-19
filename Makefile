@@ -57,7 +57,7 @@ test-playwright:
 test-playwright-ui:
 	npx playwright test --ui
 
-generate-elm-test-json: 
+generate-elm-test-json:
 	@echo "Generating Go test fixtures..."
 	@cd go && go test -run TestGenerateGoFixtures > /dev/null 2>&1
 	@echo "Generating cross-validation test data..."
@@ -85,8 +85,8 @@ test-json-compatibility: generate-go-test-json generate-elm-test-json
 	npx elm-test tests/GoElmCrossValidationTest.elm
 
 run-httpbin-ignore-error:
-	CGO_ENABLED=0 go build -o httpbin go/httpbin/main.go
-	./httpbin || echo shutdown httpbin server
+	go build -o httpbin-server go/httpbin/main.go
+	./httpbin-server || echo shutdown httpbin server
 
 ping-both:
 	wget --tries=90 --retry-connrefused -SO - http://localhost:8000
@@ -96,7 +96,8 @@ stop-run:
 	killall node
 
 stop-httpbin:
-	pkill -f "./httpbin" || true
+	killall httpbin-server
+
 
 elm-review:
 	(yes | npx elm-review --fix-all) || npx elm-review
