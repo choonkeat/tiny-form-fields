@@ -38,10 +38,17 @@ node_modules/.bin/elm-esm:
 run-ignore-error:
 	make run ELM_MAKE_FLAGS=--optimize || echo shutdown test server
 
+run-background:
+	(make run > /dev/null 2>&1 &) && sleep 1 && echo "Dev server started in background"
+
 test-all: test test-go test-json-compatibility test-playwright
 
 test:
 	npx elm-test
+
+TEST_MOCK_EXIT=0
+test-mock:
+	exit $(TEST_MOCK_EXIT)
 
 # Usage: make test-playwright [PLAYWRIGHT_FILE=e2e/mytest.spec.ts]
 # If PLAYWRIGHT_FILE is specified, only that file will be tested
@@ -53,6 +60,18 @@ test-playwright:
 		npx playwright test "$(PLAYWRIGHT_FILE)" --reporter=line; \
 	fi
 	echo playwright pass
+
+CI_TEST_TARGET ?= test-playwright
+test-playwright-ci:
+	@set +e; \
+	make run-background && \
+	make run-httpbin-background && \
+	make ping-both && \
+	make $(CI_TEST_TARGET); \
+	EXIT_CODE=$$?; \
+	echo "Cleaning up servers..."; \
+	make stop-run stop-httpbin; \
+	exit $$EXIT_CODE
 
 test-playwright-ui:
 	npx playwright test --ui
@@ -87,6 +106,10 @@ test-json-compatibility: generate-go-test-json generate-elm-test-json
 run-httpbin-ignore-error:
 	go build -o httpbin-server go/httpbin/main.go
 	./httpbin-server || echo shutdown httpbin server
+
+run-httpbin-background:
+	go build -o httpbin-server go/httpbin/main.go
+	(./httpbin-server > /dev/null 2>&1 &) && sleep 1 && echo "Httpbin server started in background"
 
 ping-both:
 	wget --tries=90 --retry-connrefused -SO - http://localhost:8000
