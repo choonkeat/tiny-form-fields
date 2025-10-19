@@ -4,7 +4,7 @@ test.describe('responsive layout tests', () => {
 	test('desktop view layout has correct structure and scrolling behavior', async ({ page }) => {
 		// Set a desktop viewport
 		await page.setViewportSize({ width: 2048, height: 800 });
-		await page.goto('http://localhost:8000/');
+		await page.goto('');
 
 		// Verify the three panels exist
 		await expect(page.locator('.tff-left-panel')).toBeVisible();
@@ -39,7 +39,7 @@ test.describe('responsive layout tests', () => {
 	test('2 column layout has correct structure and panel switching behavior', async ({ page }) => {
 		// Set a md viewport
 		await page.setViewportSize({ width: 1024, height: 800 });
-		await page.goto('http://localhost:8000/');
+		await page.goto('');
 
 		// Verify initial mobile layout - center panel on top, add questions at bottom
 		await expect(page.locator('.tff-center-panel')).toBeVisible();
@@ -89,7 +89,7 @@ test.describe('responsive layout tests', () => {
 	}) => {
 		// Set a mobile viewport
 		await page.setViewportSize({ width: 375, height: 667 });
-		await page.goto('http://localhost:8000/');
+		await page.goto('');
 
 		// Verify initial mobile layout - center panel on top, add questions at bottom
 		await expect(page.locator('.tff-center-panel')).toBeVisible();

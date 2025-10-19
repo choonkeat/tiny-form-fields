@@ -13,7 +13,7 @@ test('checkbox min/max constraints in Editor and CollectData modes', async ({
 }) => {
 	// Set a desktop viewport
 	await page.setViewportSize({ width: 2048, height: 800 });
-	await page.goto('http://localhost:8000/');
+	await page.goto('');
 
 	// 1. EDITOR MODE: Create a checkbox field with min/max constraints
 	await addField(page, 'Checkboxes', undefined, {
@@ -93,7 +93,7 @@ test('checkbox min/max constraints in Editor and CollectData modes', async ({
 test('only min constraint validation', async ({ page, browserName }) => {
 	// Set a desktop viewport
 	await page.setViewportSize({ width: 2048, height: 800 });
-	await page.goto('http://localhost:8000/');
+	await page.goto('');
 
 	// Create a checkbox field with only min constraint
 	await addField(page, 'Checkboxes', undefined, {
@@ -145,7 +145,7 @@ test('only min constraint validation', async ({ page, browserName }) => {
 test('only max constraint validation', async ({ page, browserName }) => {
 	// Set a desktop viewport
 	await page.setViewportSize({ width: 2048, height: 800 });
-	await page.goto('http://localhost:8000/');
+	await page.goto('');
 
 	// Create a checkbox field with only max constraint
 	await addField(page, 'Checkboxes', undefined, {

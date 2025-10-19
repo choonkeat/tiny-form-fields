@@ -36,15 +36,12 @@ node_modules/.bin/elm-esm:
 	npm ci
 
 run-ignore-error:
-	make run || echo shutdown test server
+	make run ELM_MAKE_FLAGS=--optimize || echo shutdown test server
 
 test-all: test test-go test-json-compatibility test-playwright
 
 test:
 	npx elm-test
-
-ping-run:
-	wget --tries=90 --retry-connrefused -SO - http://localhost:8000
 
 # Usage: make test-playwright [PLAYWRIGHT_FILE=e2e/mytest.spec.ts]
 # If PLAYWRIGHT_FILE is specified, only that file will be tested
@@ -60,7 +57,7 @@ test-playwright:
 test-playwright-ui:
 	npx playwright test --ui
 
-generate-elm-test-json: 
+generate-elm-test-json:
 	@echo "Generating Go test fixtures..."
 	@cd go && go test -run TestGenerateGoFixtures > /dev/null 2>&1
 	@echo "Generating cross-validation test data..."
@@ -87,8 +84,20 @@ test-json-compatibility: generate-go-test-json generate-elm-test-json
 	@echo "Testing JSON compatibility between Go and Elm..."
 	npx elm-test tests/GoElmCrossValidationTest.elm
 
+run-httpbin-ignore-error:
+	go build -o httpbin-server go/httpbin/main.go
+	./httpbin-server || echo shutdown httpbin server
+
+ping-both:
+	wget --tries=90 --retry-connrefused -SO - http://localhost:8000
+	wget --tries=90 --retry-connrefused -SO - http://localhost:9000
+
 stop-run:
 	killall node
+
+stop-httpbin:
+	killall httpbin-server
+
 
 elm-review:
 	(yes | npx elm-review --fix-all) || npx elm-review
@@ -117,4 +126,4 @@ format:
 	npx prettier --write "index.html" "input.css" "e2e/**/*.ts"
 
 clean:
-	rm -f go/testdata/elm_json_fixtures.json scripts/generate-go-test-json-elm.js
+	rm -f go/testdata/elm_json_fixtures.json scripts/generate-go-test-json-elm.js dist/*
