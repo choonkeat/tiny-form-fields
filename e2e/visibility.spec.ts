@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 import { addField } from './test-utils';
 
 test('[Dropdown] visibility rules in preview mode', async ({ page }) => {
-	await page.goto('http://localhost:8000/');
+	await page.goto('');
 
 	// Add radio button field first since other fields will reference it
 	await addField(page, 'Dropdown', [
@@ -67,7 +67,7 @@ test('[Dropdown] visibility rules in preview mode', async ({ page }) => {
 });
 
 test('[Radio buttons] visibility rules in preview mode', async ({ page }) => {
-	await page.goto('http://localhost:8000/');
+	await page.goto('');
 
 	// Add radio button field first since other fields will reference it
 	await addField(page, 'Radio buttons', [
@@ -131,7 +131,7 @@ test('[Radio buttons] visibility rules in preview mode', async ({ page }) => {
 });
 
 test('[Checkboxes] visibility rules in preview mode', async ({ page }) => {
-	await page.goto('http://localhost:8000/');
+	await page.goto('');
 
 	// Add checkbox field first since other fields will reference it
 	await addField(page, 'Checkboxes', [
@@ -241,7 +241,7 @@ test('[Checkboxes] visibility rules in preview mode', async ({ page }) => {
 test('[Multi-line description] visibility rules with contains in preview mode', async ({
 	page,
 }) => {
-	await page.goto('http://localhost:8000/');
+	await page.goto('');
 
 	// Add multi-line description field first since other fields will reference it
 	await addField(page, 'Multi-line description', [
@@ -318,7 +318,7 @@ test('[Multi-line description] visibility rules with contains in preview mode', 
 });
 
 test('[Single-line free text] visibility rules with contains in preview mode', async ({ page }) => {
-	await page.goto('http://localhost:8000/');
+	await page.goto('');
 
 	// Add single-line free text field first since other fields will reference it
 	await addField(page, 'Single-line free text', [
@@ -397,7 +397,7 @@ test('[Single-line free text] visibility rules with contains in preview mode', a
 test('[Single-line free text] visibility rules with greater than in preview mode', async ({
 	page,
 }) => {
-	await page.goto('http://localhost:8000/');
+	await page.goto('');
 
 	// Add single-line free text field first since other fields will reference it
 	await addField(page, 'Single-line free text', [

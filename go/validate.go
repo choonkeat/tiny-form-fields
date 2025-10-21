@@ -30,7 +30,7 @@ var (
 )
 
 type TinyFormFieldPresence struct {
-	Type string `json:"type,omitempty"`
+	Type string `json:"type"`
 	Name string `json:"name,omitempty"`
 }
 
@@ -70,8 +70,8 @@ type VisibilityComparison struct {
 }
 
 type VisibilityCondition struct {
-	Type       string               `json:"type,omitempty"`
-	FieldName  string               `json:"fieldName,omitempty"`
+	Type       string               `json:"type"`
+	FieldName  string               `json:"fieldName"`
 	Comparison VisibilityComparison `json:"comparison"`
 }
 
@@ -84,7 +84,7 @@ type TinyFormField struct {
 	Label          string                `json:"label"`
 	Name           string                `json:"name,omitempty"`
 	Description    string                `json:"description,omitempty"`
-	Presence       TinyFormFieldPresence `json:"presence,omitempty"`
+	Presence       TinyFormFieldPresence `json:"presence"`
 	Type           FieldType             `json:"type"`
 	VisibilityRule []VisibilityRule      `json:"visibilityRule,omitempty"`
 }

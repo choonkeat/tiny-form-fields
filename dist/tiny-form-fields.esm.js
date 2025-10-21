@@ -14156,6 +14156,40 @@ var $author$project$Main$attributesFromTuple = function (_v0) {
 	return $elm$core$Maybe$Just(
 		A2($elm$html$Html$Attributes$attribute, k, v));
 };
+var $author$project$Main$isOptionalTemporalInput = function (formField) {
+	var _v0 = _Utils_Tuple2(formField.presence, formField.type_);
+	if ((_v0.a.$ === 'Optional') && (_v0.b.$ === 'ShortText')) {
+		var _v1 = _v0.a;
+		var customElement = _v0.b.a;
+		var inputType = A2(
+			$elm$core$Maybe$withDefault,
+			'',
+			A2($elm$core$Dict$get, 'type', customElement.attributes));
+		return A2(
+			$elm$core$List$member,
+			inputType,
+			_List_fromArray(
+				['date', 'time', 'datetime-local']));
+	} else {
+		return false;
+	}
+};
+var $author$project$Main$buildInputClassString = F3(
+	function (formField, fieldName, trackedFormValues) {
+		var isEmpty = A2(
+			$elm$core$Maybe$withDefault,
+			true,
+			A2(
+				$elm$core$Maybe$map,
+				$elm$core$String$isEmpty,
+				A2(
+					$elm$core$Maybe$andThen,
+					$elm$core$List$head,
+					A2($elm$core$Dict$get, fieldName, trackedFormValues))));
+		var needsEmptyOptionalClass = $author$project$Main$isOptionalTemporalInput(formField) && isEmpty;
+		var baseClass = 'tff-text-field';
+		return needsEmptyOptionalClass ? (baseClass + ' tff-empty-optional') : baseClass;
+	});
 var $elm$html$Html$Attributes$checked = $elm$html$Html$Attributes$boolProperty('checked');
 var $elm$html$Html$datalist = _VirtualDom_node('datalist');
 var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
@@ -14390,7 +14424,10 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 							_Utils_ap(
 								_List_fromArray(
 									[
-										A2($elm$html$Html$Attributes$attribute, 'class', 'tff-text-field'),
+										A2(
+										$elm$html$Html$Attributes$attribute,
+										'class',
+										A3($author$project$Main$buildInputClassString, formField, fieldName, config.trackedFormValues)),
 										$elm$html$Html$Attributes$name(fieldName),
 										$elm$html$Html$Attributes$id(fieldID),
 										$elm$html$Html$Attributes$required(
@@ -17357,7 +17394,11 @@ var $author$project$Main$viewFormPreview = F2(
 			$elm$core$List$any,
 			$author$project$Main$isChooseManyUsingMinMax,
 			$elm$core$Array$toList(formFields));
-		var needsEventHandlers = needsFormLogic || isAnyChooseManyUsingMinMax;
+		var hasOptionalTemporalInputs = A2(
+			$elm$core$List$any,
+			$author$project$Main$isOptionalTemporalInput,
+			$elm$core$Array$toList(formFields));
+		var needsEventHandlers = needsFormLogic || (isAnyChooseManyUsingMinMax || hasOptionalTemporalInputs);
 		var config = {
 			customAttrs: customAttrs,
 			formFields: formFields,

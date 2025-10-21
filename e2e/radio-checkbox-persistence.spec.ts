@@ -8,7 +8,7 @@ test('radio selection persists after required checkbox in CollectData mode', asy
 }) => {
 	// Use a wide viewport
 	await page.setViewportSize({ width: 2048, height: 800 });
-	await page.goto('http://localhost:8000/');
+	await page.goto('');
 
 	// 1. EDITOR MODE: add a radio button field
 	await addField(page, 'Radio buttons', undefined, {

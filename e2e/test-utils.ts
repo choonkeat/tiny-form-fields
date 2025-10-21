@@ -1,4 +1,15 @@
-import { Page, expect } from '@playwright/test';
+import { Page, expect, test as base } from '@playwright/test';
+
+// Get the httpbin URL - this will be available in both Node and browser contexts
+export function getHttpbinUrl(): string {
+	// Check if we're in a test context with access to baseURL
+	if (typeof process !== 'undefined') {
+		// Node context - use env var directly
+		return process.env.HTTPBIN_URL || 'https://httpbin.org/post?process';
+	}
+	// Browser context - this shouldn't happen as this function runs in Node
+	return 'https://httpbin.org/post?fallback';
+}
 
 export interface FieldEdit {
 	label?: string;
@@ -48,12 +59,12 @@ export async function attemptSubmitWithExpectedFailure(formPage) {
 	await formPage.waitForTimeout(1000);
 
 	// If validation works properly, the form won't navigate away
-	expect(formPage.url()).not.toBe('https://httpbin.org/post');
+	expect(formPage.url()).not.toBe(getHttpbinUrl());
 }
 
 export async function submitExpectingSuccess(formPage) {
 	// Prepare to intercept the form submission
-	const responsePromise = formPage.waitForResponse('https://httpbin.org/post', {
+	const responsePromise = formPage.waitForResponse(getHttpbinUrl(), {
 		timeout: 30000,
 	});
 
@@ -65,7 +76,7 @@ export async function submitExpectingSuccess(formPage) {
 
 export async function viewForm(page) {
 	// Set form target URL to ensure consistency
-	await page.locator('input#form_target_url').fill('https://httpbin.org/post');
+	await page.locator('input#form_target_url').fill(getHttpbinUrl());
 
 	// Open the form in a new window
 	const formPagePromise = page.waitForEvent('popup');

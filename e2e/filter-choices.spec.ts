@@ -10,7 +10,7 @@ import {
 test('filter choices dynamically based on another field', async ({ page, browserName }) => {
 	// Set a desktop viewport
 	await page.setViewportSize({ width: 2048, height: 800 });
-	await page.goto('http://localhost:8000/');
+	await page.goto('');
 
 	// 1. Add a text field that will be used as the source for filtering
 	await addField(page, 'Single-line free text', undefined, {
@@ -133,7 +133,7 @@ test('filter choices dynamically based on another field', async ({ page, browser
 test('filter choices with "contains" option', async ({ page, browserName }) => {
 	// Set a desktop viewport
 	await page.setViewportSize({ width: 2048, height: 800 });
-	await page.goto('http://localhost:8000/');
+	await page.goto('');
 
 	// 1. Add a text field that will be used as the source for filtering
 	await addField(page, 'Single-line free text', undefined, {
@@ -254,7 +254,7 @@ test('filter choices with "contains" option', async ({ page, browserName }) => {
 test('filter field selection retained visually when reopening field settings', async ({ page }) => {
 	// Set a desktop viewport
 	await page.setViewportSize({ width: 2048, height: 800 });
-	await page.goto('http://localhost:8000/');
+	await page.goto('');
 
 	const dependentFieldName = 'Filter field';
 
@@ -328,7 +328,7 @@ test('checkboxes should be hidden when filter field is empty in CollectData mode
 }) => {
 	// Set a desktop viewport
 	await page.setViewportSize({ width: 2048, height: 800 });
-	await page.goto('http://localhost:8000/');
+	await page.goto('');
 
 	// 1. Add a text field that will be used as the source for filtering
 	await addField(page, 'Single-line free text', undefined, {
@@ -465,7 +465,7 @@ test('radio buttons should be hidden when filter field is empty in CollectData m
 }) => {
 	// Set a desktop viewport
 	await page.setViewportSize({ width: 2048, height: 800 });
-	await page.goto('http://localhost:8000/');
+	await page.goto('');
 
 	// 1. Add a text field that will be used as the source for filtering
 	await addField(page, 'Single-line free text', undefined, {
@@ -604,7 +604,7 @@ test('dropdown should be hidden when filter field is empty in CollectData mode (
 }) => {
 	// Set a desktop viewport
 	await page.setViewportSize({ width: 2048, height: 800 });
-	await page.goto('http://localhost:8000/');
+	await page.goto('');
 
 	// 1. Add a text field that will be used as the source for filtering
 	await addField(page, 'Single-line free text', undefined, {

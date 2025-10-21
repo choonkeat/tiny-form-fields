@@ -51,7 +51,7 @@
         In "CollectData" mode, pass the json through flags.formFields and the form fields will be rendered.
         When the form is submitted, all the form field values will be included in the form post.
     -->
-		<form class="min-h-screen" method="post" action="https://httpbin.org/post">
+		<form class="min-h-screen" method="post">
 			<div class="p-1 md:p-3 md:w-11/12 my-8 ml-auto mr-auto bg-white min-h-full shadow">
 				<!-- tiny-form-fields render here -->
 				<div id="tiny-form-fields"></div>
@@ -133,7 +133,11 @@
 			hash['viewMode'] = hash['viewMode'] || 'Editor'; // "Editor" for form admins, "CollectData" for form users
 			hash['_url'] = hash['_url']
 				? decodeURIComponent(hash['_url'])
-				: 'https://httpbin.org/post';
+				: 'https://httpbin.org/post?browser';
+
+			Array.from(document.getElementsByTagName('form')).forEach(function (form) {
+				form.action = hash['_url'];
+			});
 
 			// Helper function to get current hash params
 			function getCurrentHashParams() {

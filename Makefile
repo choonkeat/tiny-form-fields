@@ -36,15 +36,19 @@ node_modules/.bin/elm-esm:
 	npm ci
 
 run-ignore-error:
-	make run || echo shutdown test server
+	make run ELM_MAKE_FLAGS=--optimize || echo shutdown test server
+
+run-background:
+	(make run > /dev/null 2>&1 &) && sleep 1 && echo "Dev server started in background"
 
 test-all: test test-go test-json-compatibility test-playwright
 
 test:
 	npx elm-test
 
-ping-run:
-	wget --tries=90 --retry-connrefused -SO - http://localhost:8000
+TEST_MOCK_EXIT=0
+test-mock:
+	exit $(TEST_MOCK_EXIT)
 
 # Usage: make test-playwright [PLAYWRIGHT_FILE=e2e/mytest.spec.ts]
 # If PLAYWRIGHT_FILE is specified, only that file will be tested
@@ -57,8 +61,25 @@ test-playwright:
 	fi
 	echo playwright pass
 
+CI_TEST_TARGET ?= test-playwright
+test-playwright-ci:
+	@set +e; \
+	make run-background && \
+	make run-httpbin-background && \
+	make ping-both && \
+	{ make $(CI_TEST_TARGET); EXIT_CODE=$$?; } ; \
+	echo "Cleaning up servers..."; \
+	make stop-run stop-httpbin; \
+	exit $${EXIT_CODE:-0}
+
 test-playwright-ui:
 	npx playwright test --ui
+
+generate-elm-test-json:
+	@echo "Generating Go test fixtures..."
+	@cd go && go test -run TestGenerateGoFixtures > /dev/null 2>&1
+	@echo "Generating cross-validation test data..."
+	node scripts/generate-cross-validation-tests.js
 
 generate-go-test-json: go/testdata/elm_json_fixtures.json
 
@@ -70,7 +91,7 @@ go/testdata/elm_json_fixtures.json: scripts/GenerateGoTestJSON.elm src/Main.elm
 test-go: generate-go-test-json
 	make -C go test
 
-test-json-compatibility: generate-go-test-json
+test-json-compatibility: generate-go-test-json generate-elm-test-json
 	@echo "Testing JSON compatibility between Elm and Go..."
 	@if make -C go test > /dev/null 2>&1; then \
 		echo "✓ JSON compatibility test passed"; \
@@ -78,9 +99,27 @@ test-json-compatibility: generate-go-test-json
 		echo "✗ JSON compatibility test failed - Elm/Go JSON structures are out of sync"; \
 		exit 1; \
 	fi
+	@echo "Testing JSON compatibility between Go and Elm..."
+	npx elm-test tests/GoElmCrossValidationTest.elm
+
+run-httpbin-ignore-error:
+	go build -o httpbin-server go/httpbin/main.go
+	./httpbin-server || echo shutdown httpbin server
+
+run-httpbin-background:
+	go build -o httpbin-server go/httpbin/main.go
+	(./httpbin-server > /dev/null 2>&1 &) && sleep 1 && echo "Httpbin server started in background"
+
+ping-both:
+	wget --tries=90 --retry-connrefused -SO - http://localhost:8000
+	wget --tries=90 --retry-connrefused -SO - http://localhost:9000
 
 stop-run:
 	killall node
+
+stop-httpbin:
+	killall httpbin-server
+
 
 elm-review:
 	(yes | npx elm-review --fix-all) || npx elm-review
@@ -109,4 +148,4 @@ format:
 	npx prettier --write "index.html" "input.css" "e2e/**/*.ts"
 
 clean:
-	rm -f go/testdata/elm_json_fixtures.json scripts/generate-go-test-json-elm.js
+	rm -f go/testdata/elm_json_fixtures.json scripts/generate-go-test-json-elm.js dist/*
