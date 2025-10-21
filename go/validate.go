@@ -470,7 +470,7 @@ func (f *ShortTextField) Validate(value []string, field TinyFormField) error {
 					return fmt.Errorf("%w: %s", ErrInvalidColor, fieldName)
 				}
 			case "date":
-				if err := validateDate(val); err != nil {
+				if err := validateDate(val, f.Attributes); err != nil {
 					return fmt.Errorf("%w: %s", ErrInvalidDate, fieldName)
 				}
 			case "time":
@@ -532,9 +532,31 @@ func validateColor(val string) error {
 	return nil
 }
 
-func validateDate(val string) error {
-	_, err := time.Parse("2006-01-02", val)
-	return err
+func validateDate(val string, attributes map[string]string) error {
+	t, err := time.Parse("2006-01-02", val)
+	if err != nil {
+		return err
+	}
+
+	// Check for "min" and "max" attributes
+	if minDateStr, ok := attributes["min"]; ok {
+		minDate, err := time.Parse("2006-01-02", minDateStr)
+		if err == nil {
+			if t.Before(minDate) {
+				return fmt.Errorf("date is before minimum %s", minDateStr)
+			}
+		}
+	}
+	if maxDateStr, ok := attributes["max"]; ok {
+		maxDate, err := time.Parse("2006-01-02", maxDateStr)
+		if err == nil {
+			if t.After(maxDate) {
+				return fmt.Errorf("date is after maximum %s", maxDateStr)
+			}
+		}
+	}
+
+	return nil
 }
 
 func validateTime(val string) error {

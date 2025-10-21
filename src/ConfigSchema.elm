@@ -238,8 +238,10 @@ customElementSchemaBuilder =
             , ( "multiple", attributeOptionalBoolSchemaBuilder )
             , ( "maxlength", attributeOptionalIntSchemaBuilder )
             , ( "datalist", attributeOptionalChoicesSchemaBuilder )
+            , ( "min", attributeOptionalStringSchemaBuilder )
+            , ( "max", attributeOptionalStringSchemaBuilder )
             ]
-        |> withRequired [ "inputType", "inputTag", "attributes", "multiple", "maxlength", "datalist" ]
+        |> withRequired [ "inputType", "inputTag", "attributes", "multiple", "maxlength", "datalist", "min", "max" ]
 
 
 attributeOptionalIntSchemaBuilder : SchemaBuilder
