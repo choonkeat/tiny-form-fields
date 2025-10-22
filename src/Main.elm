@@ -163,6 +163,7 @@ type Comparison
     | StringContains String
     | EndsWith String
     | GreaterThan String
+    | EqualsField String
 
 
 type Condition
@@ -2742,45 +2743,118 @@ visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
                                 (otherQuestionTitles formFields fieldIndex)
                         )
                     ]
-                , selectInputGroup
-                    { selectAttrs =
-                        [ onChange (\str -> OnFormField (OnVisibilityConditionTypeInput ruleIndex conditionIndex str) fieldIndex "")
-                        , class "tff-comparison-type"
-                        ]
-                    , options =
-                        [ ( "Equals", "Equals", isComparingWith (Equals "something") (comparisonOf rule) )
-                        , ( "StringContains", "Contains", isComparingWith (StringContains "something") (comparisonOf rule) )
-                        , ( "EndsWith", "Ends with", isComparingWith (EndsWith "something") (comparisonOf rule) )
-                        , ( "GreaterThan", "Greater than", isComparingWith (GreaterThan "something") (comparisonOf rule) )
-                        ]
-                    , inputAttrs =
-                        [ type_ "text"
-                        , value
-                            (case rule of
-                                Field _ (Equals v) ->
-                                    v
+                , let
+                    optionRecord value label selected disabled =
+                        { value = value, label = label, selected = selected, disabled = disabled }
 
-                                Field _ (StringContains v) ->
-                                    v
+                    -- Start with other fields (exclude the field being edited)
+                    candidateFields =
+                        otherQuestionTitles formFields fieldIndex
 
-                                Field _ (EndsWith v) ->
-                                    v
-
-                                Field _ (GreaterThan v) ->
-                                    v
+                    -- Available fields are candidate fields excluding only the current/source field.
+                    -- the dropdown will list all other fields (except the field itself).
+                    otherFields =
+                        List.filter
+                            (\f ->
+                                let
+                                    fn =
+                                        f.name |> Maybe.withDefault f.label
+                                in
+                                fn /= selectedFieldName
                             )
-                        , onInput (\str -> OnFormField (OnVisibilityConditionValueInput ruleIndex conditionIndex str) fieldIndex "")
-                        , required True
-                        , class "tff-comparison-value"
-                        ]
-                            ++ datalistAttr
-                    , children =
-                        case datalistElement of
-                            Just element ->
-                                [ element ]
+                            candidateFields
 
-                            Nothing ->
-                                []
+                    -- The Equals(field) option should only be disabled when there are no other
+                    -- fields at all (excluding the current/source field)
+                    candidateFieldsExceptSelf =
+                        List.filter
+                            (\f ->
+                                let
+                                    fn =
+                                        f.name |> Maybe.withDefault f.label
+                                in
+                                fn /= selectedFieldName
+                            )
+                            candidateFields
+
+                    equalsFieldDisabled =
+                        List.isEmpty candidateFieldsExceptSelf
+
+                    comparisonValueString =
+                        case rule of
+                            Field _ (Equals v) ->
+                                v
+
+                            Field _ (StringContains v) ->
+                                v
+
+                            Field _ (EndsWith v) ->
+                                v
+
+                            Field _ (GreaterThan v) ->
+                                v
+
+                            Field _ (EqualsField v) ->
+                                v
+
+                    textInputNode =
+                        input
+                            ([ type_ "text"
+                             , value comparisonValueString
+                             , onInput (\str -> OnFormField (OnVisibilityConditionValueInput ruleIndex conditionIndex str) fieldIndex "")
+                             , required True
+                             , class "tff-comparison-value"
+                             ]
+                                ++ datalistAttr
+                            )
+                            []
+
+                    fieldSelectNode =
+                        select
+                            [ class "tff-text-field tff-question-title"
+                            , onChange (\str -> OnFormField (OnVisibilityConditionValueInput ruleIndex conditionIndex str) fieldIndex "")
+                            , value comparisonValueString
+                            ]
+                            (option [ value "" ] [ text "-- Select a field --" ]
+                                :: List.map
+                                    (\f ->
+                                        let
+                                            fn =
+                                                f.name |> Maybe.withDefault f.label
+                                        in
+                                        option [ value fn, selected (fn == comparisonValueString) ] [ text ("value of " ++ Json.Encode.encode 0 (Json.Encode.string f.label)) ]
+                                    )
+                                    otherFields
+                            )
+
+                    inputNode =
+                        case comparisonOf rule of
+                            EqualsField _ ->
+                                -- render select of other fields (disabled if none)
+                                if equalsFieldDisabled then
+                                    -- render a disabled text input to keep layout
+                                    input
+                                        [ type_ "text", value "", Attr.attribute "disabled" "disabled", class "tff-comparison-value" ]
+                                        []
+
+                                else
+                                    fieldSelectNode
+
+                            _ ->
+                                textInputNode
+
+                    optionsList =
+                        [ optionRecord "Equals" "Equals" (isComparingWith (Equals "something") (comparisonOf rule)) False
+                        , optionRecord "StringContains" "Contains" (isComparingWith (StringContains "something") (comparisonOf rule)) False
+                        , optionRecord "EndsWith" "Ends with" (isComparingWith (EndsWith "something") (comparisonOf rule)) False
+                        , optionRecord "GreaterThan" "Greater than" (isComparingWith (GreaterThan "something") (comparisonOf rule)) False
+                        , optionRecord "EqualsField" "Equals (field)" (isComparingWith (EqualsField "something") (comparisonOf rule)) equalsFieldDisabled
+                        ]
+                  in
+                  selectInputGroup
+                    { selectAttrs = [ onChange (\str -> OnFormField (OnVisibilityConditionTypeInput ruleIndex conditionIndex str) fieldIndex ""), class "tff-comparison-type" ]
+                    , options = optionsList
+                    , inputNode = inputNode
                     }
                 ]
 
@@ -3794,6 +3868,12 @@ encodeComparison comparison =
                 , ( "value", Json.Encode.string value )
                 ]
 
+        EqualsField fieldName ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "EqualsField" )
+                , ( "value", Json.Encode.string fieldName )
+                ]
+
 
 decodeFormFields : Json.Decode.Decoder (Array FormField)
 decodeFormFields =
@@ -4351,6 +4431,10 @@ decodeComparison =
                         Json.Decode.succeed GreaterThan
                             |> andMap (Json.Decode.field "value" Json.Decode.string)
 
+                    "EqualsField" ->
+                        Json.Decode.succeed EqualsField
+                            |> andMap (Json.Decode.field "value" Json.Decode.string)
+
                     _ ->
                         Json.Decode.fail ("Unknown comparison type: " ++ str)
             )
@@ -4392,6 +4476,15 @@ evaluateCondition trackedFormValues condition =
                                         -- If value is not float, compare as strings
                                         formValue > givenValue
                             )
+
+                EqualsField otherFieldName ->
+                    let
+                        otherValues =
+                            Dict.get otherFieldName trackedFormValues |> Maybe.withDefault []
+                    in
+                    Dict.get fieldName trackedFormValues
+                        |> Maybe.withDefault []
+                        |> List.any (\v -> List.member v otherValues)
 
 
 isVisibilityRuleSatisfied : List VisibilityRule -> Dict String (List String) -> Bool
@@ -4473,6 +4566,14 @@ isComparingWith expected given =
                 _ ->
                     False
 
+        EqualsField _ ->
+            case given of
+                EqualsField _ ->
+                    True
+
+                _ ->
+                    False
+
 
 
 {- Helper to update a comparison -}
@@ -4495,6 +4596,9 @@ updateComparison comparisonType comparison =
                 GreaterThan str ->
                     Equals str
 
+                EqualsField str ->
+                    Equals str
+
         "StringContains" ->
             case comparison of
                 Equals str ->
@@ -4507,6 +4611,9 @@ updateComparison comparisonType comparison =
                     StringContains str
 
                 GreaterThan str ->
+                    StringContains str
+
+                EqualsField str ->
                     StringContains str
 
         "EndsWith" ->
@@ -4523,6 +4630,9 @@ updateComparison comparisonType comparison =
                 GreaterThan str ->
                     EndsWith str
 
+                EqualsField str ->
+                    EndsWith str
+
         "GreaterThan" ->
             case comparison of
                 Equals str ->
@@ -4536,6 +4646,26 @@ updateComparison comparisonType comparison =
 
                 GreaterThan str ->
                     GreaterThan str
+
+                EqualsField str ->
+                    GreaterThan str
+
+        "EqualsField" ->
+            case comparison of
+                Equals str ->
+                    EqualsField str
+
+                StringContains str ->
+                    EqualsField str
+
+                EndsWith str ->
+                    EqualsField str
+
+                GreaterThan str ->
+                    EqualsField str
+
+                EqualsField str ->
+                    EqualsField str
 
         _ ->
             comparison
@@ -4555,6 +4685,9 @@ updateComparisonValue newValue comparison =
 
         GreaterThan _ ->
             GreaterThan newValue
+
+        EqualsField _ ->
+            EqualsField newValue
 
 
 
@@ -4615,13 +4748,32 @@ updateComparisonInCondition updater condition =
 -- UI HELPER
 
 
-selectInputGroup : { selectAttrs : List (Html.Attribute msg), options : List ( String, String, Bool ), inputAttrs : List (Html.Attribute msg), children : List (Html.Html msg) } -> Html msg
-selectInputGroup { selectAttrs, options, inputAttrs, children } =
+selectInputGroup : { selectAttrs : List (Html.Attribute msg), options : List { value : String, label : String, selected : Bool, disabled : Bool }, inputNode : Html msg } -> Html msg
+selectInputGroup { selectAttrs, options, inputNode } =
     let
         calculatedAttrs =
-            List.filter (\( _, _, selected ) -> selected) options
-                |> List.map (\( value, _, _ ) -> Attr.value value)
+            options
+                |> List.filter .selected
+                |> List.map (.value >> Attr.value)
                 |> List.append [ class "tff-selectinput-select" ]
+
+        optionToNode opt =
+            option
+                (List.filterMap identity
+                    [ Just (Attr.value opt.value)
+                    , if opt.selected then
+                        Just (Attr.selected True)
+
+                      else
+                        Nothing
+                    , if opt.disabled then
+                        Just (Attr.attribute "disabled" "disabled")
+
+                      else
+                        Nothing
+                    ]
+                )
+                [ text opt.label ]
     in
     div
         [ Attr.class "tff-selectinput-wrapper"
@@ -4633,19 +4785,10 @@ selectInputGroup { selectAttrs, options, inputAttrs, children } =
                 [ Attr.class "tff-selectinput-select-wrapper"
                 ]
                 [ select (calculatedAttrs ++ selectAttrs)
-                    (List.map
-                        (\( value, label, selected ) ->
-                            option
-                                [ Attr.value value
-                                , Attr.selected selected
-                                ]
-                                [ text label ]
-                        )
-                        options
-                    )
+                    (List.map optionToNode options)
                 , selectArrowDown
                 ]
-            , input (class "tff-selectinput-input" :: inputAttrs) children
+            , inputNode
             ]
         ]
 

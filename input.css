@@ -875,3 +875,9 @@
 .tff-button-secondary {
 	@apply bg-white text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50;
 }
+
+.tff-comparison-value:focus,
+.tff-comparison-value:focus-visible {
+	outline: none !important;
+	box-shadow: none !important;
+}
