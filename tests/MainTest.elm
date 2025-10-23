@@ -560,6 +560,59 @@ suite =
                             ()
                 ]
             ]
+        , describe "EqualsField behavior"
+            [ test "EqualsField matches when any value overlaps" <|
+                \_ ->
+                    let
+                        values =
+                            Dict.fromList [ ( "a", [ "x", "y" ] ), ( "b", [ "y", "z" ] ) ]
+                    in
+                    Expect.all
+                        [ \_ ->
+                            Main.evaluateCondition values (Main.Field "a" (Main.EqualsField "b"))
+                                |> Expect.equal True
+                        , \_ ->
+                            Main.evaluateCondition values (Main.Field "b" (Main.EqualsField "a"))
+                                |> Expect.equal True
+                        ]
+                        ()
+            , test "EqualsField does not match when no overlap" <|
+                \_ ->
+                    let
+                        values =
+                            Dict.fromList [ ( "a", [ "x" ] ), ( "b", [ "y" ] ) ]
+                    in
+                    Main.evaluateCondition values (Main.Field "a" (Main.EqualsField "b"))
+                        |> Expect.equal False
+            , test "isVisibilityRuleSatisfied with EqualsField in ShowWhen" <|
+                \_ ->
+                    let
+                        rules =
+                            [ Main.ShowWhen [ Main.Field "a" (Main.EqualsField "b") ] ]
+
+                        values =
+                            Dict.fromList [ ( "a", [ "x" ] ), ( "b", [ "x" ] ) ]
+                    in
+                    Main.isVisibilityRuleSatisfied rules values
+                        |> Expect.equal True
+            , test "EqualsField handles empty lists gracefully" <|
+                \_ ->
+                    let
+                        values =
+                            Dict.fromList [ ( "a", [] ), ( "b", [] ) ]
+                    in
+                    Main.evaluateCondition values (Main.Field "a" (Main.EqualsField "b"))
+                        |> Expect.equal False
+            , test "EqualsField matches with duplicates and whitespace preserved" <|
+                \_ ->
+                    let
+                        values =
+                            Dict.fromList [ ( "a", [ "x", "x" ] ), ( "b", [ " x", "x" ] ) ]
+                    in
+                    -- Comparison is as-is: whitespace and duplicates are not normalized
+                    Main.evaluateCondition values (Main.Field "a" (Main.EqualsField "b"))
+                        |> Expect.equal True
+            ]
         , describe "list attribute handling"
             [ test "fromRawCustomElement removes list attribute" <|
                 \_ ->

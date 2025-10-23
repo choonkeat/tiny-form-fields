@@ -1395,6 +1395,142 @@ func TestVisibilityRules(t *testing.T) {
 			},
 			expectedError: nil,
 		},
+		{
+			name: "HideWhen rule - email and confirm_email fields are equal - should pass",
+			formFields: `
+			[
+				{
+					"name": "email",
+					"type": {
+						"type": "ShortText",
+						"inputType": "Email",
+						"attributes": {
+							"pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+							"multiple": "true",
+							"inputmode": "text"
+						}
+					},
+					"label": "Email",
+					"presence": "Required"
+				},
+				{
+					"name": "confirm_email",
+					"type": {
+						"type": "ShortText",
+						"inputType": "Email",
+						"attributes": {
+							"type": "email",
+							"pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+							"multiple": "true"
+						}
+					},
+					"label": "Confirm Email",
+					"presence": "Required"
+				},
+				{
+					"type": {
+						"type": "ShortText",
+						"inputType": "Disable form submit",
+						"attributes": {
+							"type": "text",
+							"class": "size-0-invisible",
+							"value": "form-invalid",
+							"pattern": "form-ok"
+						}
+					},
+					"label": " ",
+					"presence": "Required",
+					"visibilityRule": [
+						{
+							"type": "HideWhen",
+							"conditions": [
+								{
+									"type": "Field",
+									"fieldName": "email",
+									"comparison": {
+										"type": "EqualsField",
+										"value": "confirm_email"
+									}
+								}
+							]
+						}
+					]
+				}
+			]`,
+			values: url.Values{
+				"email":         []string{"email@example.com"},
+				"confirm_email": []string{"email@example.com"},
+			},
+			expectedError: nil,
+		},
+		{
+			name: "HideWhen rule - email and confirm_email fields are NOT equal - should fail",
+			formFields: `
+			[
+				{
+					"name": "email",
+					"type": {
+						"type": "ShortText",
+						"inputType": "Email",
+						"attributes": {
+							"pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+							"multiple": "true",
+							"inputmode": "text"
+						}
+					},
+					"label": "Email",
+					"presence": "Required"
+				},
+				{
+					"name": "confirm_email",
+					"type": {
+						"type": "ShortText",
+						"inputType": "Email",
+						"attributes": {
+							"type": "email",
+							"pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+							"multiple": "true"
+						}
+					},
+					"label": "Confirm Email",
+					"presence": "Required"
+				},
+				{
+					"type": {
+						"type": "ShortText",
+						"inputType": "Disable form submit",
+						"attributes": {
+							"type": "text",
+							"class": "size-0-invisible",
+							"value": "form-invalid",
+							"pattern": "form-ok"
+						}
+					},
+					"label": " ",
+					"presence": "Required",
+					"visibilityRule": [
+						{
+							"type": "HideWhen",
+							"conditions": [
+								{
+									"type": "Field",
+									"fieldName": "email",
+									"comparison": {
+										"type": "EqualsField",
+										"value": "confirm_email"
+									}
+								}
+							]
+						}
+					]
+				}
+			]`,
+			values: url.Values{
+				"email":         []string{"email@example.com"},
+				"confirm_email": []string{"different@example.com"},
+			},
+			expectedError: ErrRequiredFieldMissing,
+		},
 	}
 
 	for _, tt := range scenarios {
