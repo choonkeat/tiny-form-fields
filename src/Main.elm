@@ -4530,7 +4530,7 @@ isVisibilityRuleSatisfied rules trackedFormValues =
 
 sanitizeFormValues : Array FormField -> Dict String (List String) -> Dict String (List String)
 sanitizeFormValues formFields values =
-    sanitizeFormValuesHelper formFields values 10
+    sanitizeFormValuesHelper formFields values (Array.length formFields)
 
 
 sanitizeFormValuesHelper : Array FormField -> Dict String (List String) -> Int -> Dict String (List String)

@@ -654,7 +654,7 @@ func isFieldVisible(field TinyFormField, values url.Values) bool {
 // This prevents hidden fields from affecting the visibility of other fields.
 func sanitizeFormValues(fields []TinyFormField, values url.Values) url.Values {
 	current := values
-	maxIterations := 10 // Prevent infinite loops (should never hit this in practice)
+	maxIterations := len(fields) // Maximum possible cascade depth for N fields
 
 	for i := 0; i < maxIterations; i++ {
 		sanitized := make(url.Values)

@@ -7710,7 +7710,11 @@ var $author$project$Main$sanitizeFormValuesHelper = F3(
 	});
 var $author$project$Main$sanitizeFormValues = F2(
 	function (formFields, values) {
-		return A3($author$project$Main$sanitizeFormValuesHelper, formFields, values, 10);
+		return A3(
+			$author$project$Main$sanitizeFormValuesHelper,
+			formFields,
+			values,
+			$elm$core$Array$length(formFields));
 	});
 var $elm$core$Process$sleep = _Process_sleep;
 var $author$project$Main$stringFromInputField = function (inputField) {
@@ -9094,8 +9098,10 @@ var $author$project$Main$update = F2(
 								[value]);
 						}
 					}();
-					var updatedValues = A3($elm$core$Dict$insert, fieldName, newValues, model.u);
-					var sanitizedValues = A2($author$project$Main$sanitizeFormValues, model.g, updatedValues);
+					var newTrackedFormValues = A2(
+						$author$project$Main$sanitizeFormValues,
+						model.g,
+						A3($elm$core$Dict$insert, fieldName, newValues, model.u));
 					var formValues = A3(
 						$elm$json$Json$Encode$dict,
 						$elm$core$Basics$identity,
@@ -9110,11 +9116,11 @@ var $author$project$Main$update = F2(
 										key,
 										A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, values));
 								},
-								$elm$core$Dict$toList(sanitizedValues))));
+								$elm$core$Dict$toList(newTrackedFormValues))));
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
-							{u: sanitizedValues}),
+							{u: newTrackedFormValues}),
 						$author$project$Main$outgoing(
 							$author$project$Main$encodePortOutgoingValue(
 								$author$project$Main$PortOutgoingFormValues(formValues))));
