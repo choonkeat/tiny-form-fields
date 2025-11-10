@@ -38,7 +38,7 @@ export interface VisibilityRule {
 }
 
 export interface Comparison {
-	type: 'Equals' | 'StringContains' | 'EndsWith' | 'GreaterThan';
+	type: 'Equals' | 'StringContains' | 'EndsWith' | 'GreaterThan' | 'Equals (field)';
 	value: string;
 }
 
@@ -160,12 +160,24 @@ export async function addField(
 							await page.waitForTimeout(100);
 						}
 						// Get the last condition group
+						// Get the last condition group
 						await lastFieldRule
 							.locator('.tff-comparison-type')
 							.last()
 							.selectOption(comparison.type);
-						await lastFieldRule.locator('.tff-comparison-value').last().click();
-						await page.keyboard.type(comparison.value);
+
+						// Handle EqualsField comparison differently (it's a select, not text input)
+						if (comparison.type === 'Equals (field)') {
+							// Wait for the field selector dropdown to appear
+							await page.waitForTimeout(200);
+							const fieldSelector = lastFieldRule
+								.locator('select.tff-selectinput-select')
+								.last();
+							await fieldSelector.selectOption(comparison.value);
+						} else {
+							await lastFieldRule.locator('.tff-comparison-value').last().click();
+							await page.keyboard.type(comparison.value);
+						}
 					}
 				}
 			}

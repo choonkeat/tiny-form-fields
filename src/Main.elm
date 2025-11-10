@@ -512,8 +512,16 @@ isFieldReferencedBy fieldName formFields =
 isConditionReferencingField : String -> Condition -> Bool
 isConditionReferencingField fieldName condition =
     case condition of
-        Field conditionFieldName _ ->
-            conditionFieldName == fieldName
+        Field conditionFieldName comparison ->
+            conditionFieldName
+                == fieldName
+                || (case comparison of
+                        EqualsField targetFieldName ->
+                            targetFieldName == fieldName
+
+                        _ ->
+                            False
+                   )
 
 
 {-| Check if a field is used as a source field in a choice filter

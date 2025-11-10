@@ -80,7 +80,9 @@ test('Equals(field) dropdown disabled when no other fields and excludes self', a
 		await expect(equalsOption).toBeEnabled();
 		await fieldRule.locator('.tff-comparison-type').last().selectOption('EqualsField');
 
-		page.locator('select.tff-text-field.tff-question-title').last().selectOption('Enter email');
+		// Wait for the field selector dropdown to appear, then select 'Enter email'
+		await page.waitForTimeout(200);
+		await fieldRule.locator('select.tff-selectinput-select').last().selectOption('Enter email');
 	});
 
 	await test.step('Verify form field logic works', async () => {
@@ -99,4 +101,90 @@ test('Equals(field) dropdown disabled when no other fields and excludes self', a
 
 	// Close editor
 	await page.locator('.tff-close-button').click();
+});
+
+test('EqualsField shows "Affects logic" badge on both source and target fields', async ({
+	page,
+}) => {
+	await page.goto('');
+
+	// Set a desktop viewport
+	await page.setViewportSize({ width: 2048, height: 800 });
+
+	await test.step('Create Field A (will be source field)', async () => {
+		await addField(page, 'Single-line free text', undefined, {
+			link: 'Single-line free text',
+			label: 'Field A',
+		});
+	});
+
+	await test.step('Create Field B (will be target field)', async () => {
+		await addField(page, 'Single-line free text', undefined, {
+			link: 'Single-line free text',
+			label: 'Field B',
+		});
+	});
+
+	await test.step('Create Field C with visibility rule: show when Field A equals Field B', async () => {
+		await addField(page, 'Single-line free text', [
+			{
+				label: 'Single-line free text question title',
+				value: 'Field C',
+				visibilityRule: [
+					{
+						type: 'Show this question when',
+						field: 'Field A',
+						comparison: [
+							{
+								type: 'Equals (field)',
+								value: 'Field B',
+							},
+						],
+					},
+				],
+			},
+		]);
+	});
+
+	// Wait for the page to stabilize
+	await page.waitForTimeout(500);
+
+	// Get all field containers
+	const fieldContainers = page.locator('.tff-field-container');
+
+	await test.step('Verify Field A has "Affects logic" badge (source field)', async () => {
+		const fieldAContainer = fieldContainers.nth(0).locator('.tff-logic-indicators-container');
+		await expect(fieldAContainer).toBeVisible();
+		const indicator = fieldAContainer.locator('.tff-logic-indicator').first();
+		await expect(indicator).toBeVisible();
+		await expect(indicator).toHaveText('Affects logic');
+		await expect(indicator).toHaveClass(/tff-logic-indicator-gray/);
+		await expect(indicator).toHaveAttribute(
+			'title',
+			"Other fields' visibility depends on this field's value"
+		);
+	});
+
+	await test.step('Verify Field B has "Affects logic" badge (target field)', async () => {
+		const fieldBContainer = fieldContainers.nth(1).locator('.tff-logic-indicators-container');
+		await expect(fieldBContainer).toBeVisible();
+		const indicator = fieldBContainer.locator('.tff-logic-indicator').first();
+		await expect(indicator).toBeVisible();
+		await expect(indicator).toHaveText('Affects logic');
+		await expect(indicator).toHaveClass(/tff-logic-indicator-gray/);
+		await expect(indicator).toHaveAttribute(
+			'title',
+			"Other fields' visibility depends on this field's value"
+		);
+	});
+
+	await test.step('Verify Field C has "Contains logic" badge', async () => {
+		const fieldCContainer = fieldContainers.nth(2).locator('.tff-logic-indicators-container');
+		await expect(fieldCContainer).toBeVisible();
+		const indicator = fieldCContainer.locator('.tff-logic-indicator').first();
+		await expect(indicator).toBeVisible();
+		await expect(indicator).toHaveText('Contains logic');
+		await expect(indicator).toHaveClass(/tff-logic-indicator-blue/);
+		await expect(indicator).toHaveAttribute('title', 'This field has visibility logic');
+	});
 });

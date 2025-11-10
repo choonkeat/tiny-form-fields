@@ -9202,7 +9202,15 @@ var $author$project$Main$dragOverDecoder = F2(
 var $author$project$Main$isConditionReferencingField = F2(
 	function (fieldName, condition) {
 		var conditionFieldName = condition.a;
-		return _Utils_eq(conditionFieldName, fieldName);
+		var comparison = condition.b;
+		return _Utils_eq(conditionFieldName, fieldName) || function () {
+			if (comparison.$ === 4) {
+				var targetFieldName = comparison.a;
+				return _Utils_eq(targetFieldName, fieldName);
+			} else {
+				return false;
+			}
+		}();
 	});
 var $author$project$Main$isFieldUsedInChoiceFilter = F2(
 	function (fieldName, maybeFilter) {
