@@ -30,7 +30,7 @@ run: node_modules/.bin/elm-esm
 	npx elm-live src/Main.elm \
 		--start-page index.html \
 		--path-to-elm node_modules/.bin/elm-esm \
-		-- --output=dist/tiny-form-fields.esm.js $(ELM_MAKE_FLAGS)
+		-- --output=dist/tiny-form-fields.dev.esm.js $(ELM_MAKE_FLAGS)
 
 node_modules/.bin/elm-esm:
 	npm ci
