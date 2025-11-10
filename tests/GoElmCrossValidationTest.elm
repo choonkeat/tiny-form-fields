@@ -201,3 +201,7 @@ isValidComparison comparison =
 
         Main.GreaterThan _ ->
             True
+
+        -- Added to account for the EqualsField variant introduced in src/Main.elm
+        Main.EqualsField _ ->
+            True
