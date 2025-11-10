@@ -11499,6 +11499,8 @@ var $author$project$Main$selectInputGroup = function (_v0) {
 					]))
 			]));
 };
+var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
 var $author$project$Main$visibilityRuleSection = F4(
 	function (fieldIndex, formFields, ruleIndex, visibilityRule) {
 		var ruleHtml = F2(
@@ -11789,54 +11791,68 @@ var $author$project$Main$visibilityRuleSection = F4(
 								},
 								candidateFields);
 							var fieldSelectNode = A2(
-								$elm$html$Html$select,
+								$elm$html$Html$div,
 								_List_fromArray(
 									[
-										$elm$html$Html$Attributes$class('tff-text-field tff-question-title'),
-										$author$project$Main$onChange(
-										function (str) {
-											return A3(
-												$author$project$Main$OnFormField,
-												A3($author$project$Main$OnVisibilityConditionValueInput, ruleIndex, conditionIndex, str),
-												fieldIndex,
-												'');
-										}),
-										$elm$html$Html$Attributes$value(comparisonValueString)
+										$elm$html$Html$Attributes$class('focus-within:relative'),
+										A2($elm$html$Html$Attributes$style, 'display', 'grid'),
+										A2($elm$html$Html$Attributes$style, 'grid-template-columns', '1fr'),
+										A2($elm$html$Html$Attributes$style, 'min-width', '8rem'),
+										A2($elm$html$Html$Attributes$style, 'flex-grow', '1')
 									]),
-								A2(
-									$elm$core$List$cons,
-									A2(
-										$elm$html$Html$option,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$select,
 										_List_fromArray(
 											[
-												$elm$html$Html$Attributes$value('')
+												$elm$html$Html$Attributes$class('tff-selectinput-select'),
+												$author$project$Main$onChange(
+												function (str) {
+													return A3(
+														$author$project$Main$OnFormField,
+														A3($author$project$Main$OnVisibilityConditionValueInput, ruleIndex, conditionIndex, str),
+														fieldIndex,
+														'');
+												}),
+												$elm$html$Html$Attributes$value(comparisonValueString)
 											]),
-										_List_fromArray(
-											[
-												$elm$html$Html$text('-- Select a field --')
-											])),
-									A2(
-										$elm$core$List$map,
-										function (f) {
-											var fn = A2($elm$core$Maybe$withDefault, f.d, f.Q);
-											return A2(
+										A2(
+											$elm$core$List$cons,
+											A2(
 												$elm$html$Html$option,
 												_List_fromArray(
 													[
-														$elm$html$Html$Attributes$value(fn),
-														$elm$html$Html$Attributes$selected(
-														_Utils_eq(fn, comparisonValueString))
+														$elm$html$Html$Attributes$value('')
 													]),
 												_List_fromArray(
 													[
-														$elm$html$Html$text(
-														'value of ' + A2(
-															$elm$json$Json$Encode$encode,
-															0,
-															$elm$json$Json$Encode$string(f.d)))
-													]));
-										},
-										otherFields)));
+														$elm$html$Html$text('-- Select a field --')
+													])),
+											A2(
+												$elm$core$List$map,
+												function (f) {
+													var fn = A2($elm$core$Maybe$withDefault, f.d, f.Q);
+													return A2(
+														$elm$html$Html$option,
+														_List_fromArray(
+															[
+																$elm$html$Html$Attributes$value(fn),
+																$elm$html$Html$Attributes$selected(
+																_Utils_eq(fn, comparisonValueString))
+															]),
+														_List_fromArray(
+															[
+																$elm$html$Html$text(
+																'value of ' + A2(
+																	$elm$json$Json$Encode$encode,
+																	0,
+																	$elm$json$Json$Encode$string(f.d)))
+															]));
+												},
+												otherFields))),
+										$author$project$Main$selectArrowDown
+									]));
 							var inputNode = function () {
 								var _v3 = $author$project$Main$comparisonOf(rule);
 								if (_v3.$ === 4) {

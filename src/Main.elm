@@ -2810,22 +2810,31 @@ visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
                             []
 
                     fieldSelectNode =
-                        select
-                            [ class "tff-text-field tff-question-title"
-                            , onChange (\str -> OnFormField (OnVisibilityConditionValueInput ruleIndex conditionIndex str) fieldIndex "")
-                            , value comparisonValueString
+                        div
+                            [ class "focus-within:relative"
+                            , Attr.style "display" "grid"
+                            , Attr.style "grid-template-columns" "1fr"
+                            , Attr.style "min-width" "8rem"
+                            , Attr.style "flex-grow" "1"
                             ]
-                            (option [ value "" ] [ text "-- Select a field --" ]
-                                :: List.map
-                                    (\f ->
-                                        let
-                                            fn =
-                                                f.name |> Maybe.withDefault f.label
-                                        in
-                                        option [ value fn, selected (fn == comparisonValueString) ] [ text ("value of " ++ Json.Encode.encode 0 (Json.Encode.string f.label)) ]
-                                    )
-                                    otherFields
-                            )
+                            [ select
+                                [ class "tff-selectinput-select"
+                                , onChange (\str -> OnFormField (OnVisibilityConditionValueInput ruleIndex conditionIndex str) fieldIndex "")
+                                , value comparisonValueString
+                                ]
+                                (option [ value "" ] [ text "-- Select a field --" ]
+                                    :: List.map
+                                        (\f ->
+                                            let
+                                                fn =
+                                                    f.name |> Maybe.withDefault f.label
+                                            in
+                                            option [ value fn, selected (fn == comparisonValueString) ] [ text ("value of " ++ Json.Encode.encode 0 (Json.Encode.string f.label)) ]
+                                        )
+                                        otherFields
+                                )
+                            , selectArrowDown
+                            ]
 
                     inputNode =
                         case comparisonOf rule of
