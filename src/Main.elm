@@ -876,21 +876,19 @@ update msg model =
                         Nothing ->
                             [ value ]
 
-                updatedValues =
+                newTrackedFormValues =
                     Dict.insert fieldName newValues model.trackedFormValues
-
-                -- Sanitize values to remove hidden field values
-                sanitizedValues =
-                    sanitizeFormValues model.formFields updatedValues
+                        |> sanitizeFormValues model.formFields
 
                 formValues =
-                    Dict.toList sanitizedValues
+                    newTrackedFormValues
+                        |> Dict.toList
                         |> List.map (\( key, values ) -> ( key, Json.Encode.list Json.Encode.string values ))
                         |> Dict.fromList
                         |> Json.Encode.dict identity identity
             in
             ( { model
-                | trackedFormValues = sanitizedValues
+                | trackedFormValues = newTrackedFormValues
               }
             , outgoing (encodePortOutgoingValue (PortOutgoingFormValues formValues))
             )
