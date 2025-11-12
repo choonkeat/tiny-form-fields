@@ -612,6 +612,186 @@ suite =
                     -- Comparison is as-is: whitespace and duplicates are not normalized
                     Main.evaluateCondition values (Main.Field "a" (Main.EqualsField "b"))
                         |> Expect.equal True
+            , test "EqualsField with multi-value fields - any value matches (integration test)" <|
+                \_ ->
+                    let
+                        -- Mirror the Go test: ChooseMultiple fields with EqualsField visibility rule
+                        formFields =
+                            Array.fromList
+                                [ { label = "Your Skills"
+                                  , name = Just "skills"
+                                  , presence = Main.Required
+                                  , description = Main.AttributeNotNeeded
+                                  , type_ =
+                                        Main.ChooseMultiple
+                                            { choices =
+                                                [ { label = "Go", value = "Go" }
+                                                , { label = "Elm", value = "Elm" }
+                                                , { label = "JavaScript", value = "JavaScript" }
+                                                , { label = "Python", value = "Python" }
+                                                ]
+                                            , filter = Nothing
+                                            , maxAllowed = Nothing
+                                            , minRequired = Nothing
+                                            }
+                                  , visibilityRule = []
+                                  }
+                                , { label = "Preferred Skills"
+                                  , name = Just "preferred_skills"
+                                  , presence = Main.Required
+                                  , description = Main.AttributeNotNeeded
+                                  , type_ =
+                                        Main.ChooseMultiple
+                                            { choices =
+                                                [ { label = "Go", value = "Go" }
+                                                , { label = "Elm", value = "Elm" }
+                                                , { label = "JavaScript", value = "JavaScript" }
+                                                , { label = "Python", value = "Python" }
+                                                ]
+                                            , filter = Nothing
+                                            , maxAllowed = Nothing
+                                            , minRequired = Nothing
+                                            }
+                                  , visibilityRule = []
+                                  }
+                                , { label = "Skills Match Indicator"
+                                  , name = Nothing
+                                  , presence = Main.Required
+                                  , description = Main.AttributeNotNeeded
+                                  , type_ =
+                                        Main.ShortText
+                                            (Main.fromRawCustomElement
+                                                { inputType = "text"
+                                                , inputTag = "input"
+                                                , attributes =
+                                                    Dict.fromList
+                                                        [ ( "type", "text" )
+                                                        , ( "class", "size-0-invisible" )
+                                                        , ( "value", "form-invalid" )
+                                                        , ( "pattern", "form-ok" )
+                                                        ]
+                                                }
+                                            )
+                                  , visibilityRule =
+                                        [ Main.HideWhen
+                                            [ Main.Field "skills" (Main.EqualsField "preferred_skills") ]
+                                        ]
+                                  }
+                                ]
+
+                        -- Values with overlap: "Elm" is in both lists
+                        values =
+                            Dict.fromList
+                                [ ( "skills", [ "Go", "Elm" ] )
+                                , ( "preferred_skills", [ "Python", "Elm", "JavaScript" ] )
+                                ]
+                    in
+                    Expect.all
+                        [ \_ ->
+                            -- The EqualsField condition should be met (overlap exists)
+                            Main.evaluateCondition values (Main.Field "skills" (Main.EqualsField "preferred_skills"))
+                                |> Expect.equal True
+                        , \_ ->
+                            -- The third field should be hidden (HideWhen condition met)
+                            case Array.get 2 formFields of
+                                Just field ->
+                                    Main.isVisibilityRuleSatisfied field.visibilityRule values
+                                        |> Expect.equal False
+
+                                Nothing ->
+                                    Expect.fail "Field 2 not found"
+                        ]
+                        ()
+            , test "EqualsField with multi-value fields - no overlap (integration test)" <|
+                \_ ->
+                    let
+                        -- Same form structure as above
+                        formFields =
+                            Array.fromList
+                                [ { label = "Your Skills"
+                                  , name = Just "skills"
+                                  , presence = Main.Required
+                                  , description = Main.AttributeNotNeeded
+                                  , type_ =
+                                        Main.ChooseMultiple
+                                            { choices =
+                                                [ { label = "Go", value = "Go" }
+                                                , { label = "Elm", value = "Elm" }
+                                                , { label = "JavaScript", value = "JavaScript" }
+                                                , { label = "Python", value = "Python" }
+                                                ]
+                                            , filter = Nothing
+                                            , maxAllowed = Nothing
+                                            , minRequired = Nothing
+                                            }
+                                  , visibilityRule = []
+                                  }
+                                , { label = "Preferred Skills"
+                                  , name = Just "preferred_skills"
+                                  , presence = Main.Required
+                                  , description = Main.AttributeNotNeeded
+                                  , type_ =
+                                        Main.ChooseMultiple
+                                            { choices =
+                                                [ { label = "Go", value = "Go" }
+                                                , { label = "Elm", value = "Elm" }
+                                                , { label = "JavaScript", value = "JavaScript" }
+                                                , { label = "Python", value = "Python" }
+                                                ]
+                                            , filter = Nothing
+                                            , maxAllowed = Nothing
+                                            , minRequired = Nothing
+                                            }
+                                  , visibilityRule = []
+                                  }
+                                , { label = "Skills Match Indicator"
+                                  , name = Nothing
+                                  , presence = Main.Required
+                                  , description = Main.AttributeNotNeeded
+                                  , type_ =
+                                        Main.ShortText
+                                            (Main.fromRawCustomElement
+                                                { inputType = "text"
+                                                , inputTag = "input"
+                                                , attributes =
+                                                    Dict.fromList
+                                                        [ ( "type", "text" )
+                                                        , ( "class", "size-0-invisible" )
+                                                        , ( "value", "form-invalid" )
+                                                        , ( "pattern", "form-ok" )
+                                                        ]
+                                                }
+                                            )
+                                  , visibilityRule =
+                                        [ Main.HideWhen
+                                            [ Main.Field "skills" (Main.EqualsField "preferred_skills") ]
+                                        ]
+                                  }
+                                ]
+
+                        -- Values with NO overlap
+                        values =
+                            Dict.fromList
+                                [ ( "skills", [ "Go", "Elm" ] )
+                                , ( "preferred_skills", [ "Python", "JavaScript" ] )
+                                ]
+                    in
+                    Expect.all
+                        [ \_ ->
+                            -- The EqualsField condition should NOT be met (no overlap)
+                            Main.evaluateCondition values (Main.Field "skills" (Main.EqualsField "preferred_skills"))
+                                |> Expect.equal False
+                        , \_ ->
+                            -- The third field should be visible (HideWhen condition not met)
+                            case Array.get 2 formFields of
+                                Just field ->
+                                    Main.isVisibilityRuleSatisfied field.visibilityRule values
+                                        |> Expect.equal True
+
+                                Nothing ->
+                                    Expect.fail "Field 2 not found"
+                        ]
+                        ()
             ]
         , describe "list attribute handling"
             [ test "fromRawCustomElement removes list attribute" <|
