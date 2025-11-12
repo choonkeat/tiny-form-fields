@@ -880,7 +880,8 @@ update msg model =
                     Dict.insert fieldName newValues model.trackedFormValues
 
                 formValues =
-                    Dict.toList newTrackedFormValues
+                    newTrackedFormValues
+                        |> Dict.toList
                         |> List.map (\( key, values ) -> ( key, Json.Encode.list Json.Encode.string values ))
                         |> Dict.fromList
                         |> Json.Encode.dict identity identity
@@ -1787,7 +1788,7 @@ viewFormPreview customAttrs { formFields, needsFormLogic, trackedFormValues, sho
         |> Array.filter
             (\formField ->
                 -- Only show fields that satisfy visibility rules...
-                isVisibilityRuleSatisfied formField.visibilityRule trackedFormValues
+                isVisibilityRuleSatisfied formField.visibilityRule (sanitizeFormValues formFields trackedFormValues)
                     -- ...AND for fields with filters, the filter field must not be empty
                     && not (fieldHasEmptyFilter formField trackedFormValues)
             )
@@ -4517,6 +4518,58 @@ isVisibilityRuleSatisfied rules trackedFormValues =
                         not (List.all (evaluateCondition trackedFormValues) conditions)
             )
             rules
+
+
+
+{- Sanitize form values by removing values for hidden fields.
+   Iterates until reaching a stable state to handle cascading visibility.
+   This prevents hidden fields from affecting the visibility of other fields.
+-}
+
+
+sanitizeFormValues : Array FormField -> Dict String (List String) -> Dict String (List String)
+sanitizeFormValues formFields values =
+    sanitizeFormValuesHelper formFields values (Array.length formFields)
+
+
+sanitizeFormValuesHelper : Array FormField -> Dict String (List String) -> Int -> Dict String (List String)
+sanitizeFormValuesHelper formFields currentValues remainingIterations =
+    if remainingIterations <= 0 then
+        -- Max iterations reached, return current state
+        currentValues
+
+    else
+        let
+            sanitized =
+                Array.foldl
+                    (\field acc ->
+                        let
+                            fieldName =
+                                fieldNameOf field
+                        in
+                        -- Only keep field value if field is visible
+                        if isVisibilityRuleSatisfied field.visibilityRule currentValues then
+                            case Dict.get fieldName currentValues of
+                                Just fieldValues ->
+                                    Dict.insert fieldName fieldValues acc
+
+                                Nothing ->
+                                    acc
+
+                        else
+                            -- Field is hidden, remove its value
+                            acc
+                    )
+                    Dict.empty
+                    formFields
+        in
+        -- Check if values changed (stable state reached)
+        if sanitized == currentValues then
+            sanitized
+
+        else
+            -- Continue iterating with sanitized values
+            sanitizeFormValuesHelper formFields sanitized (remainingIterations - 1)
 
 
 

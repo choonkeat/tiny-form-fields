@@ -12754,6 +12754,74 @@ var $author$project$Main$isVisibilityRuleSatisfied = F2(
 			},
 			rules);
 	});
+var $elm$core$Array$foldl = F3(
+	function (func, baseCase, _v0) {
+		var tree = _v0.c;
+		var tail = _v0.d;
+		var helper = F2(
+			function (node, acc) {
+				if (!node.$) {
+					var subTree = node.a;
+					return A3($elm$core$Elm$JsArray$foldl, helper, acc, subTree);
+				} else {
+					var values = node.a;
+					return A3($elm$core$Elm$JsArray$foldl, func, acc, values);
+				}
+			});
+		return A3(
+			$elm$core$Elm$JsArray$foldl,
+			func,
+			A3($elm$core$Elm$JsArray$foldl, helper, baseCase, tree),
+			tail);
+	});
+var $author$project$Main$sanitizeFormValuesHelper = F3(
+	function (formFields, currentValues, remainingIterations) {
+		sanitizeFormValuesHelper:
+		while (true) {
+			if (remainingIterations <= 0) {
+				return currentValues;
+			} else {
+				var sanitized = A3(
+					$elm$core$Array$foldl,
+					F2(
+						function (field, acc) {
+							var fieldName = $author$project$Main$fieldNameOf(field);
+							if (A2($author$project$Main$isVisibilityRuleSatisfied, field.m, currentValues)) {
+								var _v0 = A2($elm$core$Dict$get, fieldName, currentValues);
+								if (!_v0.$) {
+									var fieldValues = _v0.a;
+									return A3($elm$core$Dict$insert, fieldName, fieldValues, acc);
+								} else {
+									return acc;
+								}
+							} else {
+								return acc;
+							}
+						}),
+					$elm$core$Dict$empty,
+					formFields);
+				if (_Utils_eq(sanitized, currentValues)) {
+					return sanitized;
+				} else {
+					var $temp$formFields = formFields,
+						$temp$currentValues = sanitized,
+						$temp$remainingIterations = remainingIterations - 1;
+					formFields = $temp$formFields;
+					currentValues = $temp$currentValues;
+					remainingIterations = $temp$remainingIterations;
+					continue sanitizeFormValuesHelper;
+				}
+			}
+		}
+	});
+var $author$project$Main$sanitizeFormValues = F2(
+	function (formFields, values) {
+		return A3(
+			$author$project$Main$sanitizeFormValuesHelper,
+			formFields,
+			values,
+			$elm$core$Array$length(formFields));
+	});
 var $author$project$Main$viewFormPreview = F2(
 	function (customAttrs, _v0) {
 		var formFields = _v0.g;
@@ -12822,7 +12890,10 @@ var $author$project$Main$viewFormPreview = F2(
 				A2(
 					$elm$core$Array$filter,
 					function (formField) {
-						return A2($author$project$Main$isVisibilityRuleSatisfied, formField.m, trackedFormValues) && (!A2($author$project$Main$fieldHasEmptyFilter, formField, trackedFormValues));
+						return A2(
+							$author$project$Main$isVisibilityRuleSatisfied,
+							formField.m,
+							A2($author$project$Main$sanitizeFormValues, formFields, trackedFormValues)) && (!A2($author$project$Main$fieldHasEmptyFilter, formField, trackedFormValues));
 					},
 					formFields)));
 	});

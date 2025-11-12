@@ -1548,3 +1548,308 @@ func TestVisibilityRules(t *testing.T) {
 		})
 	}
 }
+
+func TestCascadingVisibilityBugFix(t *testing.T) {
+	scenarios := []struct {
+		name          string
+		formFields    string
+		values        url.Values
+		expectedError error
+	}{
+		{
+			name: "Cascading visibility - Field C depends on hidden Field B's value (THE BUG)",
+			formFields: `[
+				{
+					"label": "Do you have a car?",
+					"name": "has_car",
+					"presence": "Required",
+					"type": {
+						"type": "ChooseOne",
+						"choices": ["Yes", "No"]
+					}
+				},
+				{
+					"label": "Car brand",
+					"name": "car_brand",
+					"presence": "Optional",
+					"type": {
+						"type": "ShortText",
+						"inputType": "text",
+						"attributes": {"type": "text"}
+					},
+					"visibilityRule": [
+						{
+							"type": "ShowWhen",
+							"conditions": [
+								{
+									"type": "Field",
+									"fieldName": "has_car",
+									"comparison": {
+										"type": "Equals",
+										"value": "Yes"
+									}
+								}
+							]
+						}
+					]
+				},
+				{
+					"label": "Do you prefer Japanese brands?",
+					"name": "prefer_japanese",
+					"presence": "Required",
+					"type": {
+						"type": "ChooseOne",
+						"choices": ["Yes", "No"]
+					},
+					"visibilityRule": [
+						{
+							"type": "ShowWhen",
+							"conditions": [
+								{
+									"type": "Field",
+									"fieldName": "car_brand",
+									"comparison": {
+										"type": "Equals",
+										"value": "Toyota"
+									}
+								}
+							]
+						}
+					]
+				}
+			]`,
+			values: url.Values{
+				"has_car":         []string{"No"},
+				"car_brand":       []string{"Toyota"},
+				"prefer_japanese": []string{""},
+			},
+			expectedError: nil, // Should pass - prefer_japanese should be hidden
+		},
+		{
+			name: "Deep cascading visibility - A→B→C→D all cascade",
+			formFields: `[
+				{
+					"label": "Field A",
+					"name": "field_a",
+					"presence": "Required",
+					"type": {"type": "ChooseOne", "choices": ["Yes", "No"]}
+				},
+				{
+					"label": "Field B",
+					"name": "field_b",
+					"presence": "Optional",
+					"type": {"type": "ShortText", "inputType": "text", "attributes": {"type": "text"}},
+					"visibilityRule": [{
+						"type": "ShowWhen",
+						"conditions": [{
+							"type": "Field",
+							"fieldName": "field_a",
+							"comparison": {"type": "Equals", "value": "Yes"}
+						}]
+					}]
+				},
+				{
+					"label": "Field C",
+					"name": "field_c",
+					"presence": "Optional",
+					"type": {"type": "ShortText", "inputType": "text", "attributes": {"type": "text"}},
+					"visibilityRule": [{
+						"type": "ShowWhen",
+						"conditions": [{
+							"type": "Field",
+							"fieldName": "field_b",
+							"comparison": {"type": "Equals", "value": "EnableC"}
+						}]
+					}]
+				},
+				{
+					"label": "Field D",
+					"name": "field_d",
+					"presence": "Required",
+					"type": {"type": "ShortText", "inputType": "text", "attributes": {"type": "text"}},
+					"visibilityRule": [{
+						"type": "ShowWhen",
+						"conditions": [{
+							"type": "Field",
+							"fieldName": "field_c",
+							"comparison": {"type": "Equals", "value": "EnableD"}
+						}]
+					}]
+				}
+			]`,
+			values: url.Values{
+				"field_a": []string{"No"},
+				"field_b": []string{"EnableC"},
+				"field_c": []string{"EnableD"},
+				"field_d": []string{""},
+			},
+			expectedError: nil, // All downstream fields should be hidden
+		},
+		{
+			name: "EqualsField with hidden target field",
+			formFields: `[
+				{
+					"label": "Show email confirmation?",
+					"name": "show_confirm",
+					"presence": "Required",
+					"type": {"type": "ChooseOne", "choices": ["Yes", "No"]}
+				},
+				{
+					"label": "Email",
+					"name": "email",
+					"presence": "Required",
+					"type": {"type": "ShortText", "inputType": "Email", "attributes": {"type": "email"}}
+				},
+				{
+					"label": "Confirm Email",
+					"name": "confirm_email",
+					"presence": "Optional",
+					"type": {"type": "ShortText", "inputType": "Email", "attributes": {"type": "email"}},
+					"visibilityRule": [{
+						"type": "ShowWhen",
+						"conditions": [{
+							"type": "Field",
+							"fieldName": "show_confirm",
+							"comparison": {"type": "Equals", "value": "Yes"}
+						}]
+					}]
+				},
+				{
+					"label": "Submit blocker",
+					"name": "blocker",
+					"presence": "Required",
+					"type": {"type": "ShortText", "inputType": "text", "attributes": {"type": "text", "value": "ok", "pattern": "ok"}},
+					"visibilityRule": [{
+						"type": "HideWhen",
+						"conditions": [{
+							"type": "Field",
+							"fieldName": "email",
+							"comparison": {"type": "EqualsField", "value": "confirm_email"}
+						}]
+					}]
+				}
+			]`,
+			values: url.Values{
+				"show_confirm":  []string{"No"},
+				"email":         []string{"test@example.com"},
+				"confirm_email": []string{"test@example.com"},
+				// blocker field is visible (emails can't be compared since confirm_email is hidden)
+				// blocker has value="ok" in HTML but pattern="ok", and we're not submitting it
+				// so it should fail validation
+			},
+			expectedError: ErrRequiredFieldMissing, // Blocker is visible and required but not provided
+		},
+		{
+			name: "StringContains with hidden field",
+			formFields: `[
+				{
+					"label": "Enable description?",
+					"name": "enable_desc",
+					"presence": "Required",
+					"type": {"type": "ChooseOne", "choices": ["Yes", "No"]}
+				},
+				{
+					"label": "Description",
+					"name": "description",
+					"presence": "Optional",
+					"type": {"type": "LongText"},
+					"visibilityRule": [{
+						"type": "ShowWhen",
+						"conditions": [{
+							"type": "Field",
+							"fieldName": "enable_desc",
+							"comparison": {"type": "Equals", "value": "Yes"}
+						}]
+					}]
+				},
+				{
+					"label": "Urgent Note",
+					"name": "urgent_note",
+					"presence": "Required",
+					"type": {"type": "ShortText", "inputType": "text", "attributes": {"type": "text"}},
+					"visibilityRule": [{
+						"type": "ShowWhen",
+						"conditions": [{
+							"type": "Field",
+							"fieldName": "description",
+							"comparison": {"type": "StringContains", "value": "urgent"}
+						}]
+					}]
+				}
+			]`,
+			values: url.Values{
+				"enable_desc":  []string{"No"},
+				"description":  []string{"This is urgent"},
+				"urgent_note":  []string{""},
+			},
+			expectedError: nil, // urgent_note should be hidden (description is hidden)
+		},
+		{
+			name: "Multiple conditions with one field hidden",
+			formFields: `[
+				{
+					"label": "Field A",
+					"name": "field_a",
+					"presence": "Required",
+					"type": {"type": "ChooseOne", "choices": ["Yes", "No"]}
+				},
+				{
+					"label": "Field B",
+					"name": "field_b",
+					"presence": "Optional",
+					"type": {"type": "ShortText", "inputType": "text", "attributes": {"type": "text"}},
+					"visibilityRule": [{
+						"type": "ShowWhen",
+						"conditions": [{
+							"type": "Field",
+							"fieldName": "field_a",
+							"comparison": {"type": "Equals", "value": "Yes"}
+						}]
+					}]
+				},
+				{
+					"label": "Field C",
+					"name": "field_c",
+					"presence": "Required",
+					"type": {"type": "ShortText", "inputType": "text", "attributes": {"type": "text"}},
+					"visibilityRule": [{
+						"type": "ShowWhen",
+						"conditions": [
+							{
+								"type": "Field",
+								"fieldName": "field_a",
+								"comparison": {"type": "Equals", "value": "No"}
+							},
+							{
+								"type": "Field",
+								"fieldName": "field_b",
+								"comparison": {"type": "Equals", "value": "SpecialValue"}
+							}
+						]
+					}]
+				}
+			]`,
+			values: url.Values{
+				"field_a": []string{"No"},
+				"field_b": []string{"SpecialValue"},
+				"field_c": []string{""},
+			},
+			expectedError: nil, // field_c should be hidden (field_b is hidden so second condition fails)
+		},
+	}
+
+	for _, tt := range scenarios {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidFormValues([]byte(tt.formFields), tt.values)
+			if tt.expectedError == nil {
+				if err != nil {
+					t.Errorf("Expected no error, got: %v", err)
+				}
+			} else {
+				if !errors.Is(err, tt.expectedError) {
+					t.Errorf("Expected error %v, got: %v", tt.expectedError, err)
+				}
+			}
+		})
+	}
+}

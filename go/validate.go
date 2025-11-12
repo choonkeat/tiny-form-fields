@@ -650,6 +650,45 @@ func isFieldVisible(field TinyFormField, values url.Values) bool {
 	return field.VisibilityRule[0].Type == "HideWhen" // Default: show for HideWhen, hide for ShowWhen
 }
 
+// sanitizeFormValues removes values for hidden fields, iterating until a stable state is reached.
+// This prevents hidden fields from affecting the visibility of other fields.
+func sanitizeFormValues(fields []TinyFormField, values url.Values) url.Values {
+	current := values
+	maxIterations := len(fields) // Maximum possible cascade depth for N fields
+
+	for i := 0; i < maxIterations; i++ {
+		sanitized := make(url.Values)
+		changed := false
+
+		for _, field := range fields {
+			fieldName := field.FieldName()
+
+			// Check if field is visible with current values
+			if isFieldVisible(field, current) {
+				// Field is visible, preserve its value
+				if fieldValues, ok := current[fieldName]; ok {
+					sanitized[fieldName] = fieldValues
+				}
+			} else {
+				// Field is hidden, remove its value
+				if _, hadValue := current[fieldName]; hadValue {
+					changed = true
+				}
+			}
+		}
+
+		// If nothing changed, we've reached a stable state
+		if !changed {
+			return sanitized
+		}
+
+		current = sanitized
+	}
+
+	// After max iterations, return current state
+	return current
+}
+
 // ValidFormValues validates the form submission values against the form definition.
 // Returns nil if validation passes, otherwise returns an error.
 func ValidFormValues(formFields []byte, values url.Values) error {
@@ -658,7 +697,10 @@ func ValidFormValues(formFields []byte, values url.Values) error {
 		return fmt.Errorf("error parsing form fields: %w", err)
 	}
 
-	return fields.Validate(values)
+	// Sanitize values to remove hidden field values before validation
+	sanitized := sanitizeFormValues(fields, values)
+
+	return fields.Validate(sanitized)
 }
 
 // isEmptyValue checks if a slice of strings is empty or contains only empty strings.
