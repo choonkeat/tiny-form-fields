@@ -878,7 +878,6 @@ update msg model =
 
                 newTrackedFormValues =
                     Dict.insert fieldName newValues model.trackedFormValues
-                        |> sanitizeFormValues model.formFields
 
                 formValues =
                     newTrackedFormValues
@@ -1789,7 +1788,7 @@ viewFormPreview customAttrs { formFields, needsFormLogic, trackedFormValues, sho
         |> Array.filter
             (\formField ->
                 -- Only show fields that satisfy visibility rules...
-                isVisibilityRuleSatisfied formField.visibilityRule trackedFormValues
+                isVisibilityRuleSatisfied formField.visibilityRule (sanitizeFormValues formFields trackedFormValues)
                     -- ...AND for fields with filters, the filter field must not be empty
                     && not (fieldHasEmptyFilter formField trackedFormValues)
             )

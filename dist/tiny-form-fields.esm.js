@@ -7539,183 +7539,6 @@ var $elm$core$Array$push = F2(
 			A2($elm$core$Elm$JsArray$push, a, tail),
 			array);
 	});
-var $elm$core$Array$foldl = F3(
-	function (func, baseCase, _v0) {
-		var tree = _v0.c;
-		var tail = _v0.d;
-		var helper = F2(
-			function (node, acc) {
-				if (!node.$) {
-					var subTree = node.a;
-					return A3($elm$core$Elm$JsArray$foldl, helper, acc, subTree);
-				} else {
-					var values = node.a;
-					return A3($elm$core$Elm$JsArray$foldl, func, acc, values);
-				}
-			});
-		return A3(
-			$elm$core$Elm$JsArray$foldl,
-			func,
-			A3($elm$core$Elm$JsArray$foldl, helper, baseCase, tree),
-			tail);
-	});
-var $elm$core$Basics$composeL = F3(
-	function (g, f, x) {
-		return g(
-			f(x));
-	});
-var $elm$core$List$all = F2(
-	function (isOkay, list) {
-		return !A2(
-			$elm$core$List$any,
-			A2($elm$core$Basics$composeL, $elm$core$Basics$not, isOkay),
-			list);
-	});
-var $elm$core$String$endsWith = _String_endsWith;
-var $elm$core$String$toFloat = _String_toFloat;
-var $author$project$Main$evaluateCondition = F2(
-	function (trackedFormValues, condition) {
-		var fieldName = condition.a;
-		var comparison = condition.b;
-		switch (comparison.$) {
-			case 0:
-				var givenValue = comparison.a;
-				return A2(
-					$elm$core$List$member,
-					givenValue,
-					A2(
-						$elm$core$Maybe$withDefault,
-						_List_Nil,
-						A2($elm$core$Dict$get, fieldName, trackedFormValues)));
-			case 1:
-				var givenValue = comparison.a;
-				return A2(
-					$elm$core$List$any,
-					$elm$core$String$contains(givenValue),
-					A2(
-						$elm$core$Maybe$withDefault,
-						_List_Nil,
-						A2($elm$core$Dict$get, fieldName, trackedFormValues)));
-			case 2:
-				var givenValue = comparison.a;
-				return A2(
-					$elm$core$List$any,
-					$elm$core$String$endsWith(givenValue),
-					A2(
-						$elm$core$Maybe$withDefault,
-						_List_Nil,
-						A2($elm$core$Dict$get, fieldName, trackedFormValues)));
-			case 3:
-				var givenValue = comparison.a;
-				return A2(
-					$elm$core$List$any,
-					function (formValue) {
-						var _v2 = $elm$core$String$toFloat(givenValue);
-						if (!_v2.$) {
-							var givenFloat = _v2.a;
-							return A2(
-								$elm$core$Maybe$withDefault,
-								false,
-								A2(
-									$elm$core$Maybe$map,
-									function (formFloat) {
-										return _Utils_cmp(formFloat, givenFloat) > 0;
-									},
-									$elm$core$String$toFloat(formValue)));
-						} else {
-							return _Utils_cmp(formValue, givenValue) > 0;
-						}
-					},
-					A2(
-						$elm$core$Maybe$withDefault,
-						_List_Nil,
-						A2($elm$core$Dict$get, fieldName, trackedFormValues)));
-			default:
-				var otherFieldName = comparison.a;
-				var otherValues = A2(
-					$elm$core$Maybe$withDefault,
-					_List_Nil,
-					A2($elm$core$Dict$get, otherFieldName, trackedFormValues));
-				return A2(
-					$elm$core$List$any,
-					function (v) {
-						return A2($elm$core$List$member, v, otherValues);
-					},
-					A2(
-						$elm$core$Maybe$withDefault,
-						_List_Nil,
-						A2($elm$core$Dict$get, fieldName, trackedFormValues)));
-		}
-	});
-var $author$project$Main$isVisibilityRuleSatisfied = F2(
-	function (rules, trackedFormValues) {
-		return $elm$core$List$isEmpty(rules) || A2(
-			$elm$core$List$any,
-			function (rule) {
-				if (!rule.$) {
-					var conditions = rule.a;
-					return A2(
-						$elm$core$List$all,
-						$author$project$Main$evaluateCondition(trackedFormValues),
-						conditions);
-				} else {
-					var conditions = rule.a;
-					return !A2(
-						$elm$core$List$all,
-						$author$project$Main$evaluateCondition(trackedFormValues),
-						conditions);
-				}
-			},
-			rules);
-	});
-var $author$project$Main$sanitizeFormValuesHelper = F3(
-	function (formFields, currentValues, remainingIterations) {
-		sanitizeFormValuesHelper:
-		while (true) {
-			if (remainingIterations <= 0) {
-				return currentValues;
-			} else {
-				var sanitized = A3(
-					$elm$core$Array$foldl,
-					F2(
-						function (field, acc) {
-							var fieldName = $author$project$Main$fieldNameOf(field);
-							if (A2($author$project$Main$isVisibilityRuleSatisfied, field.m, currentValues)) {
-								var _v0 = A2($elm$core$Dict$get, fieldName, currentValues);
-								if (!_v0.$) {
-									var fieldValues = _v0.a;
-									return A3($elm$core$Dict$insert, fieldName, fieldValues, acc);
-								} else {
-									return acc;
-								}
-							} else {
-								return acc;
-							}
-						}),
-					$elm$core$Dict$empty,
-					formFields);
-				if (_Utils_eq(sanitized, currentValues)) {
-					return sanitized;
-				} else {
-					var $temp$formFields = formFields,
-						$temp$currentValues = sanitized,
-						$temp$remainingIterations = remainingIterations - 1;
-					formFields = $temp$formFields;
-					currentValues = $temp$currentValues;
-					remainingIterations = $temp$remainingIterations;
-					continue sanitizeFormValuesHelper;
-				}
-			}
-		}
-	});
-var $author$project$Main$sanitizeFormValues = F2(
-	function (formFields, values) {
-		return A3(
-			$author$project$Main$sanitizeFormValuesHelper,
-			formFields,
-			values,
-			$elm$core$Array$length(formFields));
-	});
 var $elm$core$Process$sleep = _Process_sleep;
 var $author$project$Main$stringFromInputField = function (inputField) {
 	switch (inputField.$) {
@@ -9098,10 +8921,7 @@ var $author$project$Main$update = F2(
 								[value]);
 						}
 					}();
-					var newTrackedFormValues = A2(
-						$author$project$Main$sanitizeFormValues,
-						model.g,
-						A3($elm$core$Dict$insert, fieldName, newValues, model.u));
+					var newTrackedFormValues = A3($elm$core$Dict$insert, fieldName, newValues, model.u);
 					var formValues = A3(
 						$elm$json$Json$Encode$dict,
 						$elm$core$Basics$identity,
@@ -12825,6 +12645,183 @@ var $author$project$Main$isChooseManyUsingMinMax = function (formField) {
 			return false;
 	}
 };
+var $elm$core$Basics$composeL = F3(
+	function (g, f, x) {
+		return g(
+			f(x));
+	});
+var $elm$core$List$all = F2(
+	function (isOkay, list) {
+		return !A2(
+			$elm$core$List$any,
+			A2($elm$core$Basics$composeL, $elm$core$Basics$not, isOkay),
+			list);
+	});
+var $elm$core$String$endsWith = _String_endsWith;
+var $elm$core$String$toFloat = _String_toFloat;
+var $author$project$Main$evaluateCondition = F2(
+	function (trackedFormValues, condition) {
+		var fieldName = condition.a;
+		var comparison = condition.b;
+		switch (comparison.$) {
+			case 0:
+				var givenValue = comparison.a;
+				return A2(
+					$elm$core$List$member,
+					givenValue,
+					A2(
+						$elm$core$Maybe$withDefault,
+						_List_Nil,
+						A2($elm$core$Dict$get, fieldName, trackedFormValues)));
+			case 1:
+				var givenValue = comparison.a;
+				return A2(
+					$elm$core$List$any,
+					$elm$core$String$contains(givenValue),
+					A2(
+						$elm$core$Maybe$withDefault,
+						_List_Nil,
+						A2($elm$core$Dict$get, fieldName, trackedFormValues)));
+			case 2:
+				var givenValue = comparison.a;
+				return A2(
+					$elm$core$List$any,
+					$elm$core$String$endsWith(givenValue),
+					A2(
+						$elm$core$Maybe$withDefault,
+						_List_Nil,
+						A2($elm$core$Dict$get, fieldName, trackedFormValues)));
+			case 3:
+				var givenValue = comparison.a;
+				return A2(
+					$elm$core$List$any,
+					function (formValue) {
+						var _v2 = $elm$core$String$toFloat(givenValue);
+						if (!_v2.$) {
+							var givenFloat = _v2.a;
+							return A2(
+								$elm$core$Maybe$withDefault,
+								false,
+								A2(
+									$elm$core$Maybe$map,
+									function (formFloat) {
+										return _Utils_cmp(formFloat, givenFloat) > 0;
+									},
+									$elm$core$String$toFloat(formValue)));
+						} else {
+							return _Utils_cmp(formValue, givenValue) > 0;
+						}
+					},
+					A2(
+						$elm$core$Maybe$withDefault,
+						_List_Nil,
+						A2($elm$core$Dict$get, fieldName, trackedFormValues)));
+			default:
+				var otherFieldName = comparison.a;
+				var otherValues = A2(
+					$elm$core$Maybe$withDefault,
+					_List_Nil,
+					A2($elm$core$Dict$get, otherFieldName, trackedFormValues));
+				return A2(
+					$elm$core$List$any,
+					function (v) {
+						return A2($elm$core$List$member, v, otherValues);
+					},
+					A2(
+						$elm$core$Maybe$withDefault,
+						_List_Nil,
+						A2($elm$core$Dict$get, fieldName, trackedFormValues)));
+		}
+	});
+var $author$project$Main$isVisibilityRuleSatisfied = F2(
+	function (rules, trackedFormValues) {
+		return $elm$core$List$isEmpty(rules) || A2(
+			$elm$core$List$any,
+			function (rule) {
+				if (!rule.$) {
+					var conditions = rule.a;
+					return A2(
+						$elm$core$List$all,
+						$author$project$Main$evaluateCondition(trackedFormValues),
+						conditions);
+				} else {
+					var conditions = rule.a;
+					return !A2(
+						$elm$core$List$all,
+						$author$project$Main$evaluateCondition(trackedFormValues),
+						conditions);
+				}
+			},
+			rules);
+	});
+var $elm$core$Array$foldl = F3(
+	function (func, baseCase, _v0) {
+		var tree = _v0.c;
+		var tail = _v0.d;
+		var helper = F2(
+			function (node, acc) {
+				if (!node.$) {
+					var subTree = node.a;
+					return A3($elm$core$Elm$JsArray$foldl, helper, acc, subTree);
+				} else {
+					var values = node.a;
+					return A3($elm$core$Elm$JsArray$foldl, func, acc, values);
+				}
+			});
+		return A3(
+			$elm$core$Elm$JsArray$foldl,
+			func,
+			A3($elm$core$Elm$JsArray$foldl, helper, baseCase, tree),
+			tail);
+	});
+var $author$project$Main$sanitizeFormValuesHelper = F3(
+	function (formFields, currentValues, remainingIterations) {
+		sanitizeFormValuesHelper:
+		while (true) {
+			if (remainingIterations <= 0) {
+				return currentValues;
+			} else {
+				var sanitized = A3(
+					$elm$core$Array$foldl,
+					F2(
+						function (field, acc) {
+							var fieldName = $author$project$Main$fieldNameOf(field);
+							if (A2($author$project$Main$isVisibilityRuleSatisfied, field.m, currentValues)) {
+								var _v0 = A2($elm$core$Dict$get, fieldName, currentValues);
+								if (!_v0.$) {
+									var fieldValues = _v0.a;
+									return A3($elm$core$Dict$insert, fieldName, fieldValues, acc);
+								} else {
+									return acc;
+								}
+							} else {
+								return acc;
+							}
+						}),
+					$elm$core$Dict$empty,
+					formFields);
+				if (_Utils_eq(sanitized, currentValues)) {
+					return sanitized;
+				} else {
+					var $temp$formFields = formFields,
+						$temp$currentValues = sanitized,
+						$temp$remainingIterations = remainingIterations - 1;
+					formFields = $temp$formFields;
+					currentValues = $temp$currentValues;
+					remainingIterations = $temp$remainingIterations;
+					continue sanitizeFormValuesHelper;
+				}
+			}
+		}
+	});
+var $author$project$Main$sanitizeFormValues = F2(
+	function (formFields, values) {
+		return A3(
+			$author$project$Main$sanitizeFormValuesHelper,
+			formFields,
+			values,
+			$elm$core$Array$length(formFields));
+	});
 var $author$project$Main$viewFormPreview = F2(
 	function (customAttrs, _v0) {
 		var formFields = _v0.g;
@@ -12893,7 +12890,10 @@ var $author$project$Main$viewFormPreview = F2(
 				A2(
 					$elm$core$Array$filter,
 					function (formField) {
-						return A2($author$project$Main$isVisibilityRuleSatisfied, formField.m, trackedFormValues) && (!A2($author$project$Main$fieldHasEmptyFilter, formField, trackedFormValues));
+						return A2(
+							$author$project$Main$isVisibilityRuleSatisfied,
+							formField.m,
+							A2($author$project$Main$sanitizeFormValues, formFields, trackedFormValues)) && (!A2($author$project$Main$fieldHasEmptyFilter, formField, trackedFormValues));
 					},
 					formFields)));
 	});
