@@ -11538,10 +11538,10 @@ var $author$project$Main$visibilityRuleSection = F4(
 				var datalistElement = function () {
 					if (!selectedField.$) {
 						var field = selectedField.a;
-						var _v7 = field.a;
-						switch (_v7.$) {
+						var _v8 = field.a;
+						switch (_v8.$) {
 							case 2:
-								var choices = _v7.a.k;
+								var choices = _v8.a.k;
 								return $elm$core$Maybe$Just(
 									A2(
 										$elm$html$Html$datalist,
@@ -11562,7 +11562,7 @@ var $author$project$Main$visibilityRuleSection = F4(
 											},
 											choices)));
 							case 3:
-								var choices = _v7.a.k;
+								var choices = _v8.a.k;
 								return $elm$core$Maybe$Just(
 									A2(
 										$elm$html$Html$datalist,
@@ -11583,7 +11583,7 @@ var $author$project$Main$visibilityRuleSection = F4(
 											},
 											choices)));
 							case 4:
-								var choices = _v7.a.k;
+								var choices = _v8.a.k;
 								return $elm$core$Maybe$Just(
 									A2(
 										$elm$html$Html$datalist,
@@ -11723,25 +11723,39 @@ var $author$project$Main$visibilityRuleSection = F4(
 								}
 							}();
 							var textInputNode = A2(
-								$elm$html$Html$input,
-								_Utils_ap(
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$type_('text'),
-											$elm$html$Html$Attributes$value(comparisonValueString),
-											$elm$html$Html$Events$onInput(
-											function (str) {
-												return A3(
-													$author$project$Main$OnFormField,
-													A3($author$project$Main$OnVisibilityConditionValueInput, ruleIndex, conditionIndex, str),
-													fieldIndex,
-													'');
-											}),
-											$elm$html$Html$Attributes$required(true),
-											$elm$html$Html$Attributes$class('tff-comparison-value')
-										]),
-									datalistAttr),
-								_List_Nil);
+								$elm$html$Html$div,
+								_List_Nil,
+								A2(
+									$elm$core$List$cons,
+									A2(
+										$elm$html$Html$input,
+										_Utils_ap(
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$type_('text'),
+													$elm$html$Html$Attributes$value(comparisonValueString),
+													$elm$html$Html$Events$onInput(
+													function (str) {
+														return A3(
+															$author$project$Main$OnFormField,
+															A3($author$project$Main$OnVisibilityConditionValueInput, ruleIndex, conditionIndex, str),
+															fieldIndex,
+															'');
+													}),
+													$elm$html$Html$Attributes$required(true),
+													$elm$html$Html$Attributes$class('tff-comparison-value')
+												]),
+											datalistAttr),
+										_List_Nil),
+									function () {
+										if (!datalistElement.$) {
+											var element = datalistElement.a;
+											return _List_fromArray(
+												[element]);
+										} else {
+											return _List_Nil;
+										}
+									}()));
 							var candidateFields = A2($author$project$Main$otherQuestionTitles, formFields, fieldIndex);
 							var candidateFieldsExceptSelf = A2(
 								$elm$core$List$filter,

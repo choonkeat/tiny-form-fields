@@ -2807,16 +2807,25 @@ visibilityRuleSection fieldIndex formFields ruleIndex visibilityRule =
                                 v
 
                     textInputNode =
-                        input
-                            ([ type_ "text"
-                             , value comparisonValueString
-                             , onInput (\str -> OnFormField (OnVisibilityConditionValueInput ruleIndex conditionIndex str) fieldIndex "")
-                             , required True
-                             , class "tff-comparison-value"
-                             ]
-                                ++ datalistAttr
+                        div []
+                            (input
+                                ([ type_ "text"
+                                 , value comparisonValueString
+                                 , onInput (\str -> OnFormField (OnVisibilityConditionValueInput ruleIndex conditionIndex str) fieldIndex "")
+                                 , required True
+                                 , class "tff-comparison-value"
+                                 ]
+                                    ++ datalistAttr
+                                )
+                                []
+                                :: (case datalistElement of
+                                        Just element ->
+                                            [ element ]
+
+                                        Nothing ->
+                                            []
+                                   )
                             )
-                            []
 
                     fieldSelectNode =
                         div
