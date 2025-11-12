@@ -1531,6 +1531,122 @@ func TestVisibilityRules(t *testing.T) {
 			},
 			expectedError: ErrRequiredFieldMissing,
 		},
+		{
+			name: "EqualsField with multi-value fields - any value matches (Elm behavior)",
+			formFields: `
+			[
+				{
+					"name": "skills",
+					"type": {
+						"type": "ChooseMultiple",
+						"choices": ["Go", "Elm", "JavaScript", "Python"]
+					},
+					"label": "Your Skills",
+					"presence": "Required"
+				},
+				{
+					"name": "preferred_skills",
+					"type": {
+						"type": "ChooseMultiple",
+						"choices": ["Go", "Elm", "JavaScript", "Python"]
+					},
+					"label": "Preferred Skills",
+					"presence": "Required"
+				},
+				{
+					"type": {
+						"type": "ShortText",
+						"inputType": "text",
+						"attributes": {
+							"type": "text",
+							"class": "size-0-invisible",
+							"value": "form-invalid",
+							"pattern": "form-ok"
+						}
+					},
+					"label": "Skills Match Indicator",
+					"presence": "Required",
+					"visibilityRule": [
+						{
+							"type": "HideWhen",
+							"conditions": [
+								{
+									"type": "Field",
+									"fieldName": "skills",
+									"comparison": {
+										"type": "EqualsField",
+										"value": "preferred_skills"
+									}
+								}
+							]
+						}
+					]
+				}
+			]`,
+			values: url.Values{
+				"skills":           []string{"Go", "Elm"},
+				"preferred_skills": []string{"Python", "Elm", "JavaScript"},
+			},
+			expectedError: nil, // Should pass - "Elm" is in both lists, so condition is met, field is hidden
+		},
+		{
+			name: "EqualsField with multi-value fields - no overlap",
+			formFields: `
+			[
+				{
+					"name": "skills",
+					"type": {
+						"type": "ChooseMultiple",
+						"choices": ["Go", "Elm", "JavaScript", "Python"]
+					},
+					"label": "Your Skills",
+					"presence": "Required"
+				},
+				{
+					"name": "preferred_skills",
+					"type": {
+						"type": "ChooseMultiple",
+						"choices": ["Go", "Elm", "JavaScript", "Python"]
+					},
+					"label": "Preferred Skills",
+					"presence": "Required"
+				},
+				{
+					"type": {
+						"type": "ShortText",
+						"inputType": "text",
+						"attributes": {
+							"type": "text",
+							"class": "size-0-invisible",
+							"value": "form-invalid",
+							"pattern": "form-ok"
+						}
+					},
+					"label": "Skills Match Indicator",
+					"presence": "Required",
+					"visibilityRule": [
+						{
+							"type": "HideWhen",
+							"conditions": [
+								{
+									"type": "Field",
+									"fieldName": "skills",
+									"comparison": {
+										"type": "EqualsField",
+										"value": "preferred_skills"
+									}
+								}
+							]
+						}
+					]
+				}
+			]`,
+			values: url.Values{
+				"skills":           []string{"Go", "Elm"},
+				"preferred_skills": []string{"Python", "JavaScript"},
+			},
+			expectedError: ErrRequiredFieldMissing, // Should fail - no overlap, so field is visible but missing value
+		},
 	}
 
 	for _, tt := range scenarios {

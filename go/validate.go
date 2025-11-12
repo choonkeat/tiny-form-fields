@@ -602,8 +602,21 @@ func isVisibilityRuleSatisfied(rule VisibilityRule, values url.Values) bool {
 			conditionMet = strings.HasSuffix(fieldValue, condition.Comparison.Value)
 		case "EqualsField":
 			// the value stored in Comparison.Value is the name of another field
-			comparisonValue := values.Get(condition.Comparison.Value)
-			conditionMet = fieldValue == comparisonValue
+			// Check if ANY value from fieldName matches ANY value from the other field
+			fieldValues := values[condition.FieldName]
+			otherFieldValues := values[condition.Comparison.Value]
+			conditionMet = false
+			for _, fv := range fieldValues {
+				for _, ofv := range otherFieldValues {
+					if fv == ofv {
+						conditionMet = true
+						break
+					}
+				}
+				if conditionMet {
+					break
+				}
+			}
 		case "GreaterThan":
 			// Try to parse comparison value as float64
 			comparisonValue, comparisonErr := strconv.ParseFloat(condition.Comparison.Value, 64)
