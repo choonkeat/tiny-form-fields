@@ -1,47 +1,48 @@
 name: Tests
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
 jobs:
-  test:
-    name: Run Playwright Tests
-    timeout-minutes: 20
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: lts/*
-    - name: Install dependencies
-      run: npm ci
-    - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
-    - name: Run test-json-compatibility
-      run: make test-json-compatibility
-    - name: Run Playwright tests
-      run: env HTTPBIN_URL="http://localhost:9000/post" make test-playwright-ci
-    - uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: playwright-report
-        path: playwright-report/
-        retention-days: 30
+    test:
+        name: Run Playwright Tests
+        timeout-minutes: 20
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: lts/*
+            - name: Install dependencies
+              run: npm ci
+            - name: Install Playwright Browsers
+              run: npx playwright install --with-deps
+            - name: Run test-json-compatibility
+              run: make test-json-compatibility
+            - name: Run Playwright tests
+              run: make test-playwright-ci HTTPBIN_URL="http://localhost:9000/post" PLAYWRIGHT_ARGS=""
+            - uses: actions/upload-artifact@v4
+              if: failure()
+              with:
+                  name: playwright-report
+                  path: playwright-report/
+                  retention-days: 30
+                  if-no-files-found: ignore
 
-  go-test:
-    name: Run Go Tests
-    timeout-minutes: 20
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          sparse-checkout: go
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: "1.21.1"
-          cache: false  # No external dependencies, no go.sum to cache
-      - name: Run tests
-        working-directory: go
-        run: make test
+    go-test:
+        name: Run Go Tests
+        timeout-minutes: 20
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  sparse-checkout: go
+            - name: Set up Go
+              uses: actions/setup-go@v4
+              with:
+                  go-version: '1.21.1'
+                  cache: false # No external dependencies, no go.sum to cache
+            - name: Run tests
+              working-directory: go
+              run: make test

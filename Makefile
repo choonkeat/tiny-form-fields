@@ -50,14 +50,15 @@ TEST_MOCK_EXIT=0
 test-mock:
 	exit $(TEST_MOCK_EXIT)
 
-# Usage: make test-playwright [PLAYWRIGHT_FILE=e2e/mytest.spec.ts]
+# Usage: make test-playwright [PLAYWRIGHT_FILE=e2e/mytest.spec.ts] [PLAYWRIGHT_ARGS=--reporter=line]
 # If PLAYWRIGHT_FILE is specified, only that file will be tested
 # Otherwise, all tests will be run
+PLAYWRIGHT_ARGS ?= --reporter=line
 test-playwright:
 	@if [ -z "$(PLAYWRIGHT_FILE)" ]; then \
-		npx playwright test --reporter=line; \
+		npx playwright test $(PLAYWRIGHT_ARGS); \
 	else \
-		npx playwright test "$(PLAYWRIGHT_FILE)" --reporter=line; \
+		npx playwright test "$(PLAYWRIGHT_FILE)" $(PLAYWRIGHT_ARGS); \
 	fi
 	echo playwright pass
 
