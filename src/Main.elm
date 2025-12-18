@@ -3526,7 +3526,7 @@ viewFormFieldOptionsBuilder shortTextTypeList index formFields formField =
                             [ type_ "number"
                             , class "tff-text-field"
                             , value (minRequired |> Maybe.map String.fromInt |> Maybe.withDefault "")
-                            , Attr.min "0"
+                            , Attr.min (if formField.presence == System then "1" else "0")
 
                             -- Maximum value constraint: Either the maxAllowed value (if present) or the number of choices
                             , maxAllowed
