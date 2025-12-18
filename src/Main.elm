@@ -1651,7 +1651,8 @@ viewMain model =
         )
 
 
-{-| Checks if a ChooseMultiple field has min/max constraints
+{-| Checks if a ChooseMultiple field has min/max constraints OR needs validation tracking
+(e.g., System presence implies minimum selection requirement)
 -}
 isChooseManyUsingMinMax : FormField -> Bool
 isChooseManyUsingMinMax formField =
@@ -1663,7 +1664,10 @@ isChooseManyUsingMinMax formField =
             False
 
         ChooseMultiple { minRequired, maxAllowed } ->
-            minRequired /= Nothing || maxAllowed /= Nothing
+            -- Need event handlers if:
+            -- 1. Has explicit min/max constraints, OR
+            -- 2. System presence (implies min=1 requirement)
+            minRequired /= Nothing || maxAllowed /= Nothing || formField.presence == System
 
         ChooseOne _ ->
             False
@@ -2286,13 +2290,27 @@ viewFormFieldOptionsPreview config fieldID formField =
 
                 -- Add validation element for CollectData mode (just the hidden input for validation)
                 validationElement =
+                    let
+                        -- System presence implies minRequired = 1 if not explicitly set
+                        effectiveMin =
+                            case ( formField.presence, minRequired ) of
+                                ( System, Nothing ) ->
+                                    Just 1
+
+                                _ ->
+                                    minRequired
+
+                        -- Need validation if we have constraints
+                        needsValidation =
+                            effectiveMin /= Nothing || maxAllowed /= Nothing
+                    in
                     -- Only apply validation in CollectData mode, not in Editor mode
-                    if not disabledMode && (minRequired /= Nothing || maxAllowed /= Nothing) then
+                    if not disabledMode && needsValidation then
                         [ input
                             [ type_ "number"
                             , required True
                             , attribute "value" (String.fromInt selectedCount) -- raw value for browser only
-                            , attribute "min" (Maybe.map String.fromInt minRequired |> Maybe.withDefault "")
+                            , attribute "min" (Maybe.map String.fromInt effectiveMin |> Maybe.withDefault "")
                             , attribute "max" (Maybe.map String.fromInt maxAllowed |> Maybe.withDefault "")
                             , attribute "class" "tff-visually-hidden"
                             ]
@@ -3523,17 +3541,30 @@ viewFormFieldOptionsBuilder shortTextTypeList index formFields formField =
                 ++ [ div [ class "tff-field-group" ]
                         [ label [ class "tff-field-label" ] [ text "Minimum required" ]
                         , input
-                            [ type_ "number"
-                            , class "tff-text-field"
-                            , value (minRequired |> Maybe.map String.fromInt |> Maybe.withDefault "")
-                            , Attr.min "0"
+                            ([ type_ "number"
+                             , class "tff-text-field"
+                             , value (minRequired |> Maybe.map String.fromInt |> Maybe.withDefault "")
+                             , Attr.min
+                                (if formField.presence == System then
+                                    "1"
 
-                            -- Maximum value constraint: Either the maxAllowed value (if present) or the number of choices
-                            , maxAllowed
+                                 else
+                                    "0"
+                                )
+
+                             -- Maximum value constraint: Either the maxAllowed value (if present) or the number of choices
+                             , maxAllowed
                                 |> Maybe.map (\max -> Attr.max (String.fromInt max))
                                 |> Maybe.withDefault (Attr.max (String.fromInt (List.length choices)))
-                            , onInput (\val -> OnFormField (OnCheckboxMinRequiredInput val) index "")
-                            ]
+                             , onInput (\val -> OnFormField (OnCheckboxMinRequiredInput val) index "")
+                             ]
+                                ++ (if formField.presence == System then
+                                        [ required True ]
+
+                                    else
+                                        []
+                                   )
+                            )
                             []
                         ]
                    , div [ class "tff-field-group" ]
