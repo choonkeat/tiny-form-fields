@@ -63,20 +63,35 @@ Add Layer 2 defense: Make frontend validation enforce System presence = required
 ## Implementation Summary
 
 ### Changes Made
-1. **File**: `src/Main.elm` (lines 2288-2317)
-2. **Logic**: Added `effectiveMin` calculation in ChooseMultiple validation element
-3. **Behavior**: When `presence == System` and `minRequired == Nothing`, treats as `minRequired == Just 1`
+
+#### 1. Validation Element Generation (lines 2288-2317)
+- Added `effectiveMin` calculation in ChooseMultiple validation element
+- When `presence == System` and `minRequired == Nothing`, treats as `minRequired == Just 1`
+- Creates hidden `<input type="number" min="1" required>` for validation
+
+#### 2. Event Handler Attachment (lines 1654-1670)
+- Modified `isChooseManyUsingMinMax` to also check for System presence
+- Ensures event handlers are attached when `presence == System`
+- Allows `trackedFormValues` to be updated when checkboxes are clicked
+- Validation element's `value` attribute reflects actual selection count
+
+#### 3. E2E Tests (e2e/system-choosemultiple-validation.spec.ts)
+- Test 1: Verifies System + ChooseMultiple creates validation with min="1"
+- Test 2: Documents behavior when minRequired is explicitly set
+- Tests pass in Chrome, Firefox, and WebKit
 
 ### Commits
 - `24261ff` - Format code after PR #54
 - `41c1173` - Add WIP E2E test
-- `4c46d12` - Implement the fix
+- `4c46d12` - Implement the validation element fix
+- `1a54817` - Documentation update
+- `2427a54` - **Complete fix**: Event handlers + working E2E tests
 
 ### Test Results
 - ✅ Elm tests: 89/89 passed
 - ✅ Go tests: passed
 - ✅ JSON compatibility: 21/21 passed
-- ⚠️ E2E test: needs refinement (can verify manually)
+- ✅ E2E tests: 6/6 passed (Chrome, Firefox, WebKit)
 
 ### Impact
 - **Fixed**: System + ChooseMultiple fields now enforce at least 1 selection
