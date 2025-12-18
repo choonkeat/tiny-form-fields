@@ -1651,7 +1651,8 @@ viewMain model =
         )
 
 
-{-| Checks if a ChooseMultiple field has min/max constraints
+{-| Checks if a ChooseMultiple field has min/max constraints OR needs validation tracking
+(e.g., System presence implies minimum selection requirement)
 -}
 isChooseManyUsingMinMax : FormField -> Bool
 isChooseManyUsingMinMax formField =
@@ -1663,7 +1664,10 @@ isChooseManyUsingMinMax formField =
             False
 
         ChooseMultiple { minRequired, maxAllowed } ->
-            minRequired /= Nothing || maxAllowed /= Nothing
+            -- Need event handlers if:
+            -- 1. Has explicit min/max constraints, OR
+            -- 2. System presence (implies min=1 requirement)
+            minRequired /= Nothing || maxAllowed /= Nothing || formField.presence == System
 
         ChooseOne _ ->
             False
