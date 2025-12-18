@@ -80,6 +80,8 @@ generate-elm-test-json:
 	@cd go && go test -run TestGenerateGoFixtures > /dev/null 2>&1
 	@echo "Generating cross-validation test data..."
 	node scripts/generate-cross-validation-tests.js
+	@echo "Formatting generated Elm test data..."
+	npx elm-format tests/GoElmCrossValidationTestData.elm --yes
 
 generate-go-test-json: go/testdata/elm_json_fixtures.json
 
