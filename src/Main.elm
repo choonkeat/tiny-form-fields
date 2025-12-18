@@ -3523,7 +3523,7 @@ viewFormFieldOptionsBuilder shortTextTypeList index formFields formField =
                 ++ [ div [ class "tff-field-group" ]
                         [ label [ class "tff-field-label" ] [ text "Minimum required" ]
                         , input
-                            [ type_ "number"
+                            ([ type_ "number"
                             , class "tff-text-field"
                             , value (minRequired |> Maybe.map String.fromInt |> Maybe.withDefault "")
                             , Attr.min (if formField.presence == System then "1" else "0")
@@ -3534,6 +3534,13 @@ viewFormFieldOptionsBuilder shortTextTypeList index formFields formField =
                                 |> Maybe.withDefault (Attr.max (String.fromInt (List.length choices)))
                             , onInput (\val -> OnFormField (OnCheckboxMinRequiredInput val) index "")
                             ]
+                                ++ (if formField.presence == System then
+                                        [ required True ]
+
+                                    else
+                                        []
+                                   )
+                            )
                             []
                         ]
                    , div [ class "tff-field-group" ]
