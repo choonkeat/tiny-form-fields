@@ -2286,13 +2286,27 @@ viewFormFieldOptionsPreview config fieldID formField =
 
                 -- Add validation element for CollectData mode (just the hidden input for validation)
                 validationElement =
+                    let
+                        -- System presence implies minRequired = 1 if not explicitly set
+                        effectiveMin =
+                            case ( formField.presence, minRequired ) of
+                                ( System, Nothing ) ->
+                                    Just 1
+
+                                _ ->
+                                    minRequired
+
+                        -- Need validation if we have constraints
+                        needsValidation =
+                            effectiveMin /= Nothing || maxAllowed /= Nothing
+                    in
                     -- Only apply validation in CollectData mode, not in Editor mode
-                    if not disabledMode && (minRequired /= Nothing || maxAllowed /= Nothing) then
+                    if not disabledMode && needsValidation then
                         [ input
                             [ type_ "number"
                             , required True
                             , attribute "value" (String.fromInt selectedCount) -- raw value for browser only
-                            , attribute "min" (Maybe.map String.fromInt minRequired |> Maybe.withDefault "")
+                            , attribute "min" (Maybe.map String.fromInt effectiveMin |> Maybe.withDefault "")
                             , attribute "max" (Maybe.map String.fromInt maxAllowed |> Maybe.withDefault "")
                             , attribute "class" "tff-visually-hidden"
                             ]
