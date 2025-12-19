@@ -160,7 +160,13 @@ make -n publish-npm VERSION=999.0.0-test
 ---
 
 ### Step 5: Test full workflow end-to-end
-**Status**: Not started
+**Status**: ✅ Complete
+
+**Tests performed**:
+1. ✅ `make show-versions` - Displays all three version sources correctly
+2. ✅ `make publish-prepare` without VERSION - Shows helpful error with version info
+3. ✅ `make -n publish-npm VERSION=1.2.0` - Dry-run confirms correct registry and flags
+4. ✅ All validations work (tested earlier: branch check, dirty working dir check)
 
 **Goal**: Verify the complete publish workflow (without actually publishing)
 
@@ -217,13 +223,36 @@ git branch -D test-publish-workflow
 
 ## Completion Checklist
 
-- [ ] Step 1: show-versions target
-- [ ] Step 2: publish-prepare target
-- [ ] Step 3: publish-npm target
-- [ ] Step 4: Documentation
-- [ ] Step 5: End-to-end testing
-- [ ] Git commit with all changes
-- [ ] Update this file with final status
+- [x] Step 1: show-versions target
+- [x] Step 2: publish-prepare target
+- [x] Step 3: publish-npm target
+- [x] Step 4: Documentation
+- [x] Step 5: End-to-end testing
+- [x] Git commit with all changes
+- [x] Update this file with final status
+
+## Final Status
+
+**Status**: ✅ COMPLETE
+
+All steps completed successfully. The `make publish-npm` target is ready to use.
+
+**Commit**: c833c76 - feat: add make publish-npm target for npm package releases
+
+**Testing Summary**:
+- All validations work correctly
+- Error messages show helpful version information
+- Correct registry and access flags are used
+- Dependency chain (publish-npm → publish-prepare) works correctly
+
+**Usage**:
+```bash
+# Check current versions
+make show-versions
+
+# Publish new version
+make publish-npm VERSION=1.2.0
+```
 
 ## Notes
 
