@@ -199,7 +199,10 @@ publish-prepare:
 	make clean
 	make build
 	@echo "==> Bumping version to $(VERSION)..."
-	npm version $(VERSION) -m "chore: release v$(VERSION)"
+	npm version $(VERSION) --no-git-tag-version
+	git add package.json package-lock.json dist/
+	git commit -m "chore: release v$(VERSION)"
+	git tag -a "v$(VERSION)" -m "Release v$(VERSION)"
 	@echo "✅ Ready to publish v$(VERSION)"
 
 # Publish package to npm and push version commit + tag to git
