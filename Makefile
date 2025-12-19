@@ -167,7 +167,7 @@ show-versions:
 # Validates:
 #   - VERSION parameter is provided
 #   - Currently on main branch
-#   - Working directory is clean
+#   - Working directory is clean (warning only, prompts to continue)
 #   - Logged into npm
 # Then runs: make clean && make build && npm version
 # Usage: make publish-prepare VERSION=1.2.0
@@ -186,9 +186,9 @@ publish-prepare:
 		exit 1; \
 	fi
 	@if [ -n "$$(git status --porcelain)" ]; then \
-		echo "ERROR: Working directory is not clean. Commit or stash changes first."; \
+		echo "WARNING: Working directory is not clean."; \
 		git status --short; \
-		exit 1; \
+		read -p "Press Enter to continue or Ctrl+C to cancel... " confirm; \
 	fi
 	@if ! npm whoami --registry=https://registry.npmjs.org/ > /dev/null 2>&1; then \
 		echo "ERROR: Not logged into npm."; \
