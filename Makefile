@@ -152,3 +152,67 @@ format:
 
 clean:
 	rm -f go/testdata/elm_json_fixtures.json scripts/generate-go-test-json-elm.js dist/*
+
+# Display current version information from package.json, git tags, and npm registry
+# This helps determine what version to publish next
+show-versions:
+	@echo "Current version information:"
+	@echo ""
+	@echo "  package.json: $$(grep '"version"' package.json | head -1 | sed 's/.*: "\(.*\)".*/\1/')"
+	@echo "  Latest git tag: $$(git describe --tags --abbrev=0 2>/dev/null || echo '(no tags)')"
+	@echo "  npm registry: $$(npm view tiny-form-fields version --registry=https://registry.npmjs.org/ 2>/dev/null || echo '(not published)')"
+	@echo ""
+
+# Prepare for npm publish: validate environment, clean, build, bump version
+# Validates:
+#   - VERSION parameter is provided
+#   - Currently on main branch
+#   - Working directory is clean
+#   - Logged into npm
+# Then runs: make clean && make build && npm version
+# Usage: make publish-prepare VERSION=1.2.0
+publish-prepare:
+	@echo "==> Validating environment..."
+	@if [ -z "$(VERSION)" ]; then \
+		echo "ERROR: VERSION is required."; \
+		echo ""; \
+		make show-versions; \
+		echo "Usage: make publish-npm VERSION=x.y.z"; \
+		exit 1; \
+	fi
+	@if [ "$$(git branch --show-current)" != "main" ]; then \
+		echo "ERROR: Must be on main branch to publish"; \
+		echo "Current branch: $$(git branch --show-current)"; \
+		exit 1; \
+	fi
+	@if [ -n "$$(git status --porcelain)" ]; then \
+		echo "ERROR: Working directory is not clean. Commit or stash changes first."; \
+		git status --short; \
+		exit 1; \
+	fi
+	@if ! npm whoami --registry=https://registry.npmjs.org/ > /dev/null 2>&1; then \
+		echo "ERROR: Not logged into npm."; \
+		echo "Run: npm login --registry=https://registry.npmjs.org/"; \
+		exit 1; \
+	fi
+	@echo "==> Cleaning and building..."
+	make clean
+	make build
+	@echo "==> Bumping version to $(VERSION)..."
+	npm version $(VERSION) -m "chore: release v$(VERSION)"
+	@echo "✅ Ready to publish v$(VERSION)"
+
+# Publish package to npm and push version commit + tag to git
+# Depends on publish-prepare (runs validation, clean, build, version bump first)
+# Always publishes to public npm registry (not corporate proxies)
+# Example workflow:
+#   make show-versions              # Check current versions
+#   make publish-npm VERSION=1.2.0  # Full publish workflow
+# Usage: make publish-npm VERSION=1.2.0
+publish-npm: publish-prepare
+	@echo "==> Publishing to npm..."
+	npm publish --registry=https://registry.npmjs.org/ --access=public
+	@echo "==> Pushing to git..."
+	git push origin main --tags
+	@echo "✅ Published v$(VERSION) to npm and pushed to git"
+	@echo "Verify at: https://www.npmjs.com/package/tiny-form-fields"
