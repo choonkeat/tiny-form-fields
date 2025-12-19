@@ -1,6 +1,6 @@
 {
   "name": "tiny-form-fields",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "A lightweight, customizable form builder and renderer written in Elm with web component support",
   "main": "dist/tiny-form-fields.esm.js",
   "module": "dist/tiny-form-fields.esm.js",
