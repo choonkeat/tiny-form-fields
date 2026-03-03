@@ -223,56 +223,30 @@
 					ChooseOne: 'No',
 					ChooseMany: ['Durian', 'Banana'],
 				}, // pre-fill form fields
-				shortTextTypeList: [
+				inputFieldGroups: [
 					{
-						// optional: you can add custom fields using webcomponents
-						'Custom Element': {
-							inputTag: 'validated-input',
-							attributes: {
-								type: 'url',
-							},
-						},
+						heading: 'Basic',
+						fields: [
+							{ type: 'Dropdown', choices: ['Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Indigo', 'Violet'] },
+							{ type: 'ChooseOne', choices: ['Yes', 'No'] },
+							{ type: 'ChooseMultiple', choices: ['Apple', 'Banana', 'Cantaloupe', 'Durian'] },
+							{ type: 'LongText', maxLength: 160 },
+							{ type: 'ShortText', inputType: 'Single-line free text', attributes: { type: 'text' } },
+						],
 					},
 					{
-						Email: {
-							type: 'email',
-						},
-					},
-					{
-						Emails: {
-							type: 'email',
-							multiple: 'true',
-						},
-					},
-					{
-						Telephone: {
-							type: 'tel',
-						},
-					},
-					{
-						URL: {
-							type: 'url',
-						},
-					},
-					{
-						Color: {
-							type: 'color',
-						},
-					},
-					{
-						Date: {
-							type: 'date',
-						},
-					},
-					{
-						Time: {
-							type: 'time',
-						},
-					},
-					{
-						'Date & Time': {
-							type: 'datetime-local',
-						},
+						heading: 'Advanced',
+						fields: [
+							{ type: 'ShortText', inputType: 'Custom Element', inputTag: 'validated-input', attributes: { type: 'url' } },
+							{ type: 'ShortText', inputType: 'Email', attributes: { type: 'email' } },
+							{ type: 'ShortText', inputType: 'Emails', attributes: { type: 'email', multiple: 'true' } },
+							{ type: 'ShortText', inputType: 'Telephone', attributes: { type: 'tel' } },
+							{ type: 'ShortText', inputType: 'URL', attributes: { type: 'url' } },
+							{ type: 'ShortText', inputType: 'Color', attributes: { type: 'color' } },
+							{ type: 'ShortText', inputType: 'Date', attributes: { type: 'date' } },
+							{ type: 'ShortText', inputType: 'Time', attributes: { type: 'time' } },
+							{ type: 'ShortText', inputType: 'Date & Time', attributes: { type: 'datetime-local' } },
+						],
 					},
 				],
 			};

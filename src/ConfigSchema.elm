@@ -21,8 +21,9 @@ configSchemaBuilder =
             , ( "formFields", formFieldsSchemaBuilder )
             , ( "formValues", formValuesSchemaBuilder )
             , ( "shortTextTypeList", shortTextTypeListSchemaBuilder )
+            , ( "inputFieldGroups", inputFieldGroupsSchemaBuilder )
             ]
-        |> withRequired [ "viewMode", "formFields", "formValues", "shortTextTypeList" ]
+        |> withRequired [ "viewMode", "formFields", "formValues" ]
 
 
 viewModeSchemaBuilder : SchemaBuilder
@@ -341,6 +342,24 @@ shortTextTypeListSchemaBuilder =
     buildSchema
         |> withType "array"
         |> withItem customElementSchemaBuilder
+
+
+inputFieldGroupSchemaBuilder : SchemaBuilder
+inputFieldGroupSchemaBuilder =
+    buildSchema
+        |> withType "object"
+        |> withProperties
+            [ ( "heading", buildSchema |> withType "string" )
+            , ( "fields", buildSchema |> withType "array" |> withItem inputFieldSchemaBuilder )
+            ]
+        |> withRequired [ "heading", "fields" ]
+
+
+inputFieldGroupsSchemaBuilder : SchemaBuilder
+inputFieldGroupsSchemaBuilder =
+    buildSchema
+        |> withType "array"
+        |> withItem inputFieldGroupSchemaBuilder
 
 
 configSchemaJson : Encode.Value

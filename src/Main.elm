@@ -13,16 +13,22 @@ port module Main exposing
     , RawCustomElement
     , ViewMode(..)
     , VisibilityRule(..)
+    , InputFieldGroup
+    , allCustomElementsFromGroups
     , allInputField
     , decodeChoice
+    , decodeConfigInputFieldGroups
     , decodeCustomElement
     , decodeFormField
     , decodeFormFields
+    , decodeInputFieldGroup
+    , decodeInputFieldGroups
     , decodeShortTextTypeList
     , dragOverDecoder
     , encodeChoice
     , encodeFormFields
     , encodeInputField
+    , encodeInputFieldGroup
     , encodePairsFromCustomElement
     , evaluateCondition
     , fieldsWithPlaceholder
@@ -82,9 +88,7 @@ type alias Config =
     { viewMode : ViewMode
     , formFields : Array FormField
     , formValues : Json.Encode.Value
-
-    -- List because order matters
-    , shortTextTypeList : List CustomElement
+    , inputFieldGroups : List InputFieldGroup
     }
 
 
@@ -94,12 +98,11 @@ type alias Model =
     , formFields : Array FormField
     , needsFormLogic : Bool
     , trackedFormValues : Dict String (List String)
-
-    -- List because order matters
-    , shortTextTypeList : List CustomElement
+    , inputFieldGroups : List InputFieldGroup
 
     -- Dict to lookup by `inputType`
     , shortTextTypeDict : Dict String CustomElement
+    , activeFieldGroupIndex : Int
     , selectedFieldIndex : Maybe Int
     , dragged : Maybe Dragged
     , nextQuestionNumber : Int
@@ -346,6 +349,27 @@ allInputField =
     ]
 
 
+type alias InputFieldGroup =
+    { heading : String
+    , fields : List InputField
+    }
+
+
+allCustomElementsFromGroups : List InputFieldGroup -> List CustomElement
+allCustomElementsFromGroups groups =
+    groups
+        |> List.concatMap .fields
+        |> List.filterMap
+            (\inputField ->
+                case inputField of
+                    ShortText customElement ->
+                        Just customElement
+
+                    _ ->
+                        Nothing
+            )
+
+
 stringFromInputField : InputField -> String
 stringFromInputField inputField =
     case inputField of
@@ -420,6 +444,7 @@ type Msg
     | Drop (Maybe Int)
     | DoSleepDo Float (List Msg)
     | OnFormValuesUpdated String String
+    | SelectFieldGroup Int
 
 
 type alias Droppable =
@@ -563,27 +588,11 @@ isFieldUsedInChoiceFilter fieldName maybeFilter =
 
 init : Flags -> ( Model, Cmd Msg )
 init flags =
-    let
-        defaultShortTextTypeList : List CustomElement
-        defaultShortTextTypeList =
-            [ fromRawCustomElement
-                { inputType = "Single-line free text"
-                , inputTag = defaultInputTag
-                , attributes = Dict.fromList [ ( "type", "text" ) ]
-                }
-            ]
-
-        defaultShortTextTypeListWithout : List CustomElement -> List CustomElement
-        defaultShortTextTypeListWithout shortTextTypeList =
-            List.filter (\a -> not (List.member a shortTextTypeList))
-                defaultShortTextTypeList
-    in
     case Json.Decode.decodeValue decodeConfig flags of
         Ok config ->
             let
-                effectiveShortTextTypeList =
-                    defaultShortTextTypeListWithout config.shortTextTypeList
-                        ++ config.shortTextTypeList
+                allCustomElements =
+                    allCustomElementsFromGroups config.inputFieldGroups
 
                 initialTrackedFormValues =
                     Array.toList config.formFields
@@ -620,11 +629,12 @@ init flags =
                         |> Array.isEmpty
                         |> not
               , trackedFormValues = initialTrackedFormValues
-              , shortTextTypeList = effectiveShortTextTypeList
+              , inputFieldGroups = config.inputFieldGroups
               , shortTextTypeDict =
-                    effectiveShortTextTypeList
+                    allCustomElements
                         |> List.map (\customElement -> ( customElement.inputType, customElement ))
                         |> Dict.fromList
+              , activeFieldGroupIndex = 0
               , selectedFieldIndex = Nothing
               , dragged = Nothing
               , nextQuestionNumber = Array.length config.formFields + 1
@@ -640,8 +650,9 @@ init flags =
               , formFields = Array.empty
               , needsFormLogic = False
               , trackedFormValues = Dict.empty
-              , shortTextTypeList = []
+              , inputFieldGroups = []
               , shortTextTypeDict = Dict.empty
+              , activeFieldGroupIndex = 0
               , selectedFieldIndex = Nothing
               , dragged = Nothing
               , nextQuestionNumber = 1
@@ -847,6 +858,9 @@ update msg model =
                     |> Task.perform (always (DoSleepDo duration nextMsgs))
                 ]
             )
+
+        SelectFieldGroup index ->
+            ( { model | activeFieldGroupIndex = index }, Cmd.none )
 
         OnFormValuesUpdated fieldName value ->
             let
@@ -2611,10 +2625,12 @@ fieldsWithPlaceholder fields dragged =
 viewFormBuilder : Maybe ( Int, Animate ) -> Model -> List (Html Msg)
 viewFormBuilder maybeAnimate model =
     let
-        extraOptions =
-            List.map
-                (\customElement -> ShortText customElement)
-                model.shortTextTypeList
+        activeFields =
+            model.inputFieldGroups
+                |> List.drop model.activeFieldGroupIndex
+                |> List.head
+                |> Maybe.map .fields
+                |> Maybe.withDefault []
 
         maybeFieldsList =
             fieldsWithPlaceholder
@@ -2629,9 +2645,15 @@ viewFormBuilder maybeAnimate model =
             [ class "tff-left-panel"
             , classList [ ( "tff-panel-hidden", model.selectedFieldIndex /= Nothing ) ]
             ]
-            [ h2 [ class "tff-panel-header" ] [ text "Add Form Field" ]
-            , viewAddQuestionsList model.nextQuestionNumber (allInputField ++ extraOptions)
-            ]
+            ([ h2 [ class "tff-panel-header" ] [ text "Add Form Field" ] ]
+                ++ (if List.length model.inputFieldGroups > 1 then
+                        [ viewFieldGroupTabs model.activeFieldGroupIndex model.inputFieldGroups ]
+
+                    else
+                        []
+                   )
+                ++ [ viewAddQuestionsList model.nextQuestionNumber activeFields ]
+            )
         , div
             [ class "tff-center-panel"
             , classList [ ( "tff-panel-hidden", model.selectedFieldIndex /= Nothing ) ]
@@ -2648,6 +2670,23 @@ viewFormBuilder maybeAnimate model =
         , viewRightPanel model
         ]
     ]
+
+
+viewFieldGroupTabs : Int -> List InputFieldGroup -> Html Msg
+viewFieldGroupTabs activeIndex groups =
+    div [ class "tff-field-group-tabs" ]
+        (List.indexedMap
+            (\index group ->
+                button
+                    [ class "tff-field-group-tab"
+                    , classList [ ( "tff-field-group-tab-active", index == activeIndex ) ]
+                    , type_ "button"
+                    , onClick (SelectFieldGroup index)
+                    ]
+                    [ text group.heading ]
+            )
+            groups
+        )
 
 
 selectArrowDown : Html msg
@@ -3146,7 +3185,7 @@ viewRightPanel modelData =
                 Just index ->
                     case Array.get index modelData.formFields of
                         Just formField ->
-                            viewFormFieldBuilder modelData.shortTextTypeList index (Array.length modelData.formFields) modelData.formFields formField
+                            viewFormFieldBuilder (allCustomElementsFromGroups modelData.inputFieldGroups) index (Array.length modelData.formFields) modelData.formFields formField
 
                         Nothing ->
                             text "Select a field to edit its settings"
@@ -3734,18 +3773,38 @@ decodeConfig =
         |> andMap (Json.Decode.Extra.optionalNullableField "viewMode" decodeViewMode |> Json.Decode.map (Maybe.withDefault (Editor { maybeAnimate = Nothing })))
         |> andMap (Json.Decode.Extra.optionalNullableField "formFields" decodeFormFields |> Json.Decode.map (Maybe.withDefault Array.empty))
         |> andMap (Json.Decode.Extra.optionalNullableField "formValues" Json.Decode.value |> Json.Decode.map (Maybe.withDefault Json.Encode.null))
-        |> andMap
-            (Json.Decode.Extra.optionalNullableField "shortTextTypeList" decodeShortTextTypeList
-                |> Json.Decode.map
-                    (Maybe.withDefault
-                        [ fromRawCustomElement
-                            { inputType = "Single-line free text"
-                            , inputTag = defaultInputTag
-                            , attributes = Dict.fromList [ ( "type", "text" ) ]
-                            }
-                        ]
-                    )
-            )
+        |> andMap decodeConfigInputFieldGroups
+
+
+decodeConfigInputFieldGroups : Json.Decode.Decoder (List InputFieldGroup)
+decodeConfigInputFieldGroups =
+    let
+        defaultShortTextTypeList =
+            [ fromRawCustomElement
+                { inputType = "Single-line free text"
+                , inputTag = defaultInputTag
+                , attributes = Dict.fromList [ ( "type", "text" ) ]
+                }
+            ]
+
+        fromShortTextTypeList : List CustomElement -> List InputFieldGroup
+        fromShortTextTypeList shortTextTypes =
+            let
+                effectiveList =
+                    List.filter (\a -> not (List.member a shortTextTypes)) defaultShortTextTypeList
+                        ++ shortTextTypes
+            in
+            [ { heading = ""
+              , fields = allInputField ++ List.map ShortText effectiveList
+              }
+            ]
+    in
+    Json.Decode.oneOf
+        [ Json.Decode.field "inputFieldGroups" decodeInputFieldGroups
+        , Json.Decode.Extra.optionalNullableField "shortTextTypeList" decodeShortTextTypeList
+            |> Json.Decode.map (Maybe.withDefault defaultShortTextTypeList)
+            |> Json.Decode.map fromShortTextTypeList
+        ]
 
 
 maybeDecode : String -> Json.Decode.Decoder b -> Json.Encode.Value -> Maybe b
@@ -4250,6 +4309,26 @@ decodeShortTextTypeList =
     in
     Json.Decode.list (Json.Decode.dict (Json.Decode.oneOf [ decodeInputTagAttributes, decodeAttributes ]))
         |> Json.Decode.map (List.concatMap customElementsFrom)
+
+
+decodeInputFieldGroup : Json.Decode.Decoder InputFieldGroup
+decodeInputFieldGroup =
+    Json.Decode.succeed InputFieldGroup
+        |> andMap (Json.Decode.field "heading" Json.Decode.string)
+        |> andMap (Json.Decode.field "fields" (Json.Decode.list decodeInputField))
+
+
+decodeInputFieldGroups : Json.Decode.Decoder (List InputFieldGroup)
+decodeInputFieldGroups =
+    Json.Decode.list decodeInputFieldGroup
+
+
+encodeInputFieldGroup : InputFieldGroup -> Json.Encode.Value
+encodeInputFieldGroup group =
+    Json.Encode.object
+        [ ( "heading", Json.Encode.string group.heading )
+        , ( "fields", Json.Encode.list encodeInputField group.fields )
+        ]
 
 
 type alias RawCustomElement =
