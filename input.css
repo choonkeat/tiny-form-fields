@@ -834,6 +834,35 @@
 	@apply ml-2;
 }
 
+/* Field group tab bar styles */
+.tff-field-group-tabs {
+	@apply flex;
+	@apply flex-row;
+	@apply border-b;
+	@apply border-gray-200;
+	@apply overflow-x-auto;
+	@apply mb-2;
+}
+
+.tff-field-group-tab {
+	@apply px-3;
+	@apply py-2;
+	@apply text-sm;
+	@apply text-gray-600;
+	@apply border-b-2;
+	@apply border-transparent;
+	@apply cursor-pointer;
+	@apply whitespace-nowrap;
+	@apply hover:text-gray-800;
+	@apply hover:border-gray-300;
+}
+
+.tff-field-group-tab-active {
+	@apply text-blue-600;
+	@apply border-blue-500;
+	@apply font-semibold;
+}
+
 .tff-field-list {
 	@apply overflow-y-auto;
 }

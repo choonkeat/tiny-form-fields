@@ -12,6 +12,7 @@ The `flags` argument passed to `Elm.Main.init` is a JSON object that configures 
     [fieldName: string]: string | string[];
   };
   shortTextTypeList?: Array<CustomElement>;
+  inputFieldGroups?: Array<InputFieldGroup>;
 }
 
 // Type definitions
@@ -19,6 +20,18 @@ type CustomElement = {
   inputType: string;
   inputTag: string;
   attributes: Record<string, string>;
+}
+
+type InputField =
+  | { type: "ShortText"; inputType: string; inputTag?: string; attributes?: Record<string, string> }
+  | { type: "LongText"; maxLength: number | null }
+  | { type: "Dropdown"; choices: string[]; filter?: ChoiceFilter }
+  | { type: "ChooseOne"; choices: string[]; filter?: ChoiceFilter }
+  | { type: "ChooseMultiple"; choices: string[]; minRequired?: number; maxAllowed?: number; filter?: ChoiceFilter }
+
+type InputFieldGroup = {
+  heading: string;
+  fields: Array<InputField>;
 }
 ```
 
@@ -129,6 +142,41 @@ Renders as:
   <option value="bob@example.com">bob@example.com</option>
   <option value="charlie@example.com">charlie@example.com</option>
 </datalist>
+```
+
+### inputFieldGroups
+- **Type**: Array of `InputFieldGroup`
+- **Default**: Not set (falls back to `shortTextTypeList` behavior)
+- **Description**: Organizes the "Add Form Field" panel into tabbed groups. Each group has a heading (shown as a tab label) and a list of field types. When multiple groups are provided, a tab bar appears in the left panel. When only one group is provided, no tab bar is shown.
+- **Precedence**: If both `inputFieldGroups` and `shortTextTypeList` are provided, `inputFieldGroups` takes precedence.
+
+Each `InputFieldGroup` has:
+- `heading`: Tab label displayed in the tab bar
+- `fields`: Array of `InputField` objects (same format as the `type` field in `formFields`)
+
+**Example**:
+```json
+{
+  "inputFieldGroups": [
+    {
+      "heading": "Basic",
+      "fields": [
+        { "type": "Dropdown", "choices": ["Red", "Green", "Blue"] },
+        { "type": "ChooseOne", "choices": ["Yes", "No"] },
+        { "type": "LongText", "maxLength": null },
+        { "type": "ShortText", "inputType": "Single-line free text", "attributes": { "type": "text" } }
+      ]
+    },
+    {
+      "heading": "Advanced",
+      "fields": [
+        { "type": "ShortText", "inputType": "Email", "attributes": { "type": "email" } },
+        { "type": "ShortText", "inputType": "URL", "attributes": { "type": "url" } },
+        { "type": "ChooseMultiple", "choices": ["Apple", "Banana", "Cantaloupe"] }
+      ]
+    }
+  ]
+}
 ```
 
 ## Usage Example
