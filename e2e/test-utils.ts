@@ -93,7 +93,18 @@ export async function addField(
 	edits?: FieldEdit[],
 	input?: FieldInput
 ) {
-	await page.getByRole('button', { name: fieldType, exact: true }).click();
+	// If the field type button isn't visible (e.g. it's in a different tab), click through tabs to find it
+	const fieldButton = page.getByRole('button', { name: fieldType, exact: true });
+	if (!(await fieldButton.isVisible())) {
+		const tabs = page.locator('.tff-field-group-tab');
+		const tabCount = await tabs.count();
+		for (let i = 0; i < tabCount; i++) {
+			await tabs.nth(i).click();
+			await page.waitForTimeout(200);
+			if (await fieldButton.isVisible()) break;
+		}
+	}
+	await fieldButton.click();
 	await page.waitForTimeout(600);
 	await expect(page.getByText(`${fieldType} question title`)).toHaveCount(0);
 	await page.locator('.tff-field-container .tff-drag-handle-icon').last().click();

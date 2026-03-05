@@ -74,6 +74,7 @@ const sports = [
 ];
 
 test('test', async ({ page }) => {
+	test.setTimeout(90000);
 	// Set a desktop viewport
 	await page.setViewportSize({ width: 2048, height: 800 });
 	await page.goto('');
@@ -180,9 +181,9 @@ test('test', async ({ page }) => {
 				break;
 			default:
 				await page1.getByLabel(input.label).click();
-				await page.waitForTimeout(100);
-				page1.keyboard.type(input.value);
-				await page.waitForTimeout(100);
+				await page1.waitForTimeout(100);
+				await page1.keyboard.type(input.value);
+				await page1.waitForTimeout(100);
 		}
 	}
 
