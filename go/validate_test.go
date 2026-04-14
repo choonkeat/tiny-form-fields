@@ -1969,3 +1969,112 @@ func TestCascadingVisibilityBugFix(t *testing.T) {
 		})
 	}
 }
+
+// A raw POST body can repeat the same name=value pair to inflate the
+// submitted count (e.g. "color=Red&color=Red&color=Red"). The validator
+// must count DISTINCT choices when checking MinRequired / MaxAllowed so
+// that duplicate submissions can't satisfy a "pick at least N" rule with
+// a single real selection.
+func TestChooseMultipleDedupsMinRequired(t *testing.T) {
+	formFields := `[
+		{
+			"name": "colors",
+			"presence": "Required",
+			"label": "Colors",
+			"type": {
+				"type": "ChooseMultiple",
+				"choices": ["Red", "Blue", "Green"],
+				"minRequired": 3
+			}
+		}
+	]`
+
+	cases := []struct {
+		name    string
+		values  url.Values
+		wantErr error
+	}{
+		{
+			name:    "three distinct choices pass",
+			values:  url.Values{"colors": []string{"Red", "Blue", "Green"}},
+			wantErr: nil,
+		},
+		{
+			name:    "three copies of the same choice fail (dedup enforces minRequired)",
+			values:  url.Values{"colors": []string{"Red", "Red", "Red"}},
+			wantErr: ErrInvalidFieldValue,
+		},
+		{
+			name:    "two distinct plus one duplicate still fails minRequired=3",
+			values:  url.Values{"colors": []string{"Red", "Red", "Blue"}},
+			wantErr: ErrInvalidFieldValue,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidFormValues([]byte(formFields), tc.values)
+			if tc.wantErr == nil {
+				if err != nil {
+					t.Errorf("expected nil error, got %v", err)
+				}
+				return
+			}
+			if !errors.Is(err, tc.wantErr) {
+				t.Errorf("expected error %v, got %v", tc.wantErr, err)
+			}
+		})
+	}
+}
+
+func TestChooseMultipleDedupsMaxAllowed(t *testing.T) {
+	formFields := `[
+		{
+			"name": "colors",
+			"presence": "Required",
+			"label": "Colors",
+			"type": {
+				"type": "ChooseMultiple",
+				"choices": ["Red", "Blue", "Green"],
+				"maxAllowed": 2
+			}
+		}
+	]`
+
+	cases := []struct {
+		name    string
+		values  url.Values
+		wantErr error
+	}{
+		{
+			name:    "two distinct choices pass",
+			values:  url.Values{"colors": []string{"Red", "Blue"}},
+			wantErr: nil,
+		},
+		{
+			name:    "three copies of one choice passes after dedup (one distinct)",
+			values:  url.Values{"colors": []string{"Red", "Red", "Red"}},
+			wantErr: nil,
+		},
+		{
+			name:    "three distinct choices still fail maxAllowed=2",
+			values:  url.Values{"colors": []string{"Red", "Blue", "Green"}},
+			wantErr: ErrInvalidFieldValue,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidFormValues([]byte(formFields), tc.values)
+			if tc.wantErr == nil {
+				if err != nil {
+					t.Errorf("expected nil error, got %v", err)
+				}
+				return
+			}
+			if !errors.Is(err, tc.wantErr) {
+				t.Errorf("expected error %v, got %v", tc.wantErr, err)
+			}
+		})
+	}
+}
