@@ -4066,6 +4066,56 @@ decodeVisibilityRule =
             )
 
 
+-- XSS defense. Elm's VirtualDom rewrites on*/formAction keys and blanks
+-- javascript:/data:text/html, values, but leaves the tag name and other
+-- attributes untouched. A form definition can reach both, so we normalize
+-- here: reject any inputTag that isn't the default "input" or a valid
+-- custom-element name (must contain a hyphen per the HTML spec; that alone
+-- rules out iframe/object/embed/meta/etc.), and drop attributes whose
+-- name or value can still produce script execution or boundary-loosening
+-- on the native tags we do allow.
+sanitizeInputTag : String -> String
+sanitizeInputTag tag =
+    let
+        lowered =
+            String.toLower tag
+
+        isValidCustomElementName =
+            String.contains "-" lowered
+                && String.all
+                    (\c ->
+                        Char.isAlphaNum c || c == '-' || c == '_' || c == '.'
+                    )
+                    lowered
+                && (String.left 1 lowered
+                        |> String.all Char.isLower
+                   )
+    in
+    if lowered == defaultInputTag || isValidCustomElementName then
+        lowered
+
+    else
+        defaultInputTag
+
+
+sanitizeAttributes : Dict String String -> Dict String String
+sanitizeAttributes =
+    let
+        disallowedKeys =
+            [ "srcdoc"
+            , "sandbox"
+            , "allow"
+            , "csp"
+            , "http-equiv"
+            , "background"
+            ]
+
+        keyAllowed key =
+            not (List.member (String.toLower key) disallowedKeys)
+    in
+    Dict.filter (\k _ -> keyAllowed k)
+
+
 decodeCustomElement : Json.Decode.Decoder CustomElement
 decodeCustomElement =
     Json.Decode.succeed RawCustomElement
@@ -4073,11 +4123,13 @@ decodeCustomElement =
         |> andMap
             (Json.Decode.Extra.optionalField "inputTag" Json.Decode.string
                 |> Json.Decode.map (Maybe.withDefault defaultInputTag)
+                |> Json.Decode.map sanitizeInputTag
             )
         |> andMap
             (Json.Decode.Extra.optionalField "attributes" (Json.Decode.keyValuePairs Json.Decode.string)
                 |> Json.Decode.map (Maybe.withDefault [])
                 |> Json.Decode.map Dict.fromList
+                |> Json.Decode.map sanitizeAttributes
             )
         |> Json.Decode.map fromRawCustomElement
 
@@ -4293,7 +4345,7 @@ decodeShortTextTypeList =
         decodeAttributes =
             -- backward compatible decoder for old json
             Json.Decode.dict Json.Decode.string
-                |> Json.Decode.map (\attributes -> ( defaultInputTag, attributes ))
+                |> Json.Decode.map (\attributes -> ( defaultInputTag, sanitizeAttributes attributes ))
 
         decodeInputTagAttributes : Json.Decode.Decoder ( String, Dict String String )
         decodeInputTagAttributes =
@@ -4301,10 +4353,12 @@ decodeShortTextTypeList =
                 |> andMap
                     (Json.Decode.Extra.optionalField "inputTag" Json.Decode.string
                         |> Json.Decode.map (Maybe.withDefault defaultInputTag)
+                        |> Json.Decode.map sanitizeInputTag
                     )
                 |> andMap
                     (Json.Decode.field "attributes" (Json.Decode.keyValuePairs Json.Decode.string)
                         |> Json.Decode.map Dict.fromList
+                        |> Json.Decode.map sanitizeAttributes
                     )
     in
     Json.Decode.list (Json.Decode.dict (Json.Decode.oneOf [ decodeInputTagAttributes, decodeAttributes ]))
