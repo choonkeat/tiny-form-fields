@@ -8,12 +8,12 @@ port module Main exposing
     , FormField
     , FormFieldMsg(..)
     , InputField(..)
-    , InputFieldGroup
     , Msg(..)
     , Presence(..)
     , RawCustomElement
     , ViewMode(..)
     , VisibilityRule(..)
+    , InputFieldGroup
     , allCustomElementsFromGroups
     , allInputField
     , decodeChoice
