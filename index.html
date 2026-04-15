@@ -227,25 +227,68 @@
 					{
 						heading: 'Basic',
 						fields: [
-							{ type: 'Dropdown', choices: ['Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Indigo', 'Violet'] },
+							{
+								type: 'Dropdown',
+								choices: [
+									'Red',
+									'Orange',
+									'Yellow',
+									'Green',
+									'Blue',
+									'Indigo',
+									'Violet',
+								],
+							},
 							{ type: 'ChooseOne', choices: ['Yes', 'No'] },
-							{ type: 'ChooseMultiple', choices: ['Apple', 'Banana', 'Cantaloupe', 'Durian'] },
+							{
+								type: 'ChooseMultiple',
+								choices: ['Apple', 'Banana', 'Cantaloupe', 'Durian'],
+							},
 							{ type: 'LongText', maxLength: 160 },
-							{ type: 'ShortText', inputType: 'Single-line free text', attributes: { type: 'text' } },
+							{
+								type: 'ShortText',
+								inputType: 'Single-line free text',
+								attributes: { type: 'text' },
+							},
 						],
 					},
 					{
 						heading: 'Advanced',
 						fields: [
-							{ type: 'ShortText', inputType: 'Custom Element', inputTag: 'validated-input', attributes: { type: 'url' } },
-							{ type: 'ShortText', inputType: 'Email', attributes: { type: 'email' } },
-							{ type: 'ShortText', inputType: 'Emails', attributes: { type: 'email', multiple: 'true' } },
-							{ type: 'ShortText', inputType: 'Telephone', attributes: { type: 'tel' } },
+							{
+								type: 'ShortText',
+								inputType: 'Custom Element',
+								inputTag: 'validated-input',
+								attributes: { type: 'url' },
+							},
+							{
+								type: 'ShortText',
+								inputType: 'Email',
+								attributes: { type: 'email' },
+							},
+							{
+								type: 'ShortText',
+								inputType: 'Emails',
+								attributes: { type: 'email', multiple: 'true' },
+							},
+							{
+								type: 'ShortText',
+								inputType: 'Telephone',
+								attributes: { type: 'tel' },
+							},
 							{ type: 'ShortText', inputType: 'URL', attributes: { type: 'url' } },
-							{ type: 'ShortText', inputType: 'Color', attributes: { type: 'color' } },
+							{
+								type: 'ShortText',
+								inputType: 'Color',
+								attributes: { type: 'color' },
+							},
 							{ type: 'ShortText', inputType: 'Date', attributes: { type: 'date' } },
 							{ type: 'ShortText', inputType: 'Time', attributes: { type: 'time' } },
-							{ type: 'ShortText', inputType: 'Date & Time', attributes: { type: 'datetime-local' } },
+							{
+								type: 'ShortText',
+								inputType: 'Date & Time',
+								attributes: { type: 'datetime-local' },
+							},
 						],
 					},
 				],

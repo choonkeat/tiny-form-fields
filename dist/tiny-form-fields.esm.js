@@ -9381,6 +9381,7 @@ var $author$project$Main$requiredData = function (presence) {
 			return true;
 	}
 };
+var $elm$html$Html$span = _VirtualDom_node('span');
 var $elm$json$Json$Encode$bool = _Json_wrap;
 var $elm$html$Html$Attributes$boolProperty = F2(
 	function (key, bool) {
@@ -10080,16 +10081,33 @@ var $author$project$Main$viewFormFieldPreview = F3(
 											var _v1 = formField.a;
 											if (_v1.$ === 4) {
 												var minRequired = _v1.a.P;
-												return (!_Utils_eq(minRequired, $elm$core$Maybe$Nothing)) ? $elm$html$Html$text('') : $elm$html$Html$text(' (optional)');
+												return (!_Utils_eq(minRequired, $elm$core$Maybe$Nothing)) ? $elm$html$Html$text('') : A2(
+													$elm$html$Html$span,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('tff-label-optional')
+														]),
+													_List_fromArray(
+														[
+															$elm$html$Html$text(' (optional)')
+														]));
 											} else {
-												return $elm$html$Html$text(' (optional)');
+												return A2(
+													$elm$html$Html$span,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('tff-label-optional')
+														]),
+													_List_fromArray(
+														[
+															$elm$html$Html$text(' (optional)')
+														]));
 											}
 										default:
 											return $elm$html$Html$text('');
 									}
 								}()
 								])),
-							A3($author$project$Main$viewFormFieldOptionsPreview, config, fieldID, formField),
 							A2(
 							$elm$html$Html$div,
 							_List_fromArray(
@@ -10122,7 +10140,8 @@ var $author$project$Main$viewFormFieldPreview = F3(
 										return $elm$html$Html$text('');
 									}
 								}()
-								]))
+								])),
+							A3($author$project$Main$viewFormFieldOptionsPreview, config, fieldID, formField)
 						]))
 				]));
 	});
