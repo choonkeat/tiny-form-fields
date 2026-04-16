@@ -1910,7 +1910,7 @@ viewFormFieldPreview config index formField =
                     System ->
                         text ""
                 ]
-            , div [ class "tff-field-description" ]
+            , div [ class "tff-field-description", id (fieldID ++ "-description") ]
                 [ text
                     (case formField.description of
                         AttributeNotNeeded _ ->
@@ -2112,6 +2112,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                      , name fieldName
                      , id fieldID
                      , required (requiredData formField.presence)
+                     , attribute "aria-describedby" (fieldID ++ "-description")
                      ]
                         ++ dataListAttrs
                         ++ shortTextAttrs
@@ -2137,6 +2138,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                  , id fieldID
                  , required (requiredData formField.presence)
                  , placeholder " "
+                 , attribute "aria-describedby" (fieldID ++ "-description")
                  ]
                     ++ extraAttrs
                     ++ config.customAttrs
@@ -2175,6 +2177,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                     , select
                         ([ name fieldName
                          , id fieldID
+                         , attribute "aria-describedby" (fieldID ++ "-description")
 
                          -- when we're disabling `<select>` we actually only
                          -- want to disable the `<option>`s so user can see the options but cannot choose
@@ -2249,6 +2252,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                                              , value choice.value
                                              , checked (valueString == choice.value || chosenForYou filteredChoices)
                                              , required (requiredData formField.presence)
+                                             , attribute "aria-describedby" (fieldID ++ "-description")
                                              ]
                                                 ++ config.customAttrs
                                                 ++ config.onInput fieldName
@@ -2375,6 +2379,7 @@ viewFormFieldOptionsPreview config fieldID formField =
                                                      , name fieldName
                                                      , value choice.value
                                                      , checked (List.member choice.value values || chosenForYou filteredChoices)
+                                                     , attribute "aria-describedby" (fieldID ++ "-description")
                                                      ]
                                                         ++ (if shouldDisable then
                                                                 [ attribute "disabled" "disabled" ]

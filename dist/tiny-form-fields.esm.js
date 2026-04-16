@@ -9337,6 +9337,7 @@ var $elm$html$Html$Events$stopPropagationOn = F2(
 	});
 var $elm$html$Html$Attributes$title = $elm$html$Html$Attributes$stringProperty('title');
 var $elm$html$Html$Attributes$for = $elm$html$Html$Attributes$stringProperty('htmlFor');
+var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
 var $elm$html$Html$label = _VirtualDom_node('label');
 var $author$project$Main$maybeMaxLengthOf = function (formField) {
 	var _v0 = formField.a;
@@ -9512,7 +9513,6 @@ var $author$project$Main$filterChoices = F3(
 			return choices;
 		}
 	});
-var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
 var $elm$html$Html$Attributes$maxlength = function (n) {
 	return A2(
 		_VirtualDom_attribute,
@@ -9695,7 +9695,8 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 										$elm$html$Html$Attributes$name(fieldName),
 										$elm$html$Html$Attributes$id(fieldID),
 										$elm$html$Html$Attributes$required(
-										$author$project$Main$requiredData(formField.p))
+										$author$project$Main$requiredData(formField.p)),
+										A2($elm$html$Html$Attributes$attribute, 'aria-describedby', fieldID + '-description')
 									]),
 								_Utils_ap(
 									dataListAttrs,
@@ -9741,7 +9742,8 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 								$elm$html$Html$Attributes$id(fieldID),
 								$elm$html$Html$Attributes$required(
 								$author$project$Main$requiredData(formField.p)),
-								$elm$html$Html$Attributes$placeholder(' ')
+								$elm$html$Html$Attributes$placeholder(' '),
+								A2($elm$html$Html$Attributes$attribute, 'aria-describedby', fieldID + '-description')
 							]),
 						_Utils_ap(
 							extraAttrs,
@@ -9777,6 +9779,7 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 									[
 										$elm$html$Html$Attributes$name(fieldName),
 										$elm$html$Html$Attributes$id(fieldID),
+										A2($elm$html$Html$Attributes$attribute, 'aria-describedby', fieldID + '-description'),
 										disabledMode ? $elm$html$Html$Attributes$class('tff-select-disabled') : $elm$html$Html$Attributes$required(
 										$author$project$Main$requiredData(formField.p))
 									]),
@@ -9875,7 +9878,8 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 																	$elm$html$Html$Attributes$checked(
 																	_Utils_eq(valueString, choice.j) || chosenForYou(filteredChoices)),
 																	$elm$html$Html$Attributes$required(
-																	$author$project$Main$requiredData(formField.p))
+																	$author$project$Main$requiredData(formField.p)),
+																	A2($elm$html$Html$Attributes$attribute, 'aria-describedby', fieldID + '-description')
 																]),
 															_Utils_ap(
 																config.Z,
@@ -10022,7 +10026,8 @@ var $author$project$Main$viewFormFieldOptionsPreview = F3(
 																		$elm$html$Html$Attributes$name(fieldName),
 																		$elm$html$Html$Attributes$value(choice.j),
 																		$elm$html$Html$Attributes$checked(
-																		A2($elm$core$List$member, choice.j, values) || chosenForYou(filteredChoices))
+																		A2($elm$core$List$member, choice.j, values) || chosenForYou(filteredChoices)),
+																		A2($elm$html$Html$Attributes$attribute, 'aria-describedby', fieldID + '-description')
 																	]),
 																_Utils_ap(
 																	shouldDisable ? _List_fromArray(
@@ -10112,7 +10117,8 @@ var $author$project$Main$viewFormFieldPreview = F3(
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('tff-field-description')
+									$elm$html$Html$Attributes$class('tff-field-description'),
+									$elm$html$Html$Attributes$id(fieldID + '-description')
 								]),
 							_List_fromArray(
 								[
