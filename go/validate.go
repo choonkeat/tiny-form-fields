@@ -338,26 +338,45 @@ func (f *ChooseMultipleField) Validate(value []string, field TinyFormField) erro
 		return nil
 	}
 
+	// Count distinct submissions. A raw POST body can repeat the same value
+	// (e.g. "color=Red&color=Red&color=Red"), which would otherwise let a
+	// caller satisfy MinRequired with a single distinct choice or inflate
+	// the count past MaxAllowed inspection.
+	distinct := uniqueStrings(value)
+
 	// Check MinRequired constraint
-	if f.MinRequired != nil && len(value) < *f.MinRequired {
-		return fmt.Errorf("%w: %s requires at least %d choices, got %d", ErrInvalidFieldValue, fieldName, *f.MinRequired, len(value))
+	if f.MinRequired != nil && len(distinct) < *f.MinRequired {
+		return fmt.Errorf("%w: %s requires at least %d choices, got %d", ErrInvalidFieldValue, fieldName, *f.MinRequired, len(distinct))
 	}
 
 	// Check MaxAllowed constraint
-	if f.MaxAllowed != nil && len(value) > *f.MaxAllowed {
-		return fmt.Errorf("%w: %s allows at most %d choices, got %d", ErrInvalidFieldValue, fieldName, *f.MaxAllowed, len(value))
+	if f.MaxAllowed != nil && len(distinct) > *f.MaxAllowed {
+		return fmt.Errorf("%w: %s allows at most %d choices, got %d", ErrInvalidFieldValue, fieldName, *f.MaxAllowed, len(distinct))
 	}
 
 	// Parse choices
 	parsedChoices := parseChoices(f.Choices)
 
 	// Check that each value is among the allowed values
-	for _, val := range value {
+	for _, val := range distinct {
 		if slices.Index(parsedChoices, val) == -1 {
 			return fmt.Errorf("%w: %s has invalid value '%s'. Valid choices are: %v", ErrInvalidChoice, fieldName, val, parsedChoices)
 		}
 	}
 	return nil
+}
+
+func uniqueStrings(in []string) []string {
+	seen := make(map[string]struct{}, len(in))
+	out := make([]string, 0, len(in))
+	for _, v := range in {
+		if _, ok := seen[v]; ok {
+			continue
+		}
+		seen[v] = struct{}{}
+		out = append(out, v)
+	}
+	return out
 }
 
 type LongTextField struct {
