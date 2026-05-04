@@ -1444,6 +1444,89 @@ suite =
                     Main.filterValuesByFieldChoices field inputValues
                         |> Expect.equal []
             ]
+        , describe "editorFormValidity"
+            [ test "returns Nothing for an empty form" <|
+                \_ ->
+                    Main.editorFormValidity Array.empty
+                        |> Expect.equal Nothing
+            , test "returns Nothing when all labels are unique and non-empty" <|
+                \_ ->
+                    Main.editorFormValidity (Array.fromList [ field1, field2, field3 ])
+                        |> Expect.equal Nothing
+            , test "returns Just for a field with an empty label" <|
+                \_ ->
+                    let
+                        emptyLabelField =
+                            { field1 | label = "" }
+                    in
+                    Main.editorFormValidity (Array.fromList [ emptyLabelField, field2 ])
+                        |> Expect.equal (Just "Question title cannot be empty")
+            , test "returns Just for a field with a whitespace-only label" <|
+                \_ ->
+                    let
+                        blankLabelField =
+                            { field1 | label = "   " }
+                    in
+                    Main.editorFormValidity (Array.fromList [ blankLabelField, field2 ])
+                        |> Expect.equal (Just "Question title cannot be empty")
+            , test "returns Just for two fields with the same label" <|
+                \_ ->
+                    let
+                        duplicate =
+                            { field2 | label = field1.label }
+                    in
+                    Main.editorFormValidity (Array.fromList [ field1, duplicate ])
+                        |> Expect.equal (Just ("Duplicate question title: \"" ++ field1.label ++ "\""))
+            , test "reports empty-label before duplicate when both are present" <|
+                \_ ->
+                    let
+                        emptyLabelField =
+                            { field1 | label = "" }
+
+                        duplicate =
+                            { field3 | label = field2.label }
+                    in
+                    Main.editorFormValidity (Array.fromList [ emptyLabelField, field2, duplicate ])
+                        |> Expect.equal (Just "Question title cannot be empty")
+            , let
+                chooseMultipleField choices minRequired maxAllowed =
+                    { label = "Pick some"
+                    , type_ =
+                        Main.ChooseMultiple
+                            { choices = List.map (\c -> Main.Choice c c) choices
+                            , minRequired = minRequired
+                            , maxAllowed = maxAllowed
+                            , filter = Nothing
+                            }
+                    , presence = Main.Required
+                    , description = Main.AttributeNotNeeded Nothing
+                    , name = Nothing
+                    , visibilityRule = []
+                    }
+              in
+              describe "ChooseMultiple constraint consistency"
+                [ test "valid minRequired within choices count passes" <|
+                    \_ ->
+                        Main.editorFormValidity (Array.fromList [ chooseMultipleField [ "A", "B", "C" ] (Just 2) Nothing ])
+                            |> Expect.equal Nothing
+                , test "minRequired exceeding choices count is flagged" <|
+                    \_ ->
+                        Main.editorFormValidity (Array.fromList [ chooseMultipleField [ "A", "B" ] (Just 3) Nothing ])
+                            |> Expect.equal (Just "\"Pick some\": minimum required exceeds number of choices")
+                , test "maxAllowed exceeding choices count is flagged" <|
+                    \_ ->
+                        Main.editorFormValidity (Array.fromList [ chooseMultipleField [ "A", "B" ] Nothing (Just 5) ])
+                            |> Expect.equal (Just "\"Pick some\": maximum allowed exceeds number of choices")
+                , test "minRequired exceeding maxAllowed is flagged" <|
+                    \_ ->
+                        Main.editorFormValidity (Array.fromList [ chooseMultipleField [ "A", "B", "C", "D" ] (Just 3) (Just 2) ])
+                            |> Expect.equal (Just "\"Pick some\": minimum required exceeds maximum allowed")
+                , test "equal minRequired and maxAllowed passes" <|
+                    \_ ->
+                        Main.editorFormValidity (Array.fromList [ chooseMultipleField [ "A", "B", "C" ] (Just 2) (Just 2) ])
+                            |> Expect.equal Nothing
+                ]
+            ]
         ]
 
 

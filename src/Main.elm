@@ -8,12 +8,12 @@ port module Main exposing
     , FormField
     , FormFieldMsg(..)
     , InputField(..)
+    , InputFieldGroup
     , Msg(..)
     , Presence(..)
     , RawCustomElement
     , ViewMode(..)
     , VisibilityRule(..)
-    , InputFieldGroup
     , allCustomElementsFromGroups
     , allInputField
     , decodeChoice
@@ -25,6 +25,7 @@ port module Main exposing
     , decodeInputFieldGroups
     , decodeShortTextTypeList
     , dragOverDecoder
+    , editorFormValidity
     , encodeChoice
     , encodeFormFields
     , encodeInputField
@@ -68,6 +69,9 @@ port outgoing : Json.Encode.Value -> Cmd msg
 
 
 port incoming : (Json.Encode.Value -> msg) -> Sub msg
+
+
+port scrollIntoView : String -> Cmd msg
 
 
 main : Program Flags Model Msg
@@ -782,13 +786,30 @@ update msg model =
 
         SelectField fieldIndex ->
             case ( model.selectedFieldIndex, fieldIndex ) of
-                ( Just prevIndex, Nothing ) ->
-                    ( { model
-                        | selectedFieldIndex = Nothing
-                        , viewMode = Editor { maybeAnimate = Just ( prevIndex, AnimateYellowFade ) }
-                      }
-                    , Cmd.none
-                    )
+                ( Just prevIndex, _ ) ->
+                    if selectedFieldIsInvalid model then
+                        ( { model | viewMode = Editor { maybeAnimate = Just ( prevIndex, AnimateYellowFade ) } }
+                        , Cmd.batch
+                            [ Process.sleep animateFadeDuration
+                                |> Task.perform (always (SetEditorAnimate Nothing))
+                            , scrollIntoView ("tff-field-" ++ String.fromInt prevIndex)
+                            ]
+                        )
+
+                    else
+                        case ( model.selectedFieldIndex, fieldIndex ) of
+                            ( Just prevIndex2, Nothing ) ->
+                                ( { model
+                                    | selectedFieldIndex = Nothing
+                                    , viewMode = Editor { maybeAnimate = Just ( prevIndex2, AnimateYellowFade ) }
+                                  }
+                                , Cmd.none
+                                )
+
+                            _ ->
+                                ( { model | selectedFieldIndex = fieldIndex }
+                                , Cmd.none
+                                )
 
                 _ ->
                     ( { model | selectedFieldIndex = fieldIndex }
@@ -796,19 +817,49 @@ update msg model =
                     )
 
         DragStart fieldIndex ->
-            ( { model
-                | dragged = Just (DragExisting { dragIndex = fieldIndex, dropIndex = Nothing }) -- use index as initial dropTargetIndex
-                , selectedFieldIndex = Nothing
-              }
-            , Cmd.none
-            )
+            if selectedFieldIsInvalid model then
+                case model.selectedFieldIndex of
+                    Just prevIndex ->
+                        ( { model | viewMode = Editor { maybeAnimate = Just ( prevIndex, AnimateYellowFade ) } }
+                        , Cmd.batch
+                            [ Process.sleep animateFadeDuration
+                                |> Task.perform (always (SetEditorAnimate Nothing))
+                            , scrollIntoView ("tff-field-" ++ String.fromInt prevIndex)
+                            ]
+                        )
+
+                    Nothing ->
+                        ( model, Cmd.none )
+
+            else
+                ( { model
+                    | dragged = Just (DragExisting { dragIndex = fieldIndex, dropIndex = Nothing }) -- use index as initial dropTargetIndex
+                    , selectedFieldIndex = Nothing
+                  }
+                , Cmd.none
+                )
 
         DragStartNew fieldIndex ->
-            ( { model
-                | dragged = Just (DragNew { field = fieldIndex, dropIndex = Just ( 0, Nothing ) }) -- new field starts at index 0
-              }
-            , Cmd.none
-            )
+            if selectedFieldIsInvalid model then
+                case model.selectedFieldIndex of
+                    Just prevIndex ->
+                        ( { model | viewMode = Editor { maybeAnimate = Just ( prevIndex, AnimateYellowFade ) } }
+                        , Cmd.batch
+                            [ Process.sleep animateFadeDuration
+                                |> Task.perform (always (SetEditorAnimate Nothing))
+                            , scrollIntoView ("tff-field-" ++ String.fromInt prevIndex)
+                            ]
+                        )
+
+                    Nothing ->
+                        ( model, Cmd.none )
+
+            else
+                ( { model
+                    | dragged = Just (DragNew { field = fieldIndex, dropIndex = Just ( 0, Nothing ) }) -- new field starts at index 0
+                  }
+                , Cmd.none
+                )
 
         DragEnd ->
             case model.dragged of
@@ -1658,6 +1709,7 @@ viewMain model =
                     , value (Json.Encode.encode 0 (encodeFormFields model.formFields))
                     ]
                     []
+                    :: viewEditorValidationGate model.formFields
                     :: viewFormBuilder editorAttr.maybeAnimate model
 
             CollectData ->
@@ -2415,7 +2467,8 @@ renderFormBuilderField maybeAnimate model index maybeFormField =
 
         Just formField ->
             div
-                [ class "tff-field-container"
+                [ id ("tff-field-" ++ String.fromInt index)
+                , class "tff-field-container"
                 , attribute "data-input-field" (stringFromInputField formField.type_)
                 , preventDefaultOn "dragover" (dragOverDecoder index (Just formField))
                 ]
@@ -3003,13 +3056,16 @@ viewFormFieldBuilder shortTextTypeList index totalLength formFields formField =
         isDuplicateLabel =
             hasDuplicateLabel index formField.label formFields
 
+        isEmptyLabel =
+            String.isEmpty (String.trim formField.label)
+
         patternAttr =
-            if isDuplicateLabel then
+            if isDuplicateLabel || isEmptyLabel then
                 -- always invalid
                 [ Attr.pattern "^$" ]
 
             else
-                [ Attr.pattern ".*" ]
+                [ Attr.pattern ".+" ]
 
         configureMultipleCheckbox =
             div [ class "tff-field-group" ]
@@ -3074,6 +3130,9 @@ viewFormFieldBuilder shortTextTypeList index totalLength formFields formField =
                 []
             , if isDuplicateLabel then
                 div [ class "tff-error-text" ] [ text "Question titles must be unique in a form" ]
+
+              else if isEmptyLabel then
+                div [ class "tff-error-text" ] [ text "Question title cannot be empty" ]
 
               else
                 text ""
@@ -3641,6 +3700,88 @@ hasDuplicateLabel currentIndex newLabel formFields =
         |> List.any (\( _, f ) -> f.label == newLabel)
 
 
+selectedFieldIsInvalid : Model -> Bool
+selectedFieldIsInvalid model =
+    case model.selectedFieldIndex of
+        Just prevIndex ->
+            case Array.get prevIndex model.formFields of
+                Just formField ->
+                    String.isEmpty (String.trim formField.label)
+                        || hasDuplicateLabel prevIndex formField.label model.formFields
+
+                Nothing ->
+                    False
+
+        Nothing ->
+            False
+
+
+editorFormValidity : Array FormField -> Maybe String
+editorFormValidity formFields =
+    let
+        labelCounts =
+            Array.foldl
+                (\f -> Dict.update f.label (Maybe.map ((+) 1) >> Maybe.withDefault 1 >> Just))
+                Dict.empty
+                formFields
+
+        firstIssue =
+            formFields
+                |> Array.toIndexedList
+                |> List.filterMap
+                    (\( _, f ) ->
+                        if String.isEmpty (String.trim f.label) then
+                            Just "Question title cannot be empty"
+
+                        else if (Dict.get f.label labelCounts |> Maybe.withDefault 0) > 1 then
+                            Just ("Duplicate question title: \"" ++ f.label ++ "\"")
+
+                        else
+                            case f.type_ of
+                                ChooseMultiple { choices, minRequired, maxAllowed } ->
+                                    let
+                                        choiceCount =
+                                            List.length choices
+                                    in
+                                    if Maybe.map (\min -> min > choiceCount) minRequired |> Maybe.withDefault False then
+                                        Just ("\"" ++ f.label ++ "\": minimum required exceeds number of choices")
+
+                                    else if Maybe.map (\max -> max > choiceCount) maxAllowed |> Maybe.withDefault False then
+                                        Just ("\"" ++ f.label ++ "\": maximum allowed exceeds number of choices")
+
+                                    else if Maybe.map2 (\min max -> min > max) minRequired maxAllowed |> Maybe.withDefault False then
+                                        Just ("\"" ++ f.label ++ "\": minimum required exceeds maximum allowed")
+
+                                    else
+                                        Nothing
+
+                                _ ->
+                                    Nothing
+                    )
+                |> List.head
+    in
+    firstIssue
+
+
+viewEditorValidationGate : Array FormField -> Html Msg
+viewEditorValidationGate formFields =
+    case editorFormValidity formFields of
+        Nothing ->
+            text ""
+
+        Just msg ->
+            input
+                [ type_ "text"
+                , required True
+                , attribute "value" ""
+                , attribute "title" msg
+                , class "tff-visually-hidden"
+                , attribute "aria-hidden" "true"
+                , tabindex -1
+                ]
+                []
+
+
 
 -- PORT
 
@@ -4071,6 +4212,7 @@ decodeVisibilityRule =
             )
 
 
+
 -- XSS defense. Elm's VirtualDom rewrites on*/formAction keys and blanks
 -- javascript:/data:text/html, values, but leaves the tag name and other
 -- attributes untouched. A form definition can reach both, so we normalize
@@ -4079,6 +4221,8 @@ decodeVisibilityRule =
 -- rules out iframe/object/embed/meta/etc.), and drop attributes whose
 -- name or value can still produce script execution or boundary-loosening
 -- on the native tags we do allow.
+
+
 sanitizeInputTag : String -> String
 sanitizeInputTag tag =
     let
